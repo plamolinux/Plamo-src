@@ -1,5 +1,5 @@
-From 8518f6857b928e9ec615f9ca5f79f98d13db4f6d Mon Sep 17 00:00:00 2001
-From: Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>From 8518f6857b928e9ec615f9ca5f79f98d13db4f6d Mon Sep 17 00:00:00 2001
+From: Simo Sorce <simo@redhat.com>
 Date: Tue, 26 Mar 2013 10:15:56 -0400
 Subject: [PATCH] Switch to use standard GSSAPI by default
 
