@@ -1,0 +1,32 @@
+#!/bin/sh 
+
+INSINFO_BIN=""
+if [ -x /usr/bin/install-info ] ; then 
+  INSINFO_BIN=/usr/bin/install-info
+elif [ -x /usr/sbin/install-info ] ; then
+  INSINFO_BIN=/usr/sbin/install-info
+fi
+if [ ! "x.$INSINFO_BIN" = "x." ] ; then
+  INFO_DIR=/usr/share/info
+  echo -n "making $INFO_DIR/dir"
+  ( cd $INFO_DIR
+  INFO_LST=`/bin/ls`
+  P_INFO_FILE=""
+  for N in $INFO_LST ; do
+    INFO_FILE="${N%%-[0-9]*}"
+    INFO_FILE="${INFO_FILE%%\.gz}"
+    if [ ! "x.$INFO_FILE" = "x.$P_INFO_FILE" ] ; then
+      if [ ! "x.$INFO_FILE" = "x.dir" ] ; then
+        if [ -f $INFO_FILE.gz ] ; then
+          $INSINFO_BIN --info-dir=$INFO_DIR $INFO_FILE.gz 2> /dev/null
+        elif [ -f $INFO_FILE ] ; then
+          $INSINFO_BIN --info-dir=$INFO_DIR $INFO_FILE 2> /dev/null
+        fi
+        echo -n "."
+      fi
+      P_INFO_FILE="$INFO_FILE"
+    fi
+  done
+  )
+  echo "done."
+fi
