@@ -1,0 +1,132 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Plamo Linux ユーザ設定ファイルサンプル for QVWM
+;                                TAMUKI Shoichi (tamuki@linet.gr.jp)
+
+; /usr/share/qvwm/default.qvwm-theme をカスタマイズしたものです
+
+;
+; default.qvwm-theme
+;
+;   qvwm theme file (default theme)
+;
+;   This file should be included in the main configuration file (.qvwmrc)
+;   using include statement.
+;
+
+[Variables]
+DefaultIcon		= "def16.ani"	; default titlebar/taskbar-button icon
+DefaultLargeIcon	= "def32.ani"	; default task switcher icon
+DefaultShortcutIcon	= "icon32.ani"	; default shortcut icon
+DefaultFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; desktop
+WallPaper		= Windows2000	; image tiled in the desktop
+DesktopColor		= qvroyalblue	; desktop background color
+DesktopActiveColor	= qvblue	; desktop active color
+CursorColor		= white		; cursor color
+
+; titlebar
+FrameTitleHeight	= 18
+;TitlebarImage		= ""		; titlebar background image
+;TitlebarActiveImage	= ""		; titlebar active background image
+GradTitlebar		= True		; titlebar gradation
+GradTitlebarColors	= 40		; titlebar gradation colors
+TitlebarColor		= qvdarkgray	; titlebar color (inactive)
+TitlebarColor2		= qvgrey	; titlebar right-side color (inactive)
+TitlebarActiveColor	= qvblue	; titlebar color (active)
+TitlebarActiveColor2	= qvlightblue	; titlebar right-side color (active)
+TitleStringColor	= qvgray	; title string color (inactive)
+TitleStringActiveColor	= white		; title string color (active)
+TitleFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; frame
+FrameBorderWidth	= 2
+;FrameImage		= ""		; frame background image
+;FrameActiveImage	= ""		; frame active background image
+FrameColor		= qvgray	; window frame color
+FrameActiveColor	= qvgray	; window frame color
+
+; pager
+;PagerImage		= ""		; pager background image
+PagerColor		= qvgray	; pager color
+PagerActiveColor	= qvdarkgray	; selected page color
+MiniatureColor		= yellow	; non-active mini window color in pager
+MiniatureActiveColor	= red		; active mini window color in pager
+
+; taskbar
+TaskbarButtonHeight	= 22
+;TaskbarImage		= ""		; taskbar background image
+TaskbarColor		= qvgray	; taskbar color
+ClockStringColor	= black		; clock string color
+UseBoldFont		= False		; use bold font for emphasis
+TaskbarFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+TaskbarBoldFont		= "-alias-sans-bold-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; indicator
+IndicatorSize		= 16
+
+; shortcut icon
+IconSize		= 32		; icon size
+IconHorizontalSpacing	= 43		; horizontal space between icons
+IconVerticalSpacing	= 43		; vertical space between icons
+IconStringColor		= white
+IconStringActiveColor	= white
+IconForeColor		= black		; icon foreground color
+IconBackColor		= white		; icon background color
+IconFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; menu
+;MenuImage		= ""		; menu background image
+;MenuActiveImage	= ""		; menu background image
+MenuColor		= qvgray	; menu color
+MenuActiveColor		= qvblue	; selected menu item color
+MenuStringColor		= black		; menu string color (unselected)
+MenuStringActiveColor	= white		; menu string color (selected)
+CtrlMenuFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; startmenu
+;StartMenuLogoImage	= ""
+StartMenuLogoColor	= qvblue
+StartMenuFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+CascadeMenuFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; dialog
+;DialogImage		= ""		; dialog background image
+DialogColor		= qvgray	; dialog color
+DialogFont		= "-alias-sans-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-*-*"
+
+; switcher
+;SwitcherImage		= ""		; switcher background image
+SwitcherColor		= qvgray	; task switcher color
+SwitcherActiveColor	= qvblue	; icon selected color
+SwitcherStringColor	= black		; switcher string color
+
+; button
+ButtonColor		= qvgray	; button color
+ButtonActiveColor	= qvgray	; button active color
+ButtonStringColor	= black		; button string color
+ButtonStringActiveColor	= black		; button string active color
+
+; tooltip
+TooltipColor		= qvlightyellow
+TooltipStringColor	= black
+
+; sounds
+SystemStartSound	= "windows_start.wav"
+SystemExitSound		= "windows_exit.wav"
+SystemRestartSound	= "chimes.wav"
+MaximizeSound		= "maximize.wav"
+MinimizeSound		= "minimize.wav"
+RestoreUpSound		= "restore_up.wav"
+RestoreDownSound	= "restore_down.wav"
+;ExpandSound		= ""
+OpenSound		= "open.wav"
+CloseSound		= "close.wav"
+MenuPopupSound		= "menu_popup.wav"
+MenuCommandSound	= "menu_command.wav"
+PagerSound		= "ir_begin.wav"
+PagingSound		= "ir_end.wav"
+
+
+[Accessories]
+"qvwmdesk.ani"		TopRight	Background

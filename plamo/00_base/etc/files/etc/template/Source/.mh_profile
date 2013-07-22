@@ -1,0 +1,9 @@
+Path: Mail
+Draft-Folder: drafts
+send: -hencode
+whom: -hencode
+scan: -form scan.form
+inc: -form scan.form
+file-coding: ja_JP.jis
+display-coding: ja_JP.jis
+process-coding: ja_JP.jis

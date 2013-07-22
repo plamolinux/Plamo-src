@@ -1,0 +1,2071 @@
+From kojima@linet.gr.jp Sun Jan 10 00:00:00 1999
+Date: Sun, 10 Jan 1999 00:00:00 +0900
+From: KOJIMA Mitsuhiro <kojima@linet.gr.jp>
+Message-Id: <199901102030.CAA05783@localhost>
+Subject: Plamo Linux
+ =?iso-2022-jp?B?GyRCJFgkaCQmJDMkPRsoQg==?=
+X-Mailer: Mew version 1.92 on Emacs 19.34 / Mule 2.3 (SUETSUMUHANA)
+Mime-Version: 1.0
+Content-Type: Multipart/Mixed;
+	boundary="--Next_Part(Thu_Jun_18_21:11:29_1998_893)--"
+Content-Transfer-Encoding: 7bit
+
+----Next_Part(Thu_Jun_18_21:11:29_1998_893)--
+Content-Type: Text/Plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+Welcome to Plamo Linux!! this mail was written in Japanese to check
+users Japanese environment.
+
+Plamo Linux へようこそ！！
+
+Plamo Linux は Slackware 3.[346] のころ，Linux の日本語環境を簡単に構
+築することを目指して始めたディストリビューションです．
+
+その後，各種商用ディストリビューションの日本語化も進み，日本語で最初か
+ら最後までインストールが進み，インストール直後から日本語環境が利用でき
+るというのもあたりまえになってしまいました．
+
+従来は「初心者向け」と言っていたこともありますが，最近では Linux の解
+説本も Red Hat ベースのものが中心になっていますし，サポートやメンテナ
+ンス，商用アプリケーションの対応という点からも，初心者の方にはそれら商
+用ディストリビューションをお勧めします．
+
+Plamo Linux についての質問はメーリングリスト(plamo@linet.gr.jp)の方に
+お送りください．この ML は fml を使って運用しており，加入方法等につい
+ては plamo-ctl@linet.gr.jp まで，本文に "help" と記したメールを送って
+ください．
+
+# HTML パートが付いたメールは正しく認識されないため，上記アドレスへメー
+# ルを送ってもエラーになる場合はお使いのメーラーの設定をご確認ください．
+
+このメールは MIME エンコードされた画像データを含んでいます。mule + Mew 
+で読んでいる場合、space キーを押していけば、自動的に画像データも外部の
+ビューワ(xv)を使って表示されるはずです。また、このメールには、以前のバー
+ジョンのメールを TeX + dvi2ps で PostScript 化したパートも添付していま
+す。gv と ghostcript が正しくインストールできていれば、PS ファイルの部
+分も読めるはずです。
+
+*** 以前のバージョンからの変更点 ***
+
+☆xfs-xtt をデフォルトでインストールするようにしました。XF86Setup で
+  /etc/XF86Config を作成後、/etc/XF86Config の FontPath に 
+  "tcp/localhost:7100" という設定を追加すれば xfs-xtt を使うようにな
+  ります。/etc/XF86Config の例を示します。
+
+Section "Files"
+   RgbPath    "/usr/lib64/X11/rgb"
+   FontPath   "tcp/localhost:7100"
+   FontPath   "/usr/lib64/X11/fonts/misc:unscaled"
+   FontPath   "/usr/lib64/X11/fonts/75dpi:unscaled"
+
+☆セキュリティの観点から、/etc/hosts.deny と /etc/hosts.allow に、
+  ALL : ALL 、 ALL : LOCAL という設定にしています。そのため、デフォル
+  トの状態では外部からの接続は拒否されます。外部から接続したい場合は、
+  /etc/hosts.allow に接続を許可するホストやネットワークを指定してくだ
+  さい。/etc/hosts.allow の例を示します。
+
+ALL : LOCAL 172.16.2.
+
+  この例では 172.16.2.* という IP アドレスを持つホストからの接続のみを
+  許可します。
+
+                                    2001/04/08   こじまみつひろ
+                                    kojima@linet.gr.jp
+
+
+----Next_Part(Thu_Jun_18_21:11:29_1998_893)--
+Content-Type: Image/Gif
+Content-Transfer-Encoding: base64
+
+R0lGODdh1QBhAPcAAP///wgICBAQEBgYGCkpKTExMTk5OUJCQkpKSlJSUlpaWmNjY2tra3Nz
+c3t7e4SEhIyMjJSUlJycnKWlpa2trbW1tb29vcbGxs7OztbW1t7e3ufn5+/v7/f39+/n59bO
+zr21tXtzc9bGxvfe3ox7ezkxMda1tcalpffOzikhIdatre+9vbWMjJxzc86UlMaMjO+lpXtS
+Uu+cnN6MjIRSUtaEhM57e7Vra5RSUud7e4xKStZra+dzc5RCQt5jY71SUs5aWt5aWrVCQt5K
+SudKSpwxMa0xMc4xMd4xMa0hId4pKcYhIb0YGN4YGNYQEM4ICNYICNYAACEIABgIACkQADkY
+AIR7c721rbWtpUopAFoxAIRKAMatjIxjKWtCCDkhAGM5AIxSAK2MWqWEUr2EMVIxAHtKAJRa
+AKVjAFpKMWtSKTkpEJRrKaVrCLVzCEIpAGtCAIRSANaEAN7GnPfOhNatY4xjGJRjCK1zCL17
+CFo5AJxjALVzAL17ANaMAK2ce5yMa62UY+fGhMalY4RrOaWEQsacSmtSIaV7KZRrGL2EENaU
+EIRaCJxrCDEhAGNCAK1zAMaEAM6MAPfv3pSMe+/WnMatc5R7QrWUSr2UOcaUKa17CMaMCN6c
+CJxrAPetAEo5EM6cIe+tEO+tCHNSAK17AM6UAOfexrWMGPe9GM6cEPe9EMaUANacAN6lAOet
+AO/nzr21nGtjStbGlO/OY9a1UqWMOee9Mfe9CIxrAM6cAO/OWta1OffGEOe1CO+9CPfGCL2U
+AHtzUsatSv/eUu/OSu/GEK2MAN61AO/OMf/eMe/OId69EP/WCMalAM6tAMa9jLWte//eGJyE
+AP/nQv/nKefOIefOGOfOEOfOCP/nEO/WCP/nCP/vCP/3GMbGvZSUjKWllKWtrTlCQggQEMbO
+1nOEnMbO3tbe72NrhAAIKc7O1tbW3r29xnNze1JSWoSElDk5QhAQGAgIEAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAA1QBhAAAI/gABCBxIsKDBgwgTKlzIsKHD
+hxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs2bFDjg54NzZwabP
+nyUv0BtKlB4FDRt0Al3KFGOHolCHWsiwoWfTq1gZaohatIAAegEuaFCatazZp1yHBlBghYDU
+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
+Jn7iKJ7iKr7iLN7iLv7iMB7johEQADs=
+
+----Next_Part(Thu_Jun_18_21:11:29_1998_893)--
+Content-Type: Application/Postscript
+Content-Transfer-Encoding: quoted-printable
+
+%!PS-Adobe-2.0
+%%Creator: dvi2ps
+%%Title: maildemo.dvi
+%%Pages: (atend)
+%%BoundingBox: 0 0 595 842
+%%DocumentPaperSizes: A4
+%%Orientation: Portrait
+%%EndComments
+%%BeginFile: /usr/local/share/dvi2ps/dvi2.ps
+%
+/TeXDict 300 dict def
+TeXDict begin
+/inch {
+72 mul
+} bind def
+/largepaperarray [
+/letter /legal /11x17
+/b4 /b5 /a5 /a4 /a3
+] def
+/smallpaperarray [
+/note dup where {
+pop
+}{
+pop /lettersmall dup where {
+pop
+}{
+pop /letter
+} ifelse
+} ifelse
+/legal /11x17
+/b4 /b5 /a5
+/a4small dup where {
+pop
+}{
+pop /note dup where {
+pop
+}{
+pop /a4
+} ifelse
+} ifelse
+/a3
+] def
+/setpaper {
+papertray {
+dup where {
+exch get exec
+}{
+pop
+} ifelse
+}{
+pop
+} ifelse
+} bind def
+/trayarray [
+/lettertray /legaltray /11x17tray
+/b4tray /b5tray /a5tray /a4tray /a3tray
+] def
+/settray {
+dup statusdict exch known manualfeed not and {
+mark exch statusdict begin load =
+
+{
+exec
+} stopped {
+$error /newerror get {
+$error /errorname get /rangecheck eq {
+(Tray not found, using default tray.\n) print flush
+TeXDict /papertray false put
+}{
+handleerror
+} ifelse
+$error /newerror false put
+} if
+} if
+end cleartomark
+}{
+pop
+} ifelse
+} bind def
+/papertray true def
+/widtharray  [
+8.5 inch 8.5 inch 11 inch
+10.12 inch 7.17 inch
+5.83 inch 8.27 inch 11.69 inch
+] def
+/heightarray [
+11 inch 14 inch 17 inch
+14.33 inch 10.12 inch
+8.27 inch 11.69 inch 16.54 inch
+] def
+/xoffset 0 def
+/yoffset 0 def
+/leftm 72 def
+/topm 72 def
+/landscape false def
+/manualfeed false def
+/pagesetup {
+dup widtharray exch get /paperwidth exch def
+dup heightarray exch get /paperheight exch def
+dup trayarray exch get settray
+large {largepaperarray}{smallpaperarray} ifelse
+exch get setpaper
+} bind def
+/@letter {0 pagesetup} def
+/@legal {1 pagesetup} def
+/@tabloid {2 pagesetup} def
+/@b4 {3 pagesetup} def
+/@b5 {4 pagesetup} def
+/@a5 {5 pagesetup} def
+/@a4 {6 pagesetup} def
+/@a3 {7 pagesetup} def
+/@landscape {/landscape true def} bind def
+/@manualfeed {
+/manualfeed true def
+statusdict /manualfeed known {
+statusdict /manualfeed true put
+statusdict /manualfeedtimeout 120 put
+} if
+} bind def
+/@large {
+/large true def
+} bind def
+/@small {
+/large false def
+} bind def
+/@envelope {
+/xoffset 4.28 inch def
+/yoffset 1.5 inch def
+@letter
+} bind def
+/COPIES	{
+/#copies exch def
+} bind def
+/NF {
+/newname exch def
+/fsize exch def
+/corr exch def
+newname 7 dict def
+newname load begin
+/FontType 3 def
+/FontMatrix [corr 0 0 corr neg 0 0] def
+/FontBBox [0 0 1 1] def
+/BitMaps fsize array def
+/BuildChar /CharBuilder load def
+/Encoding 256 array def
+0 1 255 {Encoding exch /.notdef put} for
+end
+newname newname load definefont pop
+} bind def
+/ch-image {ch-data 0 get} bind def
+/ch-width {ch-data 1 get} bind def
+/ch-height {ch-data 2 get} bind def
+/ch-xoff {ch-data 3 get} bind def
+/ch-yoff {ch-data 4 get} bind def
+/ch-tfmw {ch-data 5 get} bind def
+/CharBuilder {
+/ch-code exch def
+/font-dict exch def
+/ch-data font-dict /BitMaps get ch-code get def
+ch-data null eq not {
+ch-tfmw 0
+ch-xoff neg  ch-yoff neg ch-width ch-xoff sub ch-height ch-yoff sub
+setcachedevice
+ch-width ch-height true [1 0  0 1  ch-xoff ch-yoff]
+{ch-image} imagemask
+} if
+} bind def
+/NF2 {
+/newname exch def
+/fsize exch def
+/corr exch def
+newname 7 dict def
+newname load begin
+/FontType 3 def
+/FontMatrix [corr 0 0 corr neg 0 0] def
+/FontBBox [0 0 1 1] def
+/BitMaps fsize array def
+/BuildChar /CharBuilder2 load def
+/Encoding 256 array def
+0 1 255 {Encoding exch /.notdef put} for
+end
+newname newname load definefont pop
+} bind def
+/CharBuilder2 {
+/ch-code exch def
+/font-dict exch def
+/ch-data font-dict /BitMaps get ch-code get def
+ch-data null eq not {
+ch-tfmw 0
+ch-xoff neg  ch-yoff neg ch-width ch-xoff sub ch-height ch-yoff sub
+setcachedevice
+ch-xoff neg ch-yoff neg translate
+ch-image exec
+} if
+} bind def
+/BFT {
+/bf-v exch def
+/bf-h exch def
+findfont [bf-h 0 0 bf-v 0 0] makefont def
+} bind def
+/BFE /BFT load def
+/BFF {
+/bf-v exch def
+/bf-h exch def
+/savecurfont currentfont def
+findfont dup setfont
+3 -1 roll
+/bf-stand exch def
+[
+bf-stand stringwidth pop
+dup bf-h exch div
+exch bf-v exch div 0 0 3 -1 roll
+0 0
+] makefont def
+savecurfont setfont
+} bind def
+/SF /setfont load def
+/s3 3 string def
+/D {
+/ch-code exch def
+/ch-data exch def
+currentfont /BitMaps get ch-code ch-data put
+currentfont /Encoding get ch-code
+dup s3 cvs cvn
+put
+} bind def
+/BP {
+userdict /bop-hook known { bop-hook } if
+/SaveImage save def
+xoffset yoffset translate
+leftm topm
+landscape {
+exch translate
+90 rotate
+}{
+paperheight exch sub translate
+} ifelse
+72 Resolution div dup neg scale
+0 0 moveto
+} bind def
+/EP {
+showpage =
+
+SaveImage restore
+userdict /eop-hook known { eop-hook } if
+} bind def
+/START {
+userdict /start-hook known { start-hook } if
+/DVImag exch def
+/magscale true def
+/Resolution exch def
+} bind def
+/END {
+end
+userdict /end-hook known { end-hook } if
+} bind def
+/l /lineto load def
+/p /moveto load def
+/r {
+0 rmoveto
+} def
+/s /show load def
+/c /curveto load def
+/rs {
+90 rotate show -90 rotate =
+
+} bind def
+/ru {
+/dy exch neg def
+/dx exch def
+/x currentpoint /y exch def def
+newpath x y moveto
+dx 0 rlineto
+0 dy rlineto
+dx neg 0 rlineto
+closepath fill
+x y moveto
+} bind def
+/TeXscale { 65781.76 div } def
+/DocumentInitState [ matrix currentmatrix currentlinewidth currentlineca=
+p
+currentlinejoin currentdash currentgray currentmiterlimit ] cvx def
+/startTexFig {
+/SavedState save def
+userdict maxlength dict begin
+currentpoint transform
+DocumentInitState setmiterlimit setgray setdash setlinejoin setlinecap
+setlinewidth setmatrix
+itransform moveto
+magscale { DVImag dup scale } if
+/ury exch TeXscale def
+/urx exch TeXscale def
+/lly exch TeXscale def
+/llx exch TeXscale def
+/y exch TeXscale def
+/x exch TeXscale def
+currentpoint /cy exch def /cx exch def
+/sx x urx llx sub div def
+/sy y ury lly sub div def
+sx sy scale
+cx sx div llx sub
+cy sy div ury sub translate
+/DefFigCTM matrix currentmatrix def
+/initmatrix {
+DefFigCTM setmatrix
+} def
+/defaultmatrix {
+DefFigCTM exch copy
+} def
+/initgraphics {
+DocumentInitState setmiterlimit setgray setdash =
+
+setlinejoin setlinecap setlinewidth setmatrix
+DefFigCTM setmatrix
+} def
+/showpage {} def
+/erasepage {} def
+/copypage {} def
+} def
+/clipFig {
+currentpoint 6 2 roll
+newpath 4 copy
+4 2 roll moveto
+6 -1 roll exch lineto
+exch lineto
+exch lineto
+closepath clip
+newpath
+moveto
+} def
+/doclip { llx lly urx ury clipFig } def
+/endTexFig {
+end SavedState restore
+} def
+/@SpecialDefaults {
+/hsi paperwidth inch def
+/vsi paperheight inch def
+/hof 0 def
+/vof 0 def
+/hsc 1 def
+/vsc 1 def
+/rotat 0 def
+/CLIP false def
+/BBOX false def
+/EPSF false def
+/ECL false def
+} bind def
+/@ecl {/ECL true def} bind def
+/@clip {/CLIP true def} bind def
+/@hsize {/hsi exch def @clip} bind def
+/@vsize {/vsi exch def @clip} bind def
+/@hoffset {/hof exch def} bind def
+/@voffset {/vof exch def} bind def
+/@scaleunit 1 def
+/@hscale {@scaleunit div /hsc exch def} bind def
+/@vscale {@scaleunit div /vsc exch def} bind def
+/@rotation {/rotat exch def} bind def
+/@angle /@rotation load def
+/@rwi {10 div /hsi exch def} bind def
+/@rhi {10 div /vsi exch def} bind def
+/@llx {/llx exch def /BBOX true def /hsi 0 def /vsi 0 def} bind def
+/@lly {/lly exch def} bind def
+/@urx {/urx exch def} bind def
+/@ury {/ury exch def} bind def
+/@bbox {{@clip}if @ury @urx @lly @llx} bind def
+/@setclipper {
+CLIP {
+newpath 0 0 moveto hsi 0 rlineto 0 vsi rlineto hsi neg 0 rlineto
+closepath clip
+} if
+} bind def
+/@beginspecial {
+/SpecialSave save def
+/dict_count countdictstack def
+/op_count count 1 sub def
+currentpoint transform initgraphics itransform translate
+magscale { DVImag dup scale } if
+landscape {90 rotate} if
+@SpecialDefaults
+@MacSetUp
+} bind def
+/@setspecial {
+hof vof translate
+BBOX {
+rotat rotate
+hsi 0 eq {
+vsi 0 eq {
+hsc vsc
+}{
+vsi ury lly sub div dup
+}ifelse
+}{
+vsi 0 eq {
+hsi urx llx sub div dup
+}{
+hsi urx llx sub div vsi ury lly sub div
+} ifelse
+} ifelse
+scale
+llx neg ECL{ury}{lly}ifelse neg translate
+CLIP {
+newpath
+llx lly moveto
+urx lly lineto
+urx ury lineto
+llx ury lineto
+closepath clip
+} if
+newpath
+}{
+@setclipper hsc vsc scale rotat rotate
+} ifelse
+/CTM matrix currentmatrix def
+end
+/letter {} def /note {} def /legal {} def /11x17 {} def
+/b4 {} def /b5 {} def /a5 {} def /a4 {} def /a4small {} def /a3 {} def
+/showpage {} def /copypage {} def /erasepage {} def
+/initmatrix {TeXDict /CTM get setmatrix} bind def
+/defaultmatrix {TeXDict /CTM get exch copy} bind def
+TeXDict /CLIP get {
+/*initclip /initclip load def
+/initclip {
+TeXDict begin
+*initclip
+matrix currentmatrix CTM setmatrix newpath
+BBOX {
+llx lly moveto urx lly lineto urx ury lineto llx ury lineto
+}{
+0 0 moveto hsi 0 rlineto 0 vsi rlineto hsi neg 0 rlineto
+} ifelse
+closepath clip setmatrix newpath
+end
+} bind def
+} if
+/initgraphics {
+initmatrix newpath initclip
+1 setlinewidth 0 setlinecap 0 setlinejoin
+[] 0 setdash 0 setgray 10 setmiterlimit
+} bind def
+/languagelevel where {
+pop languagelevel 1 ne { false setstrokeadjust false setoverprint } if
+} if
+} bind def
+/@MacSetUp {
+userdict /md known {
+userdict /md get type /dicttype eq {
+md /txpose known {
+md /txpose {pxs pys neg scale} put
+} if
+md /cp known {
+md /cp {pop pop pm restore} put
+} if
+} if
+} if
+} bind def
+/@push {
+gsave
+currentpoint translate
+dup scale
+newpath
+} bind def
+/@pop {
+grestore
+} bind def
+/@ar {
+matrix currentmatrix
+7 -2 roll moveto
+currentpoint translate
+newpath
+5 -2 roll scale
+0 0 1 6 -2 roll arc
+setmatrix
+} bind def
+/@RGB /setrgbcolor load def
+/@HSB /sethsbcolor load def
+/@CMYK /setcmykcolor dup where {
+pop load
+}{
+pop {
+1 sub 4 1 roll
+3 { 3 index add neg dup 0 lt {pop 0} if 3 1 roll } repeat
+setrgbcolor pop
+} bind
+} ifelse def
+/normalscale {
+Resolution 72 div Resolution 72 div neg scale
+magscale { DVImag dup scale } if
+0 setgray
+} def
+end
+/@endspecial {
+TeXDict begin
+count op_count sub {pop} repeat
+countdictstack dict_count sub {end} repeat
+SpecialSave restore
+} bind def
+/SDict TeXDict def
+%%EndFile
+%%EndProlog
+%%BeginSetup
+%%PaperSize: A4
+%%Feature: *ManualFeed False
+%%Feature: *Resolution 300
+TeXDict begin
+@large
+@a4
+/f0 /Ryumin-Light-H 39.942 -39.942 BFE
+/f1 /GothicBBB-Medium-H 57.516 -57.516 BFE
+1.000 121 /f2 NF
+f2 SF
+[<FFFFFCFFFFFC0F007C0F001E0F000E0F00060F00060F00060F00030F03030F03030F03=
+00
+  0F03000F07000FFF000FFF000F07000F03000F03060F03060F03060F00060F000E0F00=
+0C
+  0F001C0F007CFFFFFCFFFFFC>
+24 28 -2 0 28.250] 69 D
+[<FFF800FFF8000F00000F00000F00000F00000F00000F00000F03000F03000F03000F03=
+00
+  0F07000FFF000FFF000F07000F03000F03000F030C0F030C0F000C0F000C0F001C0F00=
+18
+  0F00380F0078FFFFF8FFFFF8>
+24 28 -2 0 27.097] 70 D
+[<001FC00000FFF08001F0398007C00F800F0007801F0007801E0007803C0007807C0007=
+80
+  7C00078078000780F800FFF0F800FFF0F8000000F8000000F8000000F8000000F80000=
+00
+  F8000180780001807C0001807C0003803C0003801E0003801E0007800F000F8007C01F=
+80
+  01F03B8000FFE180001F8080>
+32 30 -2 1 32.574] 71 D
+[<FFF0FFF00F000F000F000F000F000F000F000F000F000F000F000F000F000F000F000F=
+00
+  0F000F000F000F000F000F000F000F00FFF0FFF0>
+16 28 -1 0 14.990] 73 D
+[<0F80003FE00070F000707800F83800F83C00F83C00703C00003C00003C00003C00003C=
+00
+  003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C=
+00
+  003C00003C00003C0007FF8007FF80>
+24 29 -1 1 21.332] 74 D
+[<FFFFF0FFFFF00F01F00F00F00F00700F00300F00380F00180F00180F00180F00180F00=
+00
+  0F00000F00000F00000F00000F00000F00000F00000F00000F00000F00000F00000F00=
+00
+  0F00000F0000FFF800FFF800>
+24 28 -2 0 25.944] 76 D
+[<FFC387FF80FFC387FF801E038078000C07C078000C07C078000C07C078000C0F607800=
+0C
+  0F6078000C0F6078000C1E3078000C1E3078000C1E3078000C3C1878000C3C1878000C=
+3C
+  1878000C780C78000C780C78000C780C78000CF00678000CF00678000CF00678000DE0=
+03
+  78000DE00378000DE00378000FC001F8000FC001F800FFC001FF80FF8000FF80>
+40 28 -2 0 38.051] 77 D
+[<FFF000FFF0000F00000F00000F00000F00000F00000F00000F00000F00000F00000F00=
+00
+  0FFF800FFFE00F01F00F00780F003C0F003E0F003E0F003E0F003E0F003E0F003E0F00=
+3C
+  0F00780F01F0FFFFE0FFFF80>
+24 28 -2 0 28.250] 80 D
+[<83F800CFFC00FC0E00F00300E00380E00180C001C0C001C0C001C00001C00003C00003=
+C0
+  000F8000FF8007FF001FFE003FF8007FC0007C0000F00000F00000E00180E00180E001=
+80
+  E003807003803007803C1F801FF98007E080>
+24 30 -2 1 23.061] 83 D
+[<03FFFC0003FFFC00000F0000000F0000000F0000000F0000000F0000000F0000000F00=
+00
+  000F0000000F0000000F0000000F0000000F0000000F0000000F0000000F0000000F00=
+00
+  C00F0060C00F0060C00F0060C00F0060E00F00E0600F00C0700F01C0780F03C07FFFFF=
+C0
+  7FFFFFC0>
+32 28 -1 0 29.979] 84 D
+[<FFC07FF0FFC07FF00F001F0007001E0003003E0001807C0001C0780000C0F80000E0F0=
+00
+  0061E0000033E000003BC000001F8000000F8000000F0000001F0000003F0000003F80=
+00
+  007D80000078C00000F0E00001F0600001E0700003C0380007C0180007803E00FFF0FF=
+C0
+  FFF0FFC0>
+32 28 -1 0 31.133] 88 D
+[<0F8F803FFFC0787FE0F03E60F01E60F01E60F01E00781E003C1E001FFE0007FE00001E=
+00
+  381E007C1E007C1E007C3C003FF8001FE000>
+24 18 -1 0 20.755] 97 D
+[<03E00FF81E0C3C0678067800F000F000F000F000F000F000701C783E383E1E3E0FFC03=
+F8>
+16 18 -1 0 18.449] 99 D
+[<03E7F00FF7F01E1F80380F80780780700780F00780F00780F00780F00780F00780F007=
+80
+  7007807807803807801E0F800FFF8003E7800007800007800007800007800007800007=
+80
+  000780000780000780003F80003F80>
+24 29 -1 0 23.061] 100 D
+[<03E00FF81E0C380678067000F000F000F000F000FFFEFFFE700E781E381C1C380FF007=
+E0>
+16 18 -1 0 18.449] 101 D
+[<07F8001FFE003C0F00700380E001C0E001C0E001C0E001C07007C03FFF801FFF003FFE=
+00
+  3FF80070000070000037E0003FF0003C3C00381C00781E00781E00781E00781E00381D=
+80
+  3C3DC00FFDC007E7C0000380>
+24 28 -1 9 20.755] 103 D
+[<FFCFF0FFCFF01E07801E07801E07801E07801E07801E07801E07801E07801E07801E07=
+80
+  1E07801E07801F07801F8F001EFF001E7E001E00001E00001E00001E00001E00001E00=
+00
+  1E00001E00001E0000FE0000FE0000>
+24 29 -1 0 23.061] 104 D
+[<FFC0FFC01E001E001E001E001E001E001E001E001E001E001E001E001E001E00FE00FE=
+00
+  0000000000000000000000001C003E003E003E001C00>
+16 29 0 0 11.531] 105 D
+[<3F007FC0F8E0F8F0F87870780078007800780078007800780078007800780078007800=
+78
+  00780078007800780078007803F803F8000000000000000000000000007000F800F800=
+F8
+  0070>
+16 37 4 8 12.684] 106 D
+[<FF9FE0FF9FE01E1F001E1E001E3E001E3C001E7C001E78001FF0001FF0001FE0001EE0=
+00
+  1E70001E38001E1C001E1F001E3FE01E3FE01E00001E00001E00001E00001E00001E00=
+00
+  1E00001E00001E0000FE0000FE0000>
+24 29 -1 0 21.908] 107 D
+[<FFC0FFC01E001E001E001E001E001E001E001E001E001E001E001E001E001E001E001E=
+00
+  1E001E001E001E001E001E001E001E001E00FE00FE00>
+16 29 0 0 11.531] 108 D
+[<FFCFF9FFFFCFF9FF1E03C0781E03C0781E03C0781E03C0781E03C0781E03C0781E03C0=
+78
+  1E03C0781E03C0781E03C0781E03C0781F03E0781F03E0781F87B0F0FEFF9FF0FE3E07=
+C0>
+32 18 -1 0 34.592] 109 D
+[<FFCFF0FFCFF01E07801E07801E07801E07801E07801E07801E07801E07801E07801E07=
+80
+  1E07801E07801F07801F8F00FEFF00FE7E00>
+24 18 -1 0 23.061] 110 D
+[<03F0000FFC001E1E00380700780780700380F003C0F003C0F003C0F003C0F003C0F003=
+C0
+  7003807807803807001E1E000FFC0003F000>
+24 18 -1 0 20.755] 111 D
+[<FFC000FFC0001E00001E00001E00001E00001E00001E00001E7C001FFF001F87801E03=
+C0
+  1E01E01E01E01E00F01E00F01E00F01E00F01E00F01E00F01E01E01E01E01E03C01F87=
+80
+  FFFF00FE7E00>
+24 26 -1 8 23.061] 112 D
+[<FFE0FFE01E001E001E001E001E001E001E001E001E001E001E001F181F3C1FBCFFFCFE=
+70>
+16 18 0 0 16.258] 114 D
+[<8F80FFE0F070E038C038C038007807F81FF03FE07FC0FE00F000E030E03070703FF01F=
+B0>
+16 18 -1 0 16.373] 115 D
+[<07801FC01E603C303C303C303C303C303C003C003C003C003C003C003C003C00FFE0FF=
+E0
+  3C001C001C000C000C000C000C000C00>
+16 26 -1 0 16.143] 116 D
+[<03E7F00FF7F00E1F801E0F801E07801E07801E07801E07801E07801E07801E07801E07=
+80
+  1E07801E07801E07801E0780FE3F80FE3F80>
+24 18 -1 0 23.061] 117 D
+[<00E00000E00000E00001F00001F00003F80003D80003D800078C00078C00078C000F06=
+00
+  0F06000F06001E03001E0780FF8FE0FF8FE0>
+24 18 -1 0 21.908] 118 D
+[<00C0600001C0700001E0F00001E0F00003E0F80003F1F80003F1F80007B1CC00079BCC=
+00
+  079BCC000F1B86000F0F86000F0F86001E0F03001E0F03001E0F0780FF3FCFE0FF3FCF=
+E0>
+32 18 -1 0 29.979] 119 D
+[<FF9FF8FF9FF80F0780070F00031F00019E0001FC0000FC0000780000F00001F00001F8=
+00
+  03DC0003CE000786000F87807FCFF07FCFF0>
+24 18 0 0 21.908] 120 D
+[<07E00FF01C38381C381C700E700E700EF00FF00FF00FF00FF00FF00FF00FF00FF00FF0=
+0F
+  F00FF00FF00F700E700E700E381C381C1C380FF003C0>
+16 29 -2 1 20.755] 48 D
+[<FFF8FFF807800780078007800780078007800780078007800780078007800780078007=
+80
+  07800780078007800780C780FF803F8003800180>
+16 28 -4 0 20.755] 49 D
+[<FFFEFFFE7FFE3FFE18071C030E0306030300018000E000F000780038003C001E001E00=
+1F
+  700FF80FF80FF81FF01E601E603C38781FF007C0>
+16 28 -2 0 20.755] 50 D
+[<07C01FF03878603CF01EF81EF81FF81F701F001F001F001E003E003C007007C007E000=
+70
+  0038003C103E7C3E7C1E7C1E783E303C38781FF007C0>
+16 29 -2 1 20.755] 51 D
+[<03FFC003FFC0003C00003C00003C00003C00003C00003C00FFFFC0FFFFC0E03C00603C=
+00
+  303C00383C00183C000C3C000E3C00063C00073C0003BC0001BC0001FC0000FC00007C=
+00
+  007C00003C00001C00001C00>
+24 28 -1 0 20.755] 52 D
+[<03E00FF01C38381C380E700E700F700FF00FF00FF00FF00FF00FF00EF80EF81EFC1CF7=
+F8
+  F3F0700070007800381C383E1C3E0E1E070C03FC00F0>
+16 29 -2 1 20.755] 54 D
+[<07E01FF03C3C700C700EE007E007E007E007E00F700F701E387E1CFC0FF807F01FE03F=
+B8
+  3E1C7C1C780E700E700E700E300E381C1C380FF003E0>
+16 29 -2 1 20.755] 56 D
+[<0F801FC030F078387C387C1C381C000E000E000E0FCF1FEF383F781F701F700FF00FF0=
+0F
+  F00FF00FF00FF00EF00E700E781C381C1C380FF003C0>
+16 29 -2 1 20.755] 57 D
+[<00C00180030007000E000E001C001C003800380038007000700070007000F000F000F0=
+00
+  F000F000F000F000F000F000F000F000F00070007000700070003800380038001C001C=
+00
+  0E000E0007000300018000C0>
+16 42 -3 11 16.143] 40 D
+[<C0006000300038001C001C000E000E00070007000700038003800380038003C003C003=
+C0
+  03C003C003C003C003C003C003C003C003C003800380038003800700070007000E000E=
+00
+  1C001C00380030006000C000>
+16 42 -2 11 16.143] 41 D
+[<0006000000060000000600000006000000060000000600000006000000060000000600=
+00
+  00060000000600000006000000060000FFFFFFE0FFFFFFE00006000000060000000600=
+00
+  0006000000060000000600000006000000060000000600000006000000060000000600=
+00
+  00060000>
+32 28 -2 4 32.286] 43 D
+[<406070303018181878F8F8F070>
+8 13 -3 8 11.531] 44 D
+[<70F8F8F870>
+8 5 -3 0 11.531] 46 D
+[<C000C000E00060006000700030003800180018001C000C000C000E0006000600070003=
+00
+  03000380018001C000C000C000E000600060007000300030003800180018001C000C00=
+0E
+  00060006000700030003>
+16 41 -2 10 20.755] 47 D
+[<003FE00000FFFE0003C01F80070001E00C000000181E1F00383FBF803071F8C060E0F8=
+C0
+  61E0784061E07860C3C07860C3C07860C3C07860C3C07860C3C07860C3C07860C3C078=
+60
+  61E078C061E078C060E0C0C03071C180383F8380181E03000C00060007001C0003C078=
+00
+  00FFE000003F8000>
+32 29 -2 0 32.286] 64 D
+[<7FC7F8FF807FC7F8FF800F01E03C000F01E03C000F01E03C000F01E03C000F01E03C00=
+0F
+  01E03C000F01E03C000F01E03C000F01E03C000F01E03C000F01E03C000F01E03C000F=
+01
+  E03C000F01E03C00FFFFFFFC00FFFFFFFC000F01E000000F01E000000F01E000000F01=
+E0
+  00000F01E038000F03E07C000703F07C000783F07C0003E1FC380000FFDFF800001F03=
+F0
+  00>
+40 29 0 0 34.592] 14 D
+1.000 121 /f3 NF
+f3 SF
+[<FFFFFFFF80FFFFFFFF80FFFFFFFF80FFFFFFFF8003FE01FFC003FE007FC003FE001FC0=
+03
+  FE000FC003FE0007C003FE0007C003FE0003C003FE0003C003FE0003C003FE0003E003=
+FE
+  0001E003FE0001E003FE0001E003FE0001E003FE00000003FE00000003FE00000003FE=
+00
+  000003FE00000003FE00000003FE00000003FE00000003FE00000003FE00000003FE00=
+00
+  0003FE00000003FE00000003FE00000003FE00000003FE00000003FE00000003FE0000=
+00
+  03FE000000FFFFFE0000FFFFFE0000FFFFFE0000FFFFFE0000>
+40 41 -2 0 41.344] 76 D
+[<FFFFF80000FFFFF80000FFFFF80000FFFFF8000003FE00000003FE00000003FE000000=
+03
+  FE00000003FE00000003FE00000003FE00000003FE00000003FE00000003FE00000003=
+FE
+  00000003FE00000003FE00000003FE00000003FFFFFC0003FFFFFF8003FFFFFFE003FE=
+00
+  7FF003FE001FF803FE000FF803FE0007FC03FE0007FC03FE0007FE03FE0007FE03FE00=
+07
+  FE03FE0007FE03FE0007FE03FE0007FE03FE0007FC03FE0007FC03FE000FFC03FE001F=
+F8
+  03FE003FF0FFFFFFFFE0FFFFFFFFC0FFFFFFFF00FFFFFFF000>
+40 41 -3 0 46.989] 80 D
+[<01FC03FC0FFF0FFC3FFFDFFC7F81FFFC7F00FFC0FF007FC0FE003FC0FE003FC0FE003F=
+C0
+  FF003FC07F003FC03F803FC01FE03FC007FE3FC001FFFFC0001FFFC000003FC000003F=
+C0
+  0F003FC03FC03FC03FC03FC03FC07F803FC0FF803FC1FF001FFFFE000FFFF80001FFC0=
+00>
+32 27 -2 0 33.415] 97 D
+[<FFFFFFFFFFFFFFFF0FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00F=
+F0
+  0FF00FF00FF00FF00FF0FFF0FFF0FFF0FFF000000000000000000000000007801FE01F=
+E0
+  3FF03FF03FF03FF01FE01FE00780>
+16 43 -2 0 19.094] 105 D
+[<FFFFFFFFFFFFFFFF0FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00F=
+F0
+  0FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00F=
+F0
+  0FF00FF0FFF0FFF0FFF0FFF0>
+16 42 -2 0 19.094] 108 D
+[<FFFF1FFFE3FFFCFFFF1FFFE3FFFCFFFF1FFFE3FFFCFFFF1FFFE3FFFC0FF001FE003FC0=
+0F
+  F001FE003FC00FF001FE003FC00FF001FE003FC00FF001FE003FC00FF001FE003FC00F=
+F0
+  01FE003FC00FF001FE003FC00FF001FE003FC00FF001FE003FC00FF001FE003FC00FF0=
+01
+  FE003FC00FF001FE003FC00FF001FE003FC00FF801FF003FC00FF801FF003FC00FFC01=
+FF
+  803FC00FFC01FF803FC00FEF03FDE07F80FFE783FCF07F80FFE3FFF87FFF00FFE0FFF0=
+1F
+  FE00FFE03FC007F800>
+56 27 -2 0 57.283] 109 D
+[<FFFF1FFFE0FFFF1FFFE0FFFF1FFFE0FFFF1FFFE00FF001FE000FF001FE000FF001FE00=
+0F
+  F001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000F=
+F0
+  01FE000FF001FE000FF001FE000FF001FE000FF801FE000FF801FE000FFC01FE000FFC=
+01
+  FE000FEF03FC00FFE783FC00FFE3FFF800FFE0FFF000FFE03FC000>
+40 27 -2 0 38.189] 110 D
+[<003FE00001FFFC0007FFFF000FF07F801FC01FC03F800FE03F800FE07F0007F07F0007=
+F0
+  FF0007F8FF0007F8FF0007F8FF0007F8FF0007F8FF0007F8FF0007F8FF0007F87F0007=
+F0
+  7F0007F07F0007F03F800FE03F800FE01FC01FC00FF07F8003FFFE0001FFFC00003FE0=
+00>
+32 27 -2 0 34.370] 111 D
+[<003FC1FFE001FFF9FFE003FFFDFFE007F81FFFE00FF007FE000FF003FE000FF003FE00=
+0F
+  F001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000F=
+F0
+  01FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF001FE000FF0=
+01
+  FE000FF001FE00FFF01FFE00FFF01FFE00FFF01FFE00FFF01FFE00>
+40 27 -2 0 38.189] 117 D
+[<FFF83FFF80FFF83FFF80FFF83FFF80FFF83FFF8003E01FF00001F01FE00000F83FC000=
+00
+  7C7F8000007EFF8000003EFF0000001FFE0000000FFC00000007FC00000007F8000000=
+0F
+  F00000001FF00000003FF80000003FFC0000007FFC000000FF3E000001FF1F000001FE=
+0F
+  800003FC07C000FFFE1FFF00FFFE1FFF00FFFE1FFF00FFFE1FFF00>
+40 27 -1 0 36.280] 120 D
+300 1.000 START
+%%EndSetup
+
+%%Page: 1 1
+BP
+f3 SF
+550 312 p (Plamo)s
+23 r (Lin)s
+-1 r (ux)s
+f1 SF
+20 r ($X)s
+1 r ($h$&$3$=3D!*)s
+-36 r (!*)s
+f2 SF
+249 416 p (Plamo)s
+13 r (Linux)s
+f0 SF
+11 r ($O)s
+3 r (!")s
+-2 r (F|K\\?M)s
+-2 r ($K$h$kF|K\\?M$N)s
+-1 r ($?$a$NF|K\\8l4D6-)s
+-2 r ($rDI5Z)s
+-3 r ($7)s
+2 r ($?)s
+f2 SF
+14 r (Linux)s
+f0 SF
+248 478 p (%Q)s
+1 r (%C%1!<)s
+-1 r (%8$G)s
+1 r ($9!#)s
+310 540 p ($3$N)s
+2 r (%a)s
+-1 r (!<)s
+-2 r (%k)s
+-1 r ($O)s
+f2 SF
+14 r (MIME)s
+f0 SF
+12 r (%\()s
+-1 r (%s%3!<)s
+-5 r (%I)s
+4 r ($5)s
+-1 r ($l$?2hA|)s
+-2 r (%G!<%?$r4^)s
+-2 r ($s$G$$$^$9)s
+-1 r (!#)s
+f2 SF
+-3 r (m)s
+-1 r (ule)s
+249 603 p (+)s
+16 r (Mew)s
+f0 SF
+15 r ($G)s
+2 r (FI$s$G)s
+1 r ($$)s
+1 r ($k)s
+1 r (>l)s
+1 r (9g)s
+2 r (!")s
+f2 SF
+-1 r (space)s
+f0 SF
+14 r (%-)s
+2 r (!<$r)s
+1 r (2!)s
+-1 r ($7)s
+1 r ($F)s
+2 r ($$$1)s
+-1 r ($P)s
+5 r (!")s
+-1 r (<+F0E*$K)s
+1 r (2h)s
+1 r (A|)s
+-1 r (%G)s
+2 r (!<)s
+249 665 p (%?$b30It)s
+-1 r ($N)s
+-3 r (%S)s
+1 r (%e!<%o)s
+f2 SF
+9 r (\(xv\))s
+f0 SF
+8 r ($r)s
+1 r (;H$C)s
+-2 r ($FI=3D<\($5)s
+-2 r ($l)s
+1 r ($k)s
+-1 r ($O$:)s
+-1 r ($G$9!#)s
+-2 r ($^)s
+-1 r ($?)s
+1 r (!")s
+-3 r ($3$N)s
+1 r (%a)s
+-2 r (!<)s
+-1 r (%k$K)s
+247 727 p ($O)s
+5 r (!")s
+-1 r (F1)s
+-4 r ($8)s
+4 r (FbMF$r)s
+f2 SF
+17 r (T)s
+-3 r (eX)s
+15 r (+)s
+16 r (dvi2ps)s
+f0 SF
+15 r ($G)s
+f2 SF
+17 r (PostScript)s
+f0 SF
+15 r (2=3D)s
+-2 r ($7)s
+2 r ($?)s
+1 r (%Q)s
+1 r (!<)s
+-1 r (%H)s
+1 r ($b)s
+2 r (E:IU)s
+-2 r ($7)s
+2 r ($F)s
+1 r ($$)s
+1 r ($^)s
+249 790 p ($9!#)s
+f2 SF
+-2 r (gv)s
+f0 SF
+11 r ($H)s
+f2 SF
+11 r (ghostcript)s
+f0 SF
+12 r ($,)s
+2 r (@5)s
+-3 r ($7)s
+2 r ($/)s
+2 r (%$)s
+-3 r (%s)s
+1 r (%9)s
+-2 r (%H)s
+1 r (!<%k$G$-$F$$)s
+-2 r ($l)s
+-1 r ($P)s
+4 r (!")s
+f2 SF
+-2 r (PS)s
+f0 SF
+12 r (%U%!)s
+1 r (%$)s
+-2 r (%k$NIt)s
+249 852 p (J,$bFI$a$k)s
+-1 r ($O$:$G)s
+1 r ($9!#)s
+f2 SF
+311 914 p (Plamo)s
+15 r (Linux)s
+f0 SF
+12 r ($O)s
+f2 SF
+16 r (Slackw)s
+-2 r (are)s
+14 r (3.4)s
+f0 SF
+13 r ($r)s
+2 r (85)s
+-1 r ($K)s
+3 r (!")s
+f2 SF
+-1 r (PJE)s
+f0 SF
+13 r ($d)s
+f2 SF
+15 r (JF,)s
+15 r (JG)s
+f0 SF
+13 r ($H)s
+1 r ($$$C$?)s
+1 r (F|K\\$N)s
+f2 SF
+249 976 p (Linux)s
+f0 SF
+12 r (4X78<T$NEXNO$N@.2L)s
+-1 r ($r=3D8$a$?%Q%C)s
+-1 r (%1!<)s
+-1 r (%8$G$9!#)s
+f2 SF
+-1 r (Plamo)s
+12 r (Linux)s
+f0 SF
+12 r ($N:n<T)s
+-1 r ($O)s
+248 1039 p ($=3D$l$i$N)s
+-1 r (%W)s
+2 r (%m)s
+-1 r (%8)s
+1 r (%')s
+1 r (%/)s
+-2 r (%H)s
+1 r ($N@.)s
+1 r (2L)s
+-1 r ($r$$$?$@$$$F)s
+1 r ($^$H$aD>)s
+-2 r ($7)s
+1 r ($?$@$1$G)s
+1 r ($9!#)s
+-1 r ($b)s
+-3 r ($7)s
+4 r (!")s
+-2 r ($3)s
+248 1101 p ($N%Q%C)s
+-1 r (%1)s
+-1 r (!<)s
+-2 r (%8)s
+-1 r ($,)s
+1 r (B?>/)s
+-1 r ($J$j)s
+-1 r ($H$bLr)s
+-2 r ($KN\)$D)s
+-1 r ($h$&)s
+-2 r ($G)s
+-2 r ($7)s
+1 r ($?$i)s
+2 r (!")s
+f2 SF
+-4 r (PJE)s
+f0 SF
+11 r ($d)s
+f2 SF
+14 r (JF)s
+f0 SF
+2 r (!")s
+f2 SF
+-4 r (JG)s
+f0 SF
+11 r ($N4X78)s
+249 1163 p (<T$NEXNO$N$*)s
+-1 r ($+)s
+-1 r ($2)s
+1 r ($H)s
+1 r ($*9M$\($/)s
+-1 r ($@$5$$)s
+2 r (!#)s
+311 1225 p (:n)s
+1 r (<T$NNOIT)s
+1 r (B-)s
+-1 r ($G)s
+3 r (!")s
+f2 SF
+-1 r (Plamo)s
+14 r (Linux)s
+f0 SF
+12 r ($K)s
+1 r ($O)s
+1 r ($^$@)s
+1 r ($^)s
+-1 r ($@)s
+2 r (IT40A4$J)s
+1 r (ItJ,)s
+-1 r ($,)s
+1 r ($")s
+1 r ($k$H;W$$)s
+249 1288 p ($^$9!#)s
+-1 r (LdBjE@)s
+-1 r ($d$3$3$O$3)s
+1 r ($&2~NI)s
+-3 r ($7)s
+2 r ($?)s
+1 r (J})s
+-2 r ($,)s
+1 r ($$$$$H$$)s
+2 r ($&0U8+)s
+-2 r ($O)s
+-2 r ($I)s
+1 r ($s)s
+1 r ($J)s
+1 r ($b$N$G$b7k)s
+249 1350 p (9=3D$G$9)s
+-1 r ($+$i)s
+3 r (!")s
+-1 r (:n<T)s
+f2 SF
+9 r (\(ko)s
+1 r (jima@linet.gr.jp\))s
+f0 SF
+10 r ($^$G$*4s$;$/)s
+-1 r ($@)s
+1 r ($5$$)s
+1 r (!#)s
+f2 SF
+311 1412 p (Plamo)s
+14 r (Linux)s
+f0 SF
+11 r ($G)s
+4 r (!")s
+f2 SF
+-1 r (Lin)s
+-1 r (ux)s
+f0 SF
+12 r ($N)s
+1 r (F|K\\8l4D6-)s
+-2 r ($,)s
+2 r (JXMx)s
+-1 r ($K)s
+1 r (;H)s
+-1 r ($\($^$9$h)s
+1 r ($&)s
+-1 r ($K)s
+1 r (!#)s
+-18 r (!#)s
+311 1422 p @beginspecial
+200.000000 347.000000 413.000000 444.000000 true @bbox
+@ecl
+@setspecial
+%%BeginDocument: linux-pengo-colors.eps
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /home/kojima/Sample/linux-pengo-colors.ps
+%%Creator: XV Version 3.10a  Rev: 12/29/94  -  by John Bradley
+%%BoundingBox: 200 347 413 444
+%%Pages: 1
+%%DocumentFonts:
+%%EndComments
+%%EndProlog
+
+%%Page: 1 1
+
+% remember original state
+/origstate save def
+
+% build a temporary dictionary
+20 dict begin
+
+% define space for color conversions
+/grays 213 string def  % space for gray scale line
+/npixls 0 def
+/rgbindx 0 def
+
+% lower left corner
+200 347 translate
+
+% size of image (on paper, in 1/72inch coords)
+212.97600 96.98400 scale
+
+% define 'colorimage' if it isn't defined
+%   ('colortogray' and 'mergeprocs' come from xwd2ps
+%     via xgrab)
+/colorimage where   % do we know about 'colorimage'?
+  { pop }           % yes: pop off the 'dict' returned
+  {                 % no:  define one
+    /colortogray {  % define an RGB->I function
+      /rgbdata exch store    % call input 'rgbdata'
+      rgbdata length 3 idiv
+      /npixls exch store
+      /rgbindx 0 store
+      0 1 npixls 1 sub {
+        grays exch
+        rgbdata rgbindx       get 20 mul    % Red
+        rgbdata rgbindx 1 add get 32 mul    % Green
+        rgbdata rgbindx 2 add get 12 mul    % Blue
+        add add 64 idiv      % I =3D .5G + .31R + .18B
+        put
+        /rgbindx rgbindx 3 add store
+      } for
+      grays 0 npixls getinterval
+    } bind def
+
+    % Utility procedure for colorimage operator.
+    % This procedure takes two procedures off the
+    % stack and merges them into a single procedure.
+
+    /mergeprocs { % def
+      dup length
+      3 -1 roll
+      dup
+      length
+      dup
+      5 1 roll
+      3 -1 roll
+      add
+      array cvx
+      dup
+      3 -1 roll
+      0 exch
+      putinterval
+      dup
+      4 2 roll
+      putinterval
+    } bind def
+
+    /colorimage { % def
+      pop pop     % remove 'false 3' operands
+      {colortogray} mergeprocs
+      image
+    } bind def
+  } ifelse          % end of 'false' case
+
+
+
+% define the colormap
+/cmap 558 string def
+
+
+% load up the colormap
+currentfile cmap readhexstring
+ffffff 080808 101010 181818 292929 313131 393939 424242 4a4a4a 525252 =
+
+5a5a5a 636363 6b6b6b 737373 7b7b7b 848484 8c8c8c 949494 9c9c9c a5a5a5 =
+
+adadad b5b5b5 bdbdbd c6c6c6 cecece d6d6d6 dedede e7e7e7 efefef f7f7f7 =
+
+efe7e7 d6cece bdb5b5 7b7373 d6c6c6 f7dede c6a5a5 292121 d6adad efbdbd =
+
+b58c8c 7b5252 ef9c9c de8c8c d68484 ce7b7b b56b6b 8c4a4a e77373 944242 =
+
+bd5252 de5a5a b54242 de4a4a e74a4a 9c3131 ce3131 de3131 ad2121 de2929 =
+
+c62121 bd1818 de1818 d61010 ce0808 d60808 d60000 210800 180800 291000 =
+
+847b73 b5ada5 4a2900 392100 633900 8c5200 a58452 523100 7b4a00 945a00 =
+
+a56300 5a4a31 6b5229 a56b08 b57308 422900 6b4200 845200 d68400 dec69c =
+
+f7ce84 d6ad63 946308 ad7308 bd7b08 5a3900 9c6300 b57300 bd7b00 d68c00 =
+
+ad9c7b e7c684 6b5221 946b18 d69410 845a08 9c6b08 312100 634200 ad7300 =
+
+c68400 ce8c00 efd69c c6ad73 947b42 b5944a bd9439 ad7b08 c68c08 de9c08 =
+
+9c6b00 f7ad00 4a3910 efad10 efad08 735200 ad7b00 ce9400 e7dec6 f7bd18 =
+
+ce9c10 f7bd10 c69400 d69c00 dea500 e7ad00 efe7ce 6b634a efce63 d6b552 =
+
+e7bd31 f7bd08 ce9c00 efce5a d6b539 f7c610 e7b508 efbd08 f7c608 bd9400 =
+
+7b7352 efce4a efc610 ad8c00 ffde31 efce21 debd10 ffd608 c6bd8c b5ad7b =
+
+ffde18 9c8400 e7ce21 e7ce10 e7ce08 ffe710 efd608 ffef08 fff718 94948c =
+
+a5a594 a5adad 394242 081010 c6ced6 c6cede 636b84 000829 ceced6 d6d6de =
+
+bdbdc6 52525a 393942 101018 080810 000000 =
+
+pop pop   % lose return values from readhexstring
+
+
+% rlecmapimage expects to have 'w h bits matrix' on stack
+/rlecmapimage {
+  /buffer 1 string def
+  /rgbval 3 string def
+  /block  384 string def
+
+  % proc to read a block from file, and return RGB data
+  { currentfile buffer readhexstring pop
+    /bcount exch 0 get store
+    bcount 128 ge
+    {  % it's a non-run block
+      0 1 bcount 128 sub
+      { currentfile buffer readhexstring pop pop
+
+        % look up value in color map
+        /rgbval cmap buffer 0 get 3 mul 3 getinterval store
+
+        % and put it in position i*3 in block
+        block exch 3 mul rgbval putinterval
+      } for
+      block  0  bcount 127 sub 3 mul  getinterval
+    }
+
+    { % else it's a run block
+      currentfile buffer readhexstring pop pop
+
+      % look up value in colormap
+      /rgbval cmap buffer 0 get 3 mul 3 getinterval store
+
+      0 1 bcount { block exch 3 mul rgbval putinterval } for
+
+      block 0 bcount 1 add 3 mul getinterval
+    } ifelse
+  } % end of proc
+  false 3 colorimage
+} bind def
+
+
+213 97 8			% dimensions of data
+[213 0 0 -97 0 97]		% mapping matrix
+rlecmapimage
+
+7f005400
+7f005400
+7f005400
+7f005400
+7f005400
+7f005400
+7f002d00021d811c1d041d1c00
+7f002c008117b905b985141a1b1c1d001900
+7f002a00811db909b98416191b1d001800
+7f002900811ab908b9880502b901171a1c1d001600
+7f002800811db908b984010a4604b985b916191c1d001500
+7f002700821d01b909b9840d0fac04b984b915191c001500
+7f0027008117b909b983010804018101b985b912161a1d001400
+7f002700810ab911b98413181c1d001300
+7f0027008125b911b98410161b1d001300
+7f002600811db901b98201b7b906b9820205b903b9840d14191c001300
+7f002600811db903b9820501b902b9850a100bb906b903b98411171b1d001200
+7f002600811db986b92516172502b901b9850e12141916b904b98410161b1d001200
+7f002600811db982b9ab00010002b982071d000100821604b903b9840f151a1d001200
+7f002600881d01b900b9020013b988b9470025b9030016b903b9840e14191d001200
+7f0026008c1d0bb919b9101b17b7091400b984b9071900b903b9840e13191d001200
+7f0026008c1d0ab91ab904b0b544b9b100b901b9820800b903b9840d12181c001200
+7f0026008d1d0ab90eb7b96394a69c7ea64db981b9008100b903b9840d12181c001200
+7f002600911d10b9ad00639d8d98a49aa2a09d5b00b8b903b9840d12181c001200
+3300833b42351c821c1d006b00861d15b96b6e7b8d838da6a3978197a384a3a4a099b903=
+
+b9840e12181c001200
+0900101d170003428441191b1d006a008b1d15b976687b8d9891a28a9c859ca3a47d94b9=
+
+03b9852111171b1d001100
+070010b983051c1d00140081394203428428181b1d006900861d14b95d7b98918a919b8f=
+
+a4a3a6a1877c82b903b9850110161b1d001100
+070083150d05b909b987250b11171a1c1d0013000542843c151a1d006900911d15b96b56=
+
+9d949aa2a4a65f7887926f43b983b914b7b985b90f151a1d001100
+0600861d1c1a18160fb905b9890d1113151617191b1d001200811d4205428312181c0069=
+
+00871d1ab91a5c6c959989997d537c776f74171cb989b90f1004b90813191c001100
+0700861d1b19181702b903b98a050e11141618191a1c1d001200811d420442843a11171b=
+
+006900891d1bb917af676a927b7783777654158415b3150bb983b9130cb985b911161b1d=
+
+001000
+0700011d841c1b1a0eb903b9870c0f13171a1b1c1d811d001300821d35420342850c1117=
+
+1c1d0068008f1d0eb9b416ae574b60504b62af151d0082001bb904b9840914191c001000=
+
+
+0a00011d8113b903b9850d11161b1d001700821d1e420242853a0e12181c006900811cb9=
+
+84b91a1b16ae01ae01af84b4181c001d831d0025b904b98411161a1d000f00
+0b00821d14b903b9840d12181c0019008a1c192e340c0e11161a1d006800821d01b981b9=
+
+008200191602168515191d001d000100811db905b98413181c1d000e00
+0c008115b903b9840e13191d001900841d1b181513851316191c1d0068008103b981b900=
+
+87001d00151615160083001d001d021d820001b904b98406151a1d000e00
+0c008114b903b9840e13191c001a00881d1b1a18191a1c1d0068008118b982b911000100=
+
+851d001e1d001d011d81001d021d820018b905b98412171b1d000d00
+0c008115b903b9840e13191d001b00011d011c011d6900811db901b981001d031d81001d=
+
+051d0100011d8100b906b98414191c1d000c00
+0c008114b903b9840e13191c007f000a00811db901b9820e001d081d81001d031d010081=
+
+07b906b98315191c000c00
+0c008115b903b9840e13191c007f000a008104b901b983141b001d011d011c811b1d821d=
+
+001d021d851c1a191d17b906b98410161a1d000b00
+0c008114b903b9840e13191d001700811d000800061d0600011d011c021d0900051d0b00=
+
+051d2f008116b901b986b71347181b1d00830019001d021d831c18151602168100b982b9=
+
+01b904b98413171b1d000a00
+0c008115b903b9840e13191d001400862a3e42351b1c1d881d0016120e0d0605b903b983=
+
+1a1c1d0001008112b904b98b0c1b1c1d001a160e0d0706b903b983131b1d000200861816=
+
+0e0d0705b903b9831a1b1d000200011d821c1d1c071c051d821c1d1c041c021d0b00811d=
+
+b902b9830a141c0081001d011d831b1d001d021d0100891c1b1716191ab92505b904b984=
+
+14181c1d000900
+0c008114b903b9840e13191d0013000542842d1a1c1db909b98516191c1d1bb908b98417=
+
+1b1c0eb908b98410181b1d0001008106b908b98316181b0001000eb9821b1cb90ab9831a=
+
+1c1d000900811db985b9acb918001d811d0081001d811d0081001d011d0100031d84001c=
+
+1600b901b98107b903b98411161b1d000900
+0c008115b903b9840e13191d00120001428317b4154201428824191b1c1b191504b904b9=
+
+8412161b17b901b9840e13120ab903b982171a1b841b19170cb904b9840c14191d000100=
+
+851d1b191707b904b98411151a1d0084001d1b0db907b988101517191b1c1b0db904b986=
+
+061516181a1d000900831cb909b984b9001d001d0e1d85001d1c1519b901b98106b903b9=
+
+8313181c000900
+0c008114b903b9840e13191c001100833b4218168316153f4201428215191b851b191715=
+
+03b903b983101518b983b912141302138112b902b9880116191a19171513b903b9840a13=
+
+181c000100861d1c19171509b903b9850f14191c001d841d1a1815b905b98a0f11131619=
+
+1a1b1a1715b901b988010f111315181a1c000800851d01b902b90081001d031d0100071d=
+
+82001d0081001d011d8600b901b50302b902b98411161b1d000800
+0c008115b903b9840e13191c0010008823421f17161718384201428812171a1c1b1a180f=
+
+b903b9820f15b989b917151415161718b4b903b98711171a1b1a1917b903b9840912171c=
+
+000200851d1b1a1917b903b9840e13191d0086001d1c1a1815b904b9850a1014181b1c84=
+
+1c1b1a18b98ab9010d0f1215181a1c1d000800861db909b901001d011d81001d061d8500=
+
+1d001d001d041d86000a030902b5b902b9840f14191d000800
+0c008114b903b9840e13191d0010008742381716171a1b420242843414191c1d831d1c13=
+
+b903b9840f09b91615841517191a1c831c1b06b902b9870514191c1d1c1bb903b9840912=
+
+181c000300011d821c1ab903b9840e13191c000100011d831b1910b904b98611161a1c1d=
+
+001d821d19b981b90f870f13171a1b1c1d00090001b98403b9001d0081001d021d82001b=
+
+1d031d81001d081d8100b902b98102b902b98411171b1d000700
+0c008115b903b9840e13191d000f008627421f1617191c811c420242843c13181c008300=
+
+1d14b903b9830fb907158515171a1c1d0083001d0cb903b98612181b1d001cb903b98409=
+
+11171c000500821d1cb903b9840e13191c000300831d1c1ab904b9840a151a1d00020082=
+
+04b911841113171a1d811d000a00831db902b982b9001d041d84001d1c1d0083001d001d=
+
+021d83001d001d021d8100b902b98108b902b9841015191d000700
+0c008114b903b9840e13191d000f00824239178517b21e1d27420242853d11171c1d0082=
+
+0014b903b98207b914851417191c1d000100821d14b903b98611171b1d001db903b98409=
+
+12181c000600811db903b9840e13191c000400831d1c17b904b98313181c000100881db9=
+
+031413161a1c000c00861cb908b90f001d041d82001c1d031d0100821d001d061d8100b9=
+
+02b9810ab902b9840e13181c000700
+0c008115b903b9840e13191d000e00861c421fb4171a1d821d3b420242853711b41b1d00=
+
+820015b904b986251215181b1d000200821d15b903b98610151b1d001db903b984091118=
+
+1c000600811db903b9840e13191c000500831d1b25b903b98405151a1d00890003b91614=
+
+16191c1d000b00811db983b901b9000100831d001d0083001d1c1d051d81001d011d8200=
+
+1d0081001d821d00b902b98108b903b98411171b1d000600
+0c008114b903b9840e13191c000e00823b41178317191c1d811d420342852fa9171b1d00=
+
+820014b904b9850e12161a1d0004008118b903b98610151b1d001db903b9840912171c00=
+
+0600811cb903b9840e13191c000600821c19b904b98713181b1d19b90c158415181b1d00=
+
+0c008311b901b982b9001d021d81001d011d811c1d841d001d001d011d81001d041d8300=
+
+1d00b902b98103b903b98410161b1d000600
+0c008115b903b9840e13191c000e008242261783171a1d008100420342850c11171c1d00=
+
+820015b904b9850e13181b1d000400811cb903b9860f151a1d001db903b9840912171c00=
+
+0600811cb903b9840e13191c000700821b0bb903b984ad151a1cb986b91715171a1d000d=
+
+0002b98301b9001d011d81001d021d811b1d041d83001d001d061d8100b902b98103b903=
+
+b9840f141a1d000600
+0c008114b903b9840e13191d000d0089274218b41f1c1d002a420342840d12181c000100=
+
+8114b904b9840f13191c000500811cb903b9860f141a1d001db903b9840911181c000600=
+
+811db903b9840e13191c000700821d1ab904b98410170cb915841516191c000d008108b9=
+
+85b904b7b9001d011d0100851d001d1b001d821d001d011d81001d041d81001d821d00b9=
+
+01b98104b904b9840e13191c000600
+0c008115b903b9840e13191d000d00823b351783171a1c0082003e420342840e13181c00=
+
+01008115b903b985050f151a1d000500811cb903b9860f151a1d001db903b9840912171c=
+
+000600811db903b9840e13191c000700831d1c12b904b98814b9011615181b1d000d0002=
+
+b984250f0a001d061d821b001d031d81001d071d0100810fb982b9b6b904b9840d12181d=
+
+000600
+0c008114b903b9840e13191d000d00811d188618191b1d001d42034285400f14b31d0001=
+
+008114b903b9840a10161b000600811cb903b9860f151a1d001db903b9840911181c0006=
+
+00811cb903b9840e13191c000800821d1ab904b98201b9148414161a1c000d00811db902=
+
+b9840807001d0081001d031d821b001d031d0100821d001d011d81001d011d820001b983=
+
+b90302b903b9840e13181c000600
+0c008115b903b9840e13191d000d0085061a191a1c0001000442853110151a1d00010081=
+
+15b903b9840d12171c000600811db903b9860f151a1d001db903b9840912171c00060081=
+
+1cb903b9840e13191c000900821c17b904b986051114181c1d000d00871db645a89db912=
+
+0081001d011d0200821d1b000100041d81001d061d8300b903b902b982b70bb985b90d13=
+
+181d000600
+0c008114b903b9840e13191c000c008215b91a831a1b1d0082002b420342840d11b41b00=
+
+02008114b903b9840d12181c000600811cb903b9860f151a1d001db903b9840911181c00=
+
+0600811db903b9840e13191c000900831d1b25b903b985031015191c000e00881d889d81=
+
+839db91b0081001d041d821b001d811d0081001d021d81001d821d001d011d83655a02b9=
+
+04b98706b8b90e13181c000600
+0c008115b903b9840e13191c000c00860eb9191a1c1d00820041420342840d12181c0002=
+
+008115b903b9840e13191d000600811cb903b9860f151a1d001db903b9840912171c0006=
+
+00811db903b9840e13191c000a00821c19b904b98410151a1d000e00841c6f837b918591=
+
+9db90d001d041d841b001d001d861d001d001d001d021d820087a482a490b904b987b76c=
+
+a60e13181d000600
+0c008114b903b9840e13191d000c008806b918191b1d001d420342853f0e14191d000200=
+
+8114b903b9840e14191d000600811cb903b9860f151a1d001db903b9840911181c000600=
+
+811db903b9840e13191c000a00821d05b904b9840114191c000d00841d62688198869883=
+
+9195b9060081001d851d001d1c1d000100011d81001d011d81001d011d85008691a396b9=
+
+05b986a7a49f13181c000600
+0c008115b903b9840e13191d000b00811db987b917181b1d001d420342852910151a1d00=
+
+02008115b903b9840e141a1d000600811db903b9860f151a1d001db903b9840912171c00=
+
+06008115b903b9840e13191c000a00831cb904b904b9840e161b1d000b00841d54777b98=
+
+8598917b8da5b901b90100081d81001d031d88001d001b87917754b904b98883a6946412=
+
+181c1d000500
+0c008114b903b9840e13191d000b00811db987b916181b1d0030420342850d11171b1d00=
+
+02008114b903b9840f151a1d000600811cb903b9860f151a1d001db903b9840911181c00=
+
+0600810db903b9840e13191c000a008401b9200db904b98314191c000800861d80715063=
+
+9298829883988498838da5b901b901000b1d81001d891d0016ae8683775e6db901b98a5f=
+
+5e87988d6411171b1d000500
+0c008115b903b9840e13191d000c0001b98315171b1d811d420442840e13181c00850023=
+
+331d14b903b9840f151a1d000600811cb903b9860f151a1d001db903b9840912171c0006=
+
+008104b903b9840e13191c0009008616b90e151301b903b98408161a1d000600835d877c=
+
+7b017b84988d988398019883839153b901b981110081001d011d83001d001d051d8800b4=
+
+ae637c868e627602768977838d988710161b1d000500
+0c008114b903b9840e13191c000b00810fb984b914171b1d811d42034285370f141a1d00=
+
+81003983391b13b903b9840f151a1d000600811cb903b9860f151a1d001db903b9840911=
+
+181c000500811db904b9840e13191c00090001b9811615011505b98413181c1d00040082=
+
+59927b817b8d018d85837c817c917b847b98949db902b98205001d011d0100011d81001d=
+
+031d850016af6e7c868f86687f76687783988183988bab191c000500
+0c008115b903b9840e13191c000b0002b98513161b1d004203428b0b10161b1d001d4222=
+
+1912b903b9840f151a1d000600811db903b9860f151a1d001db903b9840912171c000500=
+
+811db904b9840e13191c000800880eb9141516181905b903b98425151a1d000400825987=
+
+980298817b8382839c98019885839883945eb902b901000a1d01008618af6d8592877702=
+
+778b7c8398927b988d9e161a1d000400
+0c008114b903b9840e13191d000a00811db901b98512161b1d27420342840d12171c0086=
+
+002742b21711b903b9840f151a1d000600811cb903b9860f151a1d001db903b984091118=
+
+1c0005008111b904b9840e13191c000700891db9031615181b1c19b904b98412181b1d00=
+
+0200851d0085838d9883988398838a837c987b8193988d9145b901b981001d091d81001d=
+
+861d1a20617f927c867c7b927c837c9884989181988d858d171a1c1d000200
+0c008115b903b9840e13191d000a008103b901b98511161a1d30420342840e13191c0083=
+
+003f3917821712b903b9840f151a1d000600811cb903b9860f151a1d001db903b9840912=
+
+171c00050082b904b903b9840e13191c0007008a03b91715161a1c1d1b0eb903b9840114=
+
+191c000400827f7b988798837b919883819802988493839894b901b981001d821d001d82=
+
+1d001d021d81001d8a1d001cb95e7f93988d838d8f8d988398918198837b9193171a1c1d=
+
+000100
+0c008114b903b9840e13191d000900811bb902b98510151b1d304202428c370f151a1d00=
+
+1d42b2b41812b903b9840f151a1d000600811cb903b9870f151a1d001d01b902b9840811=
+
+171c000400831db915b903b9840e13191c0006008316b905158715181b1d001d1ab904b9=
+
+840e171b1d000100871d006e7b91987b9882987b988a989198819283928da68600020001=
+
+1d82001d0081001d021d01008f0ab94362777c8d98839883918391839801988783988393=
+
+171a1d000100
+0c008115b903b9840e13191d00090004b98510151b1d30420242840d10161b1d831d3e42=
+
+1783171813b903b9840f151a1d000600811db903b9870f151a1d001d08b902b985051117=
+
+1c1d0003008303b916b903b9840e13191c00060001b9851615161a1d0084001d1c15b904=
+
+b98313191c000300846f7b9883988b987b7c8d837b987b9891839384938772001d011d81=
+
+001d031d03008104b984b94876868d838d987b988f9881838d988398839891938c13181c=
+
+000100
+0c008114b903b9840e13191c0008008104b903b98510151b1d2c4202428c0d12181c1d1e=
+
+422716171a13b903b9840f151a1d0006008117b903b9870f151a1d001d14b902b9850111=
+
+171c1d0002008419b91215b903b9840e13191c0005008801b9251415181c1d000100831d=
+
+1a01b903b98408161a1d000200826392988198830183848d7b837b8301838891988392a4=
+
+6213001d051d02008114b902b9854d84777c83988298a3838f8393987b83987b8d79730e=
+
+12181b1d000000
+0c00810fb903b9840e13191c0007008105b904b9850f151b1d23420242830e13191d831d=
+
+423e1784171f1b0db903b9840f14191d0006008111b903b9840f14191d0082001cb903b9=
+
+8410161b1d00020084b9011715b903b9840e13181d000400810ab986b91013161a1d0003=
+
+00821c18b904b98413181c1d00840070777c8301830598867b819883988d928492774dab=
+
+0006008110b904b9845f76867c980198907b837b988398839187580e0d1014191c000100=
+
+
+0b00821d01b903b9840612181c000500811bb906b98510161b1d1c4201428c400f141a1d=
+
+36421816171a1cb904b9840c14191c000500821d01b903b9880913191c001d1c03b902b9=
+
+840d151a1d0082001db982b918158115b903b9840412181c000300810fb901b9850f1217=
+
+1b1d000300821d1bb904b98401151a1c00890058687787927c928d838383988398829893=
+
+980198848377766ab90eb98f4e7f7783987b91819c989183918d610c870c0e1114181b1d=
+
+000100
+0a00821d06b905b9840e161a1c1d021d821401b907b9830f151b1d821d354201428b0f15=
+
+193342261716181b06b905b9830e171b1d811d000200821d08b905b9830c171a1d011d81=
+
+1ab903b98513181c1d1bb982b91316821617b904b98409161a1c1d011d8103b902b98501=
+
+11161a1d000300821d16b905b98b02161a1c00806f768e8268770177017c018302988791=
+
+9883685e4f43b90db9884e76857c8398837b838183928b926e0e0c0e101316191b1d0002=
+
+00
+07008106b91cb98310151b1d821d1a420142823f3242854226b40d05b90bb985051b1c16=
+
+06b90bb981051c831c1b10b903b982040ab901b981131583151719b907b9820506b908b9=
+
+8705131c1d000801b90ab988051b1a184c4b4f6276027681637782778d830183867c775e=
+
+535744b90db9856c5e6e77927c817c778477686f560c880c0f1216181a1c1d000300
+07001eb98811161b1d001c183f42014282412016821605b90db983181a0db90db985181a=
+
+1b1913b905b9870516141517191bb914b9840b1a1c1db90db9851819181512108910564e=
+
+506d5d615e7677017785765e5d4f56b902b9090d01b9924d50615e7f778e7f5e6d890b0e=
+
+1014171a1c1d811d000400
+0700871c19171514131110031084111213141502158414131211100410841114181c008b=
+
+001d1b1715121314151617198419181614128112100310861112131517191b861b191614=
+
+13111003108611121315171a1b881b1916110725070d1385131415181a1c841c1815110f=
+
+010f8a101112141516151413111001108d11131416191b1d1c1a181514121004108b1113=
+
+1417191a191715ab1210921046666c4b7e7554755d6a4b56490a0c0d0e0f810f10071084=
+
+0f434b536181615e835e614f0c870c0e1215191b1d000700
+0600861d1c1b1918171603168115160216061701160115041683181a1d000100891d1b18=
+
+16151617181a1b841b1a1817160316011502168817181a1c1b1a18171603168115160116=
+
+011791181a1c1d1c1a1714131213141517181a1c1d841d1b181514021482151617821718=
+
+1781171605168417181a1c1d851d1b1918171681161581151682161516841617191a1c89=
+
+1c1b1a1917161412110f840f494a57698a694e5f440c0d0f1113141509159047497d7853=
+
+6d784a890c0f1216191c1d000800
+0700821d1c1b071b811a1b071b011a021b811a1b021b821c1d000300831d1c1b1a011a01=
+
+1c011d811c1b011b811a1b081b811c1d821d1c1b811b1a811a1b021b811a1b031b881c1d=
+
+001d1c1b191817861718191a1c1d0085001d1c1b1a1981191a021a0d1b831c1d001d821d=
+
+1c1b041b811a1b031b011c031d011c931b1918171514121146524855460d0e111417181a=
+
+071a811b1a901a182051557a55960c0d0f13171a1c1d000900
+0800091d81001d011d0100021d0200021d81001d031d81001d031d0100041d0300011d01=
+
+00061d81001d041d811c1d811d1c011c011d81001d031d0400011d011c811b1c811c1d81=
+
+1d000100011d041c021d81001d821d001d051d0100811d0003000d1d0500021d811c1b85=
+
+1b1a181614128812aa10111316181a1c811c1d091d841bb21512100210851214181b1c1d=
+
+031d0700
+0600810ab984b90d01061c811c1d811d0014008517041b04171d811d0015008106b983b9=
+
+160ab983b90f0db983b9181c1d811d001200810cb986b90d07b9061c1d811d001300810c=
+
+b987b90d06b91a1c1d000d00021d861c1b1917160bb983b9070bb981b91c821c1d000800=
+
+841d1c19171602168a17191b0f01b9090db91b1d811d000400
+06008a1db90c1819b9031a1c1d001300821cb91b011b83b9191b1d811d001300831db903=
+
+198619b9031819031a831a1b1d001300831db90519861915051a1b1d001300811db981b9=
+
+19861901b91a1b1d001000811d1c8d1c1b1a0cb9b41719b91a1b1c1d000800821d1c1b03=
+
+1b011c011d820eb91986191ab9191b1d000300
+0600851db90b1617b984b9181a1c00130082b904190119010183191b1d001300851d01b9=
+
+1617b984b91617011983191b1d0013008a1db90516061805191a1c001300811db989b916=
+
+1705b917191c1d001200011d820db9168316180f1983191b1d000a00021d0100811d008c=
+
+001d0db917161805b9191b1d000200
+0600851db90b1517b985b916181b1d0012008bb90c17181a06b917191c1d001200831d0e=
+
+b9158a1503b914160d191a1b1d0013008a1db90415b9180b191b1d001300811db989b915=
+
+1601b915171b1d001300861d0db91512171884181a1b1d0013008a0db91516180eb91719=
+
+1b000200
+0600861db90b150ab9168416181b1d0011008c1db90b16181a0db916171a1d0012008d1d=
+
+1bb90e1316b90e1318191b1c001400831db901b986b917191a1b1d001300811db989b909=
+
+25081615171a1d0013008b1d0db904b91618191a1c1d0012008c1d0db915161813b91017=
+
+1a1d000100
+0600851db90a151617011783191c1d0011008c1db90a15181b0db915161a1d0013008c1c=
+
+b9250915b90408b4191b1d0014008a1db90515b916191b1c1d001300811db981b9148714=
+
+b90f15181b1d0013008a1d0db9140a15171a1c1d0014008b0db915161913b91016191c00=
+
+0100
+06008a1db90a151617191a1c1d0012008c1db90915181b06b91516191d001300821d01b9=
+
+82b914b986b90216191c1d0014008a1db905140417071b1c1d001300811db981b9148114=
+
+b985b915181c1d0013008a1d0db9151315171a1c1d001300881d0db91516190eb9158315=
+
+191c000100
+0600891db90a1517191b1c1d0013008c1d030215181bb90316171a1d0013008b1d0fb909=
+
+140ab90b15191b0015008a1db905141517b91b1c1d001300811db983b91415b985b91511=
+
+1b1d001300831d0db9148514160f1a1b1d811d0013008b0db915161906b91516191d0001=
+
+00
+0600861db90a15171b1d811d0014008c1d1bb916181ab91816181b1d001300831d1bb914=
+
+871415b91415191c0015008b1db92515160fb9191a1c1d001200811db983b91516b981b9=
+
+1583151a1c001300831d0db915871517b9191a1c1d001200831d0db915881519b9171617=
+
+1a1d000100
+06008101b985b904181b1d0016008a1c18010bb9191817191c001500821cb916871617b9=
+
+1516191c0015008103b982b904b901b984181a1b1d0012008103b98ab9041613b9021619=
+
+1c1d0012008106b983b90125b985b918191b1d0012008106b98ab9010405191817191c1d=
+
+000100
+0600871d1a1716181b1d001600851d1b1a191a1984191a1c1d001500821d1b1881181985=
+
+19181f1b1d001500851d1a18161718011883191c1d001200851d1a17161718861816171a=
+
+1c1d0012008b1d1b191617181918191b1d001200861d1b191617181984191a1b1d000200=
+
+
+0600821d1b1984191a1c1d001700831d1c1b1a841a1b1c1d001700811c1b041b811c0016=
+
+00831d1b1a1981191a011a811b1d811d001200841d1c1a191a011a83191a1b1d811d0013=
+
+00821c1b1981191a011a831b1c1d001300821c1b1981191a841a1b1c1d000300
+0700811d1c011c811d001a00821c1d1c821c1d001800071d1700011d051c811d00140001=
+
+1d021c811d1c011c011d1500011d041c011d1500011d031c011d0500
+0900811d005e00031d1a00811d001d00041d1900021d0800
+7f005400
+7f005400
+7f005400
+7f005400
+7f005400
+7f005400
+7f005400
+
+%
+% Compression made this file 14.51% of the uncompressed size.
+%
+
+
+showpage
+
+% stop using temporary dictionary
+end
+
+% restore original state
+origstate restore
+
+%%Trailer
+%%EndDocument
+@endspecial
+f2 SF
+968 1903 p (1998/06/20)s
+f0 SF
+13 r ($3)s
+-2 r ($8)s
+3 r ($^$_$D)s
+-1 r ($R$m)s
+f2 SF
+968 1965 p (ko)s
+1 r (jima@linet.gr.jp\(home\))s
+968 2028 p (ko)s
+1 r (jima@criepi.denken.or.jp\(o\016ce\))s
+917 2789 p (1)s
+EP
+%%Trailer
+%%Pages: 1
+END
+%%EOF
+
+----Next_Part(Thu_Jun_18_21:11:29_1998_893)----

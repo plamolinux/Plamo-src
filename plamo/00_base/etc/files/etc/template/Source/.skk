@@ -1,0 +1,14 @@
+(setq skk-server-host "localhost") ;; ... は辞書サーバのホスト名
+; (setq skk-serv "/usr/libexec/skkserv")
+;; 共用辞書ファイルのあるディレクトリ
+; (setq skk-aux-large-jisyo "/usr/share/skk/SKK-JISYO.L") 
+
+;; かな入力を使う場合は有効にする
+;(setq skk-use-kana-keyboard t)
+;; NICOLA 配列
+;(setq skk-kanagaki-keyboard-type 'nicola-jis)
+;; 旧 JIS 配列
+;(setq skk-kanagaki-keyboard-type '106-jis)
+
+(defalias-maybe 'characterp 'char-valid-p)
+

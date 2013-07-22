@@ -1,0 +1,6 @@
+global disp optvar
+set disp(keyvel) 1
+set disp(ctrl) 1
+set disp(pitch) 1
+set disp(prog) 1
+set optvar(octave) 3
