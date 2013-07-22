@@ -1,0 +1,555 @@
+%\iffalse This is patch.doc, and it's -*-LaTeX-*- text
+%% patch.doc/patch.tex
+%% (c) 1994 by David Kastrup (dak@pool.informatik.rwth-aachen.de)
+%% Version 0.91
+%% 
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any later
+% version. The latest version of this license is in
+%    http://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of
+% LaTeX version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `not maintained'.
+% 
+% The work consists of the source file patch.doc
+%                 and the derived file patch.tex
+%
+% This file is provided marked up according to an early version of LaTeX
+% `doc' format markup.  Unfortunatly, docstrip for that version of doc is
+% no longer available; therefore stripping is to be done by removing all
+% lines starting with a single percent sign.
+% You may extract a driver file for printing the documentation with
+% the doc style package by extracting all lines starting with
+% %<+driver>, while removing the %<+driver> directive.
+%\fi
+% \CheckSum{360}
+% \title{Using {\tt patch.tex}}
+% \author{David Kastrup\\dak@gnu.org}
+% \date{January 22, 1994}
+% \maketitle
+% \MakeShortVerb\"
+% \begin{abstract}
+%   Often one has the need to use a preestablished format, such
+%   as~\LaTeX, but with some slight changes to some of the macros.
+%   Of~course, it is possible to just copy the offendin maco
+%   definitions into your application or style file, and~modify them
+%   there. This can lead to parts of your macros being from different
+%   versions of \LaTeX{} resp.~\TeX.
+%
+%   This input file is a tool for replacing just parts of existing macros
+%   by user defined parts. If those parts are no longer recognizable,
+%   an~error message is produced, calling the user to~attention.
+% \end{abstract}
+% \tableofcontents
+% \section{User Interface}
+% The macros defined here will allow ``patching'' up already existing
+% macros. A~typical example, included from a~style file used for
+% typesetting Greek text (to~appear in "kdgreek") is the following:
+%\begin{verbatim}
+%\input patch.tex
+%\ifx\descriptionlabel\undefined\else
+%\gpatch\descriptionlabel#1{{#1}}{%
+%    \bf {\grbf}} \fi
+%\ifx\@part\undefined\else
+%\gpatch\@part[#1]#2{[#1]{#2}}{%
+%    \bf\partname~{\grbf\partname\nobreak\ }%
+%    \bf {\grbf}} \fi
+%...
+%\endpatch
+%\end{verbatim}
+%This shows almost all features that are really there. You start by
+%inputting "patch.tex". This, among other things, opens a~local
+%group in which all of the definitions of~"patch.tex" are read~in.
+%In~order not to use up unnecessary hash~space, almost all local
+%commands are in the form~"\^^80" and upwards. For this reason,
+%you cannot {\em use\/} any macros of yours with such names
+%(Note: they are {\em
+%not\/} active characters, but rather regular one-letter control
+%sequences), and you should not patch them, but you can patch any
+%macros containing them, or patch them into macros.
+%
+%One macro is {\em very\/} special and must not appear in any macro
+%you patch, nor in any arguments to~"\patch": this is~"\@ndp@tch".
+%
+%\DescribeMacro{\patch}
+%\DescribeMacro{\gpatch}
+%You follow the "\input" by several "\patch" or "\gpatch"
+%commands. These commands
+%consist of several parts:
+%\begin{itemize}
+%\item[Optional "\bslash long"] for definition of macros possibly containing
+%  "\par" tokens in their arguments. Note that the prefixes "\global"
+%  and~"\outer" are not supported. "\global"ness is achieved by~usage
+%  of~"\gpatch" as opposed to~"\patch", and is explained later, and
+%  "\outer" macros are detestable.
+%\item ["\bslash patch" or "\bslash gpatch"] To be expected.
+%\item [\meta{Argument list}] which is the argument list the macro will
+%  have in the patched version (usually the same as the original one).
+%  It~is terminated by the opening brace of
+%\item [\meta{Argument replacement}] which is enclosed in braces. This
+%  is fed as an argument list into the old macro, in order to get the
+%  replacement text for the new macro. Basically this means that you
+%  will have to use, say, "{#1}" for an undelimited parameter~"#1",
+%  "#1@" for a delimited parameter "#1@", and "@$#!?!!" for a brace
+%  delimited parameter "#1#{" (don't try patching any macros like
+%  that. Presume you have never heard of~them).
+%\item [\meta{Substitution list}] This contains a~brace enclosed list
+%  of~replacements. Each replacement consists of
+%  \begin{itemize}
+%  \item [\meta{Matching sequence}] which is a sequence of tokens not
+%    containing any braces. If really need to match braces, you can
+%    match by using implicit braces you get by saying something like
+%    "\let\openbrace={". If you think of using the default implicit
+%    braces "\bgroup" and~"\egroup", forget~it. They are used in
+%    several macros we might want to~patch, and thus are disabled
+%    by~default.
+%  \item [\meta{Replacement sequence}] which is enclosed in~braces.
+%    Again, if you want braces to appear in your replacement, you can
+%    make that happen by using implicit braces. Matched braces,
+%    however, you may include explicitly.
+%  \end{itemize}
+%\end{itemize}
+%\DescribeMacro{\endpatch}
+%Then the patches are followed by~"\endpatch", which closes the group
+%opened by~"\input", thus freeing up almost all \TeX{} space
+%"patch.tex" took up. Since~mismatched patches can be hard to
+%diagnose, "\endpatch" is defined as being~"\outer". As~long as
+%the "\outer" nuisance prevails, we~might use it for what it~is
+%useful~for.
+%
+%That's all there is to it! Except for the "\global" issue we promised
+%to explain\dots{}
+%Usually you will be patching macros of some style, and there will be no
+%point in using~"\patch" instead of~"\gpatch". So~mostly "\gpatch" does
+%no harm, and will cause a~global definition. "\patch", on the other
+%hand, has the problem that its definitions should hold in the group
+%ended by~"\endpatch", but not globally. So~"\patch" cannot just make
+%the definitions. Instead, it collects the new definitions, and~does
+%them all at~"\endpatch".
+%
+%\DescribeMacro{\globaldefs}
+%Here is one friendly feature: If "\globaldefs" is negative,
+%"\gpatch"~will invoke "\patch" instead of its own behaviour, so that
+%local patches will be performed instead of none at~all (since the then
+%non-global definition would disappear at~"\endpatch"). This feature was
+%deemed desirable\footnote{Reason:
+%I~made an example file showing the effects of several
+%"\bslash documentstyle" commands with my Greek macro set. The Greek style
+%patched up some \LaTeX{} macros, and this was wanted only
+%locally, namely for the length of the demonstration of one particular
+%document style.}.
+%\subsection{Things to beware of (aka bugs)}
+%"patch.doc" is a very simple package (sort~of). It can fail for
+%a~number of reasons, and is not applicable in every situation. You
+%will have problems if
+%\begin{enumerate}
+%\item You use implicit tokens which are implicit at the time the
+%  patches are applied. "\bgroup" and~"\egroup" are explicitly disabled
+%  for this reason. Implicit spaces will be regarded as explicit ones
+%  by~"\patch". Implicit macro parameter characters I~am not so sure
+%  about. \TeX~behaves pretty wierd with regard to them anyhow. Other
+%  implicits should do no~harm. "\patch"~will take the problematic
+%  implicit
+%  tokens for explicit ones while it is analyzing tokens. It analyzes
+%  both matching and replacement tokens, and all tokens in the original
+%  macro up to the last replacement performed. This means that, for
+%  example, matching implicit braces in locations where you did not
+%  intend it can lead to mismatched explicit braces and lots
+%  of~confusion.
+%\item You use outer tokens in any respect.
+%  "\patch" does not care for them.
+%\item When "\@ndp@tch" appears anywhere, namely in a~macro to be
+%  patched, or in a matching or replacement sequence. It~is used for
+%  internal purposes, and you can cause lots of confusion when
+%  using~it. This means, for one thing, that you should not try
+%  "\patch"ing up any macros of this package with itself.
+%\item And this is harsh: if the macro you patch contains "#" marks
+%  (which originally were produced by writing "##") these will not be
+%  reduplicated, leading to missing parameter number errors (which will
+%  do the right thing if you ignore them, but that's ugly), or to
+%  recombination with a following number, which is plain wrong. You can
+%  work around this ugliness in an~ugly way: specify a~replacement
+%  "#{##}" for any such token. I~am pretty much afraid I~know no
+%  better way around this one.
+%\item Since "\bgroup" and~"\egroup" are disabled, using any macro that
+%  in turn uses those will not work while in patch~mode. What
+%  I~guarantee to keep working in future versions is "\let" (locally,
+%  for making implicit tokens),
+%  all expandable constructs (like conditionals) not
+%  using any of the macros of this package, and~"\patch"es.
+%  Other things are not necessarily supported in patch~mode.
+%  Specifically, do not use "\def" or~"\gdef", since manipulation of
+%  localness might unnecessarily be thwarted if you~do.
+%\item Do not change "\toks@" in any way, or use a~macro changing it.
+%  Cannot happen really, if you listen to the last advice.
+%\item Do not rely on the patches either taking place or not before the
+%  final "\endpatch"! This means, do not use a~patched macro before
+%  "\endpatch" in ways which require specifically the patched or
+%  the unpatched version. For example, do not patch one and the same macro
+%  with two separate "\patch" commands in the same patch session! The
+%  reason for this is the collecting behaviour for non-global patches.
+%  And you never really know when a~package of yours might come handy
+%  non-globally.
+%\item For similar reasons,
+%  do not use "\input patch.tex" in a local group when you are doing
+%  "\gpatch"es (unless you know what you are doing, as in the case of
+%  negative~"\globaldefs"). It~might get to~being a~problem sometime.
+%\item Never set "\globaldefs" to a~non-zero {\em positive\/} value
+%  while working with~"\patch", since it will interfere disastrously with
+%  "patch.tex"'s internals, which heavily work with local groups.
+%  Anyway, "patch.tex" is by its nature intended for local use only.
+%\item Just as a note aside: it is a~very bad idea to set "\globaldefs"
+%  to non-zero values longer than strictly necessary. It is especially
+%  a~bad idea to set it to a~negative value while {\em typesetting\/}
+%  anything,
+%  because the output routine (implicitly enclosed in a~group) will
+%  never be able to get anything done permanently, and will therefore
+%  be repeated over and~over.
+%\end{enumerate}
+%
+%Ok, this should be all there really is to it. If I~look that list over
+%again, it seems like groups really occupy my fantasy.
+%
+%Happy "\patch"ing!
+%\StopEventually{\PrintIndex}
+%\section{The Implementation}
+%We begin by opening our local group and making private control
+%sequences accessible:
+%    \begin{macrocode}
+\begingroup
+\catcode`@=11
+%    \end{macrocode}
+%We then set "\toks@" to the initial set of~actions to~perform at the
+%end of the~patches.
+%    \begin{macrocode}
+\toks@={\endgroup}
+%    \end{macrocode}
+% \begin{macro}{\endpatch}
+%    Rather simple. "\outer"~seems not to do much harm here. It might
+%    help better pinpointing severe failures when using~"\patch".
+%    \begin{macrocode}
+\outer\def\endpatch{\the\toks@}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\futuredef}
+%    This is somewhat similar to "\futurelet", only not at~all. It
+%    defines the macro which is its first argument as~code which can
+%    by use of~"\aftergroup" reproduce the third argument~token,
+%    and after doing that it will call the second argument.
+%    All~arguments are removed from the input, unlike "\futurelet"'s
+%    behaviour.
+%    \begin{macrocode}
+\def\futuredef#1#2{\begingroup
+%    \end{macrocode}
+%    We do this locally, and set up a few things to do after the
+%    group. Since a~"\def" is going to finish what we want, we can
+%    insert the ``do-after'' token via "\afterassignment".
+%    \begin{macrocode}
+     \aftergroup\afterassignment \aftergroup#2%
+     \aftergroup\def \aftergroup#1%
+         \futurelet\next\^^90}
+%    \end{macrocode}
+% \end{macro}
+%    We still have the token in our input stream, but also a copy of
+%    its meaning in "\next". We first try out some cases which will
+%    not allow us to treat the next token as an undelimited macro
+%    parameter. Of course we cannot distinguish explicit from implicit
+%    tokens, but we rely on the user to explicitly unimplicate possibly
+%    implicit characters. We will do this ourselves with the following
+%    two ones:
+%    \begin{macrocode}
+\let\bgroup\relax   \let\egroup\relax
+%    \end{macrocode}
+%    Now we start checking all problematic cases.
+%    "\^^90" will substitute an appropriate definition given
+%    explicitly instead of the following token. If we can, however, we
+%    rather use the token we get. If you wonder about this name, here
+%    is why: we have to use hosts of macros because of various
+%    "\futurelet"-like constructions. Patches occur just in a local group,
+%    and should not permanently require resources. If we did not use
+%    one-letter control sequences here, the hash table size would be
+%    somewhat reduced, permanently, because entries never leave the
+%    hash table. One letter control sequences, however, are not
+%    hashed, and can disappear without a trace again.
+%    \begin{macrocode}
+\def\^^90{%
+    \ifcat\noexpand\next{%
+         \^^91{\aftergroup{\iffalse}\fi}%
+    \else\ifcat\noexpand\next}%
+         \^^91{\iffalse{\fi\aftergroup}}%
+    \else\ifcat\noexpand\next\space
+         \^^91{\expandafter\aftergroup\space}%
+    \else\ifcat\noexpand\next##
+         \^^91{\aftergroup########}%
+    \else
+         \let\next\^^93%
+                 \fi\fi\fi\fi\next}
+%    \end{macrocode}
+%    "\^^91" is rather simple. We save the definition in
+%    "\next@", and we'll call upon this after disposing of the next
+%    token.
+%    \begin{macrocode}
+\def\^^91#1{\def\next@{\endgroup{#1}}%
+    \let\next\^^92}
+\def\^^92{\afterassignment\next@ \let\next= }
+%    \end{macrocode}
+%    "\^^93" will actively get the next token, and produce an
+%    "\aftergroup" definition from that. It is "\long" in case we are
+%    dealing with a "\par" token.
+%    \begin{macrocode}
+\long\def\^^93#1{\endgroup{\aftergroup#1}}
+%    \end{macrocode}
+% \begin{macro}{\@ndp@tch}
+%    This is supposed to be used as a delimiter. So that we may
+%    check for its appearance conveniently, we define it as its own
+%    "\futuredef" expansion.
+%    \begin{macrocode}
+\def\@ndp@tch{\aftergroup\@ndp@tch}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\gpatch}
+%     This is it. If you are in doubt as to what the "\def\next{}" is
+%     supposed to~achieve, this is~easy. We want to detect whether you
+%     want a~long macro to be~patched. In that case, you say
+%     "\long\gpatch"\dots. We can figure this out by comparing
+%     "\next" to the non-long~"\empty". Of course, we do not
+%     explicitly check for "\outer"ness. You should not even think of
+%     wanting to make an "\outer" definition.
+%
+%    We start by defining~"\gpatch", which will in the case
+%    of~disabled "global"ness revert to~"\patch". Both~"\patch"
+%    and~"\gpatch" define "\next" as a~macro getting one
+%    "\@ndp@tch"-delimited argument:
+%    it is all what should appear after a~"\def".
+%    "\next"~should make all necessary actions for doing
+%    the~definition. After setting~up "\next", "\^^a0"~is called, for
+%    which we wrap up the argument list as a~separate argument.
+%    \begin{macrocode}
+\def\gpatch{\ifnum\globaldefs<\z@
+                \expandafter\patch
+            \else
+                \expandafter\^^98%
+            \fi}
+\long\def\^^98#1#2#{\def\next{}%
+               \long\edef\next##1\@ndp@tch%
+                  {\ifx\next\empty\else\long\fi\gdef##1}%
+               \^^a0#1{#2}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\patch}
+%    "\patch"~is a~bit more complicated, because we need to~make
+%    additions to the current "\toks@"~list.
+%    \begin{macrocode}
+\def\patch#1#2#{\def\next{}%
+  \long\edef\next##1\@ndp@tch
+     {\toks@ \noexpand\expandafter {\noexpand\the \toks@
+          \ifx\next\empty\else\long\fi \def##1}}%
+  \^^a0#1{#2}}
+%    \end{macrocode}
+% \end{macro}
+%
+%    Now the real fun starts. We get the argument replacement list,
+%    and the macro body replacement list. We define a~macro~"\^^e0"
+%    (the "e" means error) just for knowing the proper macro name for
+%    error messages.
+%
+%    We prepare in a local
+%    "\toks@" the definition (because we could not simply
+%    "\aftergroup" the argument replacement, which could consist of
+%    any number of~tokens). Note that we start yet another group,
+%    making the definitions of "\toks@" and "\next" stable.
+%
+%    \begin{macrocode}
+\long\def\^^a0#1#2#3#4{\begingroup
+    \def\^^e0{#1}%
+    \toks@{\endgroup\next#1#2}%
+    \begingroup
+    \aftergroup\the\aftergroup\toks@
+%    \end{macrocode}
+%    We collect the replacement in a continually shrinking token list.
+%    Do not get annoyed, but we'll use "\toks@" for that, too.
+%    When we are through with replacements, we'll say "\endgroup",
+%    after which the definition takes place.
+%
+%    The replacement needs
+%    to be in a token list instead of a macro in order not to break upon
+%    encountering hash marks. The use of "\toks@" for this does not
+%    conflict with its other uses due to the grouping.
+%
+%    After that, we are ready to start the fun by expanding our macro,
+%    and putting~"\p@check" to~work.
+%    \begin{macrocode}
+    \toks@{#4}%
+    \expandafter\p@check\expandafter{#1#3}\@ndp@tch}
+%    \end{macrocode}
+% \begin{macro}{\p@match}
+% \begin{macro}{\p@replace}
+%    These are token lists holding the current string to be matched
+%    next, and its replacement string. We
+%    use token lists~1 and~2 for that.
+%    \begin{macrocode}
+\toksdef\p@match=\@ne
+\toksdef\p@replace=\tw@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\p@check}
+%    We check for any remaining replacements. If there are none, we
+%    may quit. "\toks@"~is the list of
+%    remaining substitutions. "\endgroup"~stops and makes the
+%    definition (check~"\^^a0" to~see~why), "\^^a1"~continues. By the
+%    way, in case of an~error, we will later use~"\next@" in order to
+%    tell what replacements were not carried out.
+%    \begin{macrocode}
+\def\p@check{\edef\next@{\the\toks@}%
+        \ifx\empty\next@  \expandafter\endgroup
+        \else  \expandafter\^^a1\fi}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\p@first}
+%    This sets "\p@first" to the "\futuredef" expansion of the first
+%    token we want to~match. "\^^a2"~will rewrap the rest of~"\toks@",
+%    and needs an (as~to~yet) unmatched closing brace for that.
+%    It~will provide the matching open one by~itself.
+%    \begin{macrocode}
+\def\^^a1{\iffalse{\fi
+       \expandafter\futuredef \expandafter\p@first
+       \expandafter\^^a2\the\toks@}}
+%    \end{macrocode}
+% \end{macro}
+% Ok, we rewrap the rest to be matched into~"\p@match", and the
+% replacement into~"\p@replace", after which we continue with~"\^^a3".
+%    \begin{macrocode}
+\def\^^a2#1#{\p@match{#1}\afterassignment\^^a3\p@replace}
+%    \end{macrocode}
+% The remaining substitutions we repack into~"\toks@". Now we need to
+% insert the matching opening brace for the closing one we put~before.
+%    \begin{macrocode}
+\def\^^a3{\afterassignment\^^a4\toks@\expandafter{\iffalse}\fi}
+%    \end{macrocode}
+% We now get the first (or next) token of the original macro.
+%    \begin{macrocode}
+\def\^^a4{\futuredef\next\^^a5}
+%    \end{macrocode}
+% If this token matches~"\p@first", we check the rest in~"\^^a6". We
+% collect in~"\toks@" all tokens matched so far (excluding "\p@first"),
+% so that we can
+% reinsert them if the match cannot be completed successfully. This~is
+% done in a~separate group. If~"\next" turns out to
+% be~"\@ndp@tch", however,
+% this is an~error indication. It~means that the end of patchable
+% material was reached. We call then~"\^^e1", which quits in that
+% case in a somewhat unusual (but relatively fast) way, reinserting
+% the gotten~"\@ndp@tch".
+%
+% It does not do any harm that "\next" is contained in conditional
+% context. Coming from~"\futuredef", it cannot be "\let" to an
+% unmatched conditional, and will correctly be~skipped.
+%    \begin{macrocode}
+\def\^^a5{\ifx\next\p@first
+             \begingroup \toks@{}\expandafter\^^a6%
+          \else\ifx\next\@ndp@tch \^^e1\fi
+            \next \expandafter \^^a4%
+          \fi}
+%    \end{macrocode}
+% In case of an error, we give the original macro (which has not yet
+% been patched). And at definition time, we will show how the macro
+% looks like afterwards.
+%    \begin{macrocode}
+\def\^^e1{\let\^^a4\endgroup
+          \newlinechar`\^^J
+          \toks@\expandafter{\next@}%
+          \errorcontextlines\m@ne
+          \errhelp{I am ignoring inapplicable patches. Go on.}%
+          \errmessage{When trying to patch
+            \expandafter\string\^^e0, which was defined as^^J%
+            \expandafter\meaning\^^e0^^J%
+            the following patches remained inapplicable:^^J%
+            \the\toks@^^J%
+            I will show the results of the succeeded patches as soon^^J%
+            as I can without further comment, so do not be surprised.}%
+          \aftergroup\show \expandafter\aftergroup\^^e0%
+}
+%    \end{macrocode}
+% Ok, we look whether there are any tokens remaining to be matched. If
+% there are not, replacement can go~forth. In~that case, we end our
+% local group, and go over to~"\^^ac". If~there are, we continue
+% with~"\^^a7".
+%    \begin{macrocode}
+\def\^^a6{\edef\next{\the\p@match}%
+         \ifx\next\empty \endgroup\expandafter\^^ac%
+         \else \expandafter\^^a7\fi}
+%    \end{macrocode}
+% We get the next token to be matched into~"\next@" from~"\p@match".
+% We~will have to adjust "\p@match" again with a token list
+% reassignment. For this we need to insert an unmatched closing brace
+% after its expansion, which will again be matched later.
+%    \begin{macrocode}
+\def\^^a7{\iffalse{\fi
+          \expandafter\futuredef\expandafter\next@
+          \expandafter\^^a8\the\p@match}}
+%    \end{macrocode}
+% Ok, here we gather the rest into~"\p@match" and~continue.
+%    \begin{macrocode}
+\def\^^a8{\afterassignment\^^a9\p@match\expandafter{\iffalse}\fi}
+%    \end{macrocode}
+% Now we get the next token from the original macro into~"\next".
+%    \begin{macrocode}
+\def\^^a9{\futuredef\next\^^aa}
+%    \end{macrocode}
+% In case of a match, we continue with~"\^^ab". Otherwise, if~we have
+% reached the illegal end of~macro ("\next" set to~"\@ndp@tch"),
+% we~stop.
+% If~we have no match legally, we reinsert~"\p@first", continue
+% scanning with~"\^^a4", reinserting everything matched with the help
+% of the "\futuredef" generated "\aftergroup"-sequence in~"\toks@".
+% This will hapen also if "\@ndp@tch" indicates something went
+% haywire, because "\@ndp@tch" cannot be in a~match sequence (if you
+% do not put it there, and you are not allowed to).
+% this we do also in the case of error, as you can easily see.
+%    \begin{macrocode}
+\def\^^aa{\ifx\next@\next
+              \expandafter\^^ab%
+          \else \aftergroup\p@first
+          \aftergroup\^^a4%
+          \the\toks@\next\expandafter\endgroup\fi}
+%    \end{macrocode}
+% We now have to append the "\aftergroup" sequence of the next matched
+% token in~"\next" to~"\toks@". After that, we can loop.
+%    \begin{macrocode}
+\def\^^ab{\toks@\expandafter\expandafter\expandafter{%
+         \expandafter\the\expandafter\toks@\next}%
+         \^^a6}
+%    \end{macrocode}
+% Ok, here follows the code if a~match {\em was\/} completed. We
+% insert the tokens of~"\p@replace". We~have to scan "\p@replace"
+% token by~token, so that implicit braces work like in the match
+% code sequences. We do this until "\p@replace" is exhausted. Which we
+% can detect by finding "\@ndp@tch".
+%    \begin{macrocode}
+\def\^^ac{\expandafter\^^ad\the\p@replace\@ndp@tch}
+%    \end{macrocode}
+% The following analysis loop is about as straight as it can get.
+%    \begin{macrocode}
+\def\^^ad{\futuredef\next\^^ae}
+\def\^^ae{\ifx\next\@ndp@tch
+              \expandafter\p@check
+          \else
+              \next \expandafter\^^ad%
+          \fi}
+%    \end{macrocode}
+% We end here by giving the driver file for the documentation, which
+% will typically be extracted using~"docstrip.sty".
+%    \begin{macrocode}
+%<+driver>\documentstyle[doc]{article}
+%<+driver>    \EnableCrossrefs
+%<+driver>%    \DisableCrossrefs
+%<+driver>
+%<+driver>    \CodelineIndex
+%<+driver>\begin{document}
+%<+driver>  \DocInput{patch.doc}
+%<+driver>\end{document}
+%    \end{macrocode}
+%\Finale

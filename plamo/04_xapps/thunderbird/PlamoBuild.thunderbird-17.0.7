@@ -1,0 +1,420 @@
+#!/bin/sh
+##############################################################
+url='http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/17.0.7/source/thunderbird-17.0.7.source.tar.bz2'
+verify=$url.asc
+pkgbase=thunderbird
+vers=17.0.7
+arch=x86_64
+# arch=i586
+build=P1
+src=comm-esr17
+thunderbird_tag=THUNDERBIRD_17_0_7_RELEASE
+OPT_CONFIG=''
+DOCS='mail/README.html'
+patchfiles='thunderbird.desktop.patch'
+compress=txz
+##############################################################
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    # files=`ls -a --indicator-style=none | tail -n+3`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} 
+  if [ $arch = "x86_64" ]; then
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+xmandir=$P/usr/X11R7/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+else
+    target="-m32"
+    libdir="lib"
+fi
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+      wget $verify
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ -x /usr/bin/ccache ]; then
+  GCC="ccache gcc"
+  GPP="ccache g++"
+else
+  GCC="gcc"
+  GPP="g++"
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+######################################################################
+# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
+#   記述します。
+######################################################################
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    echo "hg clone start"
+    if [ -d ../l10n ]; then
+      rm -rf ../l10n
+    fi
+    hg -v clone -r $thunderbird_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    echo " done."
+    if [ ! -d ../l10n ]; then
+      mkdir ../l10n
+    fi
+    mv ja ../l10n/
+
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+cat > mozconfig << EOF
+# Specify that Thunderbird should be built.
+mk_add_options MOZ_MAKE_FLAGS="-j3"
+ac_add_options --enable-application=mail
+ac_add_options --enable-calendar
+ac_add_options --disable-installer
+ac_add_options --enable-strip
+ac_add_options --disable-install-strip
+ac_add_options --disable-tests
+ac_add_options --enable-extensions=default
+ac_add_options --enable-single-profile
+ac_add_options --disable-profilesharing
+ac_add_options --disable-updater
+ac_add_options --disable-elf-dynstr-gc
+ac_add_options --disable-necko-wifi
+ac_add_options --disable-crashreporter
+ac_add_options --enable-chrome-format=jar
+ac_add_options --enable-svg
+ac_add_options --enable-webm
+ac_add_options --enable-system-lcms
+ac_add_options --enable-system-sqlite
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-nspr
+ac_add_options --with-system-nss
+ac_add_options --with-system-zlib
+ac_add_options --with-system-bz2
+ac_add_options --with-system-libevent
+#ac_add_options --with-system-hunspell
+ac_add_options --with-pthreads
+ac_add_options --enable-system-ffi
+ac_add_options --disable-static 
+ac_add_options --enable-shared 
+ac_add_options --enable-safe-browsing
+ac_add_options --enable-ui-locale=ja
+ac_add_options --disable-gnomevfs
+ac_add_options --disable-gnomeui
+ac_add_options --with-l10n-base=../../l10n
+ac_add_options --prefix=/usr
+ac_add_options --libdir=/usr/${libdir}
+ac_add_options --localstatedir=/var
+ac_add_options --with-branding=mail/branding/aurora
+
+export CC="${GCC} -isystem /usr/include $target"
+export CXX="${GPP} -isystem /usr/include $target"
+export LDFLAGS='-Wl,--as-needed'
+export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+EOF
+
+    if [ $arch = "x86_64" ]; then
+      cat >> mozconfig << EOF
+export USE_ARCH=64
+EOF
+    else
+      cat >> mozconfig << EOF
+ac_add_options --host=i686-pc-linux-gnu
+ac_add_options --build=i686-pc-linux-gnu
+mk_add_options CONFIG_GUESS=i686-pc-linux-gnu
+export USE_ARCH=32
+EOF
+    fi
+    make -j3 -f client.mk build
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    make -f client.mk install DESTDIR=$P
+  done
+######################################################################
+# * make install でコピーされないファイルがある場合はここに記述します。
+######################################################################
+  install2 thunderbird.desktop $P/usr/share/applications/
+  ( cd $P/usr/$libdir ; ln -sf thunderbird-$vers thunderbird )
+
+#  mkdir -p $P/install
+#  cat <<EOF > $P/install/initpkg
+#lib_chk=\`grep thunderbird /etc/ld.so.conf\`
+#if [ "\$lib_chk.x" = ".x" ]; then
+#echo "adding /usr/$libdir/thunderbird to /etc/ld.so.conf"
+#echo "/usr/$libdir/thunderbird" >> /etc/ld.so.conf
+#ldconfig 2>/dev/null 1>/dev/null
+#fi
+#EOF
+
+
+# locale dataはソースコードには同梱されず，別途Mercurial経由で取り出す必要がある
+# ようなので，ズルして本家の日本語版バイナリから借用 :-P
+
+#  rm $P/usr/${libdir}/thunderbird-$vers/chrome/en-US.{jar,manifest}
+#  for i in $localefiles ; do
+#      cp $W/$i $P/usr/${libdir}/thunderbird-$vers/chrome
+#  done
+
+# remove locales except ja
+# 
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
+    for loc in * ; do
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
+  fi
+
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+######################################################################
+# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
+#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
+# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
+######################################################################
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
+  done
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  mv $docdir/$src $docdir/$pkgbase-$vers
+  convert
+############################################################
+# /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+# 紛れこみがちなので
+############################################################
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share $P/usr/include $P/usr/${libdir}
+  fi
+######################################################################
+# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
+#   記述します(prune_symlink を使います)。
+# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
+#   します(こだわりを求めないなら単に makepkg でも良いです)。
+######################################################################
+# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+# tar rvpf $pkg.tar -C $P usr/share/doc/$src
+# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
+# mv $pkg.tar.gz $pkg.tgz
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

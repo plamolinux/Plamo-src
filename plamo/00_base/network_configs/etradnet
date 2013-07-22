@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Change to tradnet
+
+# planet -> tradnet
+change_tradnet () {
+    if [ -r /tmp/SeTT_PX ]; then
+	T_PX=`cat /tmp/SeTT_PX`
+    elif [ -z "$T_PX" -a -n "$1" ]; then
+	T_PX=$1
+    else
+	T_PX=/
+    fi
+    cd $T_PX
+
+    sbin/tradnet -f
+}
+
+# Installer must call me with -f !!
+if [ "$1" = "-f" ]; then
+    change_tradnet
+    exit
+fi
+
+if [ "`ls -l /sbin/netconfig | sed 's/.*-> *//'`" = "netconfig.planet" ]; then
+
+cat <<EOF > /tmp/tmpmsg
+
+Now you use the new 'Planet' as a network enabler. Change it
+into the old and simple 'tradnet' ? Note that only Planet
+supports the NICs like PC-card or USB.
+
+You have to reboot the system after changing, and you have to
+redo the network configuration again for the first time of using
+tradnet.
+ 
+EOF
+
+    dialog --title "Change to tradnet?" --yesno "`cat /tmp/tmpmsg`" 13 70
+    if [ ! $? = 0 ]; then
+	rm -f /tmp/tmpmsg
+	exit
+    fi
+    rm -f /tmp/tmpmsg
+    change_tradnet
+fi
+
+exec /sbin/enetconfig.tradnet

@@ -1,0 +1,430 @@
+#!/bin/sh
+##############################################################
+url='http://jaist.dl.sourceforge.net/project/cpufreqd/Source%20packages/2.4.2/cpufreqd-2.4.2.tar.bz2'
+pkgbase=cpufreqd
+vers=2.4.2
+arch=x86_64
+# arch=i586
+build=P3
+src=cpufreqd-2.4.2
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+patchfiles=''
+compress=txz
+##############################################################
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_all() {
+  for chk in `find . ` ; do
+    chk_elf=`file $chk | grep ELF`
+    if [ "$chk_elf.x" != ".x" ]; then
+      chk_lib=`echo $chk | grep lib`
+      if [ "$chk_lib.x" != ".x" ]; then
+         echo "stripping $chk with -g "
+         strip -g $chk
+      else
+         echo "stripping $chk"
+         strip $chk
+      fi
+    fi
+  done
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    # files=`ls -a --indicator-style=none | tail -n+3`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress_all() {
+  cd $P
+  strip_all
+}  
+
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} 
+  if [ $arch = "x86_64" ]; then
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+xmandir=$P/usr/X11R7/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+    suffix="64"
+else
+    target="-m32"
+    libdir="lib"
+    suffix=""
+fi
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+######################################################################
+# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
+#   記述します。
+######################################################################
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+    patch -p1 <<"EOF"
+--- build/src/Makefile.in~	2010-04-18 22:58:42.000000000 +0900
++++ build/src/Makefile.in	2011-07-05 08:07:40.470800424 +0900
+@@ -419,7 +419,7 @@
+ @ACPI_PLUGIN_TRUE@		$(AM_CFLAGS) -I/@PTHREAD_SRCDIR@/include -I/usr/include/sysfs
+ 
+ @ACPI_PLUGIN_TRUE@cpufreqd_acpi_la_LDFLAGS = \
+-@ACPI_PLUGIN_TRUE@		-module -avoid-version -L/@PTHREAD_SRCDIR@/lib -lpthread -lsysfs
++@ACPI_PLUGIN_TRUE@		-module -avoid-version -L/@PTHREAD_SRCDIR@/${libdir} -lpthread -lsysfs
+
+EOF
+    sed -i -e 's/^#enable_remote/enable_remote/' -e 's/#remote_group/remote_group/' cpufreqd.conf
+
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
+  done
+######################################################################
+# * make install でコピーされないファイルがある場合はここに記述します。
+######################################################################
+  mkdir -p $P/etc/rc.d/init.d
+  cat <<"EOF" > $P/etc/rc.d/init.d/cpufreqd
+#!/bin/sh
+start() {
+    for i in cpufreq_conservative cpufreq_powersave cpufreq_userspace cpufreq_ondemand cpufreq_stats freq_table ; do
+        modprobe $i >/dev/null 2>&1
+    done
+    for i in acpi-cpufreq mperf p4-clockmod powernow-k8 speedstep-centrino speedstep-lib ; do
+        modprobe $i >/dev/null 2>&1
+    done
+    for i in ac battery container pci_slot processor sbshc video acpi_pad button fan power_meter sbs thermal ; do
+        modprobe $i >/dev/null 2>&1
+    done
+
+    if [ -x /usr/sbin/cpufreqd ]; then
+	echo $"Starting cpufreqd..."
+	/usr/sbin/cpufreqd
+    fi
+}
+
+stop() {
+    if [ -r /var/run/cpufreqd.pid ]; then
+	echo $"Stopping cpufreqd daemon..."
+	kill `cat /var/run/cpufreqd.pid`
+	rm -f /var/run/cpufreqd.pid
+    fi
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+restart)
+    stop
+    sleep 3
+    start
+    ;;
+*)
+    echo $"Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
+EOF
+  # chmod +x $P/etc/rc.d/init.d/cpufreqd
+
+  mkdir -p $docdir/$src
+  cat <<"EOF" > $docdir/$src/sample_cpufreqd.conf
+# this is a comment
+# see CPUFREQD.CONF(5) manpage for a complete reference
+[General]
+pidfile=/var/run/cpufreqd.pid
+poll_interval=2
+verbosity=4
+#enable_remote=1
+#remote_group=root
+[/General]
+
+#[acpi]
+#acpid_socket=/var/run/acpid.socket
+#[/acpi]
+
+#[nforce2_atxp1]
+#vcore_path=/some/path
+#vcore_default=1500
+#[/nforce2_atxp1]
+
+[sensors_plugin]
+sensors_conf=/etc/sensors3.conf
+[/sensors_plugin]
+
+[Profile]
+name=On Demand High
+minfreq=40%
+maxfreq=100%
+policy=ondemand
+[/Profile]
+
+[Profile]
+name=On Demand Low
+minfreq=20%
+maxfreq=80%
+policy=ondemand
+[/Profile]
+
+[Profile]
+name=Performance High
+minfreq=100%
+maxfreq=100%
+policy=performance
+#exec_post=echo 8 > /proc/acpi/sony/brightness
+[/Profile]
+
+[Profile]
+name=Performance Low
+minfreq=80%
+maxfreq=80%
+policy=performance
+[/Profile]
+
+[Profile]
+name=Powersave High
+minfreq=70%
+maxfreq=70%
+policy=powersave
+[/Profile]
+
+[Profile]
+name=Powersave Low
+minfreq=30%
+maxfreq=30%
+policy=powersave
+[/Profile]
+
+#[Profile]
+#name=Conservative High
+#minfreq=33%
+#maxfreq=100%
+#policy=conservative
+#[/Profile]
+#
+#[Profile]
+#name=Conservative Low
+#minfreq=0%
+#maxfreq=66%
+#policy=conservative
+#[/Profile]
+
+##
+# Basic states
+##
+[Rule]
+name=Default Rule
+sensor=temp1:0-60
+cpu_interval=0-100
+profile=Performance High
+[/Rule]
+ 
+# CPU Too hot!
+[Rule]
+name=CPU Too Hot
+#acpi_temperature=55-100
+sensor=temp1:61-100
+cpu_interval=50-100
+profile=On Demand Low
+[/Rule]
+
+EOF
+
+
+# remove locales except ja
+# 
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
+    for loc in * ; do
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
+  fi
+
+######################################################################
+# path に lib があるバイナリは strip -g, ないバイナリは strip する
+######################################################################
+  cd $P
+  compress_all
+
+######################################################################
+# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
+#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
+# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
+######################################################################
+  cd $W
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
+  done
+############################################################
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
+############################################################
+
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share/doc
+  fi
+
+######################################################################
+# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
+#   記述します(prune_symlink を使います)。
+# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
+#   します(こだわりを求めないなら単に makepkg でも良いです)。
+######################################################################
+# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+# tar rvpf $pkg.tar -C $P usr/share/doc/$src
+# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
+# mv $pkg.tar.gz $pkg.tgz
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

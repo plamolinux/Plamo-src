@@ -1,0 +1,428 @@
+Submitted By: DJ Lucas <dj at linuxfromscratch dot org>
+Date: 2010-02-18
+Initial Package Version: firefox-3.6/xulrunner-1.9.2
+Upstream Status: not applicable
+Origin: self (previous firefox-3.5.2-provide_system_nss_nspr patch)
+Description: Adds auto-generated {nss,nspr}{.pc,-config} files and fixes
+             compilation of applications dependent on libxul.
+             Rediffed for Firefox-3.6 and Xulrunner-1.9.2
+
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/libxul-embedding.pc.in mozilla-1.9.2/xulrunner/installer/libxul-embedding.pc.in
+--- mozilla-1.9.2-orig/xulrunner/installer/libxul-embedding.pc.in	2010-01-20 21:31:27.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/libxul-embedding.pc.in	2010-02-17 22:33:07.000000000 -0600
+@@ -6,5 +6,6 @@
+ Name: libxul-embedding
+ Description: Static library for version-independent embedding of the Mozilla runtime
+ Version: %MOZILLA_VERSION%
++Requires: %NSPR_NAME% >= %NSPR_VERSION%
+ Libs: -L${sdkdir}/lib -lxpcomglue
+ Cflags: -DXPCOM_GLUE -I${includedir} %WCHAR_CFLAGS%
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/Makefile.in mozilla-1.9.2/xulrunner/installer/Makefile.in
+--- mozilla-1.9.2-orig/xulrunner/installer/Makefile.in	2010-01-20 21:31:27.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/Makefile.in	2010-02-17 22:43:25.000000000 -0600
+@@ -96,16 +96,27 @@
+ NSPR_VERSION=$(shell $(NSPR_CONFIG) --version)
+ else
+ pkg_config_files += mozilla-nspr.pc
++pkg_config_files += nspr.pc
++config_files += nspr-config
+ NSPR_NAME=mozilla-nspr
+ FULL_NSPR_CFLAGS=-I\$${includedir}
+ FULL_NSPR_LIBS=$(subst $(prefix),\$${sdkdir},$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
+ NSPR_VERSION=$(shell $(DEPTH)/nsprpub/config/nspr-config --version)
++NSPR_MAJOR_VERSION=$(shell echo $(NSPR_VERSION) | cut -d. -f1)
++NSPR_MINOR_VERSION=$(shell echo $(NSPR_VERSION) | cut -d. -f2)
++NSPR_PATCH_VERSION=$(shell echo $(NSPR_VERSION) | cut -d. -f3)
+ endif
+ 
+ $(warning FULL_NSPR_CFLAGS=$(FULL_NSPR_CFLAGS))
+ 
+ ifndef MOZ_NATIVE_NSS
+ pkg_config_files += mozilla-nss.pc
++pkg_config_files += nspr.pc
++config_files += nspr-config
++NSS_MAJOR_VERSION=$(shell grep "NSS_VMAJOR" $(topsrcdir)/security/nss/lib/nss/nss.h | awk '{print $$3}')
++NSS_MINOR_VERSION=$(shell grep "NSS_VMINOR" $(topsrcdir)/security/nss/lib/nss/nss.h | awk '{print $$3}')
++NSS_PATCH_VERSION=$(shell grep "NSS_VPATCH" $(topsrcdir)/security/nss/lib/nss/nss.h | awk '{print $$3}')
++NSS_VERSION=$(NSS_MAJOR_VERSION).$(NSS_MINOR_VERSION).$(NSS_PATCH_VERSION)
+ endif
+ 
+ ifdef MOZ_OJI
+@@ -124,16 +135,34 @@
+ 	-e "s|%MOZ_APP_NAME%|$(MOZ_APP_NAME)|" \
+ 	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
+ 	-e "s|%WCHAR_CFLAGS%|$(WCHAR_CFLAGS)|" \
++	-e "s|%NSS_VERSION%|$(NSS_VERSION)|" \
+ 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
+ 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
+ 	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
+ 	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" > $@
+ 	chmod 644 $@
+ 
++%-config: $(srcdir)/%-config.in $(GLOBAL_DEPS)
++	cat $< | sed \
++	-e "s|%prefix%|$(prefix)|" \
++	-e "s|%includedir%|$(includedir)|" \
++	-e "s|%sdkdir%|$(sdkdir)|" \
++	-e "s|%NSPR_MAJOR_VERSION%|$(NSPR_MAJOR_VERSION)|" \
++	-e "s|%NSPR_MINOR_VERSION%|$(NSPR_MINOR_VERSION)|" \
++	-e "s|%NSPR_PATCH_VERSION%|$(NSPR_PATCH_VERSION)|" \
++	-e "s|%NSS_MAJOR_VERSION%|$(NSS_MAJOR_VERSION)|" \
++	-e "s|%NSS_MINOR_VERSION%|$(NSS_MINOR_VERSION)|" \
++	-e "s|%NSS_PATCH_VERSION%|$(NSS_PATCH_VERSION)|" > $@
++	chmod 755 $@
++
+ install:: $(pkg_config_files)
+ 	@echo pkg_config_file: $(pkg_config_files)
+ 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(libdir)/pkgconfig
+ 
++install:: $(config_files)
++	@echo config_files: $(config_files)
++	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(bindir)
++
+ GARBAGE += $(MOZILLA_VERSION).system.conf $(pkg_config_files)
+ 
+ GARBAGE += debian/changelog
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/nspr-config.in mozilla-1.9.2/xulrunner/installer/nspr-config.in
+--- mozilla-1.9.2-orig/xulrunner/installer/nspr-config.in	1969-12-31 18:00:00.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/nspr-config.in	2010-02-17 22:43:33.000000000 -0600
+@@ -0,0 +1,147 @@
++#!/bin/sh
++
++prefix=%prefix%
++exec_prefix=${prefix}/bin
++sdkdir=%sdkdir%
++libdir=%sdkdir%
++includedir=%includedir%
++
++major_version=%NSPR_MAJOR_VERSION%
++minor_version=%NSPR_MINOR_VERSION%
++patch_version=%NSPR_PATCH_VERSION%
++
++usage()
++{
++	cat <<EOF
++Usage: nspr-config [OPTIONS] [LIBRARIES]
++Options:
++	[--prefix[=DIR]]
++	[--exec-prefix[=DIR]]
++	[--includedir[=DIR]]
++	[--libdir[=DIR]]
++	[--version]
++	[--libs]
++	[--cflags]
++Libraries:
++	nspr
++	plc
++	plds
++EOF
++	exit $1
++}
++
++if test $# -eq 0; then
++	usage 1 1>&2
++fi
++
++lib_nspr=yes
++lib_plc=yes
++lib_plds=yes
++
++while test $# -gt 0; do
++  case "$1" in
++  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
++  *) optarg= ;;
++  esac
++
++  case $1 in
++    --prefix=*)
++      prefix=$optarg
++      ;;
++    --prefix)
++      echo_prefix=yes
++      ;;
++    --exec-prefix=*)
++      exec_prefix=$optarg
++      ;;
++    --exec-prefix)
++      echo_exec_prefix=yes
++      ;;
++    --includedir=*)
++      includedir=$optarg
++      ;;
++    --includedir)
++      echo_includedir=yes
++      ;;
++    --libdir=*)
++      libdir=$optarg
++      ;;
++    --libdir)
++      echo_libdir=yes
++      ;;
++    --version)
++      echo ${major_version}.${minor_version}.${patch_version}
++      ;;
++    --cflags)
++      echo_cflags=yes
++      ;;
++    --libs)
++      echo_libs=yes
++      ;;
++    nspr)
++      lib_nspr=yes
++      ;;
++    plc)
++      lib_plc=yes
++      ;;
++    plds)
++      lib_plds=yes
++      ;;
++    *)
++      usage 1 1>&2
++      ;;
++  esac
++  shift
++done
++
++# Set variables that may be dependent upon other variables
++if test -z "$exec_prefix"; then
++    exec_prefix=`pkg-config --variable=exec_prefix nspr`
++fi
++if test -z "$includedir"; then
++    includedir=`pkg-config --variable=includedir nss`
++fi
++if test -z "$libdir"; then
++    libdir=`pkg-config --variable=libdir nss`
++fi
++
++if test "$echo_prefix" = "yes"; then
++    echo $prefix
++fi
++
++if test "$echo_exec_prefix" = "yes"; then
++    echo $exec_prefix
++fi
++
++if test "$echo_includedir" = "yes"; then
++    echo $includedir
++fi
++
++if test "$echo_libdir" = "yes"; then
++    echo $libdir
++fi
++
++if test "$echo_cflags" = "yes"; then
++    echo -I$includedir/stable
++fi
++
++if test "$echo_libs" = "yes"; then
++      libdirs=-L$libdir
++      if test -n "$lib_plds"; then
++	libdirs="$libdirs -lplds${major_version}"
++      fi
++      if test -n "$lib_plc"; then
++	libdirs="$libdirs -lplc${major_version}"
++      fi
++      if test -n "$lib_nspr"; then
++	libdirs="$libdirs -lnspr${major_version}"
++      fi
++      os_ldflags=""
++      for i in $os_ldflags ; do
++	if echo $i | grep \^-L >/dev/null; then
++	  libdirs="$libdirs $i"
++        fi
++      done
++      echo $libdirs -lpthread
++fi      
++
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/nspr.pc.in mozilla-1.9.2/xulrunner/installer/nspr.pc.in
+--- mozilla-1.9.2-orig/xulrunner/installer/nspr.pc.in	1969-12-31 18:00:00.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/nspr.pc.in	2010-02-17 22:43:33.000000000 -0600
+@@ -0,0 +1,11 @@
++prefix=%prefix%
++sdkdir=%sdkdir%
++includedir=%includedir%
++
++Name: NSPR
++Description: The Netscape Portable Runtime
++Version: %NSPR_VERSION%
++Libs: %FULL_NSPR_LIBS%
++Cflags: %FULL_NSPR_CFLAGS%
++
++
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/nss-config.in mozilla-1.9.2/xulrunner/installer/nss-config.in
+--- mozilla-1.9.2-orig/xulrunner/installer/nss-config.in	1969-12-31 18:00:00.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/nss-config.in	2010-02-17 22:43:33.000000000 -0600
+@@ -0,0 +1,157 @@
++#!/bin/sh
++
++prefix=%prefix%
++exec_prefix=${prefix}/bin
++sdkdir=%sdkdir%
++libdir=%sdkdir%
++includedir=%includedir%
++
++major_version=%NSS_MAJOR_VERSION%
++minor_version=%NSS_MINOR_VERSION%
++patch_version=%NSS_PATCH_VERSION%
++
++usage()
++{
++	cat <<EOF
++Usage: nss-config [OPTIONS] [LIBRARIES]
++Options:
++	[--prefix[=DIR]]
++	[--exec-prefix[=DIR]]
++	[--includedir[=DIR]]
++	[--libdir[=DIR]]
++	[--version]
++	[--libs]
++	[--cflags]
++Dynamic Libraries:
++	nss
++	nssutil
++	smime
++	ssl
++	softokn
++EOF
++	exit $1
++}
++
++if test $# -eq 0; then
++	usage 1 1>&2
++fi
++
++lib_nss=yes
++lib_nssutil=yes
++lib_smime=yes
++lib_ssl=yes
++lib_softokn=yes
++
++while test $# -gt 0; do
++  case "$1" in
++  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
++  *) optarg= ;;
++  esac
++
++  case $1 in
++    --prefix=*)
++      prefix=$optarg
++      ;;
++    --prefix)
++      echo_prefix=yes
++      ;;
++    --exec-prefix=*)
++      exec_prefix=$optarg
++      ;;
++    --exec-prefix)
++      echo_exec_prefix=yes
++      ;;
++    --includedir=*)
++      includedir=$optarg
++      ;;
++    --includedir)
++      echo_includedir=yes
++      ;;
++    --libdir=*)
++      libdir=$optarg
++      ;;
++    --libdir)
++      echo_libdir=yes
++      ;;
++    --version)
++      echo ${major_version}.${minor_version}.${patch_version}
++      ;;
++    --cflags)
++      echo_cflags=yes
++      ;;
++    --libs)
++      echo_libs=yes
++      ;;
++    nss)
++      lib_nss=yes
++      ;;
++    nssutil)
++      lib_nssutil=yes
++      ;;
++    smime)
++      lib_smime=yes
++      ;;
++    ssl)
++      lib_ssl=yes
++      ;;
++    softokn)
++      lib_softokn=yes
++      ;;
++    *)
++      usage 1 1>&2
++      ;;
++  esac
++  shift
++done
++
++# Set variables that may be dependent upon other variables
++if test -z "$exec_prefix"; then
++    exec_prefix=`pkg-config --variable=exec_prefix nss`
++fi
++if test -z "$includedir"; then
++    includedir=`pkg-config --variable=includedir nss`
++fi
++if test -z "$libdir"; then
++    libdir=`pkg-config --variable=libdir nss`
++fi
++
++if test "$echo_prefix" = "yes"; then
++    echo $prefix
++fi
++
++if test "$echo_exec_prefix" = "yes"; then
++    echo $exec_prefix
++fi
++
++if test "$echo_includedir" = "yes"; then
++    echo $includedir
++fi
++
++if test "$echo_libdir" = "yes"; then
++    echo $libdir
++fi
++
++if test "$echo_cflags" = "yes"; then
++    echo -I$includedir/stable
++fi
++
++if test "$echo_libs" = "yes"; then
++      libdirs="-L$libdir"
++      if test -n "$lib_nss"; then
++	libdirs="$libdirs -lnss${major_version}"
++      fi
++      if test -n "$lib_nssutil"; then
++        libdirs="$libdirs -lnssutil${major_version}"
++      fi
++      if test -n "$lib_smime"; then
++	libdirs="$libdirs -lsmime${major_version}"
++      fi
++      if test -n "$lib_ssl"; then
++	libdirs="$libdirs -lssl${major_version}"
++      fi
++      if test -n "$lib_softokn"; then
++        libdirs="$libdirs -lsoftokn${major_version}"
++      fi
++      echo $libdirs
++fi      
++
+diff -Naur mozilla-1.9.2-orig/xulrunner/installer/nss.pc.in mozilla-1.9.2/xulrunner/installer/nss.pc.in
+--- mozilla-1.9.2-orig/xulrunner/installer/nss.pc.in	1969-12-31 18:00:00.000000000 -0600
++++ mozilla-1.9.2/xulrunner/installer/nss.pc.in	2010-02-17 22:43:33.000000000 -0600
+@@ -0,0 +1,12 @@
++prefix=%prefix%
++exec_prefix=${prefix}/bin
++sdkdir=%sdkdir%
++libdir=%sdkdir%
++includedir=%includedir%
++
++Name: NSS
++Description: Mozilla Network Security Services
++Version: %NSS_VERSION%
++Requires: nspr >= %NSPR_VERSION%
++Libs: -L${sdkdir}/lib -lnss3 -lnssutil3 -lsmime3 -lssl3 -lsoftokn3
++Cflags: -I${includedir}/stable

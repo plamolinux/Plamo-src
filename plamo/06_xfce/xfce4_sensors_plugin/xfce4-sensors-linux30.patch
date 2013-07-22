@@ -1,0 +1,12 @@
+diff -uNr xfce4-sensors-plugin-1.2.3.orig//lib/hddtemp.c xfce4-sensors-plugin-1.2.3//lib/hddtemp.c
+--- xfce4-sensors-plugin-1.2.3.orig//lib/hddtemp.c	2011-10-26 12:05:16.480524017 +0900
++++ xfce4-sensors-plugin-1.2.3//lib/hddtemp.c	2011-10-26 12:06:17.504065051 +0900
+@@ -421,7 +421,7 @@
+ #ifdef HAVE_NETCAT
+     read_disks_netcat (chip);
+ #else
+-    if (strcmp(p_uname->sysname, "Linux")==0 && major>=5)
++    if (strcmp(p_uname->sysname, "Linux")==0)
+         read_disks_linux26 (chip);
+     else
+         read_disks_fallback (chip); /* hopefully, that's a safe variant */

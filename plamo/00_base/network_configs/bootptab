@@ -1,0 +1,72 @@
+# /etc/bootptab: database for bootp server (/etc/bootpd)
+# Last update: gwr, Sun Dec 12 19:00:00 EDT 1993
+# Dynamic Examples: al, Sat, Apr 15 12:00:00 EDT 1994
+# Blank lines and lines beginning with '#' are ignored.
+#
+# Legend:	(see bootptab.5)
+#	first field -- hostname (not indented)
+#	bf -- bootfile
+#	bs -- bootfile size in 512-octet blocks
+#	cs -- cookie servers
+#	df -- dump file name
+#	dn -- domain name
+#	ds -- domain name servers
+#	ef -- extension file
+#	gw -- gateways
+#	ha -- hardware address
+#	hd -- home directory for bootfiles
+#	hn -- host name set for client
+#	ht -- hardware type
+#	im -- impress servers
+#	ip -- host IP address
+#	lg -- log servers
+#	lp -- LPR servers
+#	ns -- IEN-116 name servers
+#	ra -- reply address
+#	rl -- resource location protocol servers
+#	rp -- root path
+#	sa -- boot server address
+#	sm -- subnet mask
+#	sw -- swap server
+#	tc -- template host (points to similar host entry)
+#	td -- TFTP directory
+#	to -- time offset (seconds)
+#	ts -- time servers
+#	vm -- vendor magic number
+#	Tn -- generic option tag n
+#
+# Be careful about including backslashes where they're needed.  Weird (bad)
+# things can happen when a backslash is omitted where one is intended.
+# Also, note that generic option data must be either a string or a
+# sequence of bytes where each byte is a two-digit hex value.
+
+# First, define a global entry which specifies the stuff every host uses.
+# NOTE: THE VALUES BELOW ARE MEANT AS AN EXAMPLE!
+#allhost:hd=/tmp:bf=null:\
+#        :ds=145.71.35.1 145.71.32.1:\
+#        :sm=255.255.254.0:\
+#        :gw=145.71.35.1:\
+#        :ts=145.71.35.1:\
+#        :lp=145.71.35.1:\
+#        :to=-7200:
+
+# Define all individual entries.
+#hostname:ht=1:ha=ether_addr_in_hex:ip=ip_addr_in_dec:tc=allhost:
+
+# Dynamic hosts will be added at end of file
+# You need to define ranges of dynamic IP to assign from this bootp server
+# use dummy name ".dynamic-X" where X is the range number starting with 1
+# Generic option tag T254 tells how many IP addresses to assign from that range
+# WARNING: don't assign beyond the Class C boundary (or your subnet),
+# start a new range
+
+#Examples: including what to add with T250 line
+#.dynamic-1:ip=204.213.190.10:T254=0x64:T253=0x02:\
+	:T250="gw=204.213.190.1:ds=204.213.176.1":
+
+# How to do part of a class B
+#.dynamic-1:ip=137.49.41.1:T254=0xFE:
+#.dynamic-2:ip=137.49.42.1:T254=0xFE:
+#.dynamic-3:ip=137.49.43.1:T254=0xFE:
+#.dynamic-4:ip=137.49.44.1:T254=0xFE:
+

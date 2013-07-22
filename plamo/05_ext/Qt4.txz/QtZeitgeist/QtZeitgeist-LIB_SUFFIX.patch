@@ -1,0 +1,39 @@
+diff -uprN QtZeitgeist-0.7.0-Source.org/CMakeLists.txt QtZeitgeist-0.7.0-Source/CMakeLists.txt
+--- QtZeitgeist-0.7.0-Source.org/CMakeLists.txt	2011-03-29 01:16:34.000000000 +0900
++++ QtZeitgeist-0.7.0-Source/CMakeLists.txt	2011-09-01 13:03:13.213909394 +0900
+@@ -39,7 +39,7 @@ add_custom_target(uninstall
+ 
+ # Generate pkg-config file
+ configure_file(${CMAKE_SOURCE_DIR}/QtZeitgeist.pc.in ${CMAKE_BINARY_DIR}/QtZeitgeist.pc)
+-install(FILES ${CMAKE_BINARY_DIR}/QtZeitgeist.pc DESTINATION lib/pkgconfig)
++install(FILES ${CMAKE_BINARY_DIR}/QtZeitgeist.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
+ 
+ add_subdirectory(include)
+ add_subdirectory(src)
+diff -uprN QtZeitgeist-0.7.0-Source.org/QtZeitgeist.pc.in QtZeitgeist-0.7.0-Source/QtZeitgeist.pc.in
+--- QtZeitgeist-0.7.0-Source.org/QtZeitgeist.pc.in	2011-03-29 01:16:34.000000000 +0900
++++ QtZeitgeist-0.7.0-Source/QtZeitgeist.pc.in	2011-09-01 13:01:38.501088589 +0900
+@@ -1,11 +1,11 @@
+ prefix=${CMAKE_INSTALL_PREFIX}
+ exec_prefix=${CMAKE_INSTALL_PREFIX}
+-libdir=${CMAKE_INSTALL_PREFIX}/lib
++libdir=${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}
+ includedir=${CMAKE_INSTALL_PREFIX}/include
+ 
+ Name: QtZeitgeist
+ Description: Qt Zeitgeist library
+ Version: 0.0.1
+ Requires: QtCore QtDBus
+-Libs: -L${CMAKE_INSTALL_PREFIX}/lib -lQtZeitgeist
++Libs: -L${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX} -lQtZeitgeist
+ Cflags: -I${CMAKE_INSTALL_PREFIX}/include/QtZeitgeist -I${CMAKE_INSTALL_PREFIX}/include/
+diff -uprN QtZeitgeist-0.7.0-Source.org/src/CMakeLists.txt QtZeitgeist-0.7.0-Source/src/CMakeLists.txt
+--- QtZeitgeist-0.7.0-Source.org/src/CMakeLists.txt	2011-03-29 01:16:34.000000000 +0900
++++ QtZeitgeist-0.7.0-Source/src/CMakeLists.txt	2011-09-01 12:58:20.612159440 +0900
+@@ -47,5 +47,5 @@ qt4_wrap_cpp(library_MOC_SRCS ${library_
+ add_library(qzeitgeist SHARED ${library_SRCS} ${library_MOC_SRCS})
+ target_link_libraries(qzeitgeist ${QT_LIBRARIES} ${QDBUS_LDFLAGS})
+ set_target_properties(qzeitgeist PROPERTIES VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}" SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR})
+-install(TARGETS qzeitgeist EXPORT QZeitgeistExport DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(TARGETS qzeitgeist EXPORT QZeitgeistExport DESTINATION ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+ install(EXPORT QZeitgeistExport DESTINATION ${CMAKE_INSTALL_PREFIX}/share/qzeitgeist/cmake NAMESPACE QZEITGEIST_)

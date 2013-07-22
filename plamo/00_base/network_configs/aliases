@@ -1,0 +1,54 @@
+#
+# aliases map generation
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+$have_aliases = 0;
+
+sub read_aliases {
+
+	local($_, $line, $ali);
+
+	return if ($have_aliases);
+	open(ALIASES, "<$source{mail_aliases}") ||
+		&fatal("can't open $source{mail_aliases}: $!");
+
+	$ali = '';
+	while (<ALIASES>) {
+		chop;
+		s/#.*//o;
+		next if (/^\s*$/o);
+		if (/^\s+/) {
+			if ($line eq '') {
+				&fatal("bad line in aliases file (line $.)");
+			}
+			s/\s+/ /og;
+			$line .= $_;
+			next;
+		}
+		if ($ali ne '') {
+			$aliases{$ali} = $line;
+			$ali = '';
+		}
+		($ali, $line) = split(/[:\s]+/, $_, 2);
+		$line =~ s/\s+/ /og;
+	}
+	$aliases{$ali} = $line if ($ali ne '');
+
+	close ALIASES;
+	$have_aliases = 1;
+};
+
+sub mail_aliases {
+
+	local($_);
+
+	&read_aliases;
+
+	foreach (keys aliases) {
+		print OUT "$_\t$aliases{$_}\n";
+	}
+	print OUT "@\t@\n";
+}
+
+1;

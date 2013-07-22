@@ -1,0 +1,19 @@
+#
+# ftpusers	This file describes the names of the users that may
+#		_*NOT*_ log into the system via the FTP server.
+#		This usually includes "root", "uucp", "news" and the
+#		like, because those users have too much power to be
+#		allowed to do "just" FTP...
+#
+# Version:	@(#)/etc/ftpusers	2.00	04/30/93
+#
+# Author:	Fred N. van Kempen, <waltje@uwalt.nl.mugnet.org
+#
+# The entire line gets matched, so no comments or extra characters on
+# lines containing a username.
+#
+root
+uucp
+news
+
+# End of ftpusers.

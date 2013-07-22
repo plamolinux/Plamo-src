@@ -1,0 +1,84 @@
+autofs-5.0.6 - fix wait for master source mutex
+
+From: Ian Kent <ikent@redhat.com>
+
+A previous change that was meant to handle the case where the master map
+source mutex read lock count was exceeded was incorrectly done for the
+write lock case instead of the read lock case.
+---
+
+ CHANGELOG    |    1 +
+ lib/master.c |   30 +++++++++++++++---------------
+ 2 files changed, 16 insertions(+), 15 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 1e6edd1..2352df1 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -10,6 +10,7 @@
+ - code analysis fixes part 1.
+ - fix not bind mounting local filesystem.
+ - add "dir" map-type.
++- fix wait for master source mutex.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/lib/master.c b/lib/master.c
+index 6c89e1d..87d1269 100644
+--- a/lib/master.c
++++ b/lib/master.c
+@@ -540,38 +540,38 @@ void send_map_update_request(struct autofs_point *ap)
+ 
+ void master_source_writelock(struct master_mapent *entry)
+ {
+-	int retries = 5; /* 1 second maximum */
+ 	int status;
+ 
+-	while (retries--) {
+-		status = pthread_rwlock_wrlock(&entry->source_lock);
+-		if (status != EAGAIN)
+-			break;
+-		else {
+-                	struct timespec t = { 0, 200000000 };
+-	                struct timespec r;
+-                	while (nanosleep(&t, &r) == -1 && errno == EINTR)
+-                        	memcpy(&t, &r, sizeof(struct timespec));
+-		}
+-	}
+-
++	status = pthread_rwlock_wrlock(&entry->source_lock);
+ 	if (status) {
+ 		logmsg("master_mapent source write lock failed");
+ 		fatal(status);
+ 	}
+-
+ 	return;
+ }
+ 
+ void master_source_readlock(struct master_mapent *entry)
+ {
++	int retries = 5; /* 1 second maximum */
+ 	int status;
+ 
+-	status = pthread_rwlock_rdlock(&entry->source_lock);
++	while (retries--) {
++		status = pthread_rwlock_tryrdlock(&entry->source_lock);
++		if (status != EAGAIN && status != EBUSY)
++			break;
++		else {
++                	struct timespec t = { 0, 200000000 };
++	                struct timespec r;
++                	while (nanosleep(&t, &r) == -1 && errno == EINTR)
++                        	memcpy(&t, &r, sizeof(struct timespec));
++		}
++	}
++
+ 	if (status) {
+ 		logmsg("master_mapent source read lock failed");
+ 		fatal(status);
+ 	}
++
+ 	return;
+ }
+ 

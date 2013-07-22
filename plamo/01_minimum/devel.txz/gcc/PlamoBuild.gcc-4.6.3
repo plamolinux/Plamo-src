@@ -1,0 +1,484 @@
+#!/bin/sh -x
+##############################################################
+url='ftp://ftp.ne.jp/GNU/gcc/gcc-4.6.3/gcc-4.6.3.tar.gz'
+pkgbase=gcc
+vers=4.6.3
+# arch=i586
+arch=x86_64
+build=P2
+src=gcc-4.6.3
+if [ "$arch" = "x86_64" ]; then
+    OPT_CONFIG='--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --libexecdir=/usr/lib64 --enable-shared --enable-threads=posix  --enable-__cxa_atexit --enable-c99 --enable-long-long  --enable-clocale=gnu --enable-languages=c,c++,fortran,java --disable-libstdcxx-pch --disable-multilib'
+else
+    OPT_CONFIG='--build=i586-pc-linux-gnu --host=i586-pc-linux-gnu --libexecdir=/usr/lib --enable-shared --enable-threads=posix  --enable-__cxa_atexit --enable-c99 --enable-long-long  --enable-clocale=gnu --enable-languages=c,c++,fortran,java --disable-libstdcxx-pch --disable-multilib'
+fi
+DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
+patchfiles=''
+# firefox need static libs for build
+# compatlibs='libstdc++.a_64 libstdc++.a_32'
+compress=txz
+##############################################################'
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    # files=`ls -a --indicator-style=none | tail -n+3`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} 
+  if [ $arch = "x86_64" ]; then
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
+done
+P=$W/work ; C=$W/pivot ; P2=$W/work2
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+xmandir=$P/usr/X11R7/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+else
+    target="-m32"
+    libdir="lib"
+fi
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+#    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p $B
+  done
+######################################################################
+# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
+#   記述します。
+######################################################################
+
+  if [ ! -f $W/ecj-latest.jar ]; then
+      wget wget ftp://sourceware.org/pub/java/ecj-latest.jar
+  fi
+
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
+
+    sed -i 's/install_to_$(INSTALL_DEST) //' $src/libiberty/Makefile.in
+
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+
+    if [ -x ../$src/configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       # export CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target "
+       ../$src/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
+    fi
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j4
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
+    mkdir -p $P/${libdir}
+    ( cd $P/${libdir} ; ln -sf ../usr/bin/cpp . )
+    ( cd $P/usr/bin ; ln -sf gcc cc )
+    chk_me=`whoami | grep root`
+    if [ "$chk_me.x" != ".x" ] ;then
+	chown -R root.root $P/*
+    fi
+#    for lib in $compatlibs ; do
+#	chk=${lib%_32}
+#	if [ "$chk" != "libstdc++.a" ]; then
+#	    cp $W/$lib $P/usr/lib64/libstdc++.a
+#	else
+#	    cp $W/$lib $P/usr/lib/libstdc++.a
+#	fi
+#    done
+  done
+######################################################################
+# * make install でコピーされないファイルがある場合はここに記述します。
+######################################################################
+
+# remove locales except ja
+# 
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
+    for loc in * ; do
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
+  fi
+
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+######################################################################
+# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
+#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
+# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
+######################################################################
+  for i in cc1 cc1plus collect2 f951 jc1 lto1 ; do
+      strip $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/$i
+  done
+  strip -g $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/libgcc.a
+  # strip -g $P/usr/${libdir}/gcc/x86_64-unknown-linux-gnu/$vers/32/libgcc.a
+
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
+  done
+  if [ -d $P2 ]; then
+      rm -rf $P2
+  fi
+
+  mkdir -p $P2
+  mv $P/* $P2
+
+# for libgcc
+  echo "building libgcc"
+  pkgbase=libgcc
+  pkg=$pkgbase-$vers-$arch-$build
+  mkdir -p $P/usr/${libdir}
+  for i in libgcc_s.so.1 libstdc++.so.6.0.16 ; do
+      cp $P2/usr/${libdir}/$i $P/usr/${libdir}
+  done
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# for GCC-core
+  echo "building gcc-core"
+  pkgbase=gcc
+  pkg=$pkgbase-$vers-$arch-$build
+  mkdir -p $P/usr/bin $P/usr/${libdir}
+  for i in cpp cc gcc gccbug gcov ${arch}-pc-linux-gnu-gcc ${arch}-pc-linux-gnu-gcc-$vers ; do
+      mv $P2/usr/bin/$i $P/usr/bin
+  done
+  mkdir -p $P/lib
+  ( cd $P/lib ; ln -sf ../usr/bin/cpp cpp )
+  mv $P2/usr/${libdir}/gcc $P/usr/${libdir}
+  mv $P2/usr/${libdir}/libgcc* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libgomp* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libmudflap* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libssp* $P/usr/${libdir}/
+  mkdir -p $P/usr/share/{doc,info,man,locale}
+  mkdir -p $P/usr/share/man/man{1,7}
+  mkdir -p $P/usr/share/doc/gcc-$vers
+  mv $P2/usr/share/doc/gcc-$vers/* $P/usr/share/doc/gcc-$vers
+  for i in cpp cppinternals gcc gccinstall gccint libgomp ; do
+      mv $P2/usr/share/info/$i.info.gz $P/usr/share/info
+  done
+  mv $P2/usr/share/locale/* $P/usr/share/locale
+  for i in cpp gcc gcov ; do
+      mv $P2/usr/share/man/man1/$i.1.gz $P/usr/share/man/man1
+  done
+  for i in fsf-funding gfdl gpl ; do
+      mv $P2/usr/share/man/man7/$i.7.gz $P/usr/share/man/man7
+  done
+
+  convert
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+# for g++
+  echo "building gcc-g++"
+  popd
+  pkgbase=g++
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/include $P/usr/share
+  for i in c++ g++ ${arch}-pc-linux-gnu-c++ ${arch}-pc-linux-gnu-g++ ; do
+      mv $P2/usr/bin/$i $P/usr/bin
+  done
+  mkdir -p $P/usr/share/gdb/auto-load
+  mv $P2/usr/${libdir}/libstdc++.so.*-gdb.py $P/usr/share/gdb/auto-load
+  mv $P2/usr/${libdir}/libstdc++* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libsupc++* $P/usr/${libdir}/
+  mv $P2/usr/include/c++ $P/usr/include
+  mv $P2/usr/share/gcc-${vers} $P/usr/share/
+
+  mkdir -p $P/usr/share/man/man1
+  mv $P2/usr/share/man/man1/g++.1.gz $P/usr/share/man/man1
+  convert
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# for fortran
+  echo "building gcc-fortran"
+  popd
+  pkgbase=gfortran
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/share/man/man1 $P/usr/share/info
+  mv $P2/usr/bin/{gfortran,${arch}-pc-linux-gnu-gfortran} $P/usr/bin
+  mv $P2/usr/${libdir}/libgfortran* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libquadmath* $P/usr/${libdir}/
+  mv $P2/usr/share/info/gfortran.info.gz $P/usr/share/info/
+  mv $P2/usr/share/man/man1/gfortran.1.gz $P/usr/share/man/man1/
+
+
+  convert
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# for Java
+  echo "building gcc-java"
+  popd
+  pkgbase=gcj
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/lib $P/usr/${libdir} $P/usr/share/man/man{1,3} $P/usr/share/info
+
+  for i in aot-compile gappletviewer gc-analyze gcj gcj-dbtool gcjh gij gjar gjarsigner gjavah gkeytool gnative2ascii gorbd grmic grmid grmiregistry gserialver gtnameserv jcf-dump jv-convert rebuild-gcj-db ${arch}-pc-linux-gnu-gcj ; do
+      mv $P2/usr/bin/$i $P/usr/bin/
+  done
+
+  for i in aot-compile gappletviewer gc-analyze gcj gcj-dbtool gcjh gij gjar gjarsigner gjavah gkeytool gnative2ascii gorbd grmic grmid grmiregistry gserialver gtnameserv jcf-dump jv-convert rebuild-gcj-db gjdoc ; do
+      mv $P2/usr/share/man/man1/$i.1.gz $P/usr/share/man/man1
+  done
+
+  for i in ffi ffi_call ffi_prep_cif ; do
+      mv $P2/usr/share/man/man3/$i.3.gz $P/usr/share/man/man3
+  done
+
+  mv $P2/usr/share/python/ $P/usr/share/
+  mv $P2/usr/share/java/ $P/usr/share/
+  mv $P2/usr/share/info/{gcj,cp-tools}.info.gz $P/usr/share/info
+
+  cp $W/ecj-latest.jar $P/usr/share/java/ecj.jar
+  cat <<"EOF" > $P/usr/bin/ecj1
+#!/bin/sh
+
+gij --classpath /usr/share/java/ecj.jar \
+   org.eclipse.jdt.internal.compiler.batch.GCCMain \
+   ${1+"$@"}
+EOF
+  chmod 755 $P/usr/bin/ecj1
+
+  mv $P2/usr/${libdir}/pkgconfig $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/gcj-* $P/usr/${libdir}
+  mv $P2/usr/${libdir}/logging.properties $P/usr/${libdir}
+  mv $P2/usr/${libdir}/security $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libffi* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libgcj* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libgij* $P/usr/${libdir}/
+
+  convert
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# 
+
+fi

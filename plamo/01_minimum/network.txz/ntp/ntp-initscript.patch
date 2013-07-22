@@ -1,0 +1,37 @@
+diff -Nur ntp-4.2.6p1.original/ntp ntp-4.2.6p1/ntp
+--- ntp-4.2.6p1.original/ntp	1970-01-01 09:00:00.000000000 +0900
++++ ntp-4.2.6p1/ntp	2010-04-14 11:23:15.000000000 +0900
+@@ -0,0 +1,33 @@
++#!/bin/sh
++
++killproc() {	# kill named processes
++	pid=`/bin/ps -e |
++		/usr/bin/grep $1 |
++		/usr/bin/sed -e 's/^  *//' -e 's/ .*//'`
++	[ "$pid" != "" ] && kill $pid
++}
++
++case "$1" in
++'start')
++	ps -e | grep ntpd > /dev/null 2>&1
++	if [ $? -eq 0 ]
++	then
++		echo "ntp daemon already running. ntp start aborted"
++		exit 0
++	fi
++	if [ -f /etc/ntp.conf -a -x /usr/bin/ntpd ]
++	then
++		NTPCONF=/etc/ntp.conf
++		tmplist=`cat $NTPCONF | sed -n '/^server/p' | cut -d' ' -f2`
++		ntpservers=`echo $tmplist | sed "s/\n//g" `
++		/usr/bin/ntpdate -s $ntpservers
++		/usr/bin/ntpd -c /etc/ntp.conf
++	fi
++	;;
++'stop')
++	killproc ntpd
++	;;
++*)
++	echo "Usage: /etc/rc.d/init.d/ntp { start | stop }"
++	;;
++esac

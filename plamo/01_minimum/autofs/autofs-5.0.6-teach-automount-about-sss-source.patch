@@ -1,0 +1,93 @@
+autofs-5.0.6 - teach automount about sss source
+
+From: Ian Kent <raven@themaw.net>
+
+Add parser and conditional checks to automount to handle sss source.
+Note, the parsing probably needs more work, both for master map entries
+and map entries, to attempt to narrow invalid map names passed down to
+lower level modules. For now we have to just handle these failures in
+the lookup module.
+---
+
+ CHANGELOG           |    1 +
+ daemon/lookup.c     |    1 +
+ lib/master_tok.l    |    2 +-
+ lib/nss_parse.y     |    6 ++++--
+ modules/parse_sun.c |    2 +-
+ 5 files changed, 8 insertions(+), 4 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index ba6f90c..e276396 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -24,6 +24,7 @@
+ - fix improve mount location error reporting.
+ - fix fix wait for master source mutex.
+ - add sss lookup module.
++- teach automount about sss source.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/daemon/lookup.c b/daemon/lookup.c
+index 098588c..de7c817 100644
+--- a/daemon/lookup.c
++++ b/daemon/lookup.c
+@@ -177,6 +177,7 @@ int lookup_nss_read_master(struct master *master, time_t age)
+ 			    !strncmp(name, "nisplus:", 8) ||
+ 			    !strncmp(name, "ldap:", 5) ||
+ 			    !strncmp(name, "ldaps:", 6) ||
++			    !strncmp(name, "sss:", 4) ||
+ 			    !strncmp(name, "dir:", 4)) {
+ 				strncpy(source, name, tmp - name);
+ 
+diff --git a/lib/master_tok.l b/lib/master_tok.l
+index 77e9a26..0d6edb7 100644
+--- a/lib/master_tok.l
++++ b/lib/master_tok.l
+@@ -118,7 +118,7 @@ DNNAMESTR2	([[:alnum:]_.\-]+)
+ INTMAP		(-hosts|-null)
+ MULTI		((multi)(,(sun|hesiod))?(:{OPTWS}|{WS}))
+ MULTISEP	([\-]{2}[[:blank:]]+)
+-MTYPE		((file|program|yp|nis|nisplus|ldap|ldaps|hesiod|userdir)(,(sun|hesiod))?(:{OPTWS}|{WS}))
++MTYPE		((file|program|sss|yp|nis|nisplus|ldap|ldaps|hesiod|userdir)(,(sun|hesiod))?(:{OPTWS}|{WS}))
+ 
+ 
+ OPTTOUT		(-t{OPTWS}|-t{OPTWS}={OPTWS}|--timeout{OPTWS}|--timeout{OPTWS}={OPTWS})
+diff --git a/lib/nss_parse.y b/lib/nss_parse.y
+index 3bda6b3..a39fda4 100644
+--- a/lib/nss_parse.y
++++ b/lib/nss_parse.y
+@@ -82,7 +82,8 @@ nss_source: SOURCE
+ {
+ 	if (!strcmp($1, "files") || !strcmp($1, "yp") ||
+ 	    !strcmp($1, "nis") || !strcmp($1, "ldap") ||
+-	    !strcmp($1, "nisplus") || !strcmp($1, "hesiod"))
++	    !strcmp($1, "nisplus") || !strcmp($1, "hesiod") ||
++	    !strcmp($1, "sss"))
+ 		src = add_source(nss_list, $1);
+ 	else
+ 		nss_ignore($1);
+@@ -92,7 +93,8 @@ nss_source: SOURCE
+ 
+ 	if (!strcmp($1, "files") || !strcmp($1, "yp") ||
+ 	    !strcmp($1, "nis") || !strcmp($1, "ldap") ||
+-	    !strcmp($1, "nisplus") || !strcmp($1, "hesiod")) {
++	    !strcmp($1, "nisplus") || !strcmp($1, "hesiod") ||
++	    !strcmp($1, "sss")) {
+ 		src = add_source(nss_list, $1);
+ 		for (a = 0; a < NSS_STATUS_MAX; a++) {
+ 			if (act[a].action != NSS_ACTION_UNKNOWN) {
+diff --git a/modules/parse_sun.c b/modules/parse_sun.c
+index e9d94c7..d7e74e2 100644
+--- a/modules/parse_sun.c
++++ b/modules/parse_sun.c
+@@ -880,7 +880,7 @@ static int validate_location(unsigned int logopt, char *loc)
+ 		    !strncmp(ptr, "file:", 5) || !strncmp(ptr, "yp:", 3) ||
+ 		    !strncmp(ptr, "nis:", 4) || !strncmp(ptr, "nisplus:", 8) ||
+ 		    !strncmp(ptr, "ldap:", 5) || !strncmp(ptr, "ldaps:", 6) ||
+-		    !strncmp(ptr, "dir:", 4))
++		    !strncmp(ptr, "sss:", 4) || !strncmp(ptr, "dir:", 4))
+ 			return 1;
+ 		error(logopt,
+ 		      "expected colon delimeter not found in location %s",

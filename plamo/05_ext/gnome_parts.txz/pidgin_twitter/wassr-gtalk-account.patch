@@ -1,0 +1,15 @@
+diff -u -r pidgin-twitter-0.9.2.1.orig/util.c pidgin-twitter-0.9.2.1/util.c
+--- pidgin-twitter-0.9.2.1.orig/util.c	2011-05-13 00:08:01.000000000 +0900
++++ pidgin-twitter-0.9.2.1/util.c	2012-02-10 12:35:35.717563183 +0900
+@@ -309,6 +309,11 @@
+         return TRUE;
+     }
+ 
++    if(g_strstr_len(name,  23, "wassr-bot@xmpp.wassr.jp") &&
++       g_strstr_len(proto, 11, "prpl-jabber")) {
++        return TRUE;
++    }
++
+     return FALSE;
+ }
+ 

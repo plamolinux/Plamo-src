@@ -1,0 +1,11 @@
+--- ./util/grub.d/10_linux.in	2011-08-12 14:39:52.845232442 +0900
++++ ./util/grub.d/10_linux.in.orig	2011-08-12 14:28:19.000000000 +0900
+@@ -31,7 +31,7 @@
+ if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
+   OS=GNU/Linux
+ else
+-  OS="${GRUB_DISTRIBUTOR} GNU/Linux"
++  OS="${GRUB_DISTRIBUTOR} Linux"
+   CLASS="--class $(echo ${GRUB_DISTRIBUTOR} | tr 'A-Z' 'a-z' | cut -d' ' -f1) ${CLASS}"
+ fi
+ 

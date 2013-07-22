@@ -1,0 +1,11 @@
+--- qhull-2011.1.org/CMakeLists.txt	2011-05-19 10:53:36.000000000 +0900
++++ qhull-2011.1/CMakeLists.txt	2011-09-02 16:31:28.159398540 +0900
+@@ -26,7 +26,7 @@
+ endif()
+ if(LIB_INSTALL_DIR)
+ else()
+-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
++set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+ endif()
+ if(BIN_INSTALL_DIR)
+ else()

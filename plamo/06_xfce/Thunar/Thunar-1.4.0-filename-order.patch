@@ -1,0 +1,298 @@
+From bc042483d3772de459f9eeb893d5f62580f2fa6c Mon Sep 17 00:00:00 2001
+From: Andrzej <ndrwrdck@gmail.com>
+Date: Tue, 1 May 2012 22:11:05 +0900
+Subject: [PATCH 1/2] Sorting files, switching to
+ g_utf8_collate_key_for_filename()
+
+This means number sort is gone but this should fix our issues with locales.
+
+Sorting itself should be much faster but there might be some performance
+impact of collation (but it's less frequent than comparison).
+---
+ thunar/thunar-file.c |  164 ++++++++-----------------------------------------
+ thunar/thunar-file.h |    2 +
+ 2 files changed, 29 insertions(+), 137 deletions(-)
+
+diff --git a/thunar/thunar-file.c b/thunar/thunar-file.c
+index 9509600..fd49c60 100644
+--- a/thunar/thunar-file.c
++++ b/thunar/thunar-file.c
+@@ -304,9 +304,11 @@ thunar_file_finalize (GObject *object)
+   /* free the custom icon name */
+   g_free (file->custom_icon_name);
+   
+-  /* free display name and basename */
++  /* free display name, basename and collate keys*/
+   g_free (file->display_name);
+   g_free (file->basename);
++  g_free (file->collate_key);
++  g_free (file->collate_key_fc);
+ 
+   /* free the thumbnail path */
+   g_free (file->thumbnail_path);
+@@ -630,6 +632,8 @@ thunar_file_get (GFile   *gfile,
+       file->info = NULL;
+       file->custom_icon_name = NULL;
+       file->display_name = NULL;
++      file->collate_key = NULL;
++      file->collate_key_fc = NULL;
+       file->basename = NULL;
+ 
+       if (thunar_file_load (file, NULL, error))
+@@ -731,13 +735,19 @@ thunar_file_load (ThunarFile   *file,
+   g_free (file->custom_icon_name);
+   file->custom_icon_name = NULL;
+ 
+-  /* free display name and basename */
++  /* free display name, basename and collate keys */
+   g_free (file->display_name);
+   file->display_name = NULL;
+ 
+   g_free (file->basename);
+   file->basename = NULL;
+ 
++  g_free (file->collate_key);
++  file->collate_key = NULL;
++
++  g_free (file->collate_key_fc);
++  file->collate_key_fc = NULL;
++
+   /* free thumbnail path */
+   g_free (file->thumbnail_path);
+   file->thumbnail_path = NULL;
+@@ -893,6 +903,11 @@ thunar_file_load (ThunarFile   *file,
+         }
+     }
+ 
++  /* cache a collate keys for display name */
++  file->collate_key = g_utf8_collate_key_for_filename (file->display_name, -1);
++  file->collate_key_fc = g_utf8_collate_key_for_filename
++    (g_utf8_casefold (file->display_name, -1), -1);
++
+   /* set thumb state to unknown */
+   file->flags = 
+     (file->flags & ~THUNAR_FILE_THUMB_STATE_MASK) | THUNAR_FILE_THUMB_STATE_UNKNOWN;
+@@ -3292,12 +3307,7 @@ thunar_file_compare_by_name (const ThunarFile *file_a,
+                              const ThunarFile *file_b,
+                              gboolean          case_sensitive)
+ {
+-  const gchar *ap;
+-  const gchar *bp;
+-  const gchar *filename_a;
+-  const gchar *filename_b;
+-  guchar       ac;
+-  guchar       bc;
++  gint         result = 0;
+ 
+ #ifdef G_ENABLE_DEBUG
+   /* probably too expensive to do the instance check every time
+@@ -3307,147 +3317,27 @@ thunar_file_compare_by_name (const ThunarFile *file_a,
+   _thunar_return_val_if_fail (THUNAR_IS_FILE (file_b), 0);
+ #endif
+ 
+-  /* we compare only the display names (UTF-8!) */
+-  filename_a = thunar_file_get_display_name (file_a);
+-  filename_b = thunar_file_get_display_name (file_b);
+-
+-  /* start at the beginning of both strings */
+-  ap = filename_a;
+-  bp = filename_b;
+-
+   /* check if we should ignore case */
+-  if (G_LIKELY (case_sensitive))
++  if (G_LIKELY (case_sensitive == FALSE))
+     {
+-      /* try simple (fast) ASCII comparison first */
+-      for (;; ++ap, ++bp)
+-        {
+-          /* check if the characters differ or we have a non-ASCII char */
+-          ac = *((const guchar *)ap);
+-          bc = *((const guchar *)bp);
+-          if (ac != bc || ac == 0 || ac > 127)
+-            break;
+-        }
+-
+-      /* fallback to Unicode comparison */
+-      if (G_UNLIKELY (ac > 127 || bc > 127))
+-        {
+-          for (;; ap = g_utf8_next_char (ap), bp = g_utf8_next_char (bp))
+-            {
+-              /* check if characters differ or end of string */
+-              ac = g_utf8_get_char (ap);
+-              bc = g_utf8_get_char (bp);
+-              if (ac != bc || ac == 0)
+-                break;
+-            }
+-        }
+-    }
+-  else
+-    {
+-      /* try simple (fast) ASCII comparison first (case-insensitive!) */
+-      for (;; ++ap, ++bp)
+-        {
+-          /* check if the characters differ or we have a non-ASCII char */
+-          ac = *((const guchar *)ap);
+-          bc = *((const guchar *)bp);
+-          if (g_ascii_tolower (ac) != g_ascii_tolower (bc) || ac == 0 || ac > 127)
+-            break;
+-        }
+-
+-      /* fallback to Unicode comparison (case-insensitive!) */
+-      if (G_UNLIKELY (ac > 127 || bc > 127))
+-        {
+-          for (;; ap = g_utf8_next_char (ap), bp = g_utf8_next_char (bp))
+-            {
+-              /* check if characters differ or end of string */
+-              ac = g_utf8_get_char (ap);
+-              bc = g_utf8_get_char (bp);
+-              if (g_unichar_tolower (ac) != g_unichar_tolower (bc) || ac == 0)
+-                break;
+-            }
+-        }
++      result = strcmp (file_a->collate_key_fc, file_b->collate_key_fc);
+     }
+ 
+-  /* if both strings are equal, we're done */
+-  if (G_UNLIKELY (ac == bc
+-                  || (!case_sensitive
+-                      && g_unichar_tolower (ac) == g_unichar_tolower (bc))))
++  /* if case sensitive or if ci comparison didn't find a difference */
++  if (G_UNLIKELY (case_sensitive == TRUE || result == 0))
+     {
+-      return 0;
++      result = strcmp (file_a->collate_key, file_b->collate_key);
+     }
+ 
+-  /* check if one of the characters that differ is a digit */
+-  if (G_UNLIKELY (g_ascii_isdigit (ac) || g_ascii_isdigit (bc)))
+-    {
+-      /* if both strings differ in a digit, we use a smarter comparison
+-       * to get sorting 'file1', 'file5', 'file10' done the right way.
+-       */
+-      if (g_ascii_isdigit (ac) && g_ascii_isdigit (bc))
+-        {
+-          return compare_by_name_using_number (ap, bp, filename_a, filename_b);
+-        }
+-
+-      /* a second case is '20 file' and '2file', where comparison by number
+-       * makes sense if the previous char for both strings is a digit.
+-       */
+-      if (ap > filename_a
+-          && bp > filename_b
+-          && g_ascii_isdigit (*(ap - 1))
+-          && g_ascii_isdigit (*(bp - 1)))
+-        {
+-          /* go back one character to have both variables point to the numbers again */
+-          ap -= 1;
+-          bp -= 1;
+-
+-          return compare_by_name_using_number (ap, bp, filename_a, filename_b);
+-        }
+-    }
+-
+-  /* otherwise, if they differ in a unicode char, use the
+-   * appropriate collate function for the current locale (only
+-   * if charset is UTF-8, else the required transformations
+-   * would be too expensive)
+-   */
+-#ifdef HAVE_STRCOLL
+-  if ((ac > 127 || bc > 127) && g_get_charset (NULL))
+-    {
+-      /* case-sensitive is easy, case-insensitive is expensive,
+-       * but we use a simple optimization to make it fast.
+-       */
+-      if (G_LIKELY (case_sensitive))
+-        {
+-          return strcoll (ap, bp);
+-        }
+-      else
+-        {
+-          /* we use a trick here, so we don't need to allocate
+-           * and transform the two strings completely first (8
+-           * byte for each buffer, so all compilers should align
+-           * them properly)
+-           */
+-          gchar abuf[8];
+-          gchar bbuf[8];
+-
+-          /* transform the unicode chars to strings and
+-           * make sure the strings are nul-terminated.
+-           */
+-          abuf[g_unichar_to_utf8 (g_unichar_tolower(ac), abuf)] = '\0';
+-          bbuf[g_unichar_to_utf8 (g_unichar_tolower(bc), bbuf)] = '\0';
+-
+-          /* compare the unicode chars (as strings) */
+-          return strcoll (abuf, bbuf);
+-        }
+-    }
++#ifdef G_ENABLE_DEBUG
++  /* if both strings are equal, we're screwed (two same filenames in one directory?) */
++  _thunar_return_val_if_fail (result != 0, 0);
+ #endif
+ 
+-  /* else, they differ in an ASCII character */
+-  if (G_UNLIKELY (!case_sensitive))
+-    return (g_unichar_tolower (ac) > g_unichar_tolower (bc)) ? 1 : -1;
+-  else
+-    return (ac > bc) ? 1 : -1;
++  return result;
+ }
+ 
+ 
+-
+ gboolean
+ thunar_file_same_filesystem (const ThunarFile *file_a,
+                              const ThunarFile *file_b)
+diff --git a/thunar/thunar-file.h b/thunar/thunar-file.h
+index d1a5704..4794bf6 100644
+--- a/thunar/thunar-file.h
++++ b/thunar/thunar-file.h
+@@ -117,6 +117,8 @@ struct _ThunarFile
+   GFile         *gfile;
+   gchar         *custom_icon_name;
+   gchar         *display_name;
++  gchar         *collate_key;
++  gchar         *collate_key_fc;
+   gchar         *basename;
+   gchar         *thumbnail_path;
+   guint          flags;
+-- 
+1.7.5.4
+
+
+From f4a76ee5036b2790c4ac81c128c8102ced11c745 Mon Sep 17 00:00:00 2001
+From: Andrzej <ndrwrdck@gmail.com>
+Date: Tue, 1 May 2012 22:26:09 +0900
+Subject: [PATCH 2/2] plugged a memory leak
+
+---
+ thunar/thunar-file.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/thunar/thunar-file.c b/thunar/thunar-file.c
+index fd49c60..91f1c50 100644
+--- a/thunar/thunar-file.c
++++ b/thunar/thunar-file.c
+@@ -719,6 +719,7 @@ thunar_file_load (ThunarFile   *file,
+   gchar       *p;
+   gchar       *thumbnail_dir_path;
+   gchar       *uri = NULL;
++  gchar       *name_fc;
+ 
+   _thunar_return_val_if_fail (THUNAR_IS_FILE (file), FALSE);
+   _thunar_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+@@ -905,8 +906,9 @@ thunar_file_load (ThunarFile   *file,
+ 
+   /* cache a collate keys for display name */
+   file->collate_key = g_utf8_collate_key_for_filename (file->display_name, -1);
+-  file->collate_key_fc = g_utf8_collate_key_for_filename
+-    (g_utf8_casefold (file->display_name, -1), -1);
++  name_fc = g_utf8_casefold (file->display_name, -1);
++  file->collate_key_fc = g_utf8_collate_key_for_filename (name_fc, -1);
++  g_free (name_fc);
+ 
+   /* set thumb state to unknown */
+   file->flags = 
+-- 
+1.7.5.4
+

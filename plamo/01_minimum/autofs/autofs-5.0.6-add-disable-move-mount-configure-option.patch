@@ -1,0 +1,334 @@
+autofs-5.0.6 - add disable move mount configure option
+
+From: Ian Kent <ikent@redhat.com>
+
+With the introduction of systemd the root filesystem is now usually
+marked as shared instead of private as part of the systemd sandbox
+functionality. As a consequence moving a mount from one mount point
+to another is not allowed.
+
+To resolve this a configure option (--disable-move-mount) to disable
+autofs preparing mount tree and then moving it into place has been
+added. The move mount use in autofs was needed for a small set of
+automount types with older kernels (prior to 2.6.39). So to disable
+the use of move mount it's necessary to use a recent kernel.
+---
+
+ CHANGELOG           |    1 +
+ autofs.spec         |    2 +-
+ configure           |   18 ++++++++++++++++++
+ configure.in        |   10 ++++++++++
+ daemon/automount.c  |   11 +++++++++++
+ include/config.h.in |    3 +++
+ modules/mount_nfs.c |    5 -----
+ modules/parse_sun.c |   40 +++++++++++++++++++++++++++++++++++-----
+ 8 files changed, 79 insertions(+), 11 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 4064b5f..a1f2453 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -13,6 +13,7 @@
+ - fix wait for master source mutex.
+ - fix submount shutdown race.
+ - fix fix map source check in file lookup.
++- add disable move mount configure option.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/autofs.spec b/autofs.spec
+index 82edd1e..510ef76 100644
+--- a/autofs.spec
++++ b/autofs.spec
+@@ -57,7 +57,7 @@ inkludera n
+ echo %{version}-%{release} > .version
+ 
+ %build
+-CFLAGS="$RPM_OPT_FLAGS -Wall" ./configure --libdir=%{_libdir} --disable-mount-locking --enable-ignore-busy --with-libtirpc
++CFLAGS="$RPM_OPT_FLAGS -Wall" ./configure --libdir=%{_libdir} --disable-mount-locking --enable-ignore-busy --with-libtirpc --disable-mount-move
+ CFLAGS="$RPM_OPT_FLAGS -Wall" make initdir=/etc/rc.d/init.d DONTSTRIP=1
+ 
+ %install
+diff --git a/configure b/configure
+index b5a3608..76b6d86 100755
+--- a/configure
++++ b/configure
+@@ -704,6 +704,7 @@ with_openldap
+ with_sasl
+ enable_ext_env
+ enable_mount_locking
++enable_mount_move
+ enable_forced_shutdown
+ enable_ignore_busy
+ '
+@@ -1326,6 +1327,7 @@ Optional Features:
+   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+   --disable-ext-env	  disable search in environment for substitution variable
+   --disable-mount-locking disable use of locking when spawning mount command
++  --disable-mount-move    disable use of mount move when when preparing tree of mounts
+   --enable-force-shutdown enable USR1 signal to force unlink umount of any
+ 			  busy mounts during shutdown
+   --enable-ignore-busy	  enable exit without umounting busy mounts during
+@@ -5349,6 +5351,22 @@ $as_echo "#define ENABLE_MOUNT_LOCKING 1" >>confdefs.h
+ fi
+ 
+ #
++# Disable use of mount move
++#
++# Check whether --enable-mount-move was given.
++if test "${enable_mount_move+set}" = set; then :
++  enableval=$enable_mount_move;
++else
++  enableval=yes
++fi
++
++if test x$enable_mount_move = xyes -o x$enableval = xyes; then
++
++$as_echo "#define ENABLE_MOUNT_MOVE 1" >>confdefs.h
++
++fi
++
++#
+ # Enable forced shutdown on USR1 signal (unlink umounts all mounts).
+ #
+ # Check whether --enable-forced-shutdown was given.
+diff --git a/configure.in b/configure.in
+index 46de65a..d3e4e54 100644
+--- a/configure.in
++++ b/configure.in
+@@ -324,6 +324,16 @@ if test x$enable_mount_locking = xyes -o x$enableval = xyes; then
+ fi
+ 
+ #
++# Disable use of mount move
++#
++AC_ARG_ENABLE(mount-move,
++[  --disable-mount-move    disable use of mount move when when preparing tree of mounts],,
++	enableval=yes)
++if test x$enable_mount_move = xyes -o x$enableval = xyes; then
++	AC_DEFINE(ENABLE_MOUNT_MOVE, 1, [Disable use of mount move when preparing tree of mounts])
++fi
++
++#
+ # Enable forced shutdown on USR1 signal (unlink umounts all mounts).
+ #
+ AC_ARG_ENABLE(forced-shutdown,
+diff --git a/daemon/automount.c b/daemon/automount.c
+index 4f3151f..6bb5aa8 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -1743,9 +1743,20 @@ static void show_build_info(void)
+ 	count = 22;
+ #endif
+ 
++#ifndef ENABLE_MOUNT_MOVE
++	printf("DISABLE_MOUNT_MOVE ");
++	count = count + 19;
++#endif
++
+ #ifdef ENABLE_FORCED_SHUTDOWN
+ 	printf("ENABLE_FORCED_SHUTDOWN ");
+ 	count = count + 23;
++
++	if (count > 60) {
++		printf("\n  ");
++		count = 0;
++	}
++
+ #endif
+ 
+ #ifdef ENABLE_IGNORE_BUSY_MOUNTS
+diff --git a/include/config.h.in b/include/config.h.in
+index 4a3a990..97a8d2d 100644
+--- a/include/config.h.in
++++ b/include/config.h.in
+@@ -12,6 +12,9 @@
+ /* Disable use of locking when spawning mount command */
+ #undef ENABLE_MOUNT_LOCKING
+ 
++/* Disable use of mount move when preparing tree of mounts */
++#undef ENABLE_MOUNT_MOVE
++
+ /* define if you have E2FSCK */
+ #undef HAVE_E2FSCK
+ 
+diff --git a/modules/mount_nfs.c b/modules/mount_nfs.c
+index 8b567d2..7eab728 100644
+--- a/modules/mount_nfs.c
++++ b/modules/mount_nfs.c
+@@ -163,11 +163,6 @@ int mount_mount(struct autofs_point *ap, const char *root, const char *name, int
+ 	if (root[len - 1] == '/') {
+ 		len = snprintf(fullpath, len, "%s", root);
+ 	} else if (*name == '/') {
+-		/*
+-		 * Direct or offset mount, name is absolute path so
+-		 * don't use root (but with move mount changes root
+-		 * is now the same as name).
+-		 */
+ 		len = sprintf(fullpath, "%s", root);
+ 	} else {
+ 		len = sprintf(fullpath, "%s/%s", root, name);
+diff --git a/modules/parse_sun.c b/modules/parse_sun.c
+index 021850d..13b8af8 100644
+--- a/modules/parse_sun.c
++++ b/modules/parse_sun.c
+@@ -1028,6 +1028,7 @@ static int parse_mapent(const char *ent, char *g_options, char **options, char *
+ 	return (p - ent);
+ }
+ 
++#ifdef ENABLE_MOUNT_MOVE
+ static int move_mount(struct autofs_point *ap,
+ 		      const char *mm_tmp_root, const char *mm_root,
+ 		      unsigned int move)
+@@ -1063,6 +1064,7 @@ static int move_mount(struct autofs_point *ap,
+ 
+ 	return 1;
+ }
++#endif
+ 
+ static void cleanup_multi_root(struct autofs_point *ap, const char *root,
+ 					 const char *path, unsigned int move)
+@@ -1145,6 +1147,7 @@ static void cleanup_multi_triggers(struct autofs_point *ap,
+ 	return;
+ }
+ 
++#ifdef ENABLE_MOUNT_MOVE
+ static int check_fstype_autofs_option(const char *options)
+ {
+ 	char *tok, *tokbuf;
+@@ -1171,24 +1174,27 @@ static int check_fstype_autofs_option(const char *options)
+ 
+ 	return found;
+ }
++#endif
+ 
+ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 			 const char *name, char *loc, char *options, void *ctxt)
+ {
+ 	struct mapent *mm;
+ 	struct mapent *ro;
+-	char t_dir[] = "/tmp/autoXXXXXX";
+-	char *mnt_tmp_root, *mm_root, *mm_base, *mm_key;
++	char *mm_root, *mm_base, *mm_key;
+ 	const char *mnt_root, *target;
+ 	unsigned int mm_root_len, mnt_root_len;
+ 	int start, ret = 0, rv;
+-	unsigned int move;
++	unsigned int move = MOUNT_MOVE_NONE;
++#ifdef ENABLE_MOUNT_MOVE
++	char t_dir[] = "/tmp/autoXXXXXX";
++	char *mnt_tmp_root = NULL;
++#endif
+ 
+ 	rv = 0;
+ 
+ 	mm = me->multi;
+ 	mm_key = mm->key;
+-	move = MOUNT_MOVE_NONE;
+ 
+ 	if (*mm_key == '/') {
+ 		mm_root = mm_key;
+@@ -1202,7 +1208,10 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 	}
+ 	mm_root_len = strlen(mm_root);
+ 
+-	mnt_tmp_root = NULL;
++#ifndef ENABLE_MOUNT_MOVE
++	mnt_root = mm_root;
++	mnt_root_len = mm_root_len;
++#else
+ 	if (ap->flags & MOUNT_FLAG_REMOUNT) {
+ 		mnt_root = mm_root;
+ 		mnt_root_len = mm_root_len;
+@@ -1213,6 +1222,7 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 		mnt_root_len = strlen(mnt_root);
+ 		mnt_tmp_root = (char *) mnt_root;
+ 	}
++#endif
+ 
+ 	if (me == me->multi) {
+ 		/* name = NULL */
+@@ -1238,11 +1248,13 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 			}
+ 			ro_len = strlen(ro_loc);
+ 
++#ifdef ENABLE_MOUNT_MOVE
+ 			if (!(ap->flags & MOUNT_FLAG_REMOUNT)) {
+ 				move = MOUNT_MOVE_OTHER;
+ 				if (check_fstype_autofs_option(myoptions))
+ 					move = MOUNT_MOVE_AUTOFS;
+ 			}
++#endif
+ 
+ 			tmp = alloca(mnt_root_len + 1);
+ 			strcpy(tmp, mnt_root);
+@@ -1266,7 +1278,9 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 				goto error_out;
+ 			}
+ 		} else if (rv <= 0) {
++#ifdef ENABLE_MOUNT_MOVE
+ 			move = MOUNT_MOVE_NONE;
++#endif
+ 			ret = mount_multi_triggers(ap, me, mm_root, start, mm_base);
+ 			if (ret == -1) {
+ 				error(ap->logopt, MODPREFIX
+@@ -1279,11 +1293,21 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 		int loclen = strlen(loc);
+ 		int namelen = strlen(name);
+ 
++#ifndef ENABLE_MOUNT_MOVE
++		/*
++		 * When using move mount to mount offsets or direct mounts
++		 * the base of the tree can be the base of the temporary
++		 * mount point it needs to be the full path when not moving
++		 * the mount after construction.
++		 */
++		mnt_root = name;
++#else
+ 		if (!(ap->flags & MOUNT_FLAG_REMOUNT)) {
+ 			move = MOUNT_MOVE_OTHER;
+ 			if (check_fstype_autofs_option(options))
+ 				move = MOUNT_MOVE_AUTOFS;
+ 		}
++#endif
+ 
+ 		/* name = mm_root + mm_base */
+ 		/* destination = mm_root + mm_base = name */
+@@ -1303,7 +1327,9 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 		} else if (rv < 0) {
+ 			char *mm_root_base = alloca(strlen(mm_root) + strlen(mm_base) + 1);
+ 	
++#ifdef ENABLE_MOUNT_MOVE
+ 			move = MOUNT_MOVE_NONE;
++#endif
+ 
+ 			strcpy(mm_root_base, mm_root);
+ 			strcat(mm_root_base, mm_base);
+@@ -1318,6 +1344,7 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 		}
+ 	}
+ 
++#ifdef ENABLE_MOUNT_MOVE
+ 	if (!move_mount(ap, mnt_root, target, move)) {
+ 		cleanup_multi_triggers(ap, me, mnt_root, start, mm_base);
+ 		cleanup_multi_root(ap, mnt_root, mm_root, move);
+@@ -1326,6 +1353,7 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 
+ 	if (mnt_tmp_root)
+ 		rmdir(mnt_tmp_root);
++#endif
+ 
+ 	/* Mount for base of tree failed */
+ 	if (rv > 0)
+@@ -1341,8 +1369,10 @@ static int mount_subtree(struct autofs_point *ap, struct mapent *me,
+ 	return rv;
+ 
+ error_out:
++#ifdef ENABLE_MOUNT_MOVE
+ 	if (mnt_tmp_root)
+ 		rmdir(mnt_tmp_root);
++#endif
+ 
+ 	return 1;
+ }

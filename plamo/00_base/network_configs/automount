@@ -1,0 +1,72 @@
+#
+# Automounter map generation
+# This should be suitable for both auto.master and amd.master.
+#
+# Format:
+# key	entry entry entry \
+#	entry ...
+#
+# Fixme: we should automatically detect whether the master
+#	map contains references to other NIS maps, e.g.
+#
+#	/home		amd.home
+#
+# Copyright (C) 1996-1998 Olaf Kirch <okir@monad.swb.de>
+
+$have_automap = "";
+
+sub read_automap {
+
+	local($source) = @_;
+	local($_, $line, $key, $join);
+
+	return if ($have_automap eq $source);
+	open(MASTER, "$source") ||
+		&fatal("can't open $source: $!");
+	%master	= ();
+
+	$join = 0;
+	$key = '';
+	while (<MASTER>) {
+		chop;
+		s/#.*//o;
+		next if (/^\s*$/o);
+		if ($join) {
+			s/^\s+/ /og;
+			$line .= $_;
+		} else {
+			($key, $line) = split(/[:\s]+/, $_, 2);
+			$line =~ s/\s+/ /og;
+		}
+		$join = $line =~ s/\\$//o;
+		$master{$key} = $line;
+	}
+	$master{$key} = $line if ($join);
+
+	close MASTER;
+	$have_automap = $source;
+};
+
+sub auto_map {
+
+	local($src) = @_;
+	local($_);
+
+	&read_automap($src);
+
+	foreach (keys master) {
+		print OUT "$_\t$master{$_}\n";
+	}
+}
+
+sub auto_master {
+
+	&auto_map($source{auto_master});
+}
+
+sub amd_master {
+
+	&auto_map($source{amd_master});
+}
+
+1;

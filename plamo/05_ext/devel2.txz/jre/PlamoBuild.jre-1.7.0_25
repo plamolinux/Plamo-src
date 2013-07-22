@@ -1,0 +1,109 @@
+#!/bin/sh
+
+java_vers=1.7.0_25
+build=P1
+arch=x86_64
+# arch=i586
+fallbackfont="/usr/share/fonts/TrueType/VL-PGothic-Regular.ttf"
+
+if [ "$arch" = "x86_64" ]; then
+    jarch="amd64"
+    libdir="lib64"
+else
+    jarch="i386"
+    libdir="lib"
+fi
+ext="txz"
+
+java_dir=`pwd`/jre$java_vers
+
+if [ ! -d $java_dir ]; then
+  echo "download proper jre(Java Runtime Environment) form www.java.com"
+  echo "(ex: jre-6u18-linux-i586.bin)and run it to install jre in "
+  echo "  the same directory ( ./jre$java_vers)"
+  exit
+fi
+
+P=`pwd`/work
+if [ -d $P ]; then
+  rm -rf $P && mkdir -p $P
+fi
+
+mkdir -p $P/install
+mkdir -p $P/usr/share/doc/jre-$java_vers
+mkdir -p $P/usr/java
+cp -a $java_dir $P/usr/java
+
+( cd $P/usr/java ; ln -sf jre$java_vers jre )
+( cd $P/usr/java ; mv jre/man ../share/ )
+
+echo "font fallback setting"
+mkdir -p $P/usr/java/jre$java_vers/lib/fonts/fallback
+( cd $P/usr/java/jre$java_vers/lib/fonts/fallback ; ln -sf $fallbackfont . )
+
+pushd $P/usr/share/man
+if [ -s ja ]; then
+   rm ja 
+fi
+if [ -d ja_JP.UTF-8 ]; then
+  mv ja_JP.UTF-8 ja_JP.eucJP
+  pushd ja_JP.eucJP
+  for mandir in * ; do
+      if [ -d $mandir ]; then
+	  pushd $mandir
+	  for manfile in * ; do
+	      check=${manfile%.gz}
+	      if [ "$manfile" = "$check" ]; then  # Ìµ°µ½Ì
+		  cat $manfile | nkf -e > _temp
+		  mv _temp $manfile
+	      else  # °µ½ÌºÑ¤ß
+		  zcat $manfile | nkf -e > _temp
+		  mv _temp $check
+		  rm $manfile
+	      fi
+	  done
+	  popd
+      fi
+   done
+  popd
+fi
+find . -name "*.1" -exec gzip {} \; 
+popd
+
+mkdir -p $P/etc/profile.d
+cat <<"EOF" > $P/etc/profile.d/jre.csh
+# JAVA variables
+setenv JAVA_HOME /usr/java/jre
+if ($?PATH) then
+  set path = ( $path $JAVA_HOME/bin  )
+else
+  set path = ( /bin /usr/bin $JAVA_HOME/bin )
+endif
+EOF
+
+cat <<"EOF" > $P/etc/profile.d/jre.sh
+# JAVA variables
+export JAVA_HOME=/usr/java/jre
+if [ "$PATH.x" != ".x" ]; then
+    PATH=$PATH:$JAVA_HOME/bin
+else
+    PATH=/bin:/usr/bin:$JAVA_HOME/bin
+fi
+EOF
+
+cat <<EOF > $P/install/initpkg
+echo "jre is looking for firefox"
+if [ -d "/usr/$libdir/mozilla/plugins" ]; then
+  echo "linking jre plugin into /usr/$libdir/mozillax/plugins/"
+  ( cd /usr/${libdir}/mozilla/plugins ; ln -sf /usr/java/jre/lib/${jarch}/libnpjp2.so libnpjp2.so )
+fi
+EOF
+
+cp $0 $P/usr/share/doc/jre-$java_vers/$0
+
+cd $P
+chk_me=`whoami | grep root`
+if [ "$chk_me.x" != ".x" ]; then
+    chown -R root.root *
+fi
+/sbin/makepkg ../jre-"$java_vers"-$arch-$build.$ext

@@ -1,0 +1,28 @@
+diff -upr smtube-1.5/src/ytdataapi.cpp build/src/ytdataapi.cpp
+--- smtube-1.5/src/ytdataapi.cpp	2012-07-06 13:28:51.000000000 +0900
++++ build/src/ytdataapi.cpp	2013-01-14 17:45:07.000000000 +0900
+@@ -129,6 +134,12 @@ void YTDataAPI::reset()
+ 
+ QString YTDataAPI::unescape(QString html)
+ {
++  if (html.indexOf("%") > 0) {
++	QString decode_url;
++	decode_url = QUrl::fromPercentEncoding(html.toAscii());
++	qDebug() << decode_url ;
++	html = decode_url;
++  }
+     html.replace("&amp;", "&");
+     html.replace("&lt;", "<");
+     return html.replace("&gt;", ">");
+diff -upr smtube-1.5/src/ytdialog.cpp build/src/ytdialog.cpp
+--- smtube-1.5/src/ytdialog.cpp	2012-11-22 18:11:04.000000000 +0900
++++ build/src/ytdialog.cpp	2013-01-14 17:34:54.000000000 +0900
+@@ -488,6 +488,8 @@ void YTDialog::nextClicked()
+         {
+             entries[tab].pageNo += 1;
+             setLoadingOverlay(true);
++	    qDebug("nextClicked");
++	    qDebug() << entries[tab].nextUrl ;
+             resultForTab[api->getNextResults(entries[tab].nextUrl)] = tab;
+         }
+     }

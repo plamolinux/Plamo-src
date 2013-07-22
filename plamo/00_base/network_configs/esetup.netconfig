@@ -1,0 +1,42 @@
+#!/bin/sh
+dialog --title "Configure Your Network ?" --yesno "Would you configure your \
+network environment ?" 6 60
+if [ $? = 0 ]; then
+  if [ ! -x sbin/planet -o ! -x usr/bin/perl ] ; then
+    sh sbin/tradnet -f
+    exec sbin/enetconfig.tradnet
+    exit
+  fi
+PCMCIA_CHK=`/sbin/lspci -n | grep "Class 060[57]"`
+if [ ! -z "$PCMCIA_CHK" ]; then
+  MENU_1ST_LABEL='planet'
+  MENU_1ST_DESC='use new config script(suit for NotePC/Desktop)'
+  MENU_2ND_LABEL='tradnet'
+  MENU_2ND_DESC='use traditional config script(suit for Desktop)'
+else
+  MENU_1ST_LABEL='tradnet'
+  MENU_1ST_DESC='use traditional config script(suit for Desktop)'
+  MENU_2ND_LABEL='planet'
+  MENU_2ND_DESC='use new config script(suit for NotePC/Desktop)'
+fi
+
+dialog --title "Select network config script" --menu \
+"Plamo-4.0 adopts new network configuration script named Planet. \n\
+(Planet collect network configuration in /etc/network.conf.) \n\
+Of course, you can use traditional network configuration, too. \n\
+Which network config script do you want to use ?  If you want to \n\
+use PCMCIA/Cardbus network card, you should select Planet. " 16 74 3 \
+"$MENU_1ST_LABEL" "$MENU_1ST_DESC" \
+"$MENU_2ND_LABEL" "$MENU_2ND_DESC" \
+"Quit" "Quit" 2> /tmp/reply$$
+  if [ $? = 1 ]; then
+    rm -f /tmp/reply$$
+  else
+    NETCONFIG="`cat /tmp/reply$$`"
+    rm -f /tmp/reply$$
+    if [ ! "$NETCONFIG" = "Quit" ]; then
+      sh sbin/$NETCONFIG -f
+      sh sbin/enetconfig.$NETCONFIG
+    fi
+  fi
+fi

@@ -1,0 +1,30 @@
+diff -uNr virt-manager-0.10.0.orig/virtManager/baseclass.py virt-manager-0.10.0/virtManager/baseclass.py
+--- virt-manager-0.10.0.orig/virtManager/baseclass.py	2013-06-18 21:49:34.000000000 +0900
++++ virt-manager-0.10.0/virtManager/baseclass.py	2013-07-19 16:50:33.224773527 +0900
+@@ -22,6 +22,7 @@
+ import os
+ import sys
+ import traceback
++import locale
+ 
+ import virtManager
+ 
+@@ -182,9 +183,18 @@
+     def __init__(self, filename, windowname, builder=None, topwin=None):
+         vmmGObject.__init__(self)
+ 
++        DOMAINNAME = "virt-manager"
++
+         if filename:
+             uifile = os.path.join(self.config.get_ui_dir(), filename)
+ 
++            localedir = "/usr/share/locale"
++            try:
++                locale.bindtextdomain(DOMAINNAME, localedir)
++                locale.bind_textdomain_codeset(DOMAINNAME, "UTF-8")
++            except AttributeError:
++                pass
++
+             self.builder = Gtk.Builder()
+             self.builder.set_translation_domain("virt-manager")
+             self.builder.add_from_string(file(uifile).read())

@@ -1,0 +1,13 @@
+
+  ALSA Patch Bay
+ ================
+
+This is a GUI patchbay for the the ALSA seq sequencer api and the JACK audio
+API.  It can use FLTK 1.1 or GTKmm 2.0.0.  If you have both installed, you
+can specify which to use with the --ui command line option.  The --driver
+command line option selects the driver.  Alternatively, there should be a
+jack-patch-bay link installed which points to the alsa-patch-bay binary and
+will automatically load the jack driver.
+
+Patches to node@users.sourceforge.net.  Future versions at
+http://pkl.net/~node/alsa-patch-bay.html

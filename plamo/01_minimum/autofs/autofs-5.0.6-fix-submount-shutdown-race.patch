@@ -1,0 +1,141 @@
+autofs-5.0.6 - fix submount shutdown race
+
+From: Ian Kent <ikent@redhat.com>
+
+Shutdown of submounts is problematic because the kernel doesn't
+know when they are going away and so cannot block path walks
+while they shut down. After aquiring the locks that cause mount
+requests to wait, the daemon checks if the submount is active before
+finally umounting it. If the mount is found to be busy the shutdown
+is abandoned and the submount returned to a ready state.
+
+But, if a mount request arrives at the same time as the daemon is
+attempting to aquire these locks pthreads appears to become confused
+and blocks. So change to using the try version of the lock call and
+handling the return appropriately.
+---
+
+ CHANGELOG          |    1 +
+ daemon/automount.c |   76 ++++++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 60 insertions(+), 17 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 2352df1..6035791 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -11,6 +11,7 @@
+ - fix not bind mounting local filesystem.
+ - add "dir" map-type.
+ - fix wait for master source mutex.
++- fix submount shutdown race.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/daemon/automount.c b/daemon/automount.c
+index 376e965..4f3151f 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -1495,6 +1495,41 @@ static void handle_mounts_cleanup(void *arg)
+ 	return;
+ }
+ 
++static int submount_source_writelock_nested(struct autofs_point *ap)
++{
++	struct autofs_point *parent = ap->parent;
++	int status;
++
++	status = pthread_rwlock_trywrlock(&parent->entry->source_lock);
++	if (status)
++		goto done;
++
++	mounts_mutex_lock(parent);
++
++	status = pthread_rwlock_trywrlock(&ap->entry->source_lock);
++	if (status) {
++		mounts_mutex_unlock(parent);
++		master_source_unlock(parent->entry);
++	}
++
++done:
++	if (status && status != EBUSY) {
++		logmsg("submount nested master_mapent source write lock failed");
++		fatal(status);
++	}
++
++	return status;
++}
++
++static void submount_source_unlock_nested(struct autofs_point *ap)
++{
++	struct autofs_point *parent = ap->parent;
++
++	master_source_unlock(ap->entry);
++	mounts_mutex_unlock(parent);
++	master_source_unlock(parent->entry);
++}
++
+ void *handle_mounts(void *arg)
+ {
+ 	struct startup_cond *suc;
+@@ -1565,23 +1600,32 @@ void *handle_mounts(void *arg)
+ 			master_mutex_lock();
+ 
+ 			if (ap->submount) {
+-				master_source_writelock(ap->parent->entry);
+-				mounts_mutex_lock(ap->parent);
+-			}
+-
+-			master_source_writelock(ap->entry);
++				/*
++				 * If a mount request arrives before the locks are
++				 * aquired just return to ready state.
++				 */
++				ret = submount_source_writelock_nested(ap);
++				if (ret) {
++					warn(ap->logopt,
++					     "can't shutdown submount: mount in progress");
++					/* Return to ST_READY is done immediately */
++					st_add_task(ap, ST_READY);
++					master_mutex_unlock();
++					pthread_setcancelstate(cur_state, NULL);
++					continue;
++				}
++			} else
++				master_source_writelock(ap->entry);
+ 
+ 			if (ap->state != ST_SHUTDOWN) {
+ 				if (!ap->submount)
+ 					alarm_add(ap, ap->exp_runfreq);
+ 				/* Return to ST_READY is done immediately */
+ 				st_add_task(ap, ST_READY);
+-				master_source_unlock(ap->entry);
+-				if (ap->submount) {
+-					mounts_mutex_unlock(ap->parent);
+-					master_source_unlock(ap->parent->entry);
+-				}
+-
++				if (ap->submount)
++					submount_source_unlock_nested(ap);
++				else
++					master_source_unlock(ap->entry);
+ 				master_mutex_unlock();
+ 
+ 				pthread_setcancelstate(cur_state, NULL);
+@@ -1621,12 +1665,10 @@ void *handle_mounts(void *arg)
+ 				alarm_add(ap, ap->exp_runfreq);
+ 			/* Return to ST_READY is done immediately */
+ 			st_add_task(ap, ST_READY);
+-			master_source_unlock(ap->entry);
+-			if (ap->submount) {
+-				mounts_mutex_unlock(ap->parent);
+-				master_source_unlock(ap->parent->entry);
+-			}
+-
++			if (ap->submount)
++				submount_source_unlock_nested(ap);
++			else
++				master_source_unlock(ap->entry);
+ 			master_mutex_unlock();
+ 
+ 			pthread_setcancelstate(cur_state, NULL);

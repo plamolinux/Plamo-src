@@ -1,0 +1,67 @@
+autofs-5.0.6 - fix ipv6 name lookup check
+
+From: Ian Kent <raven@themaw.net>
+
+The host address must be used when the host name has multiple
+addresses since we need to mount the specific host and so that
+it is known what host log entries refer to.
+
+But the check for multiple addresses can be wrong because there
+is no distinction between ipv4 and ipv6 addresses. Change the
+check to use the host name when mounting if neither the ipv4
+or the ipv6 addresses have more than one record.
+---
+
+ CHANGELOG            |    1 +
+ modules/replicated.c |   17 +++++++++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index a1f2453..923669f 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -14,6 +14,7 @@
+ - fix submount shutdown race.
+ - fix fix map source check in file lookup.
+ - add disable move mount configure option.
++- fix ipv6 name lookup check.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/modules/replicated.c b/modules/replicated.c
+index eee1a06..b100c9c 100644
+--- a/modules/replicated.c
++++ b/modules/replicated.c
+@@ -1117,7 +1117,7 @@ static int add_host_addrs(struct host **list, const char *host,
+ 	char *name = n_ptr = strdup(host);
+ 	int len;
+ 	char buf[MAX_ERR_BUF];
+-	int rr = 0;
++	int rr = 0, rr4 = 0, rr6 = 0;
+ 	int ret;
+ 
+ 	if (!name) {
+@@ -1167,8 +1167,21 @@ try_name:
+ 	}
+ 
+ 	this = ni;
+-	if (this->ai_next)
++	while (this->ai_next) {
++		if (this->ai_family == AF_INET) {
++			struct sockaddr_in *addr = (struct sockaddr_in *) this->ai_addr;
++			if (addr->sin_addr.s_addr != INADDR_LOOPBACK)
++				rr4++;
++		} else if (this->ai_family == AF_INET6) {
++			struct sockaddr_in6 *addr = (struct sockaddr_in6 *) this->ai_addr;
++			if (!IN6_IS_ADDR_LOOPBACK(addr->sin6_addr.__in6_u.__u6_addr32))
++				rr6++;
++		}
++		this = this->ai_next;
++	}
++	if (rr4 > 1 || rr6 > 1)
+ 		rr++;
++	this = ni;
+ 	while (this) {
+ 		ret = add_new_host(list, host, weight, this, rr, options);
+ 		if (!ret)

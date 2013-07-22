@@ -1,0 +1,23 @@
+--- xine-ui-0.99.6/src/xitk/common.h.orig	2010-05-26 17:57:21.000000000 +0900
++++ xine-ui-0.99.6/src/xitk/common.h	2010-05-26 18:27:37.000000000 +0900
+@@ -152,13 +152,13 @@
+ /* Our default location for skin downloads */
+ #define SKIN_SERVER_URL         "http://xine.sourceforge.net/skins/skins.slx"
+ 
+-#define fontname       "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*"
+-#define boldfontname   "-*-helvetica-bold-r-*-*-10-*-*-*-*-*-*-*"
+-#define hboldfontname  "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*"
+-#define lfontname      "-*-helvetica-bold-r-*-*-10-*-*-*-*-*-*-*"
+-#define tabsfontname   "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*"
+-#define br_fontname    "-misc-fixed-medium-r-normal-*-10-*-*-*-*-*-*-*"
+-#define btnfontname    "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*"
++#define fontname       "-*-*-medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define boldfontname   "-*-*-bold-r-*-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define hboldfontname  "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*"
++#define lfontname      "-*-*-bold-r-*-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define tabsfontname   "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*"
++#define br_fontname    "-misc-fixed-medium-r-normal-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define btnfontname    "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*"
+ 
+ 
+ typedef struct {

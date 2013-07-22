@@ -1,0 +1,63 @@
+#
+# netid		generate netid.byname
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+require "passwd";
+require "group";
+require "hosts";
+
+sub netid_byname {
+	local($user, $uid, $gid, $list, $rootgrps);
+	local($map) = $mapname{netid_byname};
+
+	&passwd_read;
+	&group_read;
+	&hosts_read;
+
+	foreach $user (keys user2uid) {
+		$uid  = $user2uid{$user};
+		next if (!$uid);
+		$list = &grpuniq($user2gid{$user}, $user2groups{$user});
+		#$list = "$user2gid{$user},$user2groups{$user}";
+		printf OUT "unix.$uid\@$domain\t$uid:$list\n";
+	}
+	$rootgrps = &grpuniq($user2gid{root}, $user2groups{root});
+
+	local($addr, %hosts, $host);
+	%hosts = ();
+	foreach $addr (keys %addr2host) {
+		foreach $host (split(/\s+/, $addr2host{$addr})) {
+			# Judging which hosts to add to netid is 
+			# difficult. The statement below includes all
+			# hosts whose DNS domain matches out NIS domain,
+			# which is quite stupid. For now, I'm adding all
+			# hosts until someone else comes up with something
+			# better and equally easy to implement:-)
+			#
+			# next unless ($host =~ /$domain$/io);
+			next if ($hosts{$host});
+			$hosts{$host} = 1;
+			$host =~ /([^.]*)/;
+			#printf OUT "unix.$1\@$domain\t0:$rootgrps\n";
+			printf OUT "unix.$host\@$domain\t0:$host\n";
+		}
+	}
+}
+
+sub bynum { $a <=> $b; }
+
+sub grpuniq {
+	local($gid,$groups) = @_;
+	local(@list, $last, $_);
+
+	$last = "";
+	@list = ($gid);
+	foreach (sort bynum (split(/,/, $groups))) {
+		push(@list, $_)
+			unless ($_ == $gid);
+	}
+	$list = join(',', @list);
+	#print STDERR "$gid,$groups -> $list\n";
+	return $list;
+}

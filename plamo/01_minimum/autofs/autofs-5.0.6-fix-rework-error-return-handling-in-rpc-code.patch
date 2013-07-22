@@ -1,0 +1,49 @@
+autofs-5.0.6 - fix rework error return handling in rpc code
+
+From: Dustin Polke <DuPol@gmx.de>
+
+This fixes the following error:
+rpc_subs.c: In function ‘rpc_do_create_client’:
+rpc_subs.c:203:3: error: a label can only be part of a statement and a
+declaration is not a statement
+---
+
+ CHANGELOG      |    1 +
+ lib/rpc_subs.c |    4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 1f921b2..5f1c485 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -37,6 +37,7 @@
+ - allow for kernel packet size change (in kernel 3.3.0+).
+ - fix function to check mount.nfs version.
+ - fix typo in libtirpc file name.
++- fix rework error return handling in rpc code.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/lib/rpc_subs.c b/lib/rpc_subs.c
+index 21f090a..c198d72 100644
+--- a/lib/rpc_subs.c
++++ b/lib/rpc_subs.c
+@@ -155,7 +155,7 @@ static int rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, i
+ 	CLIENT *clnt = NULL;
+ 	struct sockaddr_in in4_laddr;
+ 	struct sockaddr_in *in4_raddr;
+-	int type, proto;
++	int type, proto, ret;
+ 	socklen_t slen;
+ 
+ 	*client = NULL;
+@@ -200,7 +200,7 @@ static int rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, i
+ 		break;
+ 
+ 	case IPPROTO_TCP:
+-		int ret = connect_nb(*fd, addr, slen, &info->timeout);
++		ret = connect_nb(*fd, addr, slen, &info->timeout);
+ 		if (ret < 0)
+ 			return ret;
+ 

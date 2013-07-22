@@ -1,0 +1,149 @@
+From root@localhost Thu Sep 15 02:23:40 1997
+Return-Path: root
+Received: (from root@localhost) by localhost (8.6.9/8.6.9) id CAA05783 for root; Thu, 15 Sep 1997 02:23:39 -0500
+Date: Thu, 15 Sep 1997 02:23:39 -0500
+From: root
+Message-Id: <199409150723.CAA05783@localhost>
+To: root
+Subject: Register with the Linux counter project
+
+   (Adapted from a question in the Linux-FAQ)
+
+   7.19 How many people use Linux?
+
+   Linux is freely available, and no one is required to register their
+   copies with any central authority, so it is difficult to know. Several
+   businesses are now surviving solely on selling and supporting Linux,
+   and very few Linux users use those businesses, relatively speaking.
+   The Linux newsgroups are some of the most heavily read on the Net, so
+   the number is likely in the hundreds of thousands, but firm numbers
+   are hard to come by.
+
+   However, one brave soul, Harald T. Alvestrand <Harald@Alvestrand.no>,
+   has decided to try, and asks that if you use Linux, you visit this Web
+   site to register:
+
+   http://counter.li.org
+
+   There is also a "linux-counter-interest" mailing list. Send mail to
+   linux-counter-interest-request@alvestrand.no with "subscribe" in the
+   BODY of the message to subscribe.
+
+
+From volkerdi@mhd1.moorhead.msus.edu  Thu Oct 22 13:49:42 1998
+Return-Path: volkerdi
+Received: (from volkerdi@localhost) by darkstar.slackware.com (8.8.8/8.8.8) id OAA03071; Thu, 22 Oct 1998 13:49:43 -0500
+Date: Thu, 22 Oct 1998 13:49:44 -0500 (CDT)
+From: "Patrick J. Volkerding" <volkerdi@mhd1.moorhead.msus.edu>
+To: root
+Subject: Welcome to Linux (Slackware 3.6)!
+Message-ID: <Pine.LNX.3.91.981120134926.3041A-100000@darkstar.slackware.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+
+
+Welcome! Glad to see you've made it this far! :^)
+
+Here are a few hints to help you navigate through the Linux operating 
+system a little bit better:
+
+-- Remember those screens you saw while each package was installing? You 
+   can see all the information (and more) again. The simplest way is to use 
+   the 'pkgtool' utility to view the package contents. Another way is to use 
+   'less' or a text editor to read the files in /var/log/packages and 
+   /var/log/scripts (this is the method I use).
+
+-- You may need to make some changes to the /etc/rc.d/rc.serial script if 
+   you're using serial ports other than /dev/ttyS0 or /dev/ttyS1 (com1: and
+   com2: under DOS), or if these ports use non-standard IRQs.
+
+   I suggest using the section about halfway through that lets you set up
+   the ports manually. Here's an example of how I set up the ports on my 
+   machine for /dev/ttyS0 and /dev/ttyS2:
+   
+   # These are the standard COM1 through COM4 devices
+   #
+   ${SETSERIAL} /dev/cua0 uart 16450 port 0x3F8 irq 4
+   # ${SETSERIAL} /dev/cua1 uart 16450 port 0x2F8 irq 3
+   ${SETSERIAL} /dev/cua2 uart 16450 port 0x3E8 irq 5
+   # ${SETSERIAL} /dev/cua3 uart 16450 port 0x2E8 irq 3
+
+   You'll also need to uncomment the line in /etc/rc.d/rc.S that starts the
+   rc.serial script.
+
+-- If you've got hardware such as a CD-ROM drive or ethernet that doesn't
+   seem to work with Linux, it's possible that the kernel you're using 
+   doesn't contain the needed support.  In that case, you can do one of
+   two things:
+
+      1.  Recompile your kernel, including the needed driver(s).
+      2.  Load the support with kernel modules.  This is probably the
+          simplest way to handle the situation.  Just edit 
+          /etc/rc.d/rc.modules so that it loads the modules you need.
+   
+-- If you're on a standalone LAN without a nameserver, make sure you 
+   don't have a nameserver line in /etc/resolv.conf, or you may experience 
+   delays with many network commands as they attempt to query the bogus 
+   nameserver.
+
+-- Want to run NFS? You'll to run the folllowing daemons in /etc/rc.d/rc.inet2:
+   rpc.portmap, rpc.mountd, and rpc.nfsd. Then, edit your /etc/exports to allow
+   NFS access. (see 'man exports' for examples)
+
+-- A lot of people ask me how to set up their printer under Linux.  In my
+   opinion, the best method is to set up APSfilter, a system that allows you
+   to print many file formats (DVI, PS, text) by just sending them to the 
+   print spooler with lpr.  To set this up, do the following steps:
+
+   1.  Make sure you're loading the parallel driver in /etc/rc.d/rc.modules.
+   2.  Install the LPD printer software.  This is package bsdlpr.tgz on the
+       A series.  Odds are it's already been installed.
+   3.  You'll probably want to have the TCP/IP subsystem installed and
+       configured (at least for loopback).  The tcpip.tgz package is part of
+       the N series, and the "netconfig" script is used to do a basic TCP/IP
+       configuration.
+   4.  APSfilter uses a variety of other filters that it expects to find
+       installed.  You'll want to install the ghostscr.tgz and gsfonts.tgz
+       packages on the AP series to add Ghostscript if you want the ability
+       to print PostScript documents.  You'll also need the jpeg.tgz package
+       from the AP series for JPEG image support.  If you want to print DVI
+       files, install at least the default TeX packages from the T series.
+   5.  Install the apsfilter package.  This package can be found in
+       Slackware's contrib/ packages directory.  Use 'installpkg' as root
+       to install the package:
+
+           installpkg aps-4.91.tgz
+
+   6.  Change into the /usr/lib/aps-4.91/ directory, and run the SETUP
+       program.  It'll write your /etc/printcap, and you'll be all set
+       to start printing.  Once you've got it working, you can also use
+       netatalk and Samba to provide print services to Macs and Windows
+       machines on the local network with your Linux box.
+
+-- If you have a PS/2 mouse, busmouse, or pretty much any kind of mouse
+   that doesn't plug into your serial port, you'll need to load a mouse
+   driver module before your mouse will work.  Edit the module loading
+   file /etc/rc.d/rc.modules to load the correct module, or compile a new
+   kernel with built in support for your mouse.
+
+-- To get your machine on the net with a modem and PPP, you need to install
+   the tcpip.tgz and ppp.tgz packages.  Your machine should be configured
+   at least with loopback using the "netconfig" utility.  Also, be sure the
+   serial port your modem uses is correctly configured.  If in doubt, take a
+   look through /etc/rc.d/rc.serial.  Then, use "pppsetup" to configure the
+   dialup process.  (Additional documentation on pppsetup can be found in
+   /usr/doc/pppsetup)  Note that demand dialing does not work unless you're
+   using pppd-2.3 or newer, and have the ppp-2.3.x driver in your kernel.
+
+-- If you installed the F series, there will be lots of FAQs (lists of 
+   Frequently Asked Questions with answers), and HOWTOs (files explaining 
+   how to do a particular Linux task), in /usr/doc/faq. These should be 
+   helpful in getting you going with Linux.  They cover most system admin
+   tasks in a lot more detail than this little email does. :^)
+
+Have fun!
+
+---
+Patrick Volkerding
+volkerdi@mhd1.moorhead.msus.edu
+

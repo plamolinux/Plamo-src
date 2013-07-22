@@ -1,0 +1,32 @@
+autofs-5.0.6 - fix allow for kernel packet size change
+
+From: Ian Kent <raven@themaw.net>
+
+Fix a couple of stupid mistakes.
+---
+
+ daemon/automount.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+
+diff --git a/daemon/automount.c b/daemon/automount.c
+index e20b603..0ff3c96 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -36,7 +36,6 @@
+ #include <dirent.h>
+ #include <sys/vfs.h>
+ #include <sys/utsname.h>
+-#include "mounts.h"
+ 
+ #include "automount.h"
+ #if defined(LIBXML2_WORKAROUND) || defined(TIRPC_WORKAROUND)
+@@ -602,7 +601,7 @@ static size_t get_kpkt_len(void)
+ 	int kern_vers;
+ 
+ 	kern_vers = linux_version_code();
+-	if (kernel_vers >= KERNEL_VERSION(3, 3, 0))
++	if (kern_vers >= KERNEL_VERSION(3, 3, 0))
+ 		return pkt_len;
+ 
+ 	uname(&un);

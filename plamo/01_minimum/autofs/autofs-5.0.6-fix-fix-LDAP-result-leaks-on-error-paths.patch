@@ -1,0 +1,57 @@
+autofs-5.0.6 - fix fix LDAP result leaks on error paths
+
+From: Ian Kent <raven@themaw.net>
+
+The previous patch with which ensured that the result struture returned
+from ldap_search_s(3) was freed could sometimes lead to a segmentation
+fault because the local variable used was not initialized before use.
+---
+
+ CHANGELOG             |    1 +
+ modules/lookup_ldap.c |    6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index dc91c25..d7c20ca 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -6,6 +6,7 @@
+ - fix dumpmaps not reading maps.
+ - fix result null check in read_one_map().
+ - fix LDAP result leaks on error paths.
++- fix fix LDAP result leaks on error paths.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/modules/lookup_ldap.c b/modules/lookup_ldap.c
+index 29323b2..d8e93e7 100644
+--- a/modules/lookup_ldap.c
++++ b/modules/lookup_ldap.c
+@@ -280,7 +280,7 @@ static int get_query_dn(unsigned logopt, LDAP *ldap, struct lookup_context *ctxt
+ {
+ 	char buf[MAX_ERR_BUF];
+ 	char *query, *dn, *qdn;
+-	LDAPMessage *result, *e;
++	LDAPMessage *result = NULL, *e;
+ 	struct ldap_searchdn *sdns = NULL;
+ 	char *attrs[2];
+ 	struct berval **value;
+@@ -1529,7 +1529,7 @@ int lookup_read_master(struct master *master, time_t age, void *context)
+ 	char buf[MAX_ERR_BUF];
+ 	char parse_buf[PARSE_MAX_BUF];
+ 	char *query;
+-	LDAPMessage *result, *e;
++	LDAPMessage *result = NULL, *e;
+ 	char *class, *info, *entry;
+ 	char **keyValue = NULL;
+ 	char **values = NULL;
+@@ -2475,7 +2475,7 @@ static int lookup_one(struct autofs_point *ap,
+ 	char buf[MAX_ERR_BUF];
+ 	time_t age = time(NULL);
+ 	char *query;
+-	LDAPMessage *result, *e;
++	LDAPMessage *result = NULL, *e;
+ 	char *class, *info, *entry;
+ 	char *enc_key1, *enc_key2;
+ 	int enc_len1 = 0, enc_len2 = 0;

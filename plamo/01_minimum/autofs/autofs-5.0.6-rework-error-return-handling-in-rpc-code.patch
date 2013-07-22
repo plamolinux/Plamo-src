@@ -1,0 +1,623 @@
+autofs-5.0.6 - rework error return handling in rpc code
+
+From: Ian Kent <raven@themaw.net>
+
+With the changes to the way mount.nfs performs nfs mounts for
+kernels that support passing of text based options mounts to
+hosts that are down or unreachable can take a long time to
+fail due to lengthy timeouts. The kernel rpc code is duty
+bound to honour these timeouts so we need to find a way to
+catch EHOSTUNREACH errors during host probing.
+
+The first thing to do is to rework the lower level autofs
+rpc code to propogate error returns up to the higher levels.
+---
+
+ CHANGELOG            |    1 
+ lib/rpc_subs.c       |  176 ++++++++++++++++++++++++++++----------------------
+ modules/replicated.c |   26 ++++---
+ 3 files changed, 113 insertions(+), 90 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 5a6af1c..c581099 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -30,6 +30,7 @@
+ - add kernel verion check function.
+ - add function to check mount.nfs version.
+ - reinstate singleton mount probe.
++- rework error return handling in rpc code.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/lib/rpc_subs.c b/lib/rpc_subs.c
+index 4082fee..21f090a 100644
+--- a/lib/rpc_subs.c
++++ b/lib/rpc_subs.c
+@@ -76,11 +76,11 @@ static int connect_nb(int fd, struct sockaddr *addr, socklen_t len, struct timev
+ 
+ 	flags = fcntl(fd, F_GETFL, 0);
+ 	if (flags < 0)
+-		return -1;
++		return -errno;
+ 
+ 	ret = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+ 	if (ret < 0)
+-		return -1;
++		return -errno;
+ 
+ 	/* 
+ 	 * From here on subsequent sys calls could change errno so
+@@ -150,14 +150,16 @@ done:
+ }
+ 
+ #ifndef WITH_LIBTIRPC
+-static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd)
++static int rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd, CLIENT **client)
+ {
+-	CLIENT *client = NULL;
++	CLIENT *clnt = NULL;
+ 	struct sockaddr_in in4_laddr;
+ 	struct sockaddr_in *in4_raddr;
+ 	int type, proto;
+ 	socklen_t slen;
+ 
++	*client = NULL;
++
+ 	proto = info->proto->p_proto;
+ 	if (proto == IPPROTO_UDP)
+ 		type = SOCK_DGRAM;
+@@ -179,11 +181,11 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 
+ 		*fd = open_sock(addr->sa_family, type, proto);
+ 		if (*fd < 0)
+-			return NULL;
++			return -errno;
+ 
+ 		laddr = (struct sockaddr *) &in4_laddr;
+ 		if (bind(*fd, laddr, slen) < 0)
+-			return NULL;
++			return -errno;
+ 	}
+ 
+ 	in4_raddr = (struct sockaddr_in *) addr;
+@@ -191,26 +193,29 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 
+ 	switch (info->proto->p_proto) {
+ 	case IPPROTO_UDP:
+-		client = clntudp_bufcreate(in4_raddr,
+-					   info->program, info->version,
+-					   info->timeout, fd,
+-					   info->send_sz, info->recv_sz);
++		clnt = clntudp_bufcreate(in4_raddr,
++					 info->program, info->version,
++					 info->timeout, fd,
++					 info->send_sz, info->recv_sz);
+ 		break;
+ 
+ 	case IPPROTO_TCP:
+-		if (connect_nb(*fd, addr, slen, &info->timeout) < 0)
+-			break;
++		int ret = connect_nb(*fd, addr, slen, &info->timeout);
++		if (ret < 0)
++			return ret;
+ 
+-		client = clnttcp_create(in4_raddr,
+-					info->program, info->version, fd,
+-					info->send_sz, info->recv_sz);
++		clnt = clnttcp_create(in4_raddr,
++				      info->program, info->version, fd,
++				      info->send_sz, info->recv_sz);
+ 		break;
+ 
+ 	default:
+ 		break;
+ 	}
+ 
+-	return client;
++	*client = clnt;
++
++	return 0;
+ }
+ #else
+ struct netconfig *find_netconf(void *handle, char *family, char *proto)
+@@ -226,9 +231,9 @@ struct netconfig *find_netconf(void *handle, char *family, char *proto)
+ 	return nconf;
+ }
+ 
+-static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd)
++static int rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd, CLIENT **client)
+ {
+-	CLIENT *client = NULL;
++	CLIENT *clnt = NULL;
+ 	struct sockaddr_in in4_laddr;
+ 	struct sockaddr_in6 in6_laddr;
+ 	struct sockaddr *laddr = NULL;
+@@ -238,6 +243,9 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 	char *nc_family, *nc_proto;
+ 	void *handle;
+ 	size_t slen;
++	int ret;
++
++	*client = NULL;
+ 
+ 	proto = info->proto->p_proto;
+ 	if (proto == IPPROTO_UDP) {
+@@ -272,16 +280,16 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 		slen = sizeof(struct sockaddr_in6);
+ 		nc_family = NC_INET6;
+ 	} else
+-		return NULL;
++		return -EINVAL;
+ 
+ 	handle = setnetconfig();
+ 	if (!handle)
+-		return NULL;
++		return -EINVAL;
+ 
+ 	nconf = find_netconf(handle, nc_family, nc_proto);
+ 	if (!nconf) {
+ 		endnetconfig(handle);
+-		return NULL;
++		return -EINVAL;
+ 	}
+ 
+ 	/*
+@@ -292,13 +300,15 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 	if (!info->client) {
+ 		*fd = open_sock(addr->sa_family, type, proto);
+ 		if (*fd < 0) {
++			ret = -errno;
+ 			endnetconfig(handle);
+-			return NULL;
++			return ret;
+ 		}
+ 
+ 		if (bind(*fd, laddr, slen) < 0) {
++			ret = -errno;
+ 			endnetconfig(handle);
+-			return NULL;
++			return ret;
+ 		}
+ 	}
+ 
+@@ -306,28 +316,30 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 	nb_addr.buf = addr;
+ 
+ 	if (info->proto->p_proto == IPPROTO_TCP) {
+-		if (connect_nb(*fd, addr, slen, &info->timeout) < 0) {
++		ret = connect_nb(*fd, addr, slen, &info->timeout);
++		if (ret < 0) {
+ 			endnetconfig(handle);
+-			return NULL;
++			return ret;
+ 		}
+ 	}
+ 
+-	client = clnt_tli_create(*fd, nconf, &nb_addr,
+-				 info->program, info->version,
+-				 info->send_sz, info->recv_sz);
++	clnt = clnt_tli_create(*fd, nconf, &nb_addr,
++				info->program, info->version,
++				info->send_sz, info->recv_sz);
+ 
+ 	endnetconfig(handle);
+ 
+-	return client;
++	*client = clnt;
++
++	return 0;
+ }
+ #endif
+ 
+ /*
+  * Create an RPC client
+  */
+-static CLIENT *create_client(struct conn_info *info)
++static int create_client(struct conn_info *info, CLIENT **client)
+ {
+-	CLIENT *client = NULL;
+ 	struct addrinfo *ai, *haddr;
+ 	struct addrinfo hints;
+ 	int fd, ret;
+@@ -346,9 +358,11 @@ static CLIENT *create_client(struct conn_info *info)
+ 	}
+ 
+ 	if (info->addr) {
+-		client = rpc_do_create_client(info->addr, info, &fd);
+-		if (client)
++		ret = rpc_do_create_client(info->addr, info, &fd, client);
++		if (ret == 0)
+ 			goto done;
++		if (ret == -EHOSTUNREACH)
++			goto out_close;
+ 
+ 		if (!info->client && fd != RPC_ANYSOCK) {
+ 			close(fd);
+@@ -376,9 +390,11 @@ static CLIENT *create_client(struct conn_info *info)
+ 			continue;
+ 		}
+ 
+-		client = rpc_do_create_client(haddr->ai_addr, info, &fd);
+-		if (client)
++		ret = rpc_do_create_client(haddr->ai_addr, info, &fd, client);
++		if (ret == 0)
+ 			break;
++		if (ret == -EHOSTUNREACH)
++			goto out_close;
+ 
+ 		if (!info->client && fd != RPC_ANYSOCK) {
+ 			close(fd);
+@@ -390,24 +406,26 @@ static CLIENT *create_client(struct conn_info *info)
+ 
+ 	freeaddrinfo(ai);
+ 
+-	if (!client) {
++	if (!*client) {
+ 		info->client = NULL;
++		ret = -ENOTCONN;
+ 		goto out_close;
+ 	}
+ done:
+ 	/* Close socket fd on destroy, as is default for rpcowned fds */
+-	if  (!clnt_control(client, CLSET_FD_CLOSE, NULL)) {
+-		clnt_destroy(client);
++	if  (!clnt_control(*client, CLSET_FD_CLOSE, NULL)) {
++		clnt_destroy(*client);
+ 		info->client = NULL;
++		ret = -ENOTCONN;
+ 		goto out_close;
+ 	}
+ 
+-	return client;
++	return 0;
+ 
+ out_close:
+ 	if (fd != -1)
+ 		close(fd);
+-	return NULL;
++	return ret;
+ }
+ 
+ int rpc_udp_getclient(struct conn_info *info,
+@@ -415,11 +433,12 @@ int rpc_udp_getclient(struct conn_info *info,
+ {
+ 	struct protoent *pe_proto;
+ 	CLIENT *client;
++	int ret;
+ 
+ 	if (!info->client) {
+ 		pe_proto = getprotobyname("udp");
+ 		if (!pe_proto)
+-			return 0;
++			return -ENOENT;
+ 
+ 		info->proto = pe_proto;
+ 		info->send_sz = UDPMSGSIZE;
+@@ -429,14 +448,13 @@ int rpc_udp_getclient(struct conn_info *info,
+ 	info->program = program;
+ 	info->version = version;
+ 
+-	client = create_client(info);
+-
+-	if (!client)
+-		return 0;
++	ret = create_client(info, &client);
++	if (ret < 0)
++		return ret;
+ 
+ 	info->client = client;
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ void rpc_destroy_udp_client(struct conn_info *info)
+@@ -454,11 +472,12 @@ int rpc_tcp_getclient(struct conn_info *info,
+ {
+ 	struct protoent *pe_proto;
+ 	CLIENT *client;
++	int ret;
+ 
+ 	if (!info->client) {
+ 		pe_proto = getprotobyname("tcp");
+ 		if (!pe_proto)
+-			return 0;
++			return -ENOENT;
+ 
+ 		info->proto = pe_proto;
+ 		info->send_sz = 0;
+@@ -468,14 +487,13 @@ int rpc_tcp_getclient(struct conn_info *info,
+ 	info->program = program;
+ 	info->version = version;
+ 
+-	client = create_client(info);
+-
+-	if (!client)
+-		return 0;
++	ret = create_client(info, &client);
++	if (ret < 0)
++		return ret;
+ 
+ 	info->client = client;
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ void rpc_destroy_tcp_client(struct conn_info *info)
+@@ -509,10 +527,11 @@ int rpc_portmap_getclient(struct conn_info *info,
+ {
+ 	struct protoent *pe_proto;
+ 	CLIENT *client;
++	int ret;
+ 
+ 	pe_proto = getprotobyname(proto);
+ 	if (!pe_proto)
+-		return 0;
++		return -ENOENT;
+ 
+ 	info->host = host;
+ 	info->addr = addr;
+@@ -530,13 +549,14 @@ int rpc_portmap_getclient(struct conn_info *info,
+ 
+ 	if (pe_proto->p_proto == IPPROTO_TCP)
+ 		info->timeout.tv_sec = PMAP_TOUT_TCP;
+-	client = create_client(info);
+-	if (!client)
+-		return 0;
++
++	ret = create_client(info, &client);
++	if (ret < 0)
++		return ret;
+ 
+ 	info->client = client;
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ unsigned short rpc_portmap_getport(struct conn_info *info, struct pmap *parms)
+@@ -546,6 +566,7 @@ unsigned short rpc_portmap_getport(struct conn_info *info, struct pmap *parms)
+ 	CLIENT *client;
+ 	enum clnt_stat status;
+ 	int proto = info->proto->p_proto;
++	int ret;
+ 
+ 	memset(&pmap_info, 0, sizeof(struct conn_info));
+ 
+@@ -567,9 +588,9 @@ unsigned short rpc_portmap_getport(struct conn_info *info, struct pmap *parms)
+ 		pmap_info.send_sz = RPCSMALLMSGSIZE;
+ 		pmap_info.recv_sz = RPCSMALLMSGSIZE;
+ 
+-		client = create_client(&pmap_info);
+-		if (!client)
+-			return 0;
++		ret = create_client(&pmap_info, &client);
++		if (ret < 0)
++			return ret;
+ 	}
+ 
+ 	/*
+@@ -611,7 +632,7 @@ unsigned short rpc_portmap_getport(struct conn_info *info, struct pmap *parms)
+ 	}
+ 
+ 	if (status != RPC_SUCCESS)
+-		return 0;
++		return -EIO;
+ 
+ 	return port;
+ }
+@@ -621,6 +642,7 @@ int rpc_ping_proto(struct conn_info *info)
+ 	CLIENT *client;
+ 	enum clnt_stat status;
+ 	int proto = info->proto->p_proto;
++	int ret;
+ 
+ 	if (info->client)
+ 		client = info->client;
+@@ -629,9 +651,9 @@ int rpc_ping_proto(struct conn_info *info)
+ 			info->send_sz = UDPMSGSIZE;
+ 			info->recv_sz = UDPMSGSIZE;
+ 		}
+-		client = create_client(info);
+-		if (!client)
+-			return 0;
++		ret = create_client(info, &client);
++		if (ret < 0)
++			return ret;
+ 	}
+ 
+ 	clnt_control(client, CLSET_TIMEOUT, (char *) &info->timeout);
+@@ -665,7 +687,7 @@ int rpc_ping_proto(struct conn_info *info)
+ 	}
+ 
+ 	if (status != RPC_SUCCESS)
+-		return 0;
++		return -EIO;
+ 
+ 	return 1;
+ }
+@@ -704,7 +726,7 @@ static unsigned int __rpc_ping(const char *host,
+ 	parms.pm_port = 0;
+ 
+ 	info.port = rpc_portmap_getport(&info, &parms);
+-	if (!info.port)
++	if (info.port < 0)
+ 		return status;
+ 
+ 	status = rpc_ping_proto(&info);
+@@ -719,19 +741,19 @@ int rpc_ping(const char *host, long seconds, long micros, unsigned int option)
+ 	unsigned int status;
+ 
+ 	status = __rpc_ping(host, vers2, "udp", seconds, micros, option);
+-	if (status)
++	if (status > 0)
+ 		return RPC_PING_V2 | RPC_PING_UDP;
+ 
+ 	status = __rpc_ping(host, vers3, "udp", seconds, micros, option);
+-	if (status)
++	if (status > 0)
+ 		return RPC_PING_V3 | RPC_PING_UDP;
+ 
+ 	status = __rpc_ping(host, vers2, "tcp", seconds, micros, option);
+-	if (status)
++	if (status > 0)
+ 		return RPC_PING_V2 | RPC_PING_TCP;
+ 
+ 	status = __rpc_ping(host, vers3, "tcp", seconds, micros, option);
+-	if (status)
++	if (status > 0)
+ 		return RPC_PING_V3 | RPC_PING_TCP;
+ 
+ 	return status;
+@@ -760,9 +782,8 @@ int rpc_time(const char *host,
+ 	status = __rpc_ping(host, vers, proto, seconds, micros, option);
+ 	gettimeofday(&end, &tz);
+ 
+-	if (!status) {
+-		return 0;
+-	}
++	if (status == RPC_PING_FAIL || status < 0)
++		return status;
+ 
+ 	taken = elapsed(start, end);
+ 
+@@ -779,13 +800,14 @@ static int rpc_get_exports_proto(struct conn_info *info, exports *exp)
+ 	int proto = info->proto->p_proto;
+ 	unsigned int option = info->close_option;
+ 	int vers_entry;
++	int ret;
+ 
+ 	if (info->proto->p_proto == IPPROTO_UDP) {
+ 		info->send_sz = UDPMSGSIZE;
+ 		info->recv_sz = UDPMSGSIZE;
+ 	}
+-	client = create_client(info);
+-	if (!client)
++	ret = create_client(info, &client);
++	if (ret < 0)
+ 		return 0;
+ 
+ 	clnt_control(client, CLSET_TIMEOUT, (char *) &info->timeout);
+@@ -894,7 +916,7 @@ exports rpc_get_exports(const char *host, long seconds, long micros, unsigned in
+ 	parms.pm_prot = info.proto->p_proto;
+ 
+ 	info.port = rpc_portmap_getport(&info, &parms);
+-	if (!info.port)
++	if (info.port < 0)
+ 		goto try_tcp;
+ 
+ 	memset(&exportlist, '\0', sizeof(exportlist));
+@@ -911,7 +933,7 @@ try_tcp:
+ 	parms.pm_prot = info.proto->p_proto;
+ 
+ 	info.port = rpc_portmap_getport(&info, &parms);
+-	if (!info.port)
++	if (info.port < 0)
+ 		return NULL;
+ 
+ 	memset(&exportlist, '\0', sizeof(exportlist));
+diff --git a/modules/replicated.c b/modules/replicated.c
+index 84134b6..ab8fdf3 100644
+--- a/modules/replicated.c
++++ b/modules/replicated.c
+@@ -563,11 +563,11 @@ static unsigned int get_nfs_info(unsigned logopt, struct host *host,
+ 		status = rpc_udp_getclient(rpc_info, NFS_PROGRAM, NFS4_VERSION);
+ 	else
+ 		status = rpc_tcp_getclient(rpc_info, NFS_PROGRAM, NFS4_VERSION);
+-	if (status) {
++	if (!status) {
+ 		gettimeofday(&start, &tz);
+ 		status = rpc_ping_proto(rpc_info);
+ 		gettimeofday(&end, &tz);
+-		if (status) {
++		if (status > 0) {
+ 			double reply;
+ 			if (random_selection) {
+ 				/* Random value between 0 and 1 */
+@@ -589,7 +589,7 @@ v3_ver:
+ 		status = rpc_portmap_getclient(pm_info,
+ 				host->name, host->addr, host->addr_len,
+ 				proto, RPC_CLOSE_DEFAULT);
+-		if (!status)
++		if (status)
+ 			goto done_ver;
+ 	}
+ 
+@@ -603,7 +603,7 @@ v3_ver:
+ 		parms.pm_prot = rpc_info->proto->p_proto;
+ 		parms.pm_vers = NFS3_VERSION;
+ 		rpc_info->port = rpc_portmap_getport(pm_info, &parms);
+-		if (!rpc_info->port)
++		if (rpc_info->port < 0)
+ 			goto v2_ver;
+ 	}
+ 
+@@ -611,11 +611,11 @@ v3_ver:
+ 		status = rpc_udp_getclient(rpc_info, NFS_PROGRAM, NFS3_VERSION);
+ 	else
+ 		status = rpc_tcp_getclient(rpc_info, NFS_PROGRAM, NFS3_VERSION);
+-	if (status) {
++	if (!status) {
+ 		gettimeofday(&start, &tz);
+ 		status = rpc_ping_proto(rpc_info);
+ 		gettimeofday(&end, &tz);
+-		if (status) {
++		if (status > 0) {
+ 			double reply;
+ 			if (random_selection) {
+ 				/* Random value between 0 and 1 */
+@@ -643,7 +643,7 @@ v2_ver:
+ 		parms.pm_prot = rpc_info->proto->p_proto;
+ 		parms.pm_vers = NFS2_VERSION;
+ 		rpc_info->port = rpc_portmap_getport(pm_info, &parms);
+-		if (!rpc_info->port)
++		if (rpc_info->port < 0)
+ 			goto done_ver;
+ 	}
+ 
+@@ -651,11 +651,11 @@ v2_ver:
+ 		status = rpc_udp_getclient(rpc_info, NFS_PROGRAM, NFS2_VERSION);
+ 	else
+ 		status = rpc_tcp_getclient(rpc_info, NFS_PROGRAM, NFS2_VERSION);
+-	if (status) {
++	if (!status) {
+ 		gettimeofday(&start, &tz);
+ 		status = rpc_ping_proto(rpc_info);
+ 		gettimeofday(&end, &tz);
+-		if (status) {
++		if (status > 0) {
+ 			double reply;
+ 			if (random_selection) {
+ 				/* Random value between 0 and 1 */
+@@ -835,12 +835,12 @@ static int get_supported_ver_and_cost(unsigned logopt, struct host *host,
+ 		int ret = rpc_portmap_getclient(&pm_info,
+ 				host->name, host->addr, host->addr_len,
+ 				proto, RPC_CLOSE_DEFAULT);
+-		if (!ret)
++		if (ret)
+ 			return 0;
+ 
+ 		parms.pm_prot = rpc_info.proto->p_proto;
+ 		rpc_info.port = rpc_portmap_getport(&pm_info, &parms);
+-		if (!rpc_info.port)
++		if (rpc_info.port < 0)
+ 			goto done;
+ 	}
+ 
+@@ -848,11 +848,11 @@ static int get_supported_ver_and_cost(unsigned logopt, struct host *host,
+ 		status = rpc_udp_getclient(&rpc_info, NFS_PROGRAM, parms.pm_vers);
+ 	else
+ 		status = rpc_tcp_getclient(&rpc_info, NFS_PROGRAM, parms.pm_vers);
+-	if (status) {
++	if (!status) {
+ 		gettimeofday(&start, &tz);
+ 		status = rpc_ping_proto(&rpc_info);
+ 		gettimeofday(&end, &tz);
+-		if (status) {
++		if (status > 0) {
+ 			if (random_selection) {
+ 				/* Random value between 0 and 1 */
+ 				taken = ((float) random())/((float) RAND_MAX+1);

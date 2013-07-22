@@ -1,0 +1,419 @@
+diff -uprN unzip60/README.NLS build32/README.NLS
+--- unzip60/README.NLS	1970-01-01 09:00:00.000000000 +0900
++++ build32/README.NLS	2010-11-07 16:23:34.000000000 +0900
+@@ -0,0 +1,55 @@
++
++sudakyo ＠ fat.coara.or.jp 氏(DAS_Works)が作成された unzip-5.52-NLS.patch を
++unzip-6.0 にポートしました．
++
++以前から便利に使わせてもらっていましたが，2010年11月現在，元サイトであ
++る http://www.coara.or.jp/~sudakyo/dasworksrpms.html は無くなっているよ
++うなので，Web Archive(http://www.webarchive.org/)に残っていたアーカイブ
++ファイルから作成しました．
++
++下記にある「大人の事情」(笑)というやつで，デフォルト SJIS(CP932)専用に
++していますので，SJIS以外のファイルを展開する場合は解除オプションが必要
++になります．
++
++以下，sudakyo 氏の書かれた解説です(適当に改行しました)．
++
++unzip
++
++unzip の文字化けを無くします。パッチを書き直しました。 Shift JIS 専用
++(*1)では無くなったのでオプション指定が必要です。
++
++-E <name>で書庫に含まれるファイル名の文字エンコーディング名(*2)を指定で
++ きます。 MS-DOS や Windows 上で作られた日本語ファイル名を含む書庫に対
++ しては -E CP932を指定してください。このオプションを全般的に使いたい場
++ 合は、~/.bashrc 等でデフォルトのオプションとして(*3)設定してください。
++ 解除オプションは--E (*4)です。
++
++UNZIPOPT="-ECP932" 
++ZIPINFOOPT="-ECP932" 
++export UNZIPOPT ZIPINFOOPT
++
++(*1) 大人の事情やなんかで Shift JIS 専用としたい場合は少し書き換えてみ
++てください。 uO.charenc_sys = ...の次あたりで uO.charenc_arch ="CP932";
++とします。この場合でも解除オプションは有効です
++
++(*2) 使用できる文字種はiconv -lで確認できます。大文字小文字、-の有無の
++違いは無視できます。
++
++(*3) UNZIPOPT="-E CP932"とすると -E が除去される怪現象があったので、こ
++れはつなげて UNZIPOPT="-ECP932"としておいてください。まったく、どこでパー
++スされているのでしょうか。 alias でもよいですが、スクリプトや他プログラ
++ムからの非対話的なシェルの呼出の場合、alias は無視されます。
++
++(*4) unzip のコマンドラインはやや柔軟性を持っています。一文字のスイッチ
++を-以降に列記することができ、解除は文字の前に-を置くことで表します。引
++数を必要とするオプションはその一文字に続けることも離すこともできます。
++
++(**) -E未指定時は元からある、文字種 OEM, ISO の推定が有効になります。こ
++れは日本語とは無縁ですが、変換には iconv を使っています。文字長固定のテー
++ブル変換では UTF-8 に対応できないからです。 OEM, ISO はそれぞれCP437,
++CP1252とし、あとは iconv に投げています。これで日本語圈以外の方々にも有
++用性を謳いたい所ですが未テストです。
++
++---------
++こじま
++
+diff -uprN unzip60/fileio.c build32/fileio.c
+--- unzip60/fileio.c	2009-04-20 09:03:44.000000000 +0900
++++ build32/fileio.c	2010-11-07 15:54:40.000000000 +0900
+@@ -2702,6 +2702,66 @@ int zstat(p, s)
+ #endif /* REGULUS */
+ 
+ 
++#ifdef NLS
++char*
++strdup_iconv (const char	*to_enc,
++	      const char	*from_enc,
++	      char		*str)
++{
++  iconv_t cd;
++  char *outbuf, *outbufp, *inbufp;
++  size_t outbufsize, inbytesleft, outbytesleft, ret;
++
++  inbufp = str;
++  inbytesleft = strlen (str);
++  outbytesleft = outbufsize = 8192;
++  outbufp = outbuf = malloc (outbufsize);
++  if (! outbuf)
++    return NULL;
++
++  cd = iconv_open (to_enc, from_enc);
++  if (cd == (iconv_t) -1)
++    return NULL;
++
++  while (inbytesleft) {
++    ret = iconv (cd, &inbufp, &inbytesleft, &outbufp, &outbytesleft);
++    if (ret == (size_t) -1) {
++      if (errno == E2BIG) {
++	size_t offset = (size_t) outbufp - (size_t) outbuf;
++	char *newbuf;
++	/* grow size of memory */
++	outbufsize += 8192;
++	outbytesleft += 8192;
++	newbuf = realloc (outbuf, outbufsize);
++	if (! newbuf) {
++	  iconv_close (cd);
++	  free (outbuf);
++	  return NULL;
++	}
++	outbuf = newbuf;
++	outbufp = outbuf + offset;
++      } else if (outbytesleft > 0 && inbytesleft > 0) {
++	/* error but force to go forward */
++	*outbufp ++ = *inbufp ++;
++	inbytesleft --;
++	outbytesleft --;
++      } else break;
++    }
++  }
++  iconv_close (cd);
++
++  outbufsize -= outbytesleft;
++  if (outbufsize < 1) {
++    free (outbuf);
++    return NULL;
++  }
++
++  outbuf = realloc (outbuf, outbufsize + 1);
++  outbuf[outbufsize] = '\0';
++
++  return outbuf;
++}
++#endif
+ 
+ 
+ #ifdef _MBCS
+@@ -2753,6 +2813,13 @@ extent uzmbclen(ptr)
+ #endif /* NEED_UZMBCLEN */
+ 
+ 
++int uzmblen (ZCONST char *ptr) {
++  int i = mblen (ptr, MB_CUR_MAX);
++  if (i >= 0) return i;
++  return 1; /* keep to go forward */
++}
++
++
+ #ifdef NEED_UZMBSCHR
+ /***********************/
+ /* Function uzmbschr() */
+diff -uprN unzip60/unix/Makefile build32/unix/Makefile
+--- unzip60/unix/Makefile	2009-01-19 07:41:18.000000000 +0900
++++ build32/unix/Makefile	2010-11-07 16:03:14.000000000 +0900
+@@ -49,7 +49,7 @@ LOC = $(D_USE_BZ2) $(LOCAL_UNZIP)
+ AF = $(LOC)
+ CFLAGS = -O
+ CF_NOOPT = -I. -I$(IZ_BZIP2) -DUNIX $(LOC)
+-CF = $(CFLAGS) $(CF_NOOPT)
++CF = $(CFLAGS) $(CF_NOOPT) -DNLS
+ LFLAGS1 =
+ LF = -o unzip$E $(LFLAGS1)
+ LF2 = -s
+diff -uprN unzip60/unix/unix.c build32/unix/unix.c
+--- unzip60/unix/unix.c	2009-01-24 08:31:26.000000000 +0900
++++ build32/unix/unix.c	2010-11-07 15:54:40.000000000 +0900
+@@ -214,7 +214,7 @@ char *do_wild(__G__ wildspec)
+         }
+ 
+         /* break the wildspec into a directory part and a wildcard filename */
+-        if ((G.wildname = (ZCONST char *)strrchr(wildspec, '/')) == NULL) {
++        if ((G.wildname = (ZCONST char *)MBSRCHR(wildspec, '/')) == NULL) {
+             G.dirname = ".";
+             G.dirnamelen = 1;
+             G.have_dirname = FALSE;
+@@ -457,7 +457,11 @@ int mapattr(__G)
+              */
+             if ((tmp & 0x10) == 0) {
+                 extent fnlen = strlen(G.filename);
++#ifdef _MBCS
++		if (lastchar(G.filename, fnlen) == '/')
++#else
+                 if (fnlen > 0 && G.filename[fnlen-1] == '/')
++#endif
+                     tmp |= 0x10;
+             }
+             /* read-only bit --> write perms; subdir bit --> dir exec bit */
+@@ -542,7 +546,7 @@ int mapname(__G__ renamed)
+     *pathcomp = '\0';           /* initialize translation buffer */
+     pp = pathcomp;              /* point to translation buffer */
+     if (uO.jflag)               /* junking directories */
+-        cp = (char *)strrchr(G.filename, '/');
++        cp = (char *)MBSRCHR(G.filename, '/');
+     if (cp == (char *)NULL)     /* no '/' or not junking dirs */
+         cp = G.filename;        /* point to internal zipfile-member pathname */
+     else
+@@ -631,7 +635,11 @@ int mapname(__G__ renamed)
+     fore exiting.
+   ---------------------------------------------------------------------------*/
+ 
++#ifdef _MBCS
++    if (lastchar(G.filename, strlen(G.filename)) == '/') {
++#else
+     if (G.filename[strlen(G.filename) - 1] == '/') {
++#endif
+         checkdir(__G__ G.filename, GETPATH);
+         if (G.created_dir) {
+             if (QCOND2) {
+@@ -949,7 +957,11 @@ int checkdir(__G__ pathcomp, flag)
+                 return MPN_NOMEM;
+             }
+             strcpy(tmproot, pathcomp);
++#ifdef _MBCS
++	    if (lastchar(tmproot, G.rootlen) == '/') {
++#else
+             if (tmproot[G.rootlen-1] == '/') {
++#endif
+                 tmproot[--G.rootlen] = '\0';
+             }
+             if (G.rootlen > 0 && (SSTAT(tmproot, &G.statbuf) ||
+diff -uprN unzip60/unzip.c build32/unzip.c
+--- unzip60/unzip.c	2009-04-17 03:26:52.000000000 +0900
++++ build32/unzip.c	2010-11-07 16:11:34.000000000 +0900
+@@ -758,6 +758,11 @@ int unzip(__G__ argc, argv)
+     /* initialize international char support to the current environment */
+     SETLOCALE(LC_CTYPE, "");
+ 
++#ifdef NLS /* needs locale support */
++    uO.charenc_sys = nl_langinfo (CODESET);
++    uO.charenc_arch = "CP932";
++#endif
++
+ #ifdef UNICODE_SUPPORT
+     /* see if can use UTF-8 Unicode locale */
+ # ifdef UTF8_MAYBE_NATIVE
+@@ -1473,6 +1478,29 @@ int uz_opts(__G__ pargc, pargv)
+ #endif /* (!NO_TIMESTAMPS) */
+                 case ('e'):    /* just ignore -e, -x options (extract) */
+                     break;
++#ifdef NLS
++		case 'E':  /* -E:  character encoding for archive */
++		  if (negative) {
++		    uO.charenc_arch = NULL;
++		  } else {
++		    uO.charenc_arch = s;
++		    if (*uO.charenc_arch == '\0') {
++		      if (! (-- argc)) {
++			Info(slide, 0x401, ((char *)slide,
++			     "error:  must give character encording name\n"));
++			return PK_PARAM;
++		      }
++		      uO.charenc_arch = *(++ argv);
++		      if (*uO.charenc_arch == '-') {
++			Info(slide, 0x401, ((char *)slide,
++			     "error:  must give character encording name\n"));
++			return PK_PARAM;
++		      }
++		    }
++		    else while (*(++ s));
++		  }
++		  break;
++#endif /* NLS */
+ #ifdef MACOS
+                 case ('E'): /* -E [MacOS] display Mac e.f. when restoring */
+                     if( negative ) {
+diff -uprN unzip60/unzip.h build32/unzip.h
+--- unzip60/unzip.h	2009-02-16 03:12:54.000000000 +0900
++++ build32/unzip.h	2010-11-07 15:54:40.000000000 +0900
+@@ -462,6 +462,10 @@ typedef struct _UzpOpts {
+ #ifndef FUNZIP
+     char *exdir;        /* pointer to extraction root directory (-d option) */
+     char *pwdarg;       /* pointer to command-line password (-P option) */
++#ifdef NLS
++    char *charenc_sys;  /* character encoding for the system. */
++    char *charenc_arch; /* character encoding for an archive. */
++#endif
+     int zipinfo_mode;   /* behave like ZipInfo or like normal UnZip? */
+     int aflag;          /* -a: do ASCII-EBCDIC and/or end-of-line translation */
+ #ifdef VMS
+diff -uprN unzip60/unzpriv.h build32/unzpriv.h
+--- unzip60/unzpriv.h	2009-04-20 08:59:26.000000000 +0900
++++ build32/unzpriv.h	2010-11-07 15:58:12.000000000 +0900
+@@ -1221,6 +1221,19 @@
+ # endif
+ #endif /* UNICODE_SUPPORT */
+ 
++#ifdef NLS
++#  ifndef _MBCS
++#    define _MBCS
++#  endif
++#  include <langinfo.h>
++#  include <iconv.h>
++char* strdup_iconv (const char *to_name, const char *from_name, char *str);
++#  if (OUTBUFSIZ < FILNAMSIZ)
++#    undef OUTBUFSIZ
++#    define OUTBUFSIZ FILNAMSIZ
++#  endif
++#endif
++
+ /* DBCS support for Info-ZIP  (mainly for japanese (-: )
+  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
+  */
+@@ -1229,10 +1242,14 @@
+    /* Multi Byte Character Set */
+ #  define ___MBS_TMP_DEF  char *___tmp_ptr;
+ #  define ___TMP_PTR      ___tmp_ptr
++/* 
+ #  ifndef CLEN
+ #    define NEED_UZMBCLEN
+ #    define CLEN(ptr) (int)uzmbclen((ZCONST unsigned char *)(ptr))
+ #  endif
++*/
++#  define CLEN(ptr) uzmblen(ptr)
++   int  uzmblen (ZCONST char *ptr);
+ #  ifndef PREINCSTR
+ #    define PREINCSTR(ptr) (ptr += CLEN(ptr))
+ #  endif
+@@ -2894,6 +2911,15 @@ char    *GetLoadPath     OF((__GPRO));  
+  *  code page.  As with A_TO_N(), conversion is done in place.
+  */
+ #ifndef _ISO_INTERN
++#  ifdef NLS
++#    define _ISO_INTERN(str1) { \
++    char *tmp = strdup_iconv (uO.charenc_sys, "CP1252", str1); \
++    if (tmp) { \
++      strncpy (str1, tmp, FILNAMSIZ); \
++      free (tmp); \
++    } \
++  }
++#  else
+ #  ifdef CRTL_CP_IS_OEM
+ #    ifndef IZ_ISO2OEM_ARRAY
+ #      define IZ_ISO2OEM_ARRAY
+@@ -2904,9 +2930,19 @@ char    *GetLoadPath     OF((__GPRO));  
+ #  else
+ #    define _ISO_INTERN(str1)   A_TO_N(str1)
+ #  endif
++#  endif /* NLS */
+ #endif
+ 
+ #ifndef _OEM_INTERN
++#  ifdef NLS
++#    define _OEM_INTERN(str1) { \
++    char *tmp = strdup_iconv (uO.charenc_sys, "CP437", str1); \
++    if (tmp) { \
++      strncpy (str1, tmp, FILNAMSIZ); \
++      free (tmp); \
++    } \
++  }
++#  else
+ #  ifdef CRTL_CP_IS_OEM
+ #    define _OEM_INTERN(str1)   A_TO_N(str1)
+ #  else
+@@ -2917,6 +2953,7 @@ char    *GetLoadPath     OF((__GPRO));  
+        for (p=(uch *)(str1); *p; p++)\
+          *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);}
+ #  endif
++#  endif /* NSL */
+ #endif
+ 
+ #ifndef STR_TO_ISO
+@@ -3003,6 +3040,26 @@ char    *GetLoadPath     OF((__GPRO));  
+  * All other ports are assumed to code zip entry filenames in ISO 8859-1.
+  */
+ #ifndef Ext_ASCII_TO_Native
++#  ifdef NLS
++#   define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
++    if (uO.charenc_arch) { \
++      char *tmp = strdup_iconv (uO.charenc_sys, uO.charenc_arch, string); \
++      if (tmp) { \
++	strncpy (string, tmp, FILNAMSIZ); \
++	free (tmp); \
++      } \
++    } else { \
++    if (((hostnum) == FS_FAT_ && \
++         !(((islochdr) || (isuxatt)) && \
++           ((hostver) == 25 || (hostver) == 26 || (hostver) == 40))) || \
++        (hostnum) == FS_HPFS_ || \
++        ((hostnum) == FS_NTFS_ && (hostver) == 50)) { \
++        _OEM_INTERN((string)); \
++    } else { \
++        _ISO_INTERN((string)); \
++    } \
++    }
++#  else
+ #  define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
+     if (((hostnum) == FS_FAT_ && \
+          !(((islochdr) || (isuxatt)) && \
+@@ -3013,6 +3070,7 @@ char    *GetLoadPath     OF((__GPRO));  
+     } else { \
+         _ISO_INTERN((string)); \
+     }
++#  endif /* NLS */
+ #endif
+ 
+ 
+diff -uprN unzip60/zipinfo.c build32/zipinfo.c
+--- unzip60/zipinfo.c	2009-02-09 02:04:30.000000000 +0900
++++ build32/zipinfo.c	2010-11-07 15:54:40.000000000 +0900
+@@ -492,6 +492,27 @@ int zi_opts(__G__ pargc, pargv)
+                         uO.C_flag = TRUE;
+                     break;
+ #endif /* !CMS_MVS */
++#ifdef NLS
++		case 'E': /* -E:  character encoding for archive */
++		  if (negative) {
++		    uO.charenc_arch = NULL;
++		  } else {
++		    uO.charenc_arch = s;
++		    if (*uO.charenc_arch == '\0') {
++		      if (! (-- argc)) {
++			error = TRUE;
++			break;
++		      }
++		      uO.charenc_arch = *(++ argv);
++		      if (*uO.charenc_arch == '-') {
++			error = TRUE;
++			break;
++		      }
++		    }
++		    else while (*(++ s));
++		  }
++		  break;
++#endif /* NLS */
+                 case 'h':      /* header line */
+                     if (negative)
+                         hflag_2 = hflag_slmv = FALSE, negative = 0;

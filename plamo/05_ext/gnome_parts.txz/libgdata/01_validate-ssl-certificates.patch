@@ -1,0 +1,14 @@
+Origin: http://git.gnome.org/browse/libgdata/commit/?h=libgdata-0-10&id=8eff8fa9138859e03e58c2aa76600ab63eb5c29c
+diff --git a/gdata/gdata-service.c b/gdata/gdata-service.c
+index 8279d53..1509d09 100644
+--- a/gdata/gdata-service.c
++++ b/gdata/gdata-service.c
+@@ -199,7 +199,7 @@ static void
+ gdata_service_init (GDataService *self)
+ {
+ 	self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GDATA_TYPE_SERVICE, GDataServicePrivate);
+-	self->priv->session = soup_session_sync_new ();
++	self->priv->session = soup_session_sync_new_with_options (SOUP_SESSION_SSL_CA_FILE, "/etc/ssl/certs/ca-certificates.crt", NULL);
+ 
+ #ifdef HAVE_GNOME
+ 	soup_session_add_feature_by_type (self->priv->session, SOUP_TYPE_GNOME_FEATURES_2_26);

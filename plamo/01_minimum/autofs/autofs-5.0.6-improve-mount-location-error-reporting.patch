@@ -1,0 +1,117 @@
+autofs-5.0.6 - improve mount location error reporting
+
+From: Ian Kent <raven@themaw.net>
+
+Try and report a more sensible error when an invalid location is
+encountered.
+---
+
+ CHANGELOG           |    1 +
+ modules/parse_sun.c |   32 ++++++++++++++++++--------------
+ 2 files changed, 19 insertions(+), 14 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index e5dfa83..a178b74 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -1,6 +1,7 @@
+ ??/??/20?? autofs-5.0.7
+ =======================
+ - fix ipv6 name for lookup fix.
++- improve mount location error reporting.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/modules/parse_sun.c b/modules/parse_sun.c
+index 3242e3b..021850d 100644
+--- a/modules/parse_sun.c
++++ b/modules/parse_sun.c
+@@ -853,7 +853,7 @@ add_offset_entry(struct autofs_point *ap, const char *name,
+ 	return ret;
+ }
+ 
+-static int validate_location(char *loc)
++static int validate_location(unsigned int logopt, char *loc)
+ {
+ 	char *ptr = loc;
+ 
+@@ -867,14 +867,22 @@ static int validate_location(char *loc)
+ 	 * and "@" in the host name part and ipv6 addresses that
+ 	 * have ":", "[" and "]".
+ 	 */
+-	if (check_colon(ptr)) {
++	if (!check_colon(ptr)) {
++		error(logopt,
++		      "expected colon delimeter not found in location %s",
++		      loc);
++		return 0;
++	} else {
+ 		while (*ptr && strncmp(ptr, ":/", 2)) {
+ 			if (!(isalnum(*ptr) ||
+ 			    *ptr == '-' || *ptr == '.' || *ptr == '_' ||
+ 			    *ptr == ',' || *ptr == '(' || *ptr == ')' ||
+ 			    *ptr == '#' || *ptr == '@' || *ptr == ':' ||
+-			    *ptr == '[' || *ptr == ']'))
++			    *ptr == '[' || *ptr == ']')) {
++				error(logopt, "invalid character \"%c\" "
++				      "found in location %s", *ptr, loc);
+ 				return 0;
++			}
+ 			ptr++;
+ 		}
+ 
+@@ -883,8 +891,10 @@ static int validate_location(char *loc)
+ 	}
+ 
+ 	/* Must always be something following */
+-	if (!*ptr)
++	if (!*ptr) {
++		error(logopt, "invalid location %s", loc);
+ 		return 0;
++	}
+ 
+ 	return 1;
+ }
+@@ -951,8 +961,7 @@ static int parse_mapent(const char *ent, char *g_options, char **options, char *
+ 		return 0;
+ 	}
+ 
+-	if (!validate_location(loc)) {
+-		warn(logopt, MODPREFIX "invalid location %s", loc);
++	if (!validate_location(logopt, loc)) {
+ 		free(myoptions);
+ 		free(loc);
+ 		return 0;
+@@ -985,9 +994,7 @@ static int parse_mapent(const char *ent, char *g_options, char **options, char *
+ 			return 0;
+ 		}
+ 
+-		if (!validate_location(ent_chunk)) {
+-			warn(logopt,
+-			      MODPREFIX "invalid location %s", ent_chunk);
++		if (!validate_location(logopt, ent_chunk)) {
+ 			free(ent_chunk);
+ 			free(myoptions);
+ 			free(loc);
+@@ -1688,8 +1695,7 @@ int parse_mount(struct autofs_point *ap, const char *name,
+ 			return 1;
+ 		}
+ 
+-		if (!validate_location(loc)) {
+-			warn(ap->logopt, MODPREFIX "invalid location %s", loc);
++		if (!validate_location(ap->logopt, loc)) {
+ 			free(loc);
+ 			free(options);
+ 			return 1;
+@@ -1714,9 +1720,7 @@ int parse_mount(struct autofs_point *ap, const char *name,
+ 				return 1;
+ 			}
+ 
+-			if (!validate_location(ent)) {
+-				warn(ap->logopt,
+-				     MODPREFIX "invalid location %s", loc);
++			if (!validate_location(ap->logopt, ent)) {
+ 				free(ent);
+ 				free(loc);
+ 				free(options);

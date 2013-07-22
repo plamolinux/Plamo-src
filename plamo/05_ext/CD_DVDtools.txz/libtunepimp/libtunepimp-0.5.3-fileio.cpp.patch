@@ -1,0 +1,12 @@
+--- build/lib/fileio.cpp~	2011-02-20 21:35:20.779274461 +0900
++++ build/lib/fileio.cpp	2011-02-20 21:39:18.441370226 +0900
+@@ -124,7 +124,8 @@
+ 
+ void tmktempname(const char *path, char *newPath, int newPathLen)
+ {
+-    char *ptr, *temp;
++  const char *ptr;
++  char *temp;
+ 
+     temp = (char *)malloc(strlen(path) + 32);
+     ptr = strrchr(path, dirSepChar);

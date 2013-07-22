@@ -1,0 +1,67 @@
+1.0.0:
+
+* updated for ladcca 0.4.0
+
+
+0.5.2:
+
+* fixed a missing parameter that stopped compilation with recent GCC versions
+
+
+0.5.1:
+
+* fixed problem compiling gtkmm ui with latest sigc++
+
+
+0.5.0:
+
+* added jack driver, also installing a jack-patch-bay link to alsa-patch-bay
+  and a jack-patch-bay.desktop
+* added client subscriptions, similar to qjackconnect; press a read port
+  twice
+
+
+0.4.1:
+
+* fixed plugin stuff to work with 2.95.x C++ symbols
+* fixed fltk compile
+* added an alsa-patch-bay.desktop
+* fixed fltk segfault
+
+
+0.4:
+
+* made a nice dlopen() system for GUIs and drivers
+* ladcca support
+* major amounts of code cleaning up and seperating (eg apb.h -> 6 .h's :)
+* bug fixes
+* compilation fixes
+* listens to alsa changes in a thread
+* gtk gui now uses a proper toolbar with stock buttons
+
+
+0.3:
+
+* fltk gui added
+* updated gtkmm gui to 2.0.0
+* cleanups and bits and bobs
+
+
+0.2.1:
+
+* tiny update to gtkmm 1.3.18
+
+
+0.2:
+
+* gtkmm gui
+* seperated out all the code and made it nice and C++ey so that different
+  drivers can be used (jack in the future) and also different gui toolkits
+* made nice error message dialog boxes come up
+* added support for setting exclusive, time update and realtime options
+  (whatever they are..) for subscriptions
+
+
+0.1:
+
+* initial, scrappy fltk version

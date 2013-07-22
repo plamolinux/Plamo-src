@@ -1,0 +1,13 @@
+diff -uprN audex-0.74b1/utils/encoderassistant.cpp audex-0.74b1.patched/utils/encoderassistant.cpp
+--- audex-0.74b1/utils/encoderassistant.cpp	2011-01-15 20:06:25.000000000 +0900
++++ audex-0.74b1.patched/utils/encoderassistant.cpp	2011-12-01 14:02:43.467908301 +0900
+@@ -179,7 +179,8 @@ const QString EncoderAssistant::pattern(
+         if (embed_cover) {
+           cmd += QString::fromUtf8(" ${"VAR_COVER_FILE" pre=\"--add-image=\" post=\":FRONT_COVER\"}");
+         }
+-	cmd += QString::fromUtf8(" --set-encoding=latin1 $"VAR_OUTPUT_FILE" && eyeD3 --to-v2.3 $"VAR_OUTPUT_FILE);
++	// cmd += QString::fromUtf8(" --set-encoding=latin1 $"VAR_OUTPUT_FILE" && eyeD3 --to-v2.3 $"VAR_OUTPUT_FILE);
++	cmd += QString::fromUtf8(" --set-encoding=utf8 $"VAR_OUTPUT_FILE" && eyeD3 --to-v2.3 $"VAR_OUTPUT_FILE);
+ 	
+       } else {
+         

@@ -1,0 +1,56 @@
+diff -upr libmusicbrainz-2.1.1/lib/c_wrapper.cpp build/lib/c_wrapper.cpp
+--- libmusicbrainz-2.1.1/lib/c_wrapper.cpp	2004-01-11 18:26:13.000000000 +0900
++++ build/lib/c_wrapper.cpp	2011-02-20 21:01:10.170519362 +0900
+@@ -24,6 +24,7 @@
+ #include "musicbrainz.h"
+ #include "trm.h"
+ #include "mb_c.h"
++#include <cstring>
+ 
+ extern "C"
+ {
+diff -upr libmusicbrainz-2.1.1/lib/comhttpsocket.cpp build/lib/comhttpsocket.cpp
+--- libmusicbrainz-2.1.1/lib/comhttpsocket.cpp	2004-03-16 09:34:22.000000000 +0900
++++ build/lib/comhttpsocket.cpp	2011-02-20 21:03:12.170953634 +0900
+@@ -20,6 +20,7 @@
+ #endif
+ #include <stdlib.h>
+ #include <assert.h>
++#include <cstring>
+ 
+ const char* g_strCOMVer = "libmusicbrainz/"VERSION;
+ 
+--- libmusicbrainz-2.1.1/lib/comsocket.cpp	2004-03-16 09:21:57.000000000 +0900
++++ build/lib/comsocket.cpp	2011-02-20 21:05:07.749280103 +0900
+@@ -43,6 +43,7 @@ ________________________________________
+ #include <fcntl.h>
+ #include <net/if.h>
+ #include <sys/ioctl.h>
++#include <cstring>
+ #endif
+ 
+ #define mb_socklen_t ACCEPT_ARG3
+diff -upr libmusicbrainz-2.1.1/lib/http.cpp build/lib/http.cpp
+--- libmusicbrainz-2.1.1/lib/http.cpp	2004-03-06 06:34:29.000000000 +0900
++++ build/lib/http.cpp	2011-02-20 21:07:04.534046739 +0900
+@@ -31,6 +31,8 @@
+ #endif
+ #include <fcntl.h>    
+ #include <errno.h>    
++#include <cstring>
++#include <stdlib.h>
+ 
+ #ifdef WIN32
+ #include <winsock.h>
+diff -upr libmusicbrainz-2.1.1/lib/sigclient.cpp build/lib/sigclient.cpp
+--- libmusicbrainz-2.1.1/lib/sigclient.cpp	2004-03-16 08:56:53.000000000 +0900
++++ build/lib/sigclient.cpp	2011-02-20 21:07:42.243641870 +0900
+@@ -33,6 +33,7 @@ email                : ijr@relatable.com
+ #pragma warning(disable:4786)
+ #endif
+ 
++#include <cstring>
+ #include "sigclient.h"
+ #include "comhttpsocket.h"
+
+

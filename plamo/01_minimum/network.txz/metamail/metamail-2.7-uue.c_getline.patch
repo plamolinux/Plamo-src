@@ -1,0 +1,29 @@
+--- ./src/metamail/uue.c.org	2009-09-23 15:34:54.000000000 +0900
++++ ./src/metamail/uue.c	2009-09-23 15:39:11.000000000 +0900
+@@ -30,7 +30,7 @@
+ }
+ 
+ 
+-getline (buf, size, fp)
++my_getline (buf, size, fp)
+ char *buf;
+ int size;
+ FILE *fp;
+@@ -70,7 +70,7 @@
+     char buf[63];
+ 
+     while (1) {
+-	if (getline (buf, sizeof buf, infp) < 0) {
++	if (my_getline (buf, sizeof buf, infp) < 0) {
+ 	    fprintf (stderr, "Premature EOF!\n");
+ 	    return;
+ 	}
+@@ -82,7 +82,7 @@
+ 	}
+     }	
+     while (1) {
+-	if (getline (buf, sizeof buf, infp) < 0) {
++	if (my_getline (buf, sizeof buf, infp) < 0) {
+ 	    fprintf (stderr, "Premature EOF!\n");
+ 	    return;
+ 	}

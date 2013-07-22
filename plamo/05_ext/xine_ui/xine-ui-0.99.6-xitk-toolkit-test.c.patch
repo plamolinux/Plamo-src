@@ -1,0 +1,92 @@
+--- xine-ui-0.99.6/src/xitk/xine-toolkit/test.c.orig	2010-05-26 18:49:29.000000000 +0900
++++ xine-ui-0.99.6/src/xitk/xine-toolkit/test.c	2010-05-26 18:54:50.000000000 +0900
+@@ -101,7 +101,7 @@
+ static test_t *test;
+ static int nlab = 0;
+ static int align = ALIGN_LEFT;
+-#define FONT_HEIGHT_MODEL "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN&é(-è_çà)=¹~#{[|`\\^@]}%"
++#define FONT_HEIGHT_MODEL "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN&)Bé(-è_$)Bçà)=)B¹~#{[|`\\^@]}%"
+ 
+ static void create_menu(void);
+ /*
+@@ -309,7 +309,7 @@
+   //  xitk_window_dialog_ok_with_width(test->imlibdata, "Long error message", NULL, NULL, 500, ALIGN_LEFT, "premier \n\n\nnum %d\n", nlab);
+   //  xitk_window_dialog_ok_with_width(test->imlibdata, "License information", NULL, NULL, 500, ALIGN_CENTER, "** This program is free software; you can redistribute it and/or modify** it under the terms of the GNU General Public License as published by** the Free Software Foundation; either version 2 of the License, or** (at your option) any later version.");
+   //xitk_window_dialog_ok_with_width(test->imlibdata, "Long error message", window_message_cb, NULL, 500, ALIGN_DEFAULT, "** This program is free software; you can redistribute it and/or modify\n** it under the terms of the GNU General Public License as published by\n** the Free Software Foundation; either version 2 of the License, or\n** (at your option) any later version.");
+-  // xitk_window_dialog_yesno(test->imlibdata, NULL, NULL, NULL, NULL, ALIGN_LEFT, "Le programme <linux kernel> a provoqué une faute de protection dans le module <unknown> à l'adresse 0x00001234.\nCitroën dump:\nAX:0x00\t\tBX:0x00\nCX:0x00\t\tGS:0x00;-)");
++  // xitk_window_dialog_yesno(test->imlibdata, NULL, NULL, NULL, NULL, ALIGN_LEFT, "Le programme <linux kernel> a provoqu)Bé une faute de protection dans le module <unknown> à l'adresse 0x00001234.\nCitroën dump:\nAX:0x00\t\tBX:0x00\nCX:0x00\t\tGS:0x00;-)");
+   //  xitk_window_dialog_ok_with_width(test->imlibdata, "Long error message", window_message_cb, NULL, 500, ALIGN_DEFAULT, "**Thisprogramisfreesoftware;youcanredistributeitand/ormodify**itunderthetermsoftheGNUGeneralPublicLicenseaspublishedby**TheFreeSoftwareFoundation;eitherversion2oftheLicense,or**(atyouroption)anylaterversion.");
+   xw = xitk_window_dialog_error(test->imlibdata, 
+ 				"Stream number %d <%s.mpg> is not valid.\n", nlab, labels[nlab]);
+@@ -484,7 +484,7 @@
+ static void create_tabs(void) {
+   xitk_pixmap_t      *bg;
+   xitk_tabs_widget_t  t;
+-  char               *fontname = "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*";
++  char               *fontname = "-*-*-medium-r-*-*-12-*-*-*-*-*-jisx0208.1983-*";
+   int                 x = 150, y = 200, w = 300;
+   int                 width, height;
+   static char        *tabs_labels[] = {
+@@ -521,7 +521,7 @@
+ static void create_frame(void) {
+   xitk_pixmap_t  *bg;
+   int             width, height;
+-  char           *fontname = "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*";
++  char           *fontname = "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*";
+   int              x = 350, y = 50, w = 200, h = 150;
+   
+   xitk_window_get_window_size(test->xwin, &width, &height);
+@@ -541,7 +541,7 @@
+  */
+ static void create_inputtext(void) {
+   xitk_inputtext_widget_t  inp;
+-  char                    *fontname = "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*";
++  char                    *fontname = "-*-*-medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*";
+ 
+   XITK_WIDGET_INIT(&inp, test->imlibdata);
+ 
+@@ -565,7 +565,7 @@
+  */
+ static void create_label(void) {
+   xitk_label_widget_t   lbl;
+-  char                 *fontname = "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*";
++  char                 *fontname = "-*--medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*";
+   int                   x = 150, y = 120, len = 100;
+   xitk_font_t          *fs;
+   int                   lbear, rbear, wid, asc, des;
+@@ -627,7 +627,7 @@
+     if(wimage) {
+       unsigned int   col;
+       xitk_font_t   *fs = NULL;
+-      char          *fontname = "-*-helvetica-bold-r-*-*-14-*-*-*-*-*-*-*";
++      char          *fontname = "-*-*-bold-r-*-*-14-*-*-*-*-*-jisx0208.1983-*";
+       int            lbear, rbear, wid, asc, des;
+       char          *label = _("Fire !!");
+ 
+@@ -762,7 +762,7 @@
+  */
+ static void create_combo(void) {
+   xitk_combo_widget_t    cmb;
+-  char                  *fontname = "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*";
++  char                  *fontname = "-*-*-medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*";
+   int                    x = 150, y = 36, width = 100, height;
+   xitk_font_t           *fs;
+ 
+@@ -804,7 +804,7 @@
+  */
+ static void create_browser(void) {
+   xitk_browser_widget_t  browser;
+-  char                  *fontname = "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*";
++  char                  *fontname = "-*-*-medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*";
+   Pixmap                 bg;
+   int                    width, height;
+ 
+@@ -954,7 +954,7 @@
+ int main(int argc, char **argv) {
+   GC                          gc;
+   xitk_labelbutton_widget_t   lb;
+-  char                       *fontname = "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*";
++  char                       *fontname = "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*";
+   int                         windoww = 600, windowh = 400;
+   xitk_widget_t              *w;
+   

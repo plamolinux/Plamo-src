@@ -1,0 +1,22 @@
+--- emacs-23.3/lisp/jka-cmpr-hook.el	2011-01-09 02:45:14.000000000 +0900
++++ build/lisp/jka-cmpr-hook.el	2011-10-26 00:34:59.133658421 +0900
+@@ -225,6 +225,10 @@
+      "XZ compressing"     "xz"           ("-c" "-q")
+      "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
+      t t "\3757zXZ\0"]
++    ["\\.txz\\'"
++     "XZ compressing"     "xz"           ("-c" "-q")
++     "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
++     nil nil "\3757zXZ\0"]
+     ;; dzip is gzip with random access.  Its compression program can't
+     ;; read/write stdin/out, so .dz files can only be viewed without
+     ;; saving, having their contents decompressed with gzip.
+@@ -292,7 +296,7 @@
+   :group 'jka-compr)
+ 
+ (defcustom jka-compr-mode-alist-additions
+-  (list (cons (purecopy "\\.tgz\\'") 'tar-mode) (cons (purecopy "\\.tbz2?\\'") 'tar-mode))
++  (list (cons (purecopy "\\.tgz\\'") 'tar-mode) (cons (purecopy "\\.tbz2?\\'") 'tar-mode) (cons (purecopy "\\.txz\\'") 'tar-mode) )
+   "List of pairs added to `auto-mode-alist' when installing jka-compr.
+ Uninstalling jka-compr removes all pairs from `auto-mode-alist' that
+ installing added.

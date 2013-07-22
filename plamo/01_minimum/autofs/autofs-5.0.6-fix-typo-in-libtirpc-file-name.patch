@@ -1,0 +1,40 @@
+autofs-5.0.6 - fix typo in libtirpc file name
+
+From: Leonardo Chiquitto <leonardo.lists@gmail.com>
+
+The library file name was misspelled as libitirpc.so.
+---
+
+ CHANGELOG          |    1 +
+ daemon/automount.c |    4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index a33201d..1f921b2 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -36,6 +36,7 @@
+ - check scandir() return value.
+ - allow for kernel packet size change (in kernel 3.3.0+).
+ - fix function to check mount.nfs version.
++- fix typo in libtirpc file name.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/daemon/automount.c b/daemon/automount.c
+index 0ff3c96..c015c2d 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -2237,9 +2237,9 @@ int main(int argc, char *argv[])
+ 		xmlInitParser();
+ #endif
+ #ifdef TIRPC_WORKAROUND
+-	void *dh_tirpc = dlopen("libitirpc.so", RTLD_NOW);
++	void *dh_tirpc = dlopen("libtirpc.so", RTLD_NOW);
+ 	if (!dh_tirpc)
+-		dh_tirpc = dlopen("libitirpc.so.1", RTLD_NOW);
++		dh_tirpc = dlopen("libtirpc.so.1", RTLD_NOW);
+ #endif
+ 
+ 	if (!master_read_master(master_list, age, 0)) {

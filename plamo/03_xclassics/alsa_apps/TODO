@@ -1,0 +1,27 @@
+ todo
+------
+o Make composite port buttons (maybe)
+o qt gui
+o gnome and kde panel applet guis
+o generalise cca/refresh code with a UI::idle function and virtual callbacks
+
+ 0.5.0
+-------
+o jack driver
+
+
+ 0.4
+-----
+o Listen to alsa in a thread
+
+
+ 0.3
+-----
+
+
+ 0.2
+-----
+o Make resizable
+o Get working without static functions (qt or gtk--)
+o deal with exclusive, time update, realtime options better
+o remove all UIness from Driver

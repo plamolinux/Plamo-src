@@ -1,0 +1,90 @@
+autofs-5.0.6 - fix segmentation fault in do_remount_indirect()
+
+From: Leonardo Chiquitto <leonardo.lists@gmail.com>
+
+In some rare circumstance, it's possible that automount will crash
+on startup while trying to reconnect to a "half-broken" NFS mount
+point.
+
+The segmentation fault happens because we're not testing scandir()'s
+return value in do_remount_indirect():
+
+lib/mounts.c:
+1210       i = j = scandir(buf, &de2, 0, alphasort);
+1211       while (i--)
+1212         free(de2[i]);
+
+So, if scandir() returns -1, it will try to free de2[-1], de2[-2], etc.
+
+Here's the call trace, for reference:
+
+Program terminated with signal 11, Segmentation fault.
+#0  0x00007ffff7fe2425 in do_remount_indirect (ap=0x7ffff821e070, fd=15,
+    path=0x7ffff821e150 "/nfs/iil") at mounts.c:1212
+1212                    free(de2[i]);
+(gdb) print j
+$1 = -1
+(gdb) print de2
+$3 = (struct dirent **) 0x0
+
+#0  0x00007ffff7fe2425 in do_remount_indirect (ap=0x7ffff821e070, fd=15,
+    path=0x7ffff821e150 "/nfs/iil") at mounts.c:1212
+#1  0x00007ffff7fe2a48 in remount_active_mount (ap=0x7ffff821e070, mc=0x0,
+    path=0x7ffff821e150 "/nfs/iil", devid=20, type=<optimized out>,
+    ioctlfd=0x7ffff6e5babc) at mounts.c:1327
+#2  0x00007ffff7fe2ac6 in try_remount (ap=0x7ffff821e070, me=0x0, type=1)
+    at mounts.c:1357
+#3  0x00007ffff7fd35e0 in do_mount_autofs_indirect (root=<optimized out>,
+    ap=<optimized out>) at indirect.c:103
+#4  mount_autofs_indirect (ap=0x7ffff821e070, root=0x7ffff8202d50 "/nfs/iil")
+    at indirect.c:213
+#5  0x00007ffff7fd1473 in mount_autofs (root=<optimized out>,
+    ap=<optimized out>) at automount.c:1005
+#6  handle_mounts (arg=0x7fffffffdfd0) at automount.c:1526
+#7  0x00007ffff7b8e5f0 in start_thread (arg=<optimized out>)
+    at pthread_create.c:297
+#8  0x00007ffff6f3187d in clone ()
+    at ../sysdeps/unix/sysv/linux/x86_64/clone.S:112
+#9  0x0000000000000000 in ?? ()
+
+Suggested fix:
+
+Check scandir() return value
+
+In some rare circumstance, it's possible that automount will crash
+on startup while trying to reconnect to a "half-broken" NFS mount
+point.
+---
+
+ CHANGELOG    |    1 +
+ lib/mounts.c |    4 ++++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index b9c3149..cc458f9 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -33,6 +33,7 @@
+ - rework error return handling in rpc code.
+ - catch EHOSTUNREACH and bail out early.
+ - systemd support fixes.
++- check scandir() return value.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/lib/mounts.c b/lib/mounts.c
+index efe0438..e218c79 100644
+--- a/lib/mounts.c
++++ b/lib/mounts.c
+@@ -1355,6 +1355,10 @@ static int do_remount_indirect(struct autofs_point *ap, int fd, const char *path
+ 			int i, j;
+ 
+ 			i = j = scandir(buf, &de2, 0, alphasort);
++			if (i < 0) {
++				free(de[n]);
++				continue;
++			}
+ 			while (i--)
+ 				free(de2[i]);
+ 			free(de2);

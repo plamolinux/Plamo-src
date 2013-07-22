@@ -1,0 +1,414 @@
+#!/bin/sh
+
+######################################################################
+url="http://jaist.dl.sourceforge.jp/canna/9565/Canna37p3.tar.bz2
+    http://plamo.linet.gr.jp/~tamuki/src/Canna37p3-keybind.patch.gz
+    http://www.nslabs.jp/archives/nicolatter-1.7.9.tar.gz
+    http://www.j10n.org/libspt/libspt-1.1.tar.bz2
+    http://plamo.linet.gr.jp/~tamuki/src/libspt-1.1-set_timefield.patch.gz
+    http://cannadic.oucrc.org/cannadic-0.95c.tar.gz"
+pkgbase=Canna
+vers=37p3
+arch=x86_64
+build=P1
+src[0]=Canna37p3
+src[1]=libspt-1.1
+src[2]=cannadic-0.95c
+OPT_CONFIG[0]=""
+OPT_CONFIG[1]=""
+OPT_CONFIG[2]=""
+DOCS[0]="`echo canuum/{COPYRIGHT,README.{copyright,jp}}`
+    ChangeLog CHANGES.jp COPYRIGHT INSTALL INSTALL.jp OCHANGES.jp
+    README README.jp RKCCONF.jp WHATIS WHATIS.jp"
+DOCS[1]="CHANGES COPYRIGHT INSTALL"
+DOCS[2]="README.ja COPYING"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+if [ $# -eq 0 ] ; then
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+  cd ${B[0]}
+  gunzip -c $W/Canna37p3-keybind.patch.gz | patch -Np1 -i -
+  patch -Np1 -i $W/nicolatter-1.7.9/patch/Canna37p1-q1.diff
+  cp -p Canna.conf Canna.conf.orig
+  cat <<- "EOF" | patch Canna.conf
+	143c143
+	< cannaPrefix = DefCannaPrefix
+	---
+	> cannaPrefix = /usr
+	149,151c149,151
+	< cannaLibDir = DefCannaLibDir
+	< XCOMM cannaManDir = $(cannaPrefix)/share/man
+	< cannaManDir = $(cannaPrefix)/man
+	---
+	> cannaLibDir = /usr/lib64/canna
+	> cannaManDir = $(cannaPrefix)/share/man
+	> XCOMM cannaManDir = $(cannaPrefix)/man
+	154,155c154,155
+	< libCannaDir = DefLibCannaDir
+	< ErrDir  = DefErrDir
+	---
+	> libCannaDir = /usr/lib64
+	> ErrDir  = /var/log/canna
+	240c240
+	< DicDir   = $(cannaLibDir)/dic
+	---
+	> DicDir   = /var/lib/canna/dic
+	333c333
+	< JMNLOCALE = ja
+	---
+	> JMNLOCALE = ja_JP.eucJP
+	EOF
+  cd ${B[1]}
+  gunzip -c $W/libspt-1.1-set_timefield.patch.gz | patch -Np1 -i -
+  cp -p Makefile.in Makefile.in.orig
+  sed 's@man$@share/man@g' Makefile.in.orig > Makefile.in
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+  done
+  cd ${B[0]}
+  xmkmf
+  cd canuum
+  xmkmf -a
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      case $i in
+      0) make canna ; ( cd canuum ; make ) ;;
+      1) make ;;
+      2) make maindic ;;
+      esac
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      if [ $i -eq 0 ] ; then
+        make -i install install.man DESTDIR=$P
+        ( cd canuum ; make install install.man DESTDIR=$P )
+      elif [ $i -eq 1 ] ; then
+        make -i install DESTDIR=$P
+      fi
+    fi
+  done
+  cd ${B[2]}
+  cannadicdir=$P/var/lib/canna/dic/canna
+  install -o bin -g bin -m 0664 gcanna.c[bl]d $cannadicdir
+  install -o bin -g bin -m 0664 gcannaf.ctd $cannadicdir
+  cp -p $cannadicdir/dics.dir $cannadicdir/dics.dir.orig
+  cat <<- "EOF" | patch $cannadicdir/dics.dir
+	25a26,28
+	> gcanna.cbd(gcanna.mwd)		-gcanna---
+	> gcanna.cld(gcanna.mwd)		-gcanna---
+	> gcannaf.ctd(.swd)		-gcannaf---
+	EOF
+  cannalibdir=$P/usr/lib64/canna
+  cp -p $cannalibdir/default.canna $cannalibdir/default.canna.orig
+  cat <<- "EOF" | patch $cannalibdir/default.canna
+	27c27,29
+	<  "iroha"
+	---
+	>  "gcanna"
+	>  "gcannaf"
+	> ; "iroha"
+	EOF
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+  strip_bindir $P/usr/libexec
+  gzip_dir $mandir/ja_JP.eucJP/man1
+  gzip_dir $mandir/ja_JP.eucJP/man3
+  install -d $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/rc.d/init.d/canna.r
+	#!/bin/sh
+	
+	SERVER=/usr/sbin/cannaserver
+	KILLER=/usr/sbin/cannakill
+	LOCKD=/var/lock/subsys
+	
+	[ -f $SERVER ] || exit 0
+	case "$1" in
+	start)
+	  echo "Starting Canna server:"
+	  rm -f /tmp/.iroha_unix/IROHA
+	  $SERVER -inet
+	  [ -d $LOCKD ] && touch $LOCKD/canna
+	  ;;
+	stop)
+	  echo "Shutting down Canna server:"
+	  $KILLER
+	  [ -d $LOCKD ] && rm -f $LOCKD/canna
+	  ;;
+	install)
+	  echo canna network
+	  ;;
+	*)
+	  echo "Usage: canna {start|stop}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 755 $P/etc/rc.d/init.d/canna.r
+  touch -t `date '+%m%d0900'` $P/etc/rc.d/init.d/canna.r
+  cat <<- "EOF" > $P/etc/hosts.canna
+	localhost
+	unix
+	EOF
+  touch -t `date '+%m%d0900'` $P/etc/hosts.canna
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+  cp -a $S/doc $docdir/$src
+  chown -R root.root $docdir/$src/doc
+  find $docdir/$src/doc -name ".cvsignore" -exec rm -f {} \;
+  ( cd $docdir ; find $src/doc -type d -exec touch -r $W/{} {} \; )
+  mv $docdir/$src/{doc,{INSTALL{,.jp},OCHANGES.jp,README{,.jp},RKCCONF.jp,WHATIS{,.jp},$myname}.gz} $C
+  mv $C/{doc,{INSTALL{,.jp},OCHANGES.jp,README{,.jp},RKCCONF.jp,WHATIS{,.jp},$myname}.gz} $docdir/$src
+  touch -r $S $docdir/$src
+  convert
+  prune_symlink $mandir/ja_JP.eucJP/man3
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64 -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P var/lib/canna
+  tar rvpf $pkg.tar -C $P var/log/canna
+  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/canna.r
+  tar rvpf $pkg.tar -C $P etc/hosts.canna
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man3 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/doc -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
+fi

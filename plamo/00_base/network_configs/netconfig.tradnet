@@ -1,0 +1,1024 @@
+#!/bin/sh
+
+############################################################################
+#			 Syntax check
+############################################################################
+#
+# This checks IP address syntax.
+# usage: syntax_check ADDRESS #-OF-EXPECTED-SEGMENTS (up to 4)
+# example: syntax_check 123.22.43.1 4
+# returns: 0=found correct  1=too many fields  2=non numeric field found
+syntax_check_color() {
+  RET_CODE=0 
+  SCRATCH=$1
+  SCRATCH=`echo $SCRATCH | tr "." "/"`
+  INDEX=$2
+  while [ ! "$INDEX" = "0" ]; do
+    # OK, so I'm a LISP-head :^)
+    FIELD=`basename $SCRATCH`
+    SCRATCH=`dirname $SCRATCH`
+    if expr $FIELD + 1 1> /dev/null 2> /dev/null; then
+      GOOD=y
+    else
+      RET_CODE=2; # non-numeric field
+    fi
+    INDEX=`expr $INDEX - 1`
+  done
+  if [ ! "$SCRATCH" = "." ]; then
+    RET_CODE=1; # too many arguments
+  fi
+  if [ "$3" = "WARN" -a ! "$RET_CODE" = "0" ]; then
+    cat << EOF > /tmp/tmpmsg
+
+入力されたアドレス $1 は、IP アドレスのようには見えません。
+ここで期待しているのは、127.0.0.1 のようにドットでくぎられた
+$2 個の数字です。もう一度、入力し直してください。
+
+EOF
+    dialog --title "WARNING" --msgbox "`cat /tmp/tmpmsg`" 9 72
+    rm -r /tmp/tmpmsg
+  else
+    if [ "$3" = "ECHO" ]; then
+      echo $RET_CODE;
+    fi
+  fi
+  return $RET_CODE;
+
+}
+
+############################################################################
+#			 Question and answer.
+############################################################################
+#
+firstdialog() {
+
+dialog --title "configure your network" --msgbox "\
+これから システムのネットワークに関する設定を行ないます。\n\
+ネットワークカードのないマシンでも、ホスト名の設定はして\n\
+おく必要があります(さもないと起動時やアプリケーションの\n\
+実行時に一定時間動かなくなることがあります。\n\
+ホスト名の設定は、/etc/hosts, /etc/HOSTNAME に、ネット\n\
+ワークに関する設定は /etc/rc.d/rc.inet1, /etc/networks, \n\
+/etc/resolv.conf  に行なわれますので、必要ならば直接ファ\n\
+イルを修正してください。\n\
+\n\
+この netconfig では PCMCIA・CardBus の設定はサポートして\n\
+いません。PCMCIA・CardBus のネットワークカードを使いたい\n\
+場合は /sbin/planet としてネットワーク設定ツールを Planet\n\
+に切り替えてください。ネットワークの設定は、\n\
+\n\
+  netconfig\n\
+\n\
+コマンドを実行することで、いつでも設定を変更できます。" 21 62
+
+}
+
+
+############################################################################
+#		     Change permissions and exit.
+############################################################################
+#
+last_dialog() {
+
+dialog --title "finish network configuration" --msgbox \
+"\nネットワークソフトウェアの設定が完了しました。\n\
+カーネルがネットワークカードを認識しない場合、 \n\
+必要なドライバが組み込まれていない可能性があります。 \n\
+その場合、モジュールとして用意されているドライバを \n\
+組み込むか必要なドライバを組み込むようにカーネルを \n\
+再構築してください" 13 72
+rm -f /tmp/tmpmsg
+
+}
+
+############################################################################
+#		     ok.
+############################################################################
+#
+ok_dialog() {
+
+dialog --title " OK." --msgbox \
+"\n\
+　　　　設定しました。\n\
+" 8 32
+rm -f /tmp/tmpmsg
+
+}
+
+############################################################################
+#		     Not found dhcpcd ?
+############################################################################
+#
+dhcpcd_not_found_dialog() {
+
+if [ ! "$DHCP" = "y" ] ; then
+  return 0 ;
+fi
+if [ -x $DHCPCD ] ; then
+  return 0 ;
+fi
+
+dialog --title "dhclient not found" --msgbox "\n\
+DHCP接続に必要な dhclient がまだインストールされていないようです。\n\
+Plamo Linux では ISC DHCP のパッケージを提供しています。この後、\n\
+ISC DHCP の インストールを必ず行ってください。" 9 70
+rm -f /tmp/tmpmsg
+
+}
+
+############################################################################
+#			 Set hostname and domain.
+############################################################################
+#
+set_hostname() {
+
+HOSTNAME=""
+while [ "$HOSTNAME" = "" ]; do
+cat << EOF > /tmp/tmpmsg
+
+最初にお使いのホストの名前を指定してください。ここで指定するのは
+ホスト名だけで、ドメイン名は含めないでください。
+
+ホスト名は？:
+EOF
+ dialog --title "configure your hostname" --inputbox "`cat /tmp/tmpmsg`" 12 70 \
+ 2> /tmp/SeThost
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/SeThost /tmp/tmpmsg
+  exit
+ fi
+ HOSTNAME="`cat /tmp/SeThost`"
+ rm -f /tmp/SeThost /tmp/tmpmsg
+done
+
+
+cat << EOF > /tmp/tmpmsg
+次にドメイン名の設定を行ないます。最初の '.' は入力しないで
+ください(.frog.or.jp ではなく frog.or.jp としてください)。
+
+DHCPによる接続等で，ドメインが定まっていない場合は，単に
+[Enter] を押してください．
+
+$HOSTNAME のドメイン名は？: 
+EOF
+ dialog --title "configure your domainname" --inputbox "`cat /tmp/tmpmsg`" \
+14 72 2> /tmp/SeTdom
+if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/SeTdom /tmp/tmpmsg
+  exit
+fi
+DOMAIN="`cat /tmp/SeTdom`"
+rm -f /tmp/SeTdom /tmp/tmpmsg
+if [ "x.$DOMAIN" = "x." ] ; then
+  echo $HOSTNAME > etc/HOSTNAME
+else
+  echo $HOSTNAME.$DOMAIN > etc/HOSTNAME
+fi
+
+}
+
+############################################################################
+#			Select methond
+############################################################################
+#
+select_dhcp_or_fixed() {
+
+while [ 0 ] ; do
+  dialog --title "接続方法の変更" \
+--menu "\nどの方法でネットワークに接続しますか？\n\
+\n" 17 76 3 \
+"Fixed" "固定IPで接続(この後、ネットワークパラメータの設定をします)" \
+"Dhcp" "DHCPで接続" \
+"Loopback" "接続せずに使用" 2> /tmp/reply
+  if [ $? = 1 -o $? = 255 ]; then
+    rm -f /tmp/reply
+    exit
+  else
+    break;
+  fi
+done
+  REPLY="`cat /tmp/reply`"
+  rm -f /tmp/reply
+  LOOPBACK="n"
+  if [ "$REPLY" != "Fixed" ] ; then
+    LOOPBACK="y"
+    if [ "$REPLY" = "Dhcp" ] ; then
+      DHCP="y"
+    fi
+  fi
+}
+
+
+
+############################################################################
+#			 TCP/IP Setting
+############################################################################
+#
+set_tcpip() {
+
+if [ -r etc/rc.d/rc.inet1 -a "$LOOPBACK" = "n" ]; then
+
+ while [ 0 ]; do
+  cat << EOF > /tmp/tmpmsg
+ホストの IP アドレスを設定してください。IP アドレスは、
+例えば 111.112.113.114 のようになります。
+$HOSTNAME の IP アドレスは？(aaa.bbb.ccc.ddd):
+EOF
+  dialog --title "configure your IP address" --inputbox "`cat /tmp/tmpmsg`" \
+10 72 2> /tmp/SeTlip
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/SeTlip /tmp/tmpmsg
+   exit
+  fi
+  IPADDR="`cat /tmp/SeTlip`"
+  rm -f /tmp/SeTlip /tmp/tmpmsg
+  if [ "x.$IPADDR" = "x." ]; then
+    continue;
+  fi
+  syntax_check_color $IPADDR 4 WARN
+  if [ $? = 0 ]; then
+    break;
+  fi
+ done
+ 
+ while [ 0 ]; do
+  cat << EOF > /tmp/tmpmsg
+お使いのネットワークのネットマスクを指定してください。ネット
+マスクは255.255.255.0 のような数字です。
+ネットマスクは？(aaa.bbb.ccc.ddd):
+EOF
+  dialog --title "configure your netmask" --inputbox "`cat /tmp/tmpmsg`" \
+10 72 2> /tmp/SeTnmask
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/SeTnmask /tmp/tmpmsg
+   exit
+  fi
+  NETMASK="`cat /tmp/SeTnmask`"
+  rm -f /tmp/SeTnmask /tmp/tmpmsg
+  if [ "x.$NETMASK" = "x." ]; then
+    continue;
+  fi
+  syntax_check_color $NETMASK 4 WARN
+  if [ $? = 0 ]; then
+    break;
+  fi
+ done
+
+ while [ 0 ]; do
+  cat << EOF > /tmp/tmpmsg
+ゲートウェイのアドレスを指定してください。アドレスは
+111.112.113.1 のように指定します。
+
+ゲートウェイが無い場合、ENTER キーを押して、先へ進みます。
+
+ゲートウェイアドレスは？(aaa.bbb.ccc.ddd):
+EOF
+  dialog --title "configure your gateway address" --inputbox "`cat /tmp/tmpmsg`" \
+13 72 2> /tmp/SeTgate
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/SeTgate /tmp/tmpmsg
+   exit
+  fi
+  GATEWAY="`cat /tmp/SeTgate`"
+  rm -f /tmp/SeTgate /tmp/tmpmsg
+  if [ "x.$GATEWAY" = "x." ]; then
+    break;
+  fi
+  syntax_check_color $GATEWAY 4 WARN
+  if [ $? = 0 ]; then
+    break;
+  fi
+ done
+
+# Set broadcast/network addresses automatially:
+
+BROADCAST=`ipmask $NETMASK $IPADDR | cut -f 1 -d ' '`
+NETWORK=`ipmask $NETMASK $IPADDR | cut -f 2 -d ' '`
+
+# if [ -r etc/rc.d/rc.inet1 -a "$LOOPBACK" = "n" ]; then
+else
+ if [ ! -r etc/rc.d/rc.inet1 ]; then
+  cat << EOF > /tmp/tmpmsg
+
+TCP/IP パッケージがインストールされていないようなので、現在設定
+できるものはホスト名/ドメイン名だけです。この場合、ネットワーク
+に接続できないのですが、ログイン時のプロンプトに指定した名前
+が表示されるようになります。
+
+EOF
+  dialog --title "skip almost configuration" \
+--infobox "`cat /tmp/tmpmsg`" 10 72
+ fi
+fi
+
+#
+#'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#			  The networks file.
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#
+
+if [ -f $ETCNETWORKS ]; then
+ cp $ETCNETWORKS tmp/`basename $ETCNETWORKS`.OLD
+fi
+#echo "Creating /$ETCNETWORKS..."
+/bin/cat <<EOF >$ETCNETWORKS
+#
+# networks	This file describes a number of netname-to-address
+#		mappings for the TCP/IP subsystem.  It is mostly
+#		used at boot time, when no name servers are running.
+#
+
+loopback	127.0.0.0
+localnet	$NETWORK
+
+# End of networks.
+EOF
+chmod 644 $ETCNETWORKS
+#
+#'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#			   The hosts file.
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#
+#echo "Creating /$HOSTS..."
+if [ -f $HOSTS ];then cp $HOSTS tmp/`basename $HOSTS`.OLD;fi
+if [ "x.$DOMAIN" = "x." ] ; then
+  LOOPIP="# 127.0.0.1"
+  FULLDOMAIN="localhost"
+else
+  LOOPIP="127.0.0.1"
+  FULLDOMAIN="$HOSTNAME.$DOMAIN"
+fi
+
+/bin/cat <<EOF >$HOSTS
+#
+# hosts		This file describes a number of hostname-to-address
+#		mappings for the TCP/IP subsystem.  It is mostly
+#		used at boot time, when no name servers are running.
+#		On small systems, this file can be used instead of a
+#		"named" name server.  Just add the names, addresses
+#		and any aliases to this file...
+#
+# By the way, Arnt Gulbrandsen <agulbra@nvg.unit.no> says that 127.0.0.1
+# should NEVER be named with the name of the machine.  It causes problems
+# for some (stupid) programs, irc and reputedly talk. :^)
+#
+
+# For IPv6 name resolution
+::1 localhost
+
+# For loopbacking.
+$LOOPIP	localhost
+$IPADDR	$FULLDOMAIN $HOSTNAME
+
+# End of hosts.
+EOF
+chmod 644 $HOSTS
+
+}
+
+############################################################################
+#			The resolv.conf file.
+############################################################################
+#
+set_resolv() {
+
+ if [ "$LOOPBACK" != "n" ] ; then
+   if [ "$DHCP" != "y" ] ; then
+     return 0 ;
+   fi
+ fi
+ dialog --title "Specify nameserver ?" --yesno \
+"ネットワーク上のネームサーバのアドレスを指定しますか？" 5 72
+ if [ $? = 0 ]; then
+   while [ "x.$NAMESERVER" = "x." ]; do
+     if [ "x.$DOMAIN" = "x." ] ; then
+       FULLDOMAIN=""
+     else
+       FULLDOMAIN="$HOSTNAME.$DOMAIN"
+     fi
+     cat << EOF > /tmp/tmpmsg
+設定した IP アドレスとホスト名は以下の通りです。
+$IPADDR       $FULLDOMAIN    $HOSTNAME
+
+お使いのネームサーバのアドレスを設定してください。
+複数のネームサーバを使う場合は /$RESOLV ファイルを
+編集してください。
+
+ネームサーバのIPアドレスは？(aaa.bbb.ccc.ddd): 
+EOF
+     dialog --title "configure your nameserver" --inputbox \
+"`cat /tmp/tmpmsg`" 15 72 2> /tmp/SeTns
+     if [ $? = 1 -o $? = 255 ]; then
+       rm -f /tmp/tmpmsg /tmp/SeTns 
+       return 1
+     fi
+     NAMESERVER="`cat /tmp/SeTns`"
+     rm -f /tmp/tmpmsg /tmp/SeTns 
+     syntax_check_color $NAMESERVER 4 WARN
+     if [ $? != 0 ]; then
+       NAMESERVER=""
+     fi
+   done
+   if [ -f $RESOLV ]; then cp $RESOLV tmp/`basename $RESOLV`.OLD;fi
+   if [ ! "x.$DOMAIN" = "x." ] ; then
+     echo "domain $DOMAIN" >$RESOLV
+     echo "nameserver $NAMESERVER" >>$RESOLV
+   else
+     echo "nameserver $NAMESERVER" >$RESOLV
+   fi
+ else
+   if [ ! "x.$DOMAIN" = "x." ] ; then
+     echo "domain $DOMAIN" >$RESOLV
+   else
+     echo "" >$RESOLV
+   fi
+ fi
+ if [ -f $PCMCIARC ] ; then
+   cp $PCMCIARC "tmp/ptmp"$$
+   sed -e "s/DNS_1=\"[^.]*.[^.]*.[^.]*.[^.]*\"/DNS_1=\"$NAMESERVER\"/g" "tmp/ptmp"$$ | sed -e "s/DNS_1=\"\"/DNS_1=\"$NAMESERVER\"/g" > $PCMCIARC
+   rm "tmp/ptmp"$$
+ fi
+ return 0
+}
+
+
+############################################################################
+#		PCMCIA?
+############################################################################
+#
+
+if_pcmcia() {
+
+if [ "$PCMCIA" = "y" ]; then
+
+dialog --title "configure for PCMCIA-CS?" \
+--yesno "お使いのシステムには PCMCIA がインストールされているようです。 \
+ネットワークの設定は PCMCIA 用に行いますか？" 9 76
+   if [ ! $? = 0 ]; then
+     PCMCIA="n"
+   else
+     PCMCIA="Y"
+   fi
+else 
+  if [ "$PCMCIA" != "Y" ] ; then
+    PCMCIA="n"
+  fi
+fi
+
+}
+
+############################################################################
+#		Make config. files
+############################################################################
+#
+make_config_file() {
+
+if [ "$PCMCIA" != "n" ];then
+  if [ -f $PCMCIARC ]; then 
+    cp $PCMCIARC tmp/`basename $PCMCIARC`.OLD
+  fi
+
+#''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#      make /etc/pcmcia/network.opts
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+if [ "$LOOPBACK" = "n" ] ; then
+
+ /bin/cat <<EOF >$PCMCIARC
+# Network adapter configuration
+#
+# The address format is "scheme,socket,instance,hwaddr".
+#
+# Note: the "network address" here is NOT the same as the IP address.
+# See the Networking HOWTO.  In short, the network address is the IP
+# address masked by the netmask.
+#
+case "\$ADDRESS" in
+dhcp,*,*,*)
+    # Transceiver selection, for cards that need it -- see 'man ifport'
+    IF_PORT=""
+    # Use BOOTP [y/n]
+    BOOTP="n"
+    # Use DHCP [y/n]
+    DHCP="y"
+    # IP address
+    IPADDR=""
+    # Domain name
+    DOMAIN="$DOMAIN"
+    # Nameserver #1
+    DNS_1="$NAMESERVER"
+    # Nameserver #2
+    DNS_2=""
+    # Nameserver #3
+    DNS_3=""
+    ;;
+fixed,*,*,*)
+    # Transceiver selection, for cards that need it -- see 'man ifport'
+    IF_PORT=""
+    # Use BOOTP [y/n]
+    BOOTP="n"
+    # IP address
+    IPADDR="$IPADDR"
+    # Netmask
+    NETMASK="$NETMASK"
+    # Network address
+    NETWORK="$NETWORK"
+    # Broadcast address
+    BROADCAST="$BROADCAST"
+    # Gateway address
+    GATEWAY="$GATEWAY"
+    # Domain name
+    DOMAIN="$DOMAIN"
+    # Nameserver #1
+    DNS_1="$NAMESERVER"
+    # Nameserver #2
+    DNS_2=""
+    # Nameserver #3
+    DNS_3=""
+    # NFS mounts, should be listed in /etc/fstab
+    MOUNTS=""
+    ;;
+esac
+
+EOF
+
+  SCHEME="`cat $PCMCIASCHEME`"
+  if [ "$SCHEME" = "default" ] ; then
+/bin/cat <<EOF >$PCMCIASCHEME
+dhcp
+EOF
+    rm -rf $PCMCIASCHEMELN
+    ln -sf /$PCMCIASCHEME $PCMCIASCHEMELN
+  fi
+
+else	# if [ "$LOOPBACK" = "n" ] ; then
+
+ /bin/cat <<EOF >$PCMCIARC
+# Network adapter configuration
+#
+# The address format is "scheme,socket,instance,hwaddr".
+#
+# Note: the "network address" here is NOT the same as the IP address.
+# See the Networking HOWTO.  In short, the network address is the IP
+# address masked by the netmask.
+#
+case "\$ADDRESS" in
+default,*,*,*)
+    # Transceiver selection, for cards that need it -- see 'man ifport'
+    IF_PORT=""
+    # Use BOOTP [y/n]
+    BOOTP="n"
+    # Use DHCP [y/n]
+    DHCP="y"
+    # IP address
+    IPADDR=""
+    # Domain name
+    DOMAIN="$DOMAIN"
+    # Nameserver #1
+    DNS_1="$NAMESERVER"
+    # Nameserver #2
+    DNS_2=""
+    # Nameserver #3
+    DNS_3=""
+    ;;
+esac
+
+EOF
+
+fi	# if [ "$LOOPBACK" = "n" ] ; then
+
+
+
+
+# if [ "$PCMCIA" = "yes" ];then
+else
+#
+#'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#			  The rc.inet1 file.
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#
+if [ ! -h $RC ] ; then
+  if [ -f $RC ]; then 
+    cp $RC tmp/`basename $RC`.OLD
+  fi
+fi
+# echo "Creating /$RC..."
+/bin/cat <<EOF >$RC
+#! /bin/sh
+#
+# rc.inet1	This shell script boots up the base INET system.
+#
+# Version:	@(#)/etc/rc.d/rc.inet1	1.01	05/27/93
+#
+
+HOSTNAME=\`cat /etc/HOSTNAME\`
+
+# Attach the loopback device.
+/$IFCONFIG lo 127.0.0.1
+/$ROUTE add -net 127.0.0.0 netmask 255.0.0.0 lo
+
+if [ -f /$INET1SCHEME ] ; then
+  INET1_SCHEME=\`cat /$INET1SCHEME\`
+else
+  INET1_SCHEME="fixed"
+fi
+
+if [ "\$INET1_SCHEME" = "fixed" ] ; then
+
+  # IF YOU HAVE AN ETHERNET CONNECTION, use these lines below to configure the 
+  # eth0 interface. If you're only using loopback or SLIP, don't include the
+  # rest of the lines in this file.
+
+  # Edit for your setup.
+  IPADDR="$IPADDR"		# REPLACE with YOUR IP address!
+  NETMASK="$NETMASK"		# REPLACE with YOUR netmask!
+  NETWORK="$NETWORK"		# REPLACE with YOUR network address!
+  BROADCAST="$BROADCAST"	# REPLACE with YOUR broadcast address, if you
+				# have one. If not, leave blank and edit below.
+  GATEWAY="$GATEWAY"		# REPLACE with YOUR gateway address!
+
+  # Uncomment the line below to configure your ethernet card.
+  /$IFCONFIG eth0 \${IPADDR} broadcast \${BROADCAST} netmask \${NETMASK}
+
+  # If the line above is uncommented, the code below can also be uncommented.
+  # It sees if the ethernet was properly initialized, and gives the admin some
+  # hints about what to do if it wasn't.
+  if [ ! \$? = 0 ]; then
+    cat << END
+Your ethernet card was not initialized properly.  Here are some reasons why this
+may have happened, and the solutions:
+1. Your kernel does not contain support for your card.  Including all the 
+   network drivers in a Linux kernel can make it too large to even boot, and
+   sometimes including extra drivers can cause system hangs.  To support your
+   ethernet, either edit /etc/rc.d/rc.modules to load the support at boottime,
+   or compile and install a kernel that contains support.
+2. You don't have an ethernet card, in which case you should comment out this
+   section of /etc/rc.d/rc.inet1.  (Unless you don't mind seeing this error...)
+END
+  fi
+
+  # Uncomment these to set up your IP routing table.
+  # /$ROUTE add -net \${NETWORK} netmask \${NETMASK} eth0
+  if [ ! "\$GATEWAY" = "" ]; then
+   /$ROUTE add default gw \${GATEWAY} netmask 0.0.0.0 metric 1
+  fi
+elif [ "\$INET1_SCHEME" = "dhcp" -o "\$INET1_SCHEME" = "DHCP" ] ; then
+  if [ -x /$DHCPCD ] ; then
+    /$DHCPCD eth0
+  else
+    cat << END
+/$DHCPCD was not found.
+Please install ISC DHCP.
+END
+  fi
+fi
+
+# End of rc.inet1
+EOF
+chmod 755 $RC
+
+if [ "$LOOPBACK" = "n" ] ; then
+  if [ -f $INET1SCHEME ] ; then
+    INET1_SCHEME="`cat $INET1SCHEME`"
+    if [ "$INET1_SCHEME" = "DHCP" ] ; then
+/bin/cat <<EOF >$INET1SCHEME
+dhcp
+EOF
+    elif [ "$INET1_SCHEME" = "LOOPBACK" ] ; then
+/bin/cat <<EOF >$INET1SCHEME
+loopback
+EOF
+    fi
+  fi
+fi
+
+fi 
+
+}
+
+############################################################################
+#		Set Scheme 
+############################################################################
+#
+set_scheme() {
+  touch $INET1SCHEME
+  if [ "$PCMCIA" = "n" ] ; then
+    if [ "$LOOPBACK" = "n" ] ; then
+      /bin/cat <<EOF >$INET1SCHEME
+fixed
+EOF
+    else
+      FNA="y"
+      INET1_SCHEME=`cat $INET1SCHEME`
+      if [ "$INET1_SCHEME" = "fixed" -o "$INET1_SCHEME" = "dhcp" -o "$INET1_SCHEME" = "loopback" ] ; then
+	FNA="n" ;
+      fi
+      if [ "$INITIAL" = "y" -o "$FNA" = "y" ] ; then
+        if [ "$DHCP" = "y" ] ; then
+          /bin/cat <<EOF >$INET1SCHEME
+DHCP
+EOF
+        else
+          /bin/cat <<EOF >$INET1SCHEME
+LOOPBACK
+EOF
+	fi
+      else
+        if [ "$DHCP" = "y" ] ; then
+          /bin/cat <<EOF >$INET1SCHEME
+dhcp
+EOF
+        else
+          /bin/cat <<EOF >$INET1SCHEME
+loopback
+EOF
+	fi
+      fi
+    fi
+ 
+  else		# notePC用設定
+    SCHEME="`cat $PCMCIASCHEME`"
+    if [ "$LOOPBACK" = "n" ] ; then
+ /bin/cat <<EOF >$PCMCIASCHEME
+fixed
+EOF
+    else
+# INITIAL="y" のとき、loopback, dhcp の時は default にする。
+# これは後で fixed の設定をやったかどうかのフラグになる。
+      if [ "$INITIAL" = "y" ] ; then
+        /bin/cat <<EOF >$PCMCIASCHEME
+default
+EOF
+      else 
+	if [ "$SCHEME" = "fixed" ] ; then
+	  /bin/cat <<EOF >$PCMCIASCHEME
+dhcp
+EOF
+	fi
+      fi
+    fi
+    rm -rf $PCMCIASCHEMELN
+    ln -sf /$PCMCIASCHEME $PCMCIASCHEMELN
+  fi
+
+}
+
+
+############################################################################
+#		Select command ( if found network setting )
+############################################################################
+#
+select_cmd() {
+
+  dialog --title "ネットワークの設定変更" \
+--menu "\nすでにネットワークの設定がされているようです。\n\
+\nどの設定変更をしますか？\n" 17 78 6 \
+"Scheme" "接続方法(DHCP/固定IP/非接続)の変更" \
+"Network" "固定IP接続時のネットワーク設定の変更(接続方法は変更しない)" \
+"Dns" "ネームサーバの設定変更" \
+"Initialize" "現在の設定を破棄し、はじめから設定し直す" \
+"Exit" "終了" 2> /tmp/reply
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/reply
+   exit
+  fi
+  REPLY="`cat /tmp/reply`"
+  rm -f /tmp/reply
+}
+
+############################################################################
+#			Select methond
+############################################################################
+#
+change_dhcp_or_fixed() {
+
+  dialog --title "接続方法の変更" \
+--menu "\nどの方法でネットワークに接続しますか？\n\
+\n" 17 48 4 \
+"Dhcp" "DHCPで接続する" \
+"Fixed" "固定IPで接続する" \
+"Loopback" "接続しない" \
+"Exit" "変更しない" 2> /tmp/reply
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/reply
+   exit
+  fi
+  REPLY="`cat /tmp/reply`"
+  rm -f /tmp/reply
+  if [ "$REPLY" = "Exit" ] ; then
+    exit
+  fi
+}
+
+############################################################################
+#			
+############################################################################
+#
+if_modify_tcpip() {
+
+ dialog --title "Not found TCP/IP setting" --yesno \
+"まだ固定IP接続用の設定が されていないようです。\n\
+今から固定IP用のネットワークの設定を行いますか？\n\
+(ここで設定を実行しても、netconfig を使えば、後で\n\
+簡単にDHCP に戻せます)" 8 54
+ 
+}
+
+change_scheme() {
+
+if [ "$PCMCIA" != "n" ] ; then 
+  SCHEME="`cat $PCMCIASCHEME`"
+  case "$REPLY" in
+  "Dhcp")
+    LOOPBACK="y"
+    DHCP="y"
+    dhcpcd_not_found_dialog
+  ;;
+  "Fixed")
+    LOOPBACK="n"
+    if [ "$SCHEME" != "fixed" ] ; then
+      if [ "$SCHEME" != "dhcp" ] ; then
+        if_modify_tcpip
+	if [ $? = 0 ] ; then	# Yesなら
+	  DOMAIN=""
+	  set_hostname
+	  set_tcpip
+	  set_resolv
+	  make_config_file
+	else
+	  exit
+        fi
+      fi
+    fi
+  ;;
+  esac
+
+else	# if [ "$PCMCIA" != "n" ] ; then 
+  # デスクトップ用の設定
+  case "$REPLY" in
+  "Dhcp")
+    LOOPBACK="y"
+    DHCP="y"
+    dhcpcd_not_found_dialog
+  ;;
+  "Loopback")
+    LOOPBACK="y"
+    DHCP="n"
+  ;;
+  "Fixed")
+    LOOPBACK="n"
+    FNA="y"
+    if [ -f $INET1SCHEME ] ; then
+      INET1_SCHEME=`cat $INET1SCHEME`
+      if [ "$INET1_SCHEME" = "fixed" -o "$INET1_SCHEME" = "dhcp" -o "$INET1_SCHEME" = "loopback" ] ; then
+        FNA="n" ;
+      fi
+    fi
+    if [ "$FNA" = "y" ] ; then
+      if_modify_tcpip
+      if [ $? = 0 ] ; then	# Yesなら
+	DOMAIN=""
+        set_hostname
+	set_tcpip
+	set_resolv
+	make_config_file
+      else
+	exit
+      fi
+    fi
+  ;;
+  esac
+
+fi	# if [ "$PCMCIA" != "n" ] ; then 
+
+}
+
+############################################################################
+#			設定をはじめからやりなおす
+############################################################################
+#
+
+cleanup_setting() {
+  NETWORK=127.0.0.0
+  IPADDR=127.0.0.1
+  DOMAIN=""
+  INITIAL="y"
+  # 最初のダイアログ
+  firstdialog
+  # ホスト名の設定
+  set_hostname
+  # 接続方法の指定
+  select_dhcp_or_fixed
+  # dhcpcdが見つからない場合はdialogを出す
+  dhcpcd_not_found_dialog
+  # 必要ならIPなどの設定をする
+  set_tcpip
+  # ネームサーバの設定
+  set_resolv
+  # PCMCIA?
+  if_pcmcia
+  # ファイルへの書き出し
+  set_scheme
+  make_config_file
+  # 最後のダイアログ
+  last_dialog
+}
+
+############################################################################
+#				MAIN
+############################################################################
+#
+
+# Figure out if we're installing from the hard drive
+if [ -r /tmp/SeTT_PX ]; then
+    T_PX=`cat /tmp/SeTT_PX`
+elif [ -z "$T_PX" -a -n "$1" ]; then
+    T_PX=$1
+else
+    T_PX=/
+fi
+cd $T_PX
+
+# IMPORTANT!!! NO LEADING '/' in the paths below, or this script will not
+# function from the bootdisk.
+IFCONFIG=sbin/ifconfig			# Where ifconfig program is.
+ROUTE=sbin/route			# Where route program is.
+RC=etc/rc.d/rc.inet1.tradnet		# Where rc.inet1 file is.
+RESOLV=etc/resolv.conf			# Where resolv.conf file is.
+HOSTS=etc/hosts			 	# Where hosts file is.
+ETCNETWORKS=etc/networks		# Where networks file is.
+PCMCIARC=etc/pcmcia/network.opts
+PCMCIASCHEMEDIR=var/lib/pcmcia
+PCMCIASCHEME=${PCMCIASCHEMEDIR}/scheme
+PCMCIASCHEMELNDIR=var/run
+PCMCIASCHEMELN=${PCMCIASCHEMELNDIR}/pcmcia-scheme
+INET1SCHEME=var/run/inet1-scheme
+DHCPCD=usr/sbin/dhclient
+#
+/bin/mkdir -p $PCMCIASCHEMEDIR
+/bin/mkdir -p $PCMCIASCHEMELNDIR
+/bin/touch $PCMCIASCHEME
+#
+#
+#if [ -x etc/rc.d/rc.pcmcia -o -x etc/rc.d/init.d/pcmcia ] ; then
+#  PCMCIA="y"
+#else
+#  PCMCIA="n"
+#fi
+
+# Always disabled!
+PCMCIA="n"
+
+if [ -f $INET1SCHEME ] ; then
+  ALREADY="y"
+fi
+
+if [ ! "$ALREADY" = "y" ] ; then 
+  cleanup_setting
+else
+  HOSTNAME=$(hostname)
+  IPADDR=$(hostname -i)
+  DOMAIN=$(hostname -d)
+  INITIAL="n"
+  if_pcmcia
+  while [ 0 ] ; do 
+  select_cmd
+  case "$REPLY" in
+  "Scheme")
+    # どの接続方法?
+    change_dhcp_or_fixed
+    change_scheme    
+    set_scheme
+    ok_dialog
+  ;;
+  "Hostname")
+    DOMAIN=""
+    set_hostname
+    ok_dialog
+  ;;
+  "Network")
+    LOOPBACK="n"
+    DOMAIN=""
+    set_hostname
+    set_tcpip
+    make_config_file
+    ok_dialog
+  ;;
+  "Dns")
+    LOOPBACK="n"
+    set_resolv
+    if [ $? = 0 ] ; then 
+      ok_dialog
+    fi
+  ;;
+  "Initialize")
+    cleanup_setting
+    exit
+  ;;
+  "Exit")
+    exit
+  ;;
+  esac
+  done
+fi
+

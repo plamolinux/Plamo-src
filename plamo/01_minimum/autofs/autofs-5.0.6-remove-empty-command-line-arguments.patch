@@ -1,0 +1,117 @@
+autofs-5.0.6 - remove empty command line arguments
+
+From: Ian Kent <raven@themaw.net>
+
+When invoking the automount daemon from a systemd unit file a macro
+that evaluates to the empty string is passed as an empty argument
+unlike the shell environment within which unquoted arguments are
+seen as white space and are not passed at all.
+
+These empty arguments confuse getopt(3) and cause the program
+parameters to be misread so we need to remove them before calling
+getopt(3).
+---
+
+ CHANGELOG          |    1 +
+ daemon/automount.c |   39 +++++++++++++++++++++++++++++++++++----
+ 2 files changed, 36 insertions(+), 4 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index d951b5a..8dec17f 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -19,6 +19,7 @@
+ - fix ipv6 configure check.
+ - add piddir to configure.
+ - add systemd unit support.
++- remove empty command line arguments (passed by systemd).
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/daemon/automount.c b/daemon/automount.c
+index 6bb5aa8..c0b4b85 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -1865,6 +1865,34 @@ static int convert_log_priority(char *priority_name)
+ 	return -1;
+ }
+ 
++static void remove_empty_args(char **argv, int *argc)
++{
++	int next_to_last = *argc - 1;
++	int i, j;
++
++	for (i = j = 1; i < *argc; i++) {
++		if (*argv[i]) {
++			j++;
++			continue;
++		}
++
++		while (i < *argc && argv[i] && !*argv[i]) i++;
++
++		if (i == *argc)
++			break;
++
++		if (i == next_to_last) {
++			if (*argv[i])
++				argv[j++] = argv[i];
++			break;
++		} else {
++			argv[j++] = argv[i];
++			argv[i--] = "";
++		}
++	}
++	*argc = j;
++}
++
+ int main(int argc, char *argv[])
+ {
+ 	int res, opt, status;
+@@ -1874,6 +1902,7 @@ int main(int argc, char *argv[])
+ 	time_t timeout;
+ 	time_t age = time(NULL);
+ 	struct rlimit rlim;
++	const char *options = "+hp:t:vmdD:fVrO:l:n:CF";
+ 	static const struct option long_options[] = {
+ 		{"help", 0, 0, 'h'},
+ 		{"pid-file", 1, 0, 'p'},
+@@ -1918,8 +1947,10 @@ int main(int argc, char *argv[])
+ 	dumpmaps = 0;
+ 	daemon_check = 1;
+ 
++	remove_empty_args(argv, &argc);
++
+ 	opterr = 0;
+-	while ((opt = getopt_long(argc, argv, "+hp:t:vmdD:fVrO:l:n:CF", long_options, NULL)) != EOF) {
++	while ((opt = getopt_long(argc, argv, options, long_options, NULL)) != EOF) {
+ 		switch (opt) {
+ 		case 'h':
+ 			usage();
+@@ -2066,7 +2097,7 @@ int main(int argc, char *argv[])
+ 	res = setrlimit(RLIMIT_NOFILE, &rlim);
+ 	if (res)
+ 		printf("%s: can't increase open file limit - continuing",
+-			argv[0]);
++			program);
+ 
+ #if ENABLE_CORES
+ 	rlim.rlim_cur = RLIM_INFINITY;
+@@ -2074,7 +2105,7 @@ int main(int argc, char *argv[])
+ 	res = setrlimit(RLIMIT_CORE, &rlim);
+ 	if (res)
+ 		printf("%s: can't increase core file limit - continuing",
+-			argv[0]);
++			program);
+ #endif
+ 
+ 	if (argc == 0)
+@@ -2097,7 +2128,7 @@ int main(int argc, char *argv[])
+ 		nc = cache_init_null_cache(master_list);
+ 		if (!nc) {
+ 			printf("%s: failed to init null map cache for %s",
+-				master_list->name, argv[0]);
++				program, master_list->name);
+ 			exit(1);
+ 		}
+ 		master_list->nc = nc;

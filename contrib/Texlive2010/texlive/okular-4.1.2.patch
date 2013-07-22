@@ -1,0 +1,326 @@
+diff -rc okular.orig/aboutdata.h okular/aboutdata.h
+*** okular.orig/aboutdata.h	2008-10-21 13:53:48.000000000 -0400
+--- okular/aboutdata.h	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 21,33 ****
+          "okular",
+          ki18n(iname), //I18N_NOOP("okular"),
+          OKULAR_VERSION_STRING,
+!         ki18n("Okular, a universal document viewer"),
+          KAboutData::License_GPL,
+          ki18n("(C) 2002 Wilco Greven, Christophe Devriese\n"
+                "(C) 2004-2005 Enrico Ros\n"
+                "(C) 2005 Piotr Szymanski\n"
+                "(C) 2004-2008 Albert Astals Cid\n"
+!               "(C) 2006-2008 Pino Toscano"),
+          KLocalizedString(),
+          "http://okular.kde.org"
+      );
+--- 21,34 ----
+          "okular",
+          ki18n(iname), //I18N_NOOP("okular"),
+          OKULAR_VERSION_STRING,
+!         ki18n("Okular, a universal document viewer (prerex-enabled version)"),
+          KAboutData::License_GPL,
+          ki18n("(C) 2002 Wilco Greven, Christophe Devriese\n"
+                "(C) 2004-2005 Enrico Ros\n"
+                "(C) 2005 Piotr Szymanski\n"
+                "(C) 2004-2008 Albert Astals Cid\n"
+!               "(C) 2006-2008 Pino Toscano\n"
+!               "(C) 2006-2008 Bob Tennent"),
+          KLocalizedString(),
+          "http://okular.kde.org"
+      );
+***************
+*** 37,42 ****
+--- 38,44 ----
+      about.addAuthor(ki18n("Albert Astals Cid"), ki18n("Former maintainer"), "aacid@kde.org");
+      about.addAuthor(ki18n("Piotr Szymanski"), ki18n("Created Okular from KPDF codebase"), "djurban@pld-dc.org");
+      about.addAuthor(ki18n("Enrico Ros"), ki18n("KPDF developer"), "eros.kde@email.it");
++     about.addAuthor(ki18n("Bob Tennent"), ki18n("prerex developer"), "rdtennent@gmail.com");
+  
+      return about;
+  }
+diff -rc okular.orig/core/document.cpp okular/core/document.cpp
+*** okular.orig/core/document.cpp	2008-10-21 13:53:48.000000000 -0400
+--- okular/core/document.cpp	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 44,49 ****
+--- 44,51 ----
+  #include <ktemporaryfile.h>
+  #include <ktoolinvocation.h>
+  
++ #include <qclipboard.h>
++ 
+  // local includes
+  #include "action.h"
+  #include "annotations.h"
+***************
+*** 2740,2747 ****
+  
+          case Action::Browse: {
+              const BrowseAction * browse = static_cast< const BrowseAction * >( action );
+              // if the url is a mailto one, invoke mailer
+!             if ( browse->url().startsWith( "mailto:", Qt::CaseInsensitive ) )
+                  KToolInvocation::invokeMailer( browse->url() );
+              else
+              {
+--- 2742,2759 ----
+  
+          case Action::Browse: {
+              const BrowseAction * browse = static_cast< const BrowseAction * >( action );
++               if ( browse->url().startsWith( "coord:")   )
++               { // for prerex: load coordinates of clicked box into the clipboard
++                 QString message = browse->url();
++                 QClipboard *cb = QApplication::clipboard();
++                 message.remove("coord: ");
++                 cb->setText(message, QClipboard::Selection );
++               }
++               else if ( browse->url().startsWith("anchor:") ) // ignore it
++               { }
++               else
+              // if the url is a mailto one, invoke mailer
+!             if ( browse->url().startsWith( QString("mailto:"), Qt::CaseInsensitive ) )
+                  KToolInvocation::invokeMailer( browse->url() );
+              else
+              {
+Only in okular/core: document.cpp.orig
+diff -rc okular.orig/core/page.cpp okular/core/page.cpp
+*** okular.orig/core/page.cpp	2008-10-21 13:53:48.000000000 -0400
+--- okular/core/page.cpp	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 20,25 ****
+--- 20,27 ----
+  
+  #include <kdebug.h>
+  
++ #include <kmessagebox.h>
++ 
+  // local includes
+  #include "action.h"
+  #include "annotations.h"
+***************
+*** 34,39 ****
+--- 36,42 ----
+  #include "rotationjob_p.h"
+  #include "textpage.h"
+  #include "textpage_p.h"
++ #include <stdlib.h>
+  
+  #ifdef PAGE_PROFILE
+  #include <QtCore/QTime>
+***************
+*** 360,365 ****
+--- 363,456 ----
+      return 0;
+  }
+  
++   // computes the factor that scales from pixel coordinates to chart coordinates
++   const QPoint Page::scaleToChart (int xclick, int yclick, int widthPage, int heightPage)  const
++   {   
++       //   Copyright (c) 2006  R. D. Tennent   
++       //   School of Computing, Queen's University, rdt@cs.queensu.ca 
++       //
++       // There are *three* coordinate systems involved here:
++       //
++       //    + chart coordinates, to which okular has no direct access 
++       //
++       //    + pixel coordinates, for example, as registered by a mouse click
++       //
++       //    + normalized page coordinates in [0,1] range used internally
++       //      by okular
++       //
++       //  Implementation:
++       //
++       //  Find the two "anchor: xci,yci" links, determine their
++       //  "normalized" locations on the page, unnormalize to get the pixel
++       //  coordinates (x1, y1) and (x2, y2) of their centre points, and
++       //  then scale the mouse-click coordinates accordingly to get the
++       //  corresponding chart coordinates (xc, yc).
++       //
++       QPoint clickChart = QPoint(); // what we're trying to determine
++       bool first = false, second = false;
++       int x1=0, y1=0, x2=0, y2=0;  // pixel coordinates of centre points of two anchor links
++       int xc1=0, yc1=0, xc2=0, yc2=0;  // chart coordinates of anchors, as determined by their URIs
++       int xc=0, yc=0;  // rounded chart coordinates of mouse-click location
++   
++       QLinkedList< ObjectRect * >::const_iterator it = m_rects.begin(), end = m_rects.end();
++       for ( ; it != end; ++it )
++         if ((*it)->objectType() == ObjectRect::Action) 
++         {
++            const BrowseAction * action = static_cast< const BrowseAction * >( (*it)->object() );
++            if (action)
++            {
++              const BrowseAction * browse = dynamic_cast< const BrowseAction * >( action );
++              if (browse)
++              {
++                QString thisURL = browse->url();
++                if (thisURL.startsWith( "anchor:" )  )
++                {
++                   int comma; 
++                   QString xs;
++                   QRect unnormalized = (*it)->boundingRect(widthPage, heightPage);
++                   thisURL.remove(0,7);  // remove "anchor:"
++                   comma = thisURL.indexOf(','); 
++                   xs  = thisURL.left(comma);  // x coordinate as a string
++                   thisURL.remove(0, comma+1); // y coordinate as a string
++                   if (!first) 
++                   {  
++                      QPoint p1;  // centre of first anchor
++                      xc1 = xs.toInt();
++                      yc1 = thisURL.toInt();
++                      p1 = unnormalized.center();
++                      x1 = p1.x(); y1 = p1.y();
++                      first = true;
++                   }
++                   else 
++                   {
++                      QPoint p2; // centre of second anchor
++                      xc2 = xs.toInt();
++                      yc2 = thisURL.toInt();
++                      p2 = unnormalized.center();
++                      x2 = p2.x(); y2 = p2.y();
++                      second = true;
++                      break;
++                   }
++                }
++              }
++            }
++         }
++       if (!second) return QPoint(-1, -1);
++   //   KMessageBox::information(0, QString()
++   //   + " x1= " + QString::number(x1)  
++   //   + " y1= " + QString::number(y1)  
++   //   + " x2= " + QString::number(x2)  
++   //   + " y2= " + QString::number(y1)  
++   //   + " xclick= " + QString::number(xclick)  
++   //   + " yclick= " + QString::number(yclick)  
++   //   );
++       xc = (int)( 0.25L + (xc1 + xc2)/2.0L - ((x1 + x2)/2.0L - xclick) * (xc2 - xc1) / (x2 - x1) ) ;
++       yc = (int)( 0.75L + (yc1 + yc2)/2.0L - ((y1 + y2)/2.0L - yclick) * (yc2 - yc1) / (y2 - y1) );
++       clickChart = QPoint(xc, yc);
++       return clickChart;
++   }
++   
++ 
+  const PageTransition * Page::transition() const
+  {
+      return d->m_transition;
+diff -rc okular.orig/core/page.h okular/core/page.h
+*** okular.orig/core/page.h	2008-10-21 13:53:48.000000000 -0400
+--- okular/core/page.h	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 326,331 ****
+--- 326,336 ----
+           */
+          void deleteAnnotations();
+  
++         /** computes the factor that scales from pixel coordinates to chart coordinates:  
++          */
++         const QPoint scaleToChart(int xclick, int yclick, int widthPage, int heightPage) const;
++ 
++ 
+      private:
+          PagePrivate* const d;
+          /// @cond PRIVATE
+diff -rc okular.orig/shell/shell.cpp okular/shell/shell.cpp
+*** okular.orig/shell/shell.cpp	2008-10-21 13:53:48.000000000 -0400
+--- okular/shell/shell.cpp	2008-10-21 13:57:38.000000000 -0400
+***************
+*** 42,47 ****
+--- 42,49 ----
+  #include <ktogglefullscreenaction.h>
+  #include <kactioncollection.h>
+  
++ #include <kstatusbar.h>
++ 
+  // local includes
+  #include "kdocumentviewer.h"
+  
+Only in okular/shell: shell.cpp.orig
+Only in okular/shell: shell.cpp.rej
+diff -rc okular.orig/shell/shell.h okular/shell/shell.h
+*** okular.orig/shell/shell.h	2008-10-21 13:53:48.000000000 -0400
+--- okular/shell/shell.h	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 101,106 ****
+--- 101,107 ----
+    KToggleAction* m_showToolBarAction;
+    bool m_menuBarWasShown, m_toolBarWasShown;
+    KUrl m_openUrl;
++   KStatusBar *m_statusBar;
+  };
+  
+  #endif
+diff -rc okular.orig/ui/pageview.cpp okular/ui/pageview.cpp
+*** okular.orig/ui/pageview.cpp	2008-10-21 13:53:48.000000000 -0400
+--- okular/ui/pageview.cpp	2008-10-21 13:55:13.000000000 -0400
+***************
+*** 1643,1651 ****
+                  }
+                  if ( !d->mouseAnn )
+                  {
+!                 d->mouseGrabPos = d->mouseOnRect ? QPoint() : d->mousePressPos;
+!                 if ( !d->mouseOnRect )
+!                     setCursor( Qt::SizeAllCursor );
+                  }
+              }
+              else if ( rightButton )
+--- 1643,1680 ----
+                  }
+                  if ( !d->mouseAnn )
+                  {
+!                   d->mouseGrabPos = d->mouseOnRect ? QPoint() : d->mousePressPos;
+!                   if ( !d->mouseOnRect )
+!                     { 
+!                       QPoint click = QPoint(e->x(), e->y());
+!                       //  need to compute chart coordinates from pixel coordinates
+!                       //  first, find the relevant page:
+!                       PageViewItem * pageItem = pickItemOnPoint( click.x(), click.y() );
+!                       if ( pageItem )
+!                       {   // load chart coordinates of clicked point into clipboard
+!                           QString message;
+!                           QClipboard *cb = QApplication::clipboard();
+!                           QPoint clickChart = pageItem->page()->
+!                             scaleToChart(
+!                                click.x() - pageItem->croppedGeometry().left(), 
+!                                click.y() - pageItem->croppedGeometry().top(), 
+!                                pageItem->croppedWidth(), 
+!                                pageItem->croppedHeight()
+!                             );
+!                           if (clickChart.x() == -1  && clickChart.y() == -1) 
+!                           { // no anchors
+!                             setCursor( Qt::SizeAllCursor );
+!                             break;
+!                           }
+!                           setCursor( Qt::CrossCursor );
+!                           message = "";
+!                           message.append(QString::number(clickChart.x()));
+!                           message.append(',');
+!                           message.append(QString::number(clickChart.y()));
+!      // message = QString::number(pageItem->width());
+!                           cb->setText(message, QClipboard::Selection );
+!                       }
+!                     }
+                  }
+              }
+              else if ( rightButton )
+***************
+*** 1767,1772 ****
+--- 1796,1811 ----
+                      // handle click over a link
+                      const Okular::Action * action = static_cast< const Okular::Action * >( rect->object() );
+                      d->document->processAction( action );
++                     if (action)
++                    {
++                      const Okular::BrowseAction * browse = static_cast< const Okular::BrowseAction * >( action );
++                      if (browse)
++                      {  // for coord URIs with prerex, change cursor to cross to signal click success
++                        QString thisURL = browse->url();
++                         if ( thisURL.startsWith( "coord:" ) ) 
++                           setCursor( Qt::CrossCursor );
++                      }
++                    }
+                  }
+                  else
+                  {

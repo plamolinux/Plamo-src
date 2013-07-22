@@ -1,0 +1,18 @@
+diff -rNu mozilla-1.9.1.bak/firefox.desktop mozilla-1.9.1/firefox.desktop
+--- mozilla-1.9.1.bak/firefox.desktop	1970-01-01 09:00:00.000000000 +0900
++++ mozilla-1.9.1/firefox.desktop	2009-12-18 16:12:22.000000000 +0900
+@@ -0,0 +1,14 @@
++[Desktop Entry]
++Name=Firefox Web Browser
++Name[ja]=Firefox ウェブ・ブラウザ
++GenericName=Web Browser
++GenericName[ja]=Firefox ウェブ・ブラウザ
++Comment=Browse the web
++Comment[ja]=ウェブを閲覧します
++Exec=firefox %U
++StartupNotify=true
++Terminal=false
++Type=Application
++Icon=internet-web-browser.svg
++Categories=Network;GNOME;GTK;WebBrowser;
++MimeType=text/html;text/xml;application/xhtml+xml;

@@ -1,0 +1,36 @@
+diff -uN comm-1.9.2/.treestate thunderbird.new/.treestate
+--- comm-1.9.2/.treestate	2010-12-08 01:30:14.000000000 +0900
++++ thunderbird.new/.treestate	1970-01-01 09:00:00.000000000 +0900
+@@ -1,3 +0,0 @@
+-[treestate]
+-src_update_version = 2
+-
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/build¤Èthunderbird.new/build
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/calendar¤Èthunderbird.new/calendar
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/config¤Èthunderbird.new/config
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/directory¤Èthunderbird.new/directory
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/editor¤Èthunderbird.new/editor
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/mail¤Èthunderbird.new/mail
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/mailnews¤Èthunderbird.new/mailnews
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/mozilla¤Èthunderbird.new/mozilla
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/other-licenses¤Èthunderbird.new/other-licenses
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/storage-backport¤Èthunderbird.new/storage-backport
+¶¦ÄÌ¤Î²¼°Ì¥Ç¥£¥ì¥¯¥È¥ê¡¼: comm-1.9.2/suite¤Èthunderbird.new/suite
+diff -uN comm-1.9.2/thunderbird.desktop thunderbird.new/thunderbird.desktop
+--- comm-1.9.2/thunderbird.desktop	1970-01-01 09:00:00.000000000 +0900
++++ thunderbird.new/thunderbird.desktop	2011-01-25 12:35:02.000000000 +0900
+@@ -0,0 +1,14 @@
++[Desktop Entry]
++Encoding=UTF-8
++Name=Mozilla Thunderbird Mail/News
++Comment=Read/Write Mail/News with Mozilla Thunderbird
++GenericName=Mail Client
++Exec=thunderbird %u
++Terminal=false
++X-MultipleArgs=false
++Type=Application
++Categories=Application;Network;Email;
++MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;
++StartupWMClass=Thunderbird-bin
++StartupNotify=true
++Comment[ja]=Mozilla Thunderbird ãƒ¡ãƒ¼ãƒ«/ãƒ‹ãƒ¥ãƒ¼ã‚¹

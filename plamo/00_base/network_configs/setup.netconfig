@@ -1,0 +1,41 @@
+#!/bin/sh
+dialog --title "ネットワークの設定？" --yesno "ネットワークを設定 \
+しますか？" 6 60
+if [ $? = 0 ]; then
+  if [ ! -x sbin/planet -o ! -x usr/bin/perl ] ; then
+    sh sbin/tradnet -f
+    exec sbin/netconfig.tradnet
+    exit
+  fi
+PCMCIA_CHK=`/sbin/lspci -n | grep "Class 060[57]"`
+if [ ! -z "$PCMCIA_CHK" ]; then
+  MENU_1ST_LABEL='planet'
+  MENU_1ST_DESC='新しい設定スクリプトを使う(NotePC/Desktop両対応)'
+  MENU_2ND_LABEL='tradnet'
+  MENU_2ND_DESC='従来のnetconfigを使う(Desktop向け)'
+else
+  MENU_1ST_LABEL='tradnet'
+  MENU_1ST_DESC='従来のnetconfigを使う(Desktop向け)'
+  MENU_2ND_LABEL='planet'
+  MENU_2ND_DESC='新しい設定スクリプトを使う(NotePC/Desktop両対応)'
+fi
+
+  dialog --title "ネットワーク設定スクリプトの選択" --menu "\
+Plamo-4.5 ではドライバの動的組み込み機能を hotplug agent から udev に \n\
+移行したため hotplug agent に強く依存していた planet は十分には機能 \n\
+しなくなっているのでご注意ください。テストは十分ではありませんが、\n\
+ドライバを Static(カーネル組み込み) で使えば一応は動作するようです。" 15 74 3 \
+"$MENU_1ST_LABEL" "$MENU_1ST_DESC" \
+"$MENU_2ND_LABEL" "$MENU_2ND_DESC" \
+"Quit" "中止" 2> /tmp/reply$$
+  if [ $? = 1 ]; then
+    rm -f /tmp/reply$$
+  else
+    NETCONFIG="`cat /tmp/reply$$`"
+    rm -f /tmp/reply$$
+    if [ ! "$NETCONFIG" = "Quit" ]; then
+      sh sbin/$NETCONFIG -f
+      sh sbin/netconfig.$NETCONFIG
+    fi
+  fi
+fi

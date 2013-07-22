@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# rc.inet1	This shell script boots up the base INET system.
+#
+# Version:	@(#)/etc/rc.d/rc.inet1	1.01	05/27/93
+#
+
+HOSTNAME=`hostname`
+
+# Attach the loopback device.
+/sbin/ifconfig lo 127.0.0.1
+/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 lo
+
+# IF YOU HAVE AN ETHERNET CONNECTION, use these lines below to configure the 
+# eth0 interface. If you're only using loopback or SLIP, don't include the
+# rest of the lines in this file.
+
+# Edit for your setup.
+#IPADDR="128.253.154.32"  # REPLACE with YOUR IP address!
+#NETMASK="255.255.255.0"  # REPLACE with YOUR netmask!
+#NETWORK="128.253.154.0"  # REPLACE with YOUR network address!
+#BROADCAST="128.253.154.255"  # REPLACE with YOUR broadcast address, if you
+ 			      # have one. If not, leave blank and edit below.
+#GATEWAY="128.253.154.1"  # REPLACE with YOUR gateway address!
+
+# Uncomment the line below to initialize the ethernet device.
+# /sbin/ifconfig eth0 ${IPADDR} broadcast ${BROADCAST} netmask ${NETMASK}
+
+# Uncomment these to set up your IP routing table.
+#/sbin/route add -net ${NETWORK} netmask ${NETMASK} eth0
+#/sbin/route add default gw ${GATEWAY} netmask 0.0.0.0 metric 1
+
+# End of rc.inet1

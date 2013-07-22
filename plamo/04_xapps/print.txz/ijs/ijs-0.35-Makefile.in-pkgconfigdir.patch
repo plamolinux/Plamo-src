@@ -1,0 +1,11 @@
+--- ijs-0.35/Makefile.in	2004-02-11 20:51:54.000000000 +0900
++++ build/Makefile.in	2013-04-03 10:46:17.000000000 +0900
+@@ -117,7 +117,7 @@
+ 
+ MAINT_CHARSET = latin1
+ m4datadir = $(datadir)/aclocal
+-pkgconfigdatadir = $(prefix)/lib/pkgconfig
++pkgconfigdatadir = $(libdir)/pkgconfig
+ 
+ lib_LTLIBRARIES = libijs.la
+ 

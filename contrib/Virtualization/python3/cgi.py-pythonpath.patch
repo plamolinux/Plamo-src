@@ -1,0 +1,9 @@
+diff -uNr Python-3.3.2.orig/Lib/cgi.py Python-3.3.2/Lib/cgi.py
+--- Python-3.3.2.orig/Lib/cgi.py	2013-05-16 01:32:54.000000000 +0900
++++ Python-3.3.2/Lib/cgi.py	2013-07-01 17:58:57.399114459 +0900
+@@ -1,4 +1,4 @@
+-#! /usr/local/bin/python
++#! /usr/bin/python3
+ 
+ # NOTE: the above "/usr/local/bin/python" is NOT a mistake.  It is
+ # intentionally NOT "/usr/bin/env python".  On many systems

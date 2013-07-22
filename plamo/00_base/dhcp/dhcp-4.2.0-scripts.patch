@@ -1,0 +1,10 @@
+--- dhcp-4.2.0-P2/client/scripts/linux	2009-04-21 23:09:57.000000000 +0900
++++ build/client/scripts/linux	2011-01-09 14:20:09.000000000 +0900
+@@ -23,6 +23,7 @@
+ # of the $1 in its args.
+ 
+ # 'ip' just looks too weird.  /sbin/ip looks less weird.
++PATH=/sbin:$PATH
+ ip=/sbin/ip
+ 
+ make_resolv_conf() {

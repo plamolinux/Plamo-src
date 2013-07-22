@@ -1,0 +1,15 @@
+--- libunique-1.1.6/unique/uniquemessage.h	2009-09-21 21:31:14.000000000 +0900
++++ build/unique/uniquemessage.h	2012-08-20 17:45:28.125842763 +0900
+@@ -29,6 +29,12 @@
+ 
+ #define UNIQUE_TYPE_MESSAGE_DATA        (unique_message_data_get_type ())
+ 
++#ifdef G_DISABLE_CONST_RETURNS
++#define G_CONST_RETURN
++#else
++#define G_CONST_RETURN const
++#endif
++
+ /**
+  * UniqueMessageData:
+  *

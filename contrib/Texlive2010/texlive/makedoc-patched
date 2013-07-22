@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Unfortunately I had to fix several errors in the build script to make the manual compilable!!
+
+#
+# Everything after a `#' is ignored
+#
+# remove the string `> /dev/null' if you want more log-output
+# remove the line containing `batchmode' if you want even more 
+#  log-information while running LaTeX
+#
+#----------------- create a `ltxdoc.cfg': --------------------------
+
+# Make sure that we start with an clean 'ltxdoc.cfg':
+echo -n > ltxdoc.cfg
+
+# Put here a (comma-separated) list of options to pass to
+# class 'article':
+C_OPT=a4paper
+
+# Put here a (comma-separated) list of options to pass to
+# package 'flabels' (color?):
+P_OPT=color
+
+if [ -n "$C_OPT" ]; then
+  echo "\PassOptionsToClass{$C_OPT}{article}"        >> ltxdoc.cfg
+fi
+if [ -n "$P_OPT" ]; then
+  echo "\PassOptionsToPackage{$P_OPT}{flabels}"	     >> ltxdoc.cfg
+  if echo $P_OPT | grep color > /dev/null && [ ! -s color.cfg ]; then
+    echo "Package 'color' needs a file 'color.cfg'!"
+  fi
+fi
+#echo "\batchmode"                                    >> ltxdoc.cfg
+
+# The next lines produce full indexes and change logs
+# you may not want those (comment the lines out with
+# TeX-comment-character '%'!)
+cat >> ltxdoc.cfg <<EOF
+\AtBeginDocument{\RecordChanges}
+\AtEndDocument{\PrintChanges}
+\AtBeginDocument{\CodelineIndex\EnableCrossrefs}
+\AtEndDocument{\PrintIndex}
+\AtEndDocument{\addcontentsline{toc}{section}{Index}}
+EOF
+
+# If you do not want any code listings, just documentation, then instead
+# of the lines above, uncomment the following:
+#echo "\AtBeginDocument{\OnlyDescription}"           >> ltxdoc.cfg
+
+#---------- latex the documentation using `ltxdoc.cfg': --------------
+
+ThisDoc=flabels.dtx
+Base=flabels
+
+echo "1st latex $ThisDoc"
+if pdflatex $ThisDoc ; then
+  echo "2nd latex $ThisDoc"
+  pdflatex $ThisDoc
+
+  echo "makeindex -s gind.ist $Base.idx"
+  #ugly
+  sed -i '.bak' -e 's/\\verb!\*\+\\->/\\verb!*+\\-!>/' "$Base.idx"
+  makeindex -s gind.ist $Base.idx
+  echo "3rd latex $ThisDoc"
+  pdflatex $ThisDoc
+else
+  echo "!!! LaTeX ERROR: $ThisDoc. (See $Base.log.)"
+fi

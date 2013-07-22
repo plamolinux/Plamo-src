@@ -1,0 +1,18 @@
+--- build/Makefile.linux.org	2012-12-06 13:26:15.000000000 +0900
++++ build/Makefile.linux	2012-12-06 13:27:05.000000000 +0900
+@@ -18,13 +18,13 @@
+ #USERFC   = ifc
+ 
+ #X11/Xlib.h のあるディレクトリ
+-IINC  = -I/usr/X11R7/include -I/usr/X11R6/include
++IINC  = -I/usr/include
+ #IINC  = -I/usr/openwin/include
+ #IINC  = -I/usr/local/X11R6/include
+ #IINC  = -I/usr/include
+ 
+ #libX11.a libX11.so のあるディレクトリ
+-LLIB  = -L/usr/X11R7/lib -L/usr/X11R6/lib
++LLIB  = -L$(LIBDIR)
+ #LLIB  = -L/usr/X11R7/lib64 -L/usr/X11R6/lib64
+ #LLIB  = -L/usr/openwin/lib
+ #LLIB  = -L/usr/local/X11R6/lib

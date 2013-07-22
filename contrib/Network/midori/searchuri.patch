@@ -1,0 +1,14 @@
+diff -uNr midori-0.4.4.orig/katze/midori-uri.vala midori-0.4.4/katze/midori-uri.vala
+--- midori-0.4.4.orig/katze/midori-uri.vala	2012-03-09 07:34:45.000000000 +0900
++++ midori-0.4.4/katze/midori-uri.vala	2012-03-12 14:57:40.071907020 +0900
+@@ -86,8 +86,8 @@
+                 return keywords;
+             string escaped = GLib.Uri.escape_string (keywords, ":/", true);
+             /* Allow DuckDuckGo to distinguish Midori and in turn share revenue */
+-            if (uri == "https://duckduckgo.com/?q=%s")
+-                return "https://duckduckgo.com/?q=%s&t=midori".printf (escaped);
++            if (uri == "https://www.google.co.jp/?q=%s")
++                return "https://www.google.co.jp/?q=%s".printf (escaped);
+             if (uri.str ("%s") != null)
+                 return uri.printf (escaped);
+             return uri + escaped;

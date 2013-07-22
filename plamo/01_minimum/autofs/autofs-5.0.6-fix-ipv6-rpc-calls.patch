@@ -1,0 +1,537 @@
+autofs-5.0.6 - fix ipv6 rpc calls
+
+From: Ian Kent <ikent@redhat.com>
+
+There is a mistake in the way autofs uses libtirpc. Two IPv6 compatibiliy
+functions were thought to be included when in fact they were not and would
+not actually work with IPv6 anyway.
+
+To fix that the libtirpc interface code needed to be re-written. Portmap
+(using libtirpc calls) is still used to get service port numbers, rather
+than rpcbind.
+---
+
+ CHANGELOG            |    1 
+ lib/rpc_subs.c       |  370 ++++++++++++++++++++------------------------------
+ modules/replicated.c |    8 +
+ 3 files changed, 155 insertions(+), 224 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 923669f..0394c74 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -15,6 +15,7 @@
+ - fix fix map source check in file lookup.
+ - add disable move mount configure option.
+ - fix ipv6 name lookup check.
++- fix ipv6 rpc calls.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/lib/rpc_subs.c b/lib/rpc_subs.c
+index af8c101..ba679a5 100644
+--- a/lib/rpc_subs.c
++++ b/lib/rpc_subs.c
+@@ -62,89 +62,6 @@ static const rpcvers_t mount_vers[] = {
+ static int connect_nb(int, struct sockaddr *, socklen_t, struct timeval *);
+ inline void dump_core(void);
+ 
+-static CLIENT *rpc_clntudp_create(struct sockaddr *addr, struct conn_info *info, int *fd)
+-{
+-	struct sockaddr_in *in4_raddr;
+-	struct sockaddr_in6 *in6_raddr;
+-	CLIENT *client = NULL;
+-
+-	switch (addr->sa_family) {
+-	case AF_INET:
+-		in4_raddr = (struct sockaddr_in *) addr;
+-		in4_raddr->sin_port = htons(info->port);
+-		client = clntudp_bufcreate(in4_raddr,
+-					   info->program, info->version,
+-					   info->timeout, fd,
+-					   info->send_sz, info->recv_sz);
+-		break;
+-
+-	case AF_INET6:
+-#ifndef INET6
+-		/* Quiet compile warning */
+-		in6_raddr = NULL;
+-#else
+-		in6_raddr = (struct sockaddr_in6 *) addr;
+-		in6_raddr->sin6_port = htons(info->port);
+-		client = clntudp6_bufcreate(in6_raddr,
+-					    info->program, info->version,
+-					    info->timeout, fd,
+-					    info->send_sz, info->recv_sz);
+-#endif
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+-	return client;
+-}
+-
+-static CLIENT *rpc_clnttcp_create(struct sockaddr *addr, struct conn_info *info, int *fd)
+-{
+-	struct sockaddr_in *in4_raddr;
+-	struct sockaddr_in6 *in6_raddr;
+-	CLIENT *client = NULL;
+-	socklen_t slen;
+-
+-	switch (addr->sa_family) {
+-	case AF_INET:
+-		in4_raddr = (struct sockaddr_in *) addr;
+-		in4_raddr->sin_port = htons(info->port);
+-		slen = sizeof(struct sockaddr_in);
+-
+-		if (connect_nb(*fd, addr, slen, &info->timeout) < 0)
+-			break;
+-
+-		client = clnttcp_create(in4_raddr,
+-					info->program, info->version, fd,
+-					info->send_sz, info->recv_sz);
+-		break;
+-
+-	case AF_INET6:
+-#ifndef INET6
+-		/* Quiet compile warning */
+-		in6_raddr = NULL;
+-#else
+-		in6_raddr = (struct sockaddr_in6 *) addr;
+-		in6_raddr->sin6_port = htons(info->port);
+-		slen = sizeof(struct sockaddr_in6);
+-
+-		if (connect_nb(*fd, addr, slen, &info->timeout) < 0)
+-			break;
+-
+-		client = clnttcp6_create(in6_raddr,
+-					 info->program, info->version, fd,
+-					 info->send_sz, info->recv_sz);
+-#endif
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+-	return client;
+-}
+-
+ /*
+  *  Perform a non-blocking connect on the socket fd.
+  *
+@@ -232,12 +149,12 @@ done:
+ 	return ret;
+ }
+ 
++#ifndef WITH_LIBTIRPC
+ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd)
+ {
+ 	CLIENT *client = NULL;
+-	struct sockaddr *laddr;
+ 	struct sockaddr_in in4_laddr;
+-	struct sockaddr_in6 in6_laddr;
++	struct sockaddr_in in4_raddr;
+ 	int type, proto;
+ 	socklen_t slen;
+ 
+@@ -252,48 +169,41 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 	 * layer, it would bind to a reserved port, which has been shown
+ 	 * to exhaust the reserved port range in some situations.
+ 	 */
+-	switch (addr->sa_family) {
+-	case AF_INET:
+-		in4_laddr.sin_family = AF_INET;
+-		in4_laddr.sin_port = htons(0);
+-		in4_laddr.sin_addr.s_addr = htonl(INADDR_ANY);
+-		slen = sizeof(struct sockaddr_in);
+-		laddr = (struct sockaddr *) &in4_laddr;
+-		break;
+-
+-	case AF_INET6:
+-#ifndef INET6
+-		/* Quiet compiler */
+-		in6_laddr.sin6_family = AF_INET6;
+-		return NULL;
+-#else
+-		in6_laddr.sin6_family = AF_INET6;
+-		in6_laddr.sin6_port = htons(0);
+-		in6_laddr.sin6_addr = in6addr_any;
+-		slen = sizeof(struct sockaddr_in6);
+-		laddr = (struct sockaddr *) &in6_laddr;
+-		break;
+-#endif
+-	default:
+-		return NULL;
+-	}
++	in4_laddr.sin_family = AF_INET;
++	in4_laddr.sin_port = htons(0);
++	in4_laddr.sin_addr.s_addr = htonl(INADDR_ANY);
++	slen = sizeof(struct sockaddr_in);
+ 
+ 	if (!info->client) {
++		struct sockaddr *laddr;
++
+ 		*fd = open_sock(addr->sa_family, type, proto);
+ 		if (*fd < 0)
+ 			return NULL;
+ 
++		laddr = (struct sockaddr *) &in4_laddr;
+ 		if (bind(*fd, laddr, slen) < 0)
+ 			return NULL;
+ 	}
+ 
++	in4_raddr = (struct sockaddr_in *) addr;
++	in4_raddr->sin_port = htons(info->port);
++
+ 	switch (info->proto->p_proto) {
+ 	case IPPROTO_UDP:
+-		client = rpc_clntudp_create(addr, info, fd);
++		client = clntudp_bufcreate(in4_raddr,
++					   info->program, info->version,
++					   info->timeout, fd,
++					   info->send_sz, info->recv_sz);
+ 		break;
+ 
+ 	case IPPROTO_TCP:
+-		client = rpc_clnttcp_create(addr, info, fd);
++		if (connect_nb(*fd, addr, slen, &info->timeout) < 0)
++			break;
++
++		client = clnttcp_create(in4_raddr,
++					info->program, info->version, fd,
++					info->send_sz, info->recv_sz);
+ 		break;
+ 
+ 	default:
+@@ -302,20 +212,126 @@ static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *inf
+ 
+ 	return client;
+ }
++#else
++struct netconfig *find_netconf(void *handle, char *family, char *proto)
++{
++	struct netconfig *nconf;
++
++	while ((nconf = getnetconfig(handle))) {
++		if ((strcmp(nconf->nc_protofmly, family) == 0) &&
++		    (strcmp(nconf->nc_proto, proto) == 0))
++			break;
++	}
++
++	return nconf;
++}
++
++static CLIENT *rpc_do_create_client(struct sockaddr *addr, struct conn_info *info, int *fd)
++{
++	CLIENT *client = NULL;
++	struct sockaddr_in in4_laddr;
++	struct sockaddr_in6 in6_laddr;
++	struct sockaddr *laddr = NULL;
++	struct netconfig *nconf;
++	struct netbuf nb_addr;
++	int type, proto;
++	char *nc_family, *nc_proto;
++	void *handle;
++	size_t slen;
++
++	proto = info->proto->p_proto;
++	if (proto == IPPROTO_UDP) {
++		type = SOCK_DGRAM;
++		nc_proto = NC_UDP;
++	} else {
++		type = SOCK_STREAM;
++		nc_proto = NC_TCP;
++	}
++
++	/*
++	 * bind to any unused port.  If we left this up to the rpc
++	 * layer, it would bind to a reserved port, which has been shown
++	 * to exhaust the reserved port range in some situations.
++	 */
++	if (addr->sa_family == AF_INET) {
++		struct sockaddr_in *in4_raddr = (struct sockaddr_in *) addr;
++		in4_laddr.sin_family = AF_INET;
++		in4_laddr.sin_port = htons(0);
++		in4_laddr.sin_addr.s_addr = htonl(INADDR_ANY);
++		laddr = (struct sockaddr *) &in4_laddr;
++		in4_raddr->sin_port = htons(info->port);
++		slen = sizeof(struct sockaddr_in);
++		nc_family = NC_INET;
++	} else if (addr->sa_family == AF_INET6) {
++		struct sockaddr_in6 *in6_raddr = (struct sockaddr_in6 *) addr;
++		in6_laddr.sin6_family = AF_INET6;
++		in6_laddr.sin6_port = htons(0);
++		in6_laddr.sin6_addr = in6addr_any;
++		laddr = (struct sockaddr *) &in6_laddr;
++		in6_raddr->sin6_port = htons(info->port);
++		slen = sizeof(struct sockaddr_in6);
++		nc_family = NC_INET6;
++	} else
++		return NULL;
++
++	handle = setnetconfig();
++	if (!handle)
++		return NULL;
++
++	nconf = find_netconf(handle, nc_family, nc_proto);
++	if (!nconf) {
++		endnetconfig(handle);
++		return NULL;
++	}
++
++	/*
++	 * bind to any unused port.  If we left this up to the rpc layer,
++	 * it would bind to a reserved port, which has been shown to
++	 * exhaust the reserved port range in some situations.
++	 */
++	if (!info->client) {
++		*fd = open_sock(addr->sa_family, type, proto);
++		if (*fd < 0) {
++			endnetconfig(handle);
++			return NULL;
++		}
++
++		if (bind(*fd, laddr, slen) < 0) {
++			endnetconfig(handle);
++			return NULL;
++		}
++	}
++
++	nb_addr.maxlen = nb_addr.len = slen;
++	nb_addr.buf = addr;
++
++	if (info->proto->p_proto == IPPROTO_TCP) {
++		if (connect_nb(*fd, addr, slen, &info->timeout) < 0) {
++			endnetconfig(handle);
++			return NULL;
++		}
++	}
++
++	client = clnt_tli_create(*fd, nconf, &nb_addr,
++				 info->program, info->version,
++				 info->send_sz, info->recv_sz);
++
++	endnetconfig(handle);
++
++	return client;
++}
++#endif
+ 
+ /*
+- * Create a UDP RPC client
++ * Create an RPC client
+  */
+-static CLIENT *create_udp_client(struct conn_info *info)
++static CLIENT *create_client(struct conn_info *info)
+ {
+ 	CLIENT *client = NULL;
+ 	struct addrinfo *ai, *haddr;
+ 	struct addrinfo hints;
+ 	int fd, ret;
+ 
+-	if (info->proto->p_proto != IPPROTO_UDP)
+-		return NULL;
+-
+ 	fd = RPC_ANYSOCK;
+ 
+ 	if (info->client) {
+@@ -355,6 +371,11 @@ static CLIENT *create_udp_client(struct conn_info *info)
+ 
+ 	haddr = ai;
+ 	while (haddr) {
++		if (haddr->ai_protocol != info->proto->p_proto) {
++			haddr = haddr->ai_next;
++			continue;
++		}
++
+ 		client = rpc_do_create_client(haddr->ai_addr, info, &fd);
+ 		if (client)
+ 			break;
+@@ -408,7 +429,7 @@ int rpc_udp_getclient(struct conn_info *info,
+ 	info->program = program;
+ 	info->version = version;
+ 
+-	client = create_udp_client(info);
++	client = create_client(info);
+ 
+ 	if (!client)
+ 		return 0;
+@@ -428,92 +449,6 @@ void rpc_destroy_udp_client(struct conn_info *info)
+ 	return;
+ }
+ 
+-/*
+- * Create a TCP RPC client using non-blocking connect
+- */
+-static CLIENT *create_tcp_client(struct conn_info *info)
+-{
+-	CLIENT *client = NULL;
+-	struct addrinfo *ai, *haddr;
+-	struct addrinfo hints;
+-	int fd, ret;
+-
+-	if (info->proto->p_proto != IPPROTO_TCP)
+-		return NULL;
+-
+-	fd = RPC_ANYSOCK;
+-
+-	if (info->client) {
+-		if (!clnt_control(info->client, CLGET_FD, (char *) &fd)) {
+-			fd = RPC_ANYSOCK;
+-			clnt_destroy(info->client);
+-			info->client = NULL;
+-		} else {
+-			clnt_control(info->client, CLSET_FD_NCLOSE, NULL);
+-			clnt_destroy(info->client);
+-		}
+-	}
+-
+-	if (info->addr) {
+-		client = rpc_do_create_client(info->addr, info, &fd);
+-		if (client)
+-			goto done;
+-
+-		if (!info->client) {
+-			close(fd);
+-			fd = RPC_ANYSOCK;
+-		}
+-	}
+-
+-	memset(&hints, 0, sizeof(hints));
+-	hints.ai_flags = AI_ADDRCONFIG;
+-	hints.ai_family = AF_UNSPEC;
+-	hints.ai_socktype = SOCK_STREAM;
+-
+-	ret = getaddrinfo(info->host, NULL, &hints, &ai);
+-	if (ret) {
+-		error(LOGOPT_ANY,
+-		      "hostname lookup failed: %s", gai_strerror(ret));
+-		info->client = NULL;
+-		goto out_close;
+-	}
+-
+-	haddr = ai;
+-	while (haddr) {
+-		client = rpc_do_create_client(haddr->ai_addr, info, &fd);
+-		if (client)
+-			break;
+-
+-		if (!info->client && fd != RPC_ANYSOCK) {
+-			close(fd);
+-			fd = RPC_ANYSOCK;
+-		}
+-
+-		haddr = haddr->ai_next;
+-	}
+-
+-	freeaddrinfo(ai);
+-
+-	if (!client) {
+-		info->client = NULL;
+-		goto out_close;
+-	}
+-done:
+-	/* Close socket fd on destroy, as is default for rpcowned fds */
+-	if  (!clnt_control(client, CLSET_FD_CLOSE, NULL)) {
+-		clnt_destroy(client);
+-		info->client = NULL;
+-		goto out_close;
+-	}
+-
+-	return client;
+-
+-out_close:
+-	if (fd != -1)
+-		close(fd);
+-	return NULL;
+-}
+-
+ int rpc_tcp_getclient(struct conn_info *info,
+ 		      unsigned int program, unsigned int version)
+ {
+@@ -533,7 +468,7 @@ int rpc_tcp_getclient(struct conn_info *info,
+ 	info->program = program;
+ 	info->version = version;
+ 
+-	client = create_tcp_client(info);
++	client = create_client(info);
+ 
+ 	if (!client)
+ 		return 0;
+@@ -593,12 +528,9 @@ int rpc_portmap_getclient(struct conn_info *info,
+ 	info->close_option = option;
+ 	info->client = NULL;
+ 
+-	if (pe_proto->p_proto == IPPROTO_TCP) {
++	if (pe_proto->p_proto == IPPROTO_TCP)
+ 		info->timeout.tv_sec = PMAP_TOUT_TCP;
+-		client = create_tcp_client(info);
+-	} else
+-		client = create_udp_client(info);
+-
++	client = create_client(info);
+ 	if (!client)
+ 		return 0;
+ 
+@@ -635,11 +567,7 @@ unsigned short rpc_portmap_getport(struct conn_info *info, struct pmap *parms)
+ 		pmap_info.send_sz = RPCSMALLMSGSIZE;
+ 		pmap_info.recv_sz = RPCSMALLMSGSIZE;
+ 
+-		if (proto == IPPROTO_TCP)
+-			client = create_tcp_client(&pmap_info);
+-		else
+-			client = create_udp_client(&pmap_info);
+-
++		client = create_client(&pmap_info);
+ 		if (!client)
+ 			return 0;
+ 	}
+@@ -700,10 +628,8 @@ int rpc_ping_proto(struct conn_info *info)
+ 		if (info->proto->p_proto == IPPROTO_UDP) {
+ 			info->send_sz = UDPMSGSIZE;
+ 			info->recv_sz = UDPMSGSIZE;
+-			client = create_udp_client(info);
+-		} else
+-			client = create_tcp_client(info);
+-
++		}
++		client = create_client(info);
+ 		if (!client)
+ 			return 0;
+ 	}
+@@ -857,10 +783,8 @@ static int rpc_get_exports_proto(struct conn_info *info, exports *exp)
+ 	if (info->proto->p_proto == IPPROTO_UDP) {
+ 		info->send_sz = UDPMSGSIZE;
+ 		info->recv_sz = UDPMSGSIZE;
+-		client = create_udp_client(info);
+-	} else
+-		client = create_tcp_client(info);
+-
++	}
++	client = create_client(info);
+ 	if (!client)
+ 		return 0;
+ 
+diff --git a/modules/replicated.c b/modules/replicated.c
+index b100c9c..b4f6da2 100644
+--- a/modules/replicated.c
++++ b/modules/replicated.c
+@@ -1095,7 +1095,13 @@ static int add_new_host(struct host **list,
+ 	if (prx == PROXIMITY_ERROR)
+ 		return 0;
+ 
+-	addr_len = sizeof(struct sockaddr);
++	if (host_addr->ai_addr->sa_family == AF_INET)
++		addr_len = INET_ADDRSTRLEN;
++	else if (host_addr->ai_addr->sa_family == AF_INET6)
++		addr_len = INET6_ADDRSTRLEN;
++	else
++		return 0;
++
+ 	new = new_host(host, host_addr->ai_addr, addr_len, prx, weight, options);
+ 	if (!new)
+ 		return 0;

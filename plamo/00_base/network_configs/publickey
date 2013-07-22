@@ -1,0 +1,38 @@
+#
+# /etc/publickey processing
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+$have_publickey = 0;
+
+sub read_publickey {
+	local($_, $netname, $key);
+
+	return if ($have_publickey);
+	open(PUBLICKEY, "<$source{publickey}") ||
+		&fatal("can't open $source{publickey}: $!");
+	while (<PUBLICKEY>) {
+		chop;
+		s/#.*//o;
+		s/^\s+//o;
+		s/\s+$//o;
+		next if (/^$/);
+		($netname, $key) = /(\S+)\s+(\S+)/o;
+		$netname2key{$netname} = $key;
+	}
+	close PUBLICKEY;
+	$have_publickey = 1;
+}
+
+sub publickey_byname {
+
+	local($netname);
+
+	&read_publickey;
+
+	foreach $netname (keys %netname2key) {
+		printf OUT "$netname\t$netname2key{$netname}\n";
+	}
+}
+
+1;

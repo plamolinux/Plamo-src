@@ -1,0 +1,19 @@
+#
+# /etc/snooptab
+#
+# tty		snoopdev	type	execpgm
+#
+ttyS1		/dev/tty7	login	/bin/login
+ttyS2		/dev/tty8	login	/bin/login
+#
+# remember to inform your gettys on the above lines 
+# that /etc/ttysnoops is the login program now
+#
+# the 'socket' snoop-device is for use with the
+# ttysnoop client
+# (any tty not listed above will match the wildcard)
+#
+*		socket		login	/bin/login
+#
+# remember to inform your telnetd that /etc/ttysnoops
+# is the login program now

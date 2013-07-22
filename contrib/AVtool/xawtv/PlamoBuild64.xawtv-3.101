@@ -1,0 +1,349 @@
+#!/bin/sh
+
+######################################################################
+url="http://linuxtv.org/downloads/xawtv/xawtv-3.101.tar.bz2"
+pkgbase=xawtv
+vers=3.101
+arch=x86_64
+build=P3
+src=$pkgbase-$vers
+OPT_CONFIG=""
+DOCS="COPYING Changes README* TODO"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+if [ $# -eq 0 ] ; then
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+  cd $B
+  cp -p x11/xt.h x11/xt.h.orig
+  sed 's@xf86vmproto\.h@xf86vmstr.h@g' x11/xt.h.orig > x11/xt.h
+  cp -p configure.ac configure.ac.orig
+  cat <<- "EOF" | patch configure.ac
+	319,321c319,321
+	< if test -d /etc/X11; then
+	< 	x11conf=/etc/X11
+	< fi
+	---
+	> #if test -d /etc/X11; then
+	> #	x11conf=/etc/X11
+	> #fi
+	327,332c327,332
+	< if test -d /usr/share/X11/app-defaults; then
+	< 	resdir=/usr/share/X11
+	< fi
+	< if test -d /etc/X11/app-defaults; then
+	< 	resdir=/etc/X11
+	< fi
+	---
+	> #if test -d /usr/share/X11/app-defaults; then
+	> #	resdir=/usr/share/X11
+	> #fi
+	> #if test -d /etc/X11/app-defaults; then
+	> #	resdir=/etc/X11
+	> #fi
+	EOF
+  sed -i '/^\(x11conf\|resdir\)=/s@lib@lib64@g' configure.ac
+  autoconf
+  autoheader
+  rm -rf autom4te.cache
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make -i install DESTDIR=$P
+    fi
+  done
+  mv $P/usr/share/xawtv/* $C
+  mv $C/* $P/usr/share/xawtv
+  mv $P/usr/share/man/man1/* $C
+  mv $C/* $P/usr/share/man/man1
+  mv $P/usr/share/man/es/man1/* $C
+  mv $C/* $P/usr/share/man/es/man1
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+  gzip_dir $mandir/es/man1
+  gzip_dir $mandir/es/man5
+  gzip_dir $mandir/es/man8
+  gzip_dir $mandir/fr/man1
+  install -d $P/usr/libexec/xawtv
+  cp -p $P/usr/bin/{xawtv,motv,fbtv,ttv,rootv,v4lctl,streamer} \
+      $P/usr/libexec/xawtv
+  uudecode <<- "EOF" | gunzip > $P/usr/bin/xawtv
+	begin-base64 644 /dev/stdout
+	H4sIAAAAAAAAA1XRzXOaQAAF8DP7V2xMTs2ky8dCcBo7VT5EhShqJdLpAdgFQcTVBVTa/u9tOtND
+	3+HNvMM7/e7vUJxXiO8AyFP4Dd7BpxQ+OHPPQh+v0aVu4Xf4CdY7WgEIm4bQ5EgofHl5gj1rbvfg
+	T5g1VZcz+Pm/FxBimuXVUxxxqmGoYQwRoS3iNTk2NRAczCfDf5Heln7waE5G2RibNQqDcnWSNs/Y
+	NaOwbALiUxKQKfa9IDATa+o2DXIejbeVoR/URTUEQqmm3S5pIn3IpAlSlswL09AY5Zs1sSKy6hYd
+	y7vMf7XMk1Ib3lrSmOEfcd8uj9LJGJvVPpq5tzkLtO0YCOuDNskDZ9XMjAQVrs2s0T5ilbWq58tV
+	tZhr6UHyubwxLEs166HShmXbSacxfn7bbSWrccwzHY4Rj5leAOF6sy+hW2zVS+sU+SI7U4cnfeer
+	ttyKXsqwXLVTiauFPhX7yisn8ehSeTcqH02aqnLGuKU8JukIF+etCQTCS9dV9ngnNeZV1/ryyVWf
+	0WFD0uNI3rfcjie5roV5fGGz9fxqV406W7si08yZ1L+VqclTxahxt0diBgSbeKI+i3Zy4Ysiqk5x
+	jXkQtJReD2NWexPke0OtvhnEf8caDIAwGLz3H3mQ5gDQK00gavgZlXn8PtBffPTwQ7y//4B+wd7D
+	lx74DfIbmPNjAgAA
+	====
+	EOF
+  touch -t `date '+%m%d0900'` $P/usr/bin/xawtv
+  for i in motv fbtv ttv rootv v4lctl streamer ; do
+    ln -f $P/usr/bin/{xawtv,$i}
+  done
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+  convert
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/libexec/xawtv
+  tar rvpf $pkg.tar -C $P usr/lib64/xawtv
+  tar rvpf $pkg.tar -C $P usr/share/xawtv
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64/X11/app-defaults | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/lib64/X11/de_DE.UTF-8/app-defaults | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/lib64/X11/fr_FR.UTF-8/app-defaults | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/lib64/X11/it_IT.UTF-8/app-defaults | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/es/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/es/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/es/man8 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/fr/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
+fi

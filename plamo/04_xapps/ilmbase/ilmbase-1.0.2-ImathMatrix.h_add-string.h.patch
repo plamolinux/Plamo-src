@@ -1,0 +1,10 @@
+--- build/Imath/ImathMatrix.h~	2010-07-17 07:48:40.000000000 +0900
++++ build/Imath/ImathMatrix.h	2012-02-08 12:10:42.333461278 +0900
+@@ -49,6 +49,7 @@
+ #include "ImathVec.h"
+ #include "ImathShear.h"
+ 
++#include <string.h>
+ #include <iostream>
+ #include <iomanip>
+ 

@@ -1,0 +1,37 @@
+#
+# /etc/ypservers processing
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+$have_ypservers = 0;
+
+sub read_ypservers {
+	local($_);
+
+	return if ($have_ypservers);
+	open(YPSERVERS, "<$source{ypservers}") ||
+		&fatal("can't open $source{ypservers}: $!");
+	while (<YPSERVERS>) {
+		chop;
+		s/#.*//o;
+		s/^\s+//o;
+		s/\s+$//o;
+		next if (/^$/);
+		$ypservers{$_} = $_;
+	}
+	close YPSERVERS;
+	$have_ypservers = 1;
+}
+
+sub ypservers {
+
+	local($server);
+
+	&read_ypservers;
+
+	foreach $server (keys %ypservers) {
+		printf OUT "$server\t$server\n";
+	}
+}
+
+1;

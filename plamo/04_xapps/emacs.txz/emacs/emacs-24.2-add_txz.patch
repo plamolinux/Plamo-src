@@ -1,0 +1,69 @@
+diff -upr emacs-24.2/lisp/eshell/esh-util.el emacs-24.2.patched/lisp/eshell/esh-util.el
+--- emacs-24.2/lisp/eshell/esh-util.el	2012-08-23 14:33:42.000000000 +0900
++++ emacs-24.2.patched/lisp/eshell/esh-util.el	2012-11-09 11:11:03.925301499 +0900
+@@ -70,7 +70,7 @@ Setting this to nil is offered as an aid
+   :group 'eshell-util)
+ 
+ (defcustom eshell-tar-regexp
+-  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\)\\'"
+   "Regular expression used to match tar file names."
+   :version "24.1"			; added xz
+   :type 'regexp
+diff -upr emacs-24.2/lisp/ibuffer.el emacs-24.2.patched/lisp/ibuffer.el
+--- emacs-24.2/lisp/ibuffer.el	2012-08-23 14:33:42.000000000 +0900
++++ emacs-24.2.patched/lisp/ibuffer.el	2012-11-09 11:08:50.024889925 +0900
+@@ -331,7 +331,7 @@ directory, like `default-directory'."
+   :group 'ibuffer)
+ 
+ (defcustom ibuffer-compressed-file-name-regexp
+-  "\\.\\(arj\\|bgz\\|bz2\\|gz\\|lzh\\|taz\\|tgz\\|xz\\|zip\\|z\\)$"
++  "\\.\\(arj\\|bgz\\|bz2\\|gz\\|lzh\\|taz\\|tgz\\|xz\\|zip\\|z\\|txz\\)$"
+   "Regexp to match compressed file names."
+   :version "24.1"                       ; added xz
+   :type 'regexp
+diff -upr emacs-24.2/lisp/ldefs-boot.el emacs-24.2.patched/lisp/ldefs-boot.el
+--- emacs-24.2/lisp/ldefs-boot.el	2012-08-23 14:33:42.000000000 +0900
++++ emacs-24.2.patched/lisp/ldefs-boot.el	2012-11-09 11:09:28.311673337 +0900
+@@ -9434,7 +9434,7 @@ Use the `etags' program to make a tags t
+ 
+ (custom-autoload 'tags-table-list "etags" t)
+ 
+-(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
++(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz")) "\
+ *List of extensions tried by etags when jka-compr is used.
+ An empty string means search the non-compressed file.
+ These extensions will be tried only if jka-compr was activated
+diff -upr emacs-24.2/lisp/loaddefs.el emacs-24.2.patched/lisp/loaddefs.el
+--- emacs-24.2/lisp/loaddefs.el	2012-08-24 18:57:32.000000000 +0900
++++ emacs-24.2.patched/lisp/loaddefs.el	2012-11-09 11:09:43.238385848 +0900
+@@ -9434,7 +9434,7 @@ Use the `etags' program to make a tags t
+ 
+ (custom-autoload 'tags-table-list "etags" t)
+ 
+-(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
++(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz")) "\
+ *List of extensions tried by etags when jka-compr is used.
+ An empty string means search the non-compressed file.
+ These extensions will be tried only if jka-compr was activated
+diff -upr emacs-24.2/lisp/pcmpl-gnu.el emacs-24.2.patched/lisp/pcmpl-gnu.el
+--- emacs-24.2/lisp/pcmpl-gnu.el	2012-08-23 14:33:42.000000000 +0900
++++ emacs-24.2.patched/lisp/pcmpl-gnu.el	2012-11-09 11:10:42.718568952 +0900
+@@ -90,7 +90,7 @@
+     (lambda (entry)
+       (when (and (file-readable-p entry)
+ 		 (file-regular-p entry))
+-	(let ((zipped (string-match "\\.\\(t?z2\\|bz2\\)\\'" entry)))
++	(let ((zipped (string-match "\\.\\(t?z2\\|bz2\\|txz\\)\\'" entry)))
+ 	  (or (and unzip-p zipped)
+ 	      (and (not unzip-p) (not zipped)))))))))
+ 
+@@ -128,7 +128,7 @@
+       (pcomplete-uniqify-list rules))))
+ 
+ (defcustom pcmpl-gnu-tarfile-regexp
+-  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\)\\'"
+   "A regexp which matches any tar archive."
+   :type 'regexp
+   :group 'pcmpl-gnu)

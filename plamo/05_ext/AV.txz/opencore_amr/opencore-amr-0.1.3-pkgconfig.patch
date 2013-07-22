@@ -1,0 +1,22 @@
+--- build32/amrnb/opencore-amrnb.pc.in~	2011-04-07 05:30:37.000000000 +0900
++++ build32/amrnb/opencore-amrnb.pc.in	2012-04-14 10:00:42.729988782 +0900
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+-includedir=@includedir@
++includedir=@includedir@/opencore-amrnb
+ 
+ Name: OpenCORE AMR-NB
+ Description: Adaptive Multi-Rate speech codec library
+--- build32/amrwb/opencore-amrwb.pc.in~	2011-04-07 05:30:37.000000000 +0900
++++ build32/amrwb/opencore-amrwb.pc.in	2012-04-14 10:01:05.373358596 +0900
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+-includedir=@includedir@
++includedir=@includedir@/opencore-amrwb
+ 
+ Name: OpenCORE AMR-WB
+ Description: Adaptive Multi-Rate Wideband speech codec library

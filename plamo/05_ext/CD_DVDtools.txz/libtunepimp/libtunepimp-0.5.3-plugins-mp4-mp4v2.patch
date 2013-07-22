@@ -1,0 +1,33 @@
+--- build/plugins/mp4/mp4.cpp~	2011-02-20 21:35:20.779274461 +0900
++++ build/plugins/mp4/mp4.cpp	2011-02-20 21:42:40.496809636 +0900
+@@ -27,7 +27,7 @@
+ 
+ #include <string.h>
+ #include <stdio.h>
+-#include <mp4.h>
++#include <mp4v2/mp4v2.h>
+ #include <stdlib.h>
+ #include "metadata.h"
+ #include "plugin.h"
+@@ -232,8 +232,9 @@
+   
+   strcpy(mdata->fileFormat, fileName + strlen(fileName) - 3); 
+   
+-  if (!MP4Close(mp4file))
+-    return 0;
++  /* if (!MP4Close(mp4file))
++     return 0; */
++  MP4Close(mp4file);
+   
+   return 1;
+ }
+@@ -316,8 +317,7 @@
+   sprintf(temp, "%d", mdata->nonAlbum);  
+   MP4SetMetadataFreeForm(mp4file, "MusicBrainz Non-Album", (u_int8_t *)temp, strlen(temp) + 1);
+   
+-  if (!MP4Close(mp4file))
+-    return 0;
++  MP4Close(mp4file);
+ 
+ #ifndef WIN32
+   if (!MP4Optimize(utf8ToEncoding(fileName, encoding).c_str()))

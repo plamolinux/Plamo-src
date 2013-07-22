@@ -1,0 +1,25 @@
+autofs-5.0.6 - fix MNT_DETACH define
+
+From: Ian Kent <raven@themaw.net>
+
+MNT_DETACH has been included in herder file
+---
+
+ include/automount.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+
+diff --git a/include/automount.h b/include/automount.h
+index 8816c15..4291bbd 100644
+--- a/include/automount.h
++++ b/include/automount.h
+@@ -333,7 +333,9 @@ int ncat_path(char *buf, size_t len,
+ 
+ /* Core automount definitions */
+ 
++#ifndef MNT_DETACH
+ #define MNT_DETACH	0x00000002	/* Just detach from the tree */
++#endif
+ 
+ struct startup_cond {
+ 	pthread_mutex_t mutex;

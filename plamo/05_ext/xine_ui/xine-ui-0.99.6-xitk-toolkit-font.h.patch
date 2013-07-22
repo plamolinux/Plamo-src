@@ -1,0 +1,23 @@
+--- xine-ui-0.99.6/src/xitk/xine-toolkit/font.h.orig	2010-05-26 19:23:41.000000000 +0900
++++ xine-ui-0.99.6/src/xitk/xine-toolkit/font.h	2010-05-26 20:02:02.000000000 +0900
+@@ -23,13 +23,13 @@
+ 
+ #include "_xitk.h"
+ 
+-#define DEFAULT_FONT_10      "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-*-*"
+-#define DEFAULT_FONT_12      "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*"
+-#define DEFAULT_FONT_14      "-*-helvetica-medium-r-*-*-14-*-*-*-*-*-*-*"
+-#define DEFAULT_BOLD_FONT_10 "-*-helvetica-bold-r-*-*-10-*-*-*-*-*-*-*"
+-#define DEFAULT_BOLD_FONT_12 "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*"
+-#define DEFAULT_BOLD_FONT_14 "-*-helvetica-bold-r-*-*-14-*-*-*-*-*-*-*"
+-#define FONT_HEIGHT_MODEL    "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN&й(-и_за)=№~#{[|`\\^@]}%"
++#define DEFAULT_FONT_10      "-*-*-medium-r-*-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define DEFAULT_FONT_12      "-*-*-medium-r-*-*-12-*-*-*-*-*-jisx0208.1983-*"
++#define DEFAULT_FONT_14      "-*-*-medium-r-*-*-14-*-*-*-*-*-jisx0208.1983-*"
++#define DEFAULT_BOLD_FONT_10 "-*-*-bold-r-*-*-10-*-*-*-*-*-jisx0208.1983-*"
++#define DEFAULT_BOLD_FONT_12 "-*-*-bold-r-*-*-12-*-*-*-*-*-jisx0208.1983-*"
++#define DEFAULT_BOLD_FONT_14 "-*-*-bold-r-*-*-14-*-*-*-*-*-jisx0208.1983-*"
++#define FONT_HEIGHT_MODEL    "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN&)Bй(-и_$)Bза)=)B№~#{[|`\\^@]}%"
+ 
+ /*
+  * init font cache subsystem

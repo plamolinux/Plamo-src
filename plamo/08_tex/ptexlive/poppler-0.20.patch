@@ -1,0 +1,12 @@
+--- source/texk/web2c/pdftexdir/pdftosrc.cc.orig	2012-06-24 17:12:34.376329435 +0200
++++ source/texk/web2c/pdftexdir/pdftosrc.cc	2012-06-24 17:12:25.490003152 +0200
+@@ -134,7 +134,7 @@
+         exit(1);
+     }
+     if (extract_xref_table) {
+-        int size = xref->getSize();
++        int size = xref->getNumObjects();
+         int i;
+         for (i = 0; i < size; i++) {
+             if (xref->getEntry(i)->offset == 0xffffffff)
+

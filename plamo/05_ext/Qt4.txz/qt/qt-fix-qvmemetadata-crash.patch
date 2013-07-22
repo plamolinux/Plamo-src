@@ -1,0 +1,19 @@
+diff --git a/src/corelib/animation/qpropertyanimation.cpp b/src/corelib/animation/qpropertyanimation.cpp
+index 2a01b32..19e7647 100644
+--- a/src/corelib/animation/qpropertyanimation.cpp
++++ b/src/corelib/animation/qpropertyanimation.cpp
+@@ -133,13 +133,7 @@ void QPropertyAnimationPrivate::updateProperty(const QVariant &newValue)
+         return;
+     }
+ 
+-    if (newValue.userType() == propertyType) {
+-        //no conversion is needed, we directly call the QMetaObject::metacall
+-        void *data = const_cast<void*>(newValue.constData());
+-        QMetaObject::metacall(targetValue, QMetaObject::WriteProperty, propertyIndex, &data);
+-    } else {
+-        targetValue->setProperty(propertyName.constData(), newValue);
+-    }
++    targetValue->setProperty(propertyName.constData(), newValue);
+ }
+ 
+ /*!

@@ -1,0 +1,477 @@
+#!/bin/sh
+##                            Time-stamp: <2005-07-20 16:10:02 cyamauch>
+
+################################
+select_main() {
+
+MSG_XSERVER="Xorg"
+
+if [ "$XSCREEN" = "" ]; then
+  if [ "$LCD_CHK" = "" ]; then
+    MSG_XSCREEN="デフォルト(${DEFAULT_XSCREEN})"
+  else
+    MSG_XSCREEN="自動検出(失敗する可能性有)"
+  fi
+else
+  MSG_XSCREEN="$XSCREEN"
+fi
+
+if [ "$XDEPTH" = "" ]; then
+  MSG_XDEPTH="デフォルト(基本的に24bpp)"
+else
+  MSG_XDEPTH="${XDEPTH}bpp"
+fi  
+
+if [ "$XVREFRESH" = "" ]; then
+  if [ "$LCD_CHK" = "" ]; then
+    MSG_XVREFRESH="デフォルト"
+  else
+    MSG_XVREFRESH="デフォルト(${LCDXVREFRESH}Hz)"
+  fi
+else
+  MSG_XVREFRESH="${XVREFRESH}Hz"
+fi  
+
+if [ "$XMODULE" = "" ]; then
+  MSG_XMODULE="デフォルト(vesa)"
+else
+  MSG_XMODULE="$XMODULE"
+fi  
+
+if [ "$MAXHSYNC" = "" ]; then
+  MSG_MAXHSYNC="デフォルト(${DEFAULT_MAXHSYNC}kHz)"
+else
+  MSG_MAXHSYNC="${MAXHSYNC}kHz"
+fi  
+
+if [ "$XKBMODEL" = "jp" ]; then
+  MSG_XKBMODEL="日本語106"
+else
+  MSG_XKBMODEL="英語101"
+fi
+
+if [ "$XMOUSE" = "" ]; then
+  if [ "$CDPLAMO_CHK" != "" ] ; then
+    # CDplamo
+    if [ "$LCD_CHK" != "" ] ; then
+      # Laptop
+      MSG_XMOUSE="デフォルト(ホイールなし)"
+    else
+      MSG_XMOUSE="デフォルト(ホイールなし)"
+    fi
+  else
+    # Plamo-x.x
+    if [ "$LCD_CHK" != "" ] ; then
+      # Laptop
+      MSG_XMOUSE="デフォルト(USBマウスなし)"
+    else
+      MSG_XMOUSE="デフォルト(ホイールなしPS/2)"
+    fi
+  fi
+else
+  if [ "$XMOUSE" = "gpm" ]; then
+    MSG_XMOUSE="gpm併用"
+  elif [ "$XMOUSE" = "laptop+ps2" ]; then
+    MSG_XMOUSE="Laptop用設定 USBマウスは2or3ボタン"
+  elif [ "$XMOUSE" = "laptop+wheel" ]; then
+    MSG_XMOUSE="Laptop用設定 USBマウスはホイール付"
+  elif [ "$XMOUSE" = "ps2" ]; then
+    MSG_XMOUSE="2ボタンあるいは3ボタンマウス"
+  elif [ "$XMOUSE" = "wheel" ]; then
+    MSG_XMOUSE="ホイール付マウス"
+  elif [ "$XMOUSE" = "ps2_ps2" ]; then
+    MSG_XMOUSE="2ボタンあるいは3ボタンのPS/2マウス"
+  elif [ "$XMOUSE" = "ps2_wheel" ]; then
+    MSG_XMOUSE="ホイール付 PS/2マウス"
+  elif [ "$XMOUSE" = "usb_ps2" ]; then
+    MSG_XMOUSE="2ボタンあるいは3ボタンのUSBマウス"
+  elif [ "$XMOUSE" = "usb_wheel" ]; then
+    MSG_XMOUSE="ホイール付 USBマウス"
+  else
+    MSG_XMOUSE="`echo ${XMOUSE}|tr a-z A-Z |sed -e 's|PS2|PS/2|'`"
+  fi
+fi  
+
+dialog --title "Xサーバの設定" \
+--menu "\n\
+Xサーバの設定を行ないます．以下の中で必要な項目を選択し，設定して\n\
+ください．ラップトップマシンの場合，デフォルトでは解像度を自動検出\n\
+する設定になっていますが，検出に成功するとは限らないので，指定した\n\
+方が安全です．【】は現在の設定を示しています．\
+\n" 20 76 9 \
+"Xserver"  "Xサーバ             【${MSG_XSERVER}】" \
+"Screen"   "解像度              【${MSG_XSCREEN}】" \
+"Depth"    "bpp値               【${MSG_XDEPTH}】" \
+"Vsync"    "垂直同期周波数      【${MSG_XVREFRESH}】" \
+"Module"   "ドライバモジュール  【${MSG_XMODULE}】" \
+"Keyboard" "キーボード          【${MSG_XKBMODEL}】" \
+"Mouse"    "マウス              【${MSG_XMOUSE}】" \
+"Hsync"    "水平同期の最大周波数【${MSG_MAXHSYNC}】" \
+"OK"       "設定完了" 2> $TMP_REPLY 
+
+}
+
+################################
+select_xserver() {
+dialog --title "Xserver" \
+--msgbox "\nかって、XFree86プロジェクトが独自のXserverを公開していましたが、\n\
+XFree86プロジェクトはXorgプロジェクトに合流し、現在のXserverはXorg版のみになりました。\n\
+そのため、ここで選択可能な項目はありません。\n" 16 70 
+}
+
+################################
+select_xscreen() {
+
+MODES=""
+I=0
+while [ ${MODES43[$I]} ] ; do
+  MODES="$MODES ${MODES43[$I]} 4:3or5:4モード"
+  let I=I+1
+done
+I=0
+while [ ${MODESWIDE[$I]} ] ; do
+  MODES="$MODES ${MODESWIDE[$I]} ワイドモード"
+  let I=I+1
+done
+
+dialog --title "画面モードの選択" \
+--menu "どの画面モードに設定しますか？\
+" 21 60 14 \
+"Default" "デフォルトに戻す" \
+$MODES 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  XSCREEN="`cat $TMP_REPLY`"
+  if [ "$XSCREEN" = "Default" ] ; then
+    XSCREEN=""
+  fi
+fi
+
+if [ "$CDPLAMO_CHK" = "" -a "$XSCREEN" != "" -a -x /usr/bin/855resolution ] ; then
+  # 855GM なマシンで VBIOS が正しい解像度を返さないラップトップマシン用の対策
+  # See http://wiki.0-24.jp/?Linux%2FY2%A4%C7SXGA%2B
+  if [ "$LCD_CHK" != "" ]; then
+    # Intel Corp. 82852/855GM Integrated Graphics Device
+    if [ "$VENDOR" = "0x8086" -a "$DEVICE" = "0x3582" ]; then
+      CHK855="`/usr/bin/855resolution -l | grep 'Mode ' | grep \" ${XSCREEN},\"`"
+      if [ "$CHK855" = "" ] ; then
+        NOXXSCREEN="`echo $XSCREEN|tr 'x' ' '`"
+        dialog --title "WARNING: VBIOS does not have $XSCREEN mode" --msgbox "\
+指定した解像度は VBIOS に存在しません．/usr/bin/855resolution\n\
+を使って，VBIOS に解像度を与える必要があります．\n\
+\n\
+【855resolutionの使い方】\n\
+# /usr/bin/855resolution -l\n\
+とすると，VBIOS の持っている解像度一覧が出ます．\n\
+不必要な解像度に相当する Mode 番号を選び(以下の例ではMode 52)，
+# /usr/bin/855resolution 52 ${NOXXSCREEN}\n\
+として，目的の解像度を VBIOS に与えます．マシンをリブートすると，上\n\
+書きした解像度はリセットされるので，起動時に 855resolution を実行す\n\
+るように /etc/rc.d/rc.local に書いておきましょう．" 16 72
+      fi
+    fi
+  fi
+fi
+
+}
+
+################################
+select_xdepth() {
+
+dialog --title "bpp値の選択" \
+--menu "\nどのbpp値に設定しますか？\n\
+24bppに設定するのが普通ですが，ビデオチップによっては，24bpp\n\
+では正常に表示できない事があります．その場合は 16bpp に設定\n\
+してください．\n\
+" 16 66 4 \
+"Default" "デフォルトに戻す" \
+"24" "24bpp(16777216色)" \
+"16" "16bpp(65536色)" \
+"8" "8bpp(256色)" 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  XDEPTH="`cat $TMP_REPLY`"
+  if [ "$XDEPTH" = "Default" ] ; then
+    XDEPTH=""
+  fi
+fi
+
+}
+
+################################
+select_xvrefresh() {
+
+dialog --title "垂直同期周波数の選択" \
+--menu "\nどの垂直同期周波数に設定しますか？\n\
+ワイドモードの解像度を指定した場合は，Default か 60 を\n\
+選択してください．\n\
+" 16 60 5 \
+"Default" "デフォルトに戻す" \
+"75" "75Hz(4:3or5:4モードのみ)" \
+"72" "72Hz(4:3or5:4モードのみ)" \
+"70" "70Hz(4:3or5:4モードのみ)" \
+"60" "60Hz" 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  XVREFRESH="`cat $TMP_REPLY`"
+  if [ "$XVREFRESH" = "Default" ] ; then
+    XVREFRESH=""
+  fi
+fi
+
+}
+
+################################
+select_xmodule() {
+dialog --title "ドライバ・モジュールの選択" \
+--menu \
+"最近のXではサーバが認識したビデオチップを外部から知る方法が用意され \n\
+なくなり、ドライバモジュールを自動選択できなくなったので、デフォルト \n\
+では vesa ドライバを使うようにして、個別のドライバが必要な場合は手動 \n\
+で選択するようにしてみました。煩雑になるため古いビデオチップ用のドラ \n\
+イバは省いていますので必要な場合は /usr/lib64/xorg/modules/driver/ \n\
+ディレクトリのドライバモジュールを確認してください。\n\
+\n\
+メーカ製のドライバでアップデートする場合、デフォルトの vesa で xorg.conf \n\
+を生成しておいてから、メーカ製のドライバをインストールすればいいでしょう。\n" 24 74 6 \
+"vesa" "ほとんどのチップで動くvesa汎用モジュール（デフォルト）" \
+"intel" "Intelの新しいビデオチップ用ドライバ" \
+"ati"   "AMD/ATIのビデオチップ用ドライバ" \
+"nv"    "NVidiaのビデオチップ用ドライバ" \
+"i740"  "Intelの古いi740ビデオチップ用ドライバ" \
+"vmware" "VMware環境用ドライバ" 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  XMODULE="`cat $TMP_REPLY`"
+else
+  XMODULE="vesa"
+fi
+
+}
+
+################################
+select_xkbmodel() {
+
+dialog --title "キーボードモデルの選択" \
+--menu "\n使用するキーボードを選択してください．\n\
+" 11 58 2 \
+"jp" "日本語106キーボード" \
+"us" "英語101キーボード" 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  XKBMODEL="`cat $TMP_REPLY`"
+fi
+
+}
+
+################################
+select_xmouse() {
+
+if [ "$CDPLAMO_CHK" = "" ] ; then
+
+if [ "$LCD_CHK" = "" ] ; then
+# desktop
+dialog --title "マウスの設定(Desktop用)" \
+--menu "\nマウスの設定を選択してください．\n\
+" 14 64 5 \
+"Default" "デフォルトに戻す" \
+"ps2_ps2" "2ボタンあるいは3ボタンの PS/2マウス" \
+"ps2_wheel" "ホイール付き PS/2マウス" \
+"usb_ps2" "2ボタンあるいは3ボタンの USBマウス" \
+"usb_wheel" "ホイール付き USBマウス" 2> $TMP_REPLY
+else
+# laptop
+dialog --title "マウスの設定(Laptop用)" \
+--menu "\nマウスの設定を選択してください．\n\
+laptop+ps2 か laptop+wheel を選択すると，PS/2・USB両方のマ\n\
+ウスが使用可能になります(USBマウスは外しておいてもOK!)．\n\
+" 14 65 3 \
+"Default" "デフォルトに戻す(USBマウスは使用しない)" \
+"laptop+ps2" "USBマウスは 2ボタンあるいは3ボタン" \
+"laptop+wheel" "USBマウスは ホイール付き" 2> $TMP_REPLY
+fi
+
+else
+# for CDplamo
+
+if [ "$LCD_CHK" = "" ] ; then
+# desktop
+dialog --title "マウスの設定(Desktop用)" \
+--menu "\nマウスの設定を選択してください．\n\
+USBマウスを使う場合は，今のうちに接続しておいてください．\n\
+接続されている場合は，USBマウスを使う設定にします．\n\
+" 14 64 3 \
+"Default" "デフォルトに戻す" \
+"ps2" "2ボタンあるいは3ボタンのPS/2またはUSBマウス" \
+"wheel" "ホイール付きPS/2またはUSBマウス" 2> $TMP_REPLY
+else
+# laptop
+dialog --title "マウスの設定(Laptop用)" \
+--menu "\nマウスの設定を選択してください．\n\
+laptop+ps2 か laptop+wheel を選択すると，PS/2・USB両方のマ\n\
+ウスが使用可能になります(USBマウスは外しておいてもOK!)．\n\
+※Defaultを選択した場合，USBマウスが接続されている場合は，\n\
+USBマウスのみが利用可能になります．この場合，USBマウスは今\n\
+のうちに接続しておいてください．\n\
+" 17 64 3 \
+"Default" "デフォルトに戻す" \
+"laptop+ps2" "USBマウスは 2ボタンあるいは3ボタン" \
+"laptop+wheel" "USBマウスは ホイール付き" 2> $TMP_REPLY
+fi
+
+fi
+
+#if [ "$CDPLAMO_CHK" = "" ] ; then
+#dialog --title "マウスのプロトコルの選択" \
+#--menu "\nマウスの設定を選択してください．\n\
+#USBマウスを使う場合は，今のうちに接続しておいてください．\n\
+#接続されている場合は，USBマウスを使う設定にします．\n\
+#" 14 64 3 \
+#"Default" "デフォルトに戻す" \
+#"ps2" "2ボタンあるいは3ボタンのPS/2またはUSBマウス" \
+#"imps2" "ホイール付きPS/2またはUSBマウス" 2> $TMP_REPLY
+#else
+#dialog --title "マウスのプロトコルの選択" \
+#--menu "\nマウスの設定を選択してください．\n\
+#USBマウスが接続されている場合，そちらが優先になります．\n\
+#gpm併用の場合，PS/2・USB両方のマウスが使用可能になりますが，\n\
+#ホイールは利用できません．\n\
+#※USBマウスは今のうちに接続しておいてください．\n\
+#" 17 64 4 \
+#"Default" "デフォルトに戻す" \
+#"ps2" "2ボタンあるいは3ボタンのPS/2またはUSBマウス" \
+#"imps2" "ホイール付きPS/2またはUSBマウス" \
+#"gpm" "gpm併用(PS/2・USB両方のマウスが使用可能)" 2> $TMP_REPLY
+#fi
+
+if [ $? = 0 ] ; then
+  XMOUSE="`cat $TMP_REPLY`"
+  if [ "$XMOUSE" = "Default" ] ; then
+    XMOUSE=""
+  fi
+fi
+
+}
+
+################################
+select_maxhsync() {
+
+dialog --title "最大水平同期周波数(kHz)の設定" \
+--inputbox "\n解像度を下げれば，水平同期周波数も下がるので，\n\
+通常は設定する必要はありません．\n\
+デフォルトに戻す場合は，そのまま Enter を押し\n\
+てください．\n\
+" 14 50 2> $TMP_REPLY
+
+if [ $? = 0 ] ; then
+  MAXHSYNC="`cat $TMP_REPLY`"
+fi
+
+}
+
+################################################################
+
+TMP_REPLY=`mktemp /tmp/tmp_reply_$$.XXXXXX`
+
+INSTDIR="/sbin"
+XFPLAMOCONFIG="${INSTDIR}/xfplamoconfig.sh"
+GPMPLAMOCONFIG="${INSTDIR}/gpmplamoconfig.sh"
+
+. $XFPLAMOCONFIG --initonly
+#LCD_CHK="hoge"
+
+MAXHSYNC=""
+
+################
+
+while [ 1 ] ; do
+
+  select_main
+  RTV=$?
+  if [ $? != 0 ] ; then
+    break
+  fi
+  case "`cat $TMP_REPLY`" in
+    Xserver)
+      select_xserver
+      ;;
+    Screen)
+      select_xscreen
+      ;;
+    Depth)
+      select_xdepth
+      ;;
+    Hsync)
+      select_maxhsync
+      ;;
+    Vsync)
+      select_xvrefresh
+      ;;
+    Module)
+      select_xmodule
+      ;;
+    Keyboard)
+      select_xkbmodel
+      ;;
+    Mouse)
+      select_xmouse
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+rm -f $TMP_REPLY
+
+if [ "$XSERVER" = "xorg" ]; then
+  XFCONFIGFILE=/etc/X11/xorg.conf
+else
+  XFCONFIGFILE=/etc/X11/XF86Config
+fi
+
+if [ $RTV = 0 ] ; then
+
+  ARGS=""
+  if [ "$XSERVER" != "" ]; then
+    ARGS="$ARGS xserver=$XSERVER"
+  fi
+  if [ "$XSCREEN" != "" ]; then
+    ARGS="$ARGS xscreen=$XSCREEN"
+  fi
+  if [ "$XDEPTH" != "" ]; then
+    ARGS="$ARGS xdepth=$XDEPTH"
+  fi
+  if [ "$XVREFRESH" != "" ]; then
+    ARGS="$ARGS xvrefresh=$XVREFRESH"
+  fi
+  if [ "$XMODULE" != "" ]; then
+    ARGS="$ARGS xmodule=$XMODULE"
+  fi
+  if [ "$MAXHSYNC" != "" ]; then
+    ARGS="$ARGS maxhsync=$MAXHSYNC"
+  fi
+  if [ "$XKBMODEL" != "" ]; then
+    ARGS="$ARGS xkbmodel=$XKBMODEL"
+  fi
+  if [ "$XMOUSE" != "" ]; then
+    ARGS="$ARGS xmouse=`echo $XMOUSE | sed -e 's/usb_//' -e 's/ps2_//'`"
+    USBMCHK="`echo $XMOUSE|sed -e 's/_ps2//' -e 's/_wheel//'|grep 'usb'`"
+  fi
+
+  if [ "$CDPLAMO_CHK" != "" ]; then
+    $GPMPLAMOCONFIG $ARGS > /etc/rc.d/rc.gpm
+    chmod 755 /etc/rc.d/rc.gpm
+  fi
+  if [ "$USBMCHK" = "usb" ] ; then
+    USBMOUSE_CHK=$USBMCHK $XFPLAMOCONFIG $ARGS > $XFCONFIGFILE
+  else
+    $XFPLAMOCONFIG $ARGS > $XFCONFIGFILE
+  fi
+  if [ "$CDPLAMO_CHK" = "" ]; then
+    dialog --title "Complete!" --msgbox "\n\
+$XFCONFIGFILE を作成しました!\n" 7 40
+  fi
+
+fi
+

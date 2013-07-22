@@ -1,0 +1,10 @@
+--- build/build/rpm/httpd.logrotate~	2011-04-08 07:51:31.000000000 +0900
++++ build/build/rpm/httpd.logrotate	2011-12-26 09:09:31.978722465 +0900
+@@ -3,6 +3,6 @@
+     notifempty
+     sharedscripts
+     postrotate
+-	/sbin/service httpd graceful 2> /dev/null || true
++	/usr/sbin/apachectl graceful
+     endscript
+ }

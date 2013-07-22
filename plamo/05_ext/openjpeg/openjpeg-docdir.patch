@@ -1,0 +1,36 @@
+diff -uNr openjpeg-1.5.1.orig/configure.ac openjpeg-1.5.1/configure.ac
+--- openjpeg-1.5.1.orig/configure.ac	2012-09-18 18:01:23.799765936 +0900
++++ openjpeg-1.5.1/configure.ac	2012-09-18 18:01:42.029832393 +0900
+@@ -7,7 +7,7 @@
+ 
+ m4_define([OPJ_MAJOR], [1])
+ m4_define([OPJ_MINOR], [5])
+-m4_define([OPJ_MICRO], [0])
++m4_define([OPJ_MICRO], [1])
+ 
+ m4_define([lt_cur], m4_eval(OPJ_MAJOR + OPJ_MINOR))
+ m4_define([lt_rev], OPJ_MICRO)
+diff -uNr openjpeg-1.5.1.orig/doc/Makefile.am openjpeg-1.5.1/doc/Makefile.am
+--- openjpeg-1.5.1.orig/doc/Makefile.am	2012-09-18 18:01:23.799765936 +0900
++++ openjpeg-1.5.1/doc/Makefile.am	2012-09-18 18:02:52.763423574 +0900
+@@ -33,7 +33,7 @@
+ 
+ endif
+ 
+-docsdir = $(docdir)-$(MAJOR_NR).$(MINOR_NR)
++docsdir = $(docdir)-$(MAJOR_NR).$(MINOR_NR).$(MICRO_NR)
+ docs_DATA = $(top_builddir)/LICENSE
+ 
+ dist_man1_MANS = \
+diff -uNr openjpeg-1.5.1.orig/doc/Makefile.in openjpeg-1.5.1/doc/Makefile.in
+--- openjpeg-1.5.1.orig/doc/Makefile.in	2012-09-18 18:01:23.799765936 +0900
++++ openjpeg-1.5.1/doc/Makefile.in	2012-09-18 18:03:10.470154810 +0900
+@@ -236,7 +236,7 @@
+ top_srcdir = @top_srcdir@
+ MAINTAINERCLEANFILES = Makefile.in
+ PACKAGE_DOCNAME = $(PACKAGE_TARNAME)-$(PACKAGE_VERSION)-doc
+-docsdir = $(docdir)-$(MAJOR_NR).$(MINOR_NR)
++docsdir = $(docdir)-$(MAJOR_NR).$(MINOR_NR).$(MICRO_NR)
+ docs_DATA = $(top_builddir)/LICENSE
+ dist_man1_MANS = \
+ man/man1/image_to_j2k.1 \

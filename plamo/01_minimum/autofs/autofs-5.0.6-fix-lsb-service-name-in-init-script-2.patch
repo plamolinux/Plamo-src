@@ -1,0 +1,45 @@
+autofs-5.0.6 - fix lsb service name in init script 2
+
+From: Ian Kent <raven@themaw.net>
+
+The "Required-Start:" and "Required-Stop:" in the init script header
+incorrectly uses $ypbind instead of ypbind. This isn't correct as
+using names starting with a $ is reserved for standards-defined
+facilities.
+---
+
+ redhat/autofs.init.in |    4 ++--
+ samples/rc.autofs.in  |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+
+diff --git a/redhat/autofs.init.in b/redhat/autofs.init.in
+index 86b7eb4..48d387d 100644
+--- a/redhat/autofs.init.in
++++ b/redhat/autofs.init.in
+@@ -9,8 +9,8 @@
+ #
+ ### BEGIN INIT INFO
+ # Provides: autofs
+-# Required-Start: $network $ypbind
+-# Required-Stop: $network $ypbind
++# Required-Start: $network ypbind
++# Required-Stop: $network ypbind
+ # Default-Start: 3 4 5
+ # Default-Stop: 0 1 2 6
+ # Short-Description: Automounts filesystems on demand
+diff --git a/samples/rc.autofs.in b/samples/rc.autofs.in
+index 0306ef6..35667ba 100644
+--- a/samples/rc.autofs.in
++++ b/samples/rc.autofs.in
+@@ -8,8 +8,8 @@
+ #
+ ### BEGIN INIT INFO
+ # Provides: autofs
+-# Required-Start: $network $ypbind
+-# Required-Stop: $network $ypbind
++# Required-Start: $network ypbind
++# Required-Stop: $network ypbind
+ # Default-Start: 3 4 5
+ # Default-Stop: 0 1 2 6
+ # Short-Description: Automounts filesystems on demand

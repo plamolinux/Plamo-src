@@ -1,0 +1,11 @@
+--- build/lib/protocol.cpp	2011-09-03 09:46:47.747537271 +0900
++++ build/lib/protocol.cpp~	2011-09-03 09:46:06.810778836 +0900
+@@ -13,7 +13,7 @@
+ #include <map>
+ #include <expat.h>
+ #include <curl/curl.h>
+-#include <curl/types.h>
++/* #include <curl/types.h> */
+ #include <curl/easy.h>
+ using namespace std;
+ 

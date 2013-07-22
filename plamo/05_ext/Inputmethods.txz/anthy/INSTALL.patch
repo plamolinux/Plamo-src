@@ -1,0 +1,70 @@
+
+0) Attention.
+ In usually, Do not do cross-compile.
+Because a configure script will run programs
+and get system depend parameters.
+
+ If you need to do cross-compile by all means,
+Run a configure script
+with specifying all --enable and --disalbe and --with options.
+
+
+1.1) How to execute autoconf/automake ?
+
+ In usually, you may not execute autoconf/automake.
+However, if you want to execute autoconf/automake,
+do as follows.
+
+% aclocal -I ./m4
+% autoconf
+% autoheader
+% automake -a --foreign
+
+or
+
+% autoreconf -viI ./m4
+
+or
+
+% autoreconf -vfiI ./m4
+
+or
+
+% env LANG=C AUTOM4TE=/home/ghal/.bin/metaauto/bin/autom4te-2.64 ~/.bin/metaauto/bin/aclocal-1.10 -I ./m4 --install
+% env LANG=C ~/.bin/metaauto/bin/autoconf-2.64
+% env LANG=C ~/.bin/metaauto/bin/autoheader-2.64
+% env LANG=C AUTOCONF=/home/ghal/.bin/metaauto/bin/autoconf-2.64 ~/.bin/metaauto/bin/automake-1.10 -a -c --foreign
+
+!!! DO NOT FORGET "-I ./m4" !!!
+
+
+1.2) How to execute autoconf/automake automatically when I edited some relating files ?
+
+ Run configure script with --enable-maintainer-mode option.
+
+
+2) How to build the Anthy ?
+
+: Extract all files.
+: Apply all patches.
+% ./configure
+% make
+% 
+
+
+3) How to install the Anthy ?
+
+% make install
+% 
+
+
+3) How to test the installed Anthy ?
+
+% anthy-agent --anonymous
+kanakanzihennkann(space)
+ PRINT_CONTEXT
+^D
+% 
+
+
+# [ End of File ]

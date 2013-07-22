@@ -1,0 +1,141 @@
+--- xine-lib-1.2.2/src/demuxers/id3.c	2012-02-06 04:17:02.000000000 +0900
++++ build/src/demuxers/id3.c	2012-08-20 22:33:06.322138762 +0900
+@@ -39,6 +39,8 @@
+ /*
+ #define LOG
+ */
++#include <stdio.h>
++#include <unistd.h>
+ 
+ #include <xine/xine_internal.h>
+ #include <xine/xineutils.h>
+@@ -85,6 +87,90 @@
+    "UTF-16BE",     /* 0x02 */
+    "UTF-8"};       /* 0x03 */
+ 
++static void CodeConv( char** pbuf, int* enc, size_t size )
++{
++  int ifd, ofd;
++  char ifname[] = "/tmp/cciXXXXXX";
++  char ofname[] = "/tmp/ccoXXXXXX";
++  FILE* cfp;
++  long cf_size;
++  char cmd_head[] = "nkf -w ";
++  char cmd_redir[] = " > ";
++  const int cmd_len = sizeof(cmd_head) + sizeof(ifname)
++                      + sizeof(cmd_redir) + sizeof(ofname);
++  char cmd[cmd_len];
++  char *buf = *pbuf;
++
++  /* Make temporary file */
++  ifd = mkstemp( ifname );
++  ofd = mkstemp( ofname );
++  if( ifd < 0 || ofd < 0 )
++    goto ret0;
++
++  /* make input file */
++  if( write( ifd, buf+1, size ) < 0 )
++    goto ret0;
++
++  /* conversion with nkf*/
++  close( ifd );
++  close( ofd );
++  sprintf( cmd, "%s%s%s%s", cmd_head, ifname, cmd_redir, ofname );
++  if( system( cmd ) < 0 )
++    goto ret0;
++
++  /* open conveted file */
++  cfp = fopen( ofname, "rb" );
++  if( cfp == NULL )
++    goto ret0;
++
++  /* get size of converted file */
++  if( fseek(cfp, 0, SEEK_END))
++    goto ret1;
++  cf_size = ftell(cfp);
++  /*printf("cf_size: %d\n", cf_size );*/
++  if( cf_size < 0 )
++    goto ret1;
++
++  /* file pointer to the top */
++  if( fseek(cfp, 0, SEEK_SET))
++    goto ret1;
++
++  /* allocate new memory */
++  *pbuf = malloc( cf_size + 1 );
++  if( *pbuf == NULL ){
++    *pbuf = buf;
++    goto ret1;
++  }
++  /* release previously allocated memory */
++  free( buf );
++
++  /* load conveted string from the file */
++  fgets( &((*pbuf)[1]), (int)cf_size, cfp );
++  (*pbuf)[cf_size] = 0; /* NULL terminator */
++
++  /* Set ENCODING to UTF-8 */
++  *enc = 3;
++
++ret1:
++  fclose(cfp);
++ret0:
++  /* post-processing */
++  remove( ifname );
++  remove( ofname );
++}
++
++static void CodeConvV1(
++  xine_stream_t *stream, int info, char* tag, size_t size )
++{
++  int enc;
++  char* buf = malloc(size + 1);
++  memcpy( &buf[1], tag, size );
++  CodeConv( &buf, &enc, size );
++  _x_meta_info_set_generic(stream, info, buf + 1, id3_encoding[enc]);
++  free( buf );
++}
++
++
+ int id3v1_parse_tag (input_plugin_t *input, xine_stream_t *stream) {
+ 
+   off_t len;
+@@ -99,10 +185,10 @@
+     if ( (tag.tag[0]=='T') && (tag.tag[1]=='A') && (tag.tag[2]=='G') ) {
+ 
+       lprintf("id3v1 tag found\n");
+-      _x_meta_info_n_set(stream, XINE_META_INFO_TITLE, tag.title, 30);
+-      _x_meta_info_n_set(stream, XINE_META_INFO_ARTIST, tag.artist, 30);
+-      _x_meta_info_n_set(stream, XINE_META_INFO_ALBUM, tag.album, 30);
+-      _x_meta_info_n_set(stream, XINE_META_INFO_COMMENT, tag.comment, 30);
++      CodeConvV1(stream, XINE_META_INFO_TITLE, tag.title, 30);
++      CodeConvV1(stream, XINE_META_INFO_ARTIST, tag.artist, 30);
++      CodeConvV1(stream, XINE_META_INFO_ALBUM, tag.album, 30);
++      CodeConvV1(stream, XINE_META_INFO_COMMENT, tag.comment, 30);
+ 
+       /* check for a track number: ID3v1.1, which is a clever hack on ID3v1 */
+       if (tag.comment[28] == 0 && tag.comment[29] != 0) {
+@@ -283,6 +369,7 @@
+     buf[frame_header->size] = 0;
+     buf[frame_header->size + 1] = 0;
+     enc = buf[0];
++    CodeConv( &buf, &enc, frame_header->size );
+     if( enc >= ID3_ENCODING_COUNT )
+       enc = 0;
+ 
+@@ -473,6 +560,7 @@
+     buf[frame_header->size] = 0;
+     buf[frame_header->size + 1] = 0;
+     enc = buf[0];
++    CodeConv( &buf, &enc, frame_header->size );
+     if( enc >= ID3_ENCODING_COUNT )
+       enc = 0;
+ 
+@@ -724,6 +812,7 @@
+     buf[frame_header->size] = 0;
+     buf[frame_header->size + 1] = 0;
+     enc = buf[0];
++    CodeConv( &buf, &enc, frame_header->size );
+     if( enc >= ID3_ENCODING_COUNT )
+       enc = 0;
+ 

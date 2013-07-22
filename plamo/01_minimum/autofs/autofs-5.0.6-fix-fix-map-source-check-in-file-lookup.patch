@@ -1,0 +1,40 @@
+autofs-5.0.6 - fix fix map source check in file lookup
+
+From: Ian Kent <raven@themaw.net>
+
+A recent change to correct a problem with included map entry removal
+has broken a different case of included map key lookup. The check in
+previous patch was too broad and caused map key lookup for keys in an
+included multi-mount map entrys to not be found.
+---
+
+ CHANGELOG             |    1 +
+ modules/lookup_file.c |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 6035791..4064b5f 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -12,6 +12,7 @@
+ - add "dir" map-type.
+ - fix wait for master source mutex.
+ - fix submount shutdown race.
++- fix fix map source check in file lookup.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/modules/lookup_file.c b/modules/lookup_file.c
+index 8ead07c..63b5ae7 100644
+--- a/modules/lookup_file.c
++++ b/modules/lookup_file.c
+@@ -1046,7 +1046,7 @@ do_cache_lookup:
+ 	 * instance (same map entry cache), not in a distinct source.
+ 	 */
+ 	if (me && (!me->mapent || 
+-	   (ap->type == LKP_INDIRECT && me->source != source))) {
++	   (me->source != source && *me->key != '/'))) {
+ 		while ((me = cache_lookup_key_next(me)))
+ 			if (me->source == source)
+ 				break;

@@ -1,0 +1,43 @@
+From 1f196a9f2f0f9e1d9e4c037f73a3db7fc2958057 Mon Sep 17 00:00:00 2001
+From: David Zeuthen <zeuthen@gmail.com>
+Date: Thu, 27 Sep 2012 17:00:57 +0000
+Subject: Don't complain about missing /etc/crypttab file
+
+Some systems don't have it at all - notably F18 doesn't have if unless
+you use encrypted root. Also make the file monitor pick up when the
+file is deleted. This was reported in bug 53147:
+
+ https://bugs.freedesktop.org/show_bug.cgi?id=53147
+
+Signed-off-by: David Zeuthen <zeuthen@gmail.com>
+---
+diff --git a/src/udiskscrypttabmonitor.c b/src/udiskscrypttabmonitor.c
+index f3b54ea..42b2a14 100644
+--- a/src/udiskscrypttabmonitor.c
++++ b/src/udiskscrypttabmonitor.c
+@@ -258,7 +258,8 @@ on_file_monitor_changed (GFileMonitor      *file_monitor,
+ {
+   UDisksCrypttabMonitor *monitor = UDISKS_CRYPTTAB_MONITOR (user_data);
+   if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
+-      event_type == G_FILE_MONITOR_EVENT_CREATED)
++      event_type == G_FILE_MONITOR_EVENT_CREATED ||
++      event_type == G_FILE_MONITOR_EVENT_DELETED)
+     {
+       udisks_debug ("/etc/crypttab changed!");
+       reload_crypttab_entries (monitor);
+@@ -368,8 +369,11 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
+                             NULL, /* size */
+                             &error))
+     {
+-      udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
+-                      error->message, g_quark_to_string (error->domain), error->code);
++      if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
++        {
++          udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
++                          error->message, g_quark_to_string (error->domain), error->code);
++        }
+       g_error_free (error);
+       goto out;
+     }
+--
+cgit v0.9.0.2-2-gbebe

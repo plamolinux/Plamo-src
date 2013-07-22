@@ -1,0 +1,110 @@
+autofs-5.0.6 - systemd support fixes
+
+From: Ian Kent <raven@themaw.net>
+
+Fix up some of in spec file systemd scriptlets.
+
+The pre-system package verion uninstall scriptlet has been commented
+out in the tar spec file. It's is an example of what might need to
+be done in a distro spec file.
+---
+
+ CHANGELOG                 |    1 +
+ autofs.spec               |   41 ++++++++++++++++++++++++++++++-----------
+ samples/autofs.service.in |    1 +
+ 3 files changed, 32 insertions(+), 11 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 69ade49..b9c3149 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -32,6 +32,7 @@
+ - reinstate singleton mount probe.
+ - rework error return handling in rpc code.
+ - catch EHOSTUNREACH and bail out early.
++- systemd support fixes.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/autofs.spec b/autofs.spec
+index d854b1f..a73fefb 100644
+--- a/autofs.spec
++++ b/autofs.spec
+@@ -105,34 +105,53 @@ install -m 644 redhat/autofs.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/autofs
+ 
+ %post
+ %if %{with_systemd}
+-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++if [ $1 -eq 1 ]; then
++	%{_bindir}/systemctl daemon-reload >/dev/null 2>&1 || :
++	# autofs has been approved to be enabled by default
++	%{_bindir}/systemctl enable %{name}.service >/dev/null 2>&1 || :
++fi
+ %else
+-chkconfig --add autofs
++if [ $1 -eq 1 ]; then
++	%{_sbindir}/chkconfig --add autofs
++fi
+ %endif
+ 
+ %preun
+-if [ "$1" = 0 ] ; then
+ %if %{with_systemd}
+-	/bin/systemctl --no-reload disable autofs.service > /dev/null 2>&1 || :
+-	/bin/systemctl stop autofs.service > /dev/null 2>&1 || :
++if [ $1 -eq 0 ] ; then
++	%{_bindir}/systemctl --no-reload disable %{name}.service > /dev/null 2>&1 || :
++	%{_bindir}/systemctl stop %{name}.service > /dev/null 2>&1 || :
++fi
+ %else
+-	/sbin/service autofs stop > /dev/null 2>&1 || :
+-	/sbin/chkconfig --del autofs
+-%endif
++if [ $1 -eq 0 ] ; then
++	%{_sbindir}/service autofs stop > /dev/null 2>&1 || :
++	%{_sbindir}/chkconfig --del autofs
+ fi
++%endif
+ 
+ %postun
+ %if %{with_systemd}
+-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
++%{_bindir}/systemctl daemon-reload >/dev/null 2>&1 || :
+ if [ $1 -ge 1 ] ; then
+-	/bin/systemctl try-restart autofs.service >/dev/null 2>&1 || :
++	# Package upgrade, not removal
++	%{_bindir}/systemctl try-restart %{name}.service >/dev/null 2>&1 || :
+ fi
+ %else
+ if [ $1 -ge 1 ] ; then
+-	/sbin/service autofs condrestart > /dev/null 2>&1 || :
++	%{_sbindir}/service autofs condrestart > /dev/null 2>&1 || :
+ fi
+ %endif
+ 
++#%triggerun -- %{name} < $bla release
++## Save the current service runlevel info
++## User must manually run systemd-sysv-convert --apply %{name}
++## to migrate them to systemd targets
++#%{_bindir}/systemd-sysv-convert --save %{name} >/dev/null 2>&1 ||:
++#
++## Run these because the SysV package being removed won't do them
++#%{_sbindir}/chkconfig --del %{name} >/dev/null 2>&1 || :
++#%{_bindir}/systemctl try-restart %{name}.service >/dev/null 2>&1 || :
++
+ %files
+ %defattr(-,root,root)
+ %doc CREDITS CHANGELOG INSTALL COPY* README* samples/ldap* samples/autofs.schema samples/autofs_ldap_auth.conf
+diff --git a/samples/autofs.service.in b/samples/autofs.service.in
+index 3756078..879b47b 100644
+--- a/samples/autofs.service.in
++++ b/samples/autofs.service.in
+@@ -7,6 +7,7 @@ Type=forking
+ PIDFile=@@autofspiddir@@/autofs.pid
+ EnvironmentFile=-@@autofsconfdir@@/autofs
+ ExecStart=@@sbindir@@/automount ${OPTIONS} --pid-file @@autofspiddir@@/autofs.pid
++ExecReload=/usr/bin/kill -HUP $MAINPID
+ 
+ [Install]
+ WantedBy=multi-user.target

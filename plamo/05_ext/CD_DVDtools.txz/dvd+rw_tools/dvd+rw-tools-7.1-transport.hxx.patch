@@ -1,0 +1,10 @@
+--- dvd+rw-tools-7.1/transport.hxx	2008-03-01 19:34:43.000000000 +0900
++++ build/transport.hxx	2011-02-03 21:15:59.000000000 +0900
+@@ -16,6 +16,7 @@
+ #include <fcntl.h>
+ #include <poll.h>
+ #include <sys/time.h>
++#include <limits.h>
+ 
+ inline long getmsecs()
+ { struct timeval tv;

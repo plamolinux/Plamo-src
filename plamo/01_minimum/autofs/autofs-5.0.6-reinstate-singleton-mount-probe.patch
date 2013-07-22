@@ -1,0 +1,113 @@
+autofs-5.0.6 - reinstate singleton mount probe
+
+From: Ian Kent <ikent@redhat.com>
+
+The change to have the kernel process text based mount options can
+introduce lengthy timeout waits when attempting a mount to a host
+that is not available.
+
+To avoid these waits autofs should probe singleton mounts if it
+thinks mount.nfs will pass text options to the kernel (which of
+course implies the kernel supports this).
+---
+
+ CHANGELOG            |    1 +
+ daemon/automount.c   |    7 +++++++
+ include/mounts.h     |    1 +
+ modules/replicated.c |   18 ++++++++++++++++--
+ 4 files changed, 25 insertions(+), 2 deletions(-)
+
+
+diff --git a/CHANGELOG b/CHANGELOG
+index 359c293..5a6af1c 100644
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -29,6 +29,7 @@
+ - ignore duplicate exports in auto.net.
+ - add kernel verion check function.
+ - add function to check mount.nfs version.
++- reinstate singleton mount probe.
+ 
+ 28/06/2011 autofs-5.0.6
+ -----------------------
+diff --git a/daemon/automount.c b/daemon/automount.c
+index c0b4b85..31dd564 100644
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -51,6 +51,9 @@ const char *libdir = AUTOFS_LIB_DIR;	/* Location of library modules */
+ const char *mapdir = AUTOFS_MAP_DIR;	/* Location of mount maps */
+ const char *confdir = AUTOFS_CONF_DIR;	/* Location of autofs config file */
+ 
++unsigned int nfs_mount_uses_string_options = 0;
++static struct nfs_mount_vers vers, check = {1, 1, 1};
++
+ /* autofs fifo name prefix */
+ const char *fifodir = AUTOFS_FIFO_DIR "/autofs.fifo";
+ 
+@@ -1273,6 +1276,8 @@ static int do_hup_signal(struct master *master, time_t age)
+ 	if (status)
+ 		fatal(status);
+ 
++	nfs_mount_uses_string_options = check_nfs_mount_version(&vers, &check);
++
+ 	master_mutex_lock();
+ 	if (master->reading) {
+ 		status = pthread_mutex_unlock(&mrc.mutex);
+@@ -1936,6 +1941,8 @@ int main(int argc, char *argv[])
+ 
+ 	defaults_read_config(0);
+ 
++	nfs_mount_uses_string_options = check_nfs_mount_version(&vers, &check);
++
+ 	kpkt_len = get_kpkt_len();
+ 	timeout = defaults_get_timeout();
+ 	ghost = defaults_get_browse_mode();
+diff --git a/include/mounts.h b/include/mounts.h
+index 6a6ebab..9aac90f 100644
+--- a/include/mounts.h
++++ b/include/mounts.h
+@@ -95,6 +95,7 @@ struct nfs_mount_vers {
+ 	unsigned int fix;
+ };
+ int check_nfs_mount_version(struct nfs_mount_vers *, struct nfs_mount_vers *);
++extern unsigned int nfs_mount_uses_string_options;
+ 
+ unsigned int query_kproto_ver(void);
+ unsigned int get_kver_major(void);
+diff --git a/modules/replicated.c b/modules/replicated.c
+index 65634bd..84134b6 100644
+--- a/modules/replicated.c
++++ b/modules/replicated.c
+@@ -901,6 +901,7 @@ int prune_host_list(unsigned logopt, struct host **list,
+ 	unsigned int v2_udp_count, v3_udp_count, v4_udp_count;
+ 	unsigned int max_udp_count, max_tcp_count, max_count;
+ 	int status;
++	int kern_vers;
+ 
+ 	if (!*list)
+ 		return 0;
+@@ -920,9 +921,22 @@ int prune_host_list(unsigned logopt, struct host **list,
+ 	 * or a single host entry whose proximity isn't local. If so
+ 	 * return immediately as we don't want to add probe latency for
+ 	 * the common case of a single filesystem mount request.
++	 *
++	 * But, if the kernel understands text nfs mount options then
++	 * mount.nfs most likely bypasses its probing and lets the kernel
++	 * do all the work. This can lead to long timeouts for hosts that
++	 * are not available so check the kernel version and mount.nfs
++	 * version and probe singleton mounts if the kernel version is
++	 * greater than 2.6.22 and mount.nfs version is greater than 1.1.1.
+ 	 */
+-	if (!this || !this->next)
+-		return 1;
++	if (nfs_mount_uses_string_options &&
++	   (kern_vers = linux_version_code()) > KERNEL_VERSION(2, 6, 22)) {
++		if (!this)
++			return 1;
++	} else {
++		if (!this || !this->next)
++			return 1;
++	}
+ 
+ 	proximity = this->proximity;
+ 	while (this) {

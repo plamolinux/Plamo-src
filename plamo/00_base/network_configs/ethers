@@ -1,0 +1,53 @@
+#
+# /etc/ethers processing
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+$have_ethers = 0;
+
+sub read_ethers {
+	local($_, $name, $addr, $rest);
+
+	return if ($have_ethers);
+	open(ETHERS, "<$source{ethers}") ||
+		&fatal("can't open $source{ethers}: $!");
+	while (<ETHERS>) {
+		chop;
+		s/#.*//o;
+		s/^\s+//o;
+		s/\s+$//o;
+		next if (/^$/);
+		($name, $addr, $rest) = /(\S+)\s+(\S+)\s*(.*)/o;
+		$name2ether{$name} = $_;
+		$ether2name{$addr} = $_;
+		foreach $name (split(/\s+/, $rest)) {
+			$name2ether{$name} = $_;
+		}
+	}
+	close ETHERS;
+	$have_ethers = 1;
+}
+
+sub ethers_byname {
+
+	local($name);
+
+	&read_ethers;
+
+	foreach $name (keys %name2ether) {
+		printf OUT "$name\t$name2ether{$name}\n";
+	}
+}
+
+sub ethers_byaddr {
+
+	local($addr);
+
+	&read_ethers;
+
+	foreach $addr (keys %ether2name) {
+		printf OUT "$addr\t$ether2name{$addr}\n";
+	}
+}
+
+1;

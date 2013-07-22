@@ -1,0 +1,75 @@
+#!/bin/sh
+
+# Change to tradnet
+
+# planet -> tradnet
+change_tradnet () {
+    if [ -r /tmp/SeTT_PX ]; then
+	T_PX=`cat /tmp/SeTT_PX`
+    elif [ -z "$T_PX" -a -n "$1" ]; then
+	T_PX=$1
+    else
+	T_PX=/
+    fi
+    cd $T_PX
+
+    (
+	cd sbin
+	rm -f netconfig; ln -s netconfig.tradnet netconfig
+	rm -f enetconfig; ln -s enetconfig.tradnet enetconfig
+    )
+    (
+	cd etc/rc.d
+	rm -f rc.inet1; ln -s rc.inet1.tradnet rc.inet1
+	if [ -f rc.dhcp.tradnet ]; then
+	    rm -f rc.dhcp; ln -s rc.dhcp.tradnet rc.dhcp
+	fi
+        if [ -L rc.pcmcia ]; then
+            rm -f rc.pcmcia
+	fi
+    )
+    (
+	cd etc/murasaki
+	if [ -f murasaki.conf.tradnet ]; then
+	    rm -f murasaki.conf; ln -s murasaki.conf.tradnet murasaki.conf
+	fi
+    )
+    (
+	cd etc
+	if [ -f resolv.conf.tradnet ]; then
+	    mv -f resolv.conf.tradnet resolv.conf
+	fi
+    )
+}
+
+# Installer must call me with -f !!
+if [ "$1" = "-f" ]; then
+    change_tradnet
+    exit
+fi
+
+if [ "`ls -l /sbin/netconfig | sed 's/.*-> *//'`" = "netconfig.planet" ]; then
+
+cat <<EOF > /tmp/tmpmsg
+
+現在、ネットワーク設定ツールとして、新しい 'Planet' が使われてい
+ます。従来のシンプルな 'tradnet' に変更しますか? ただし、PCカー
+ドや USB 等の NIC は、Planet のみでの対応となっていますのでご注
+意ください。
+
+なお、変更後は、システムを再起動する必要があります。また、初めて
+tradnet を用いる場合、変更後は、ネットワークまわりの設定を最初か
+らやり直す必要があります。
+ 
+EOF
+
+    dialog --title "Change to tradnet?" --yesno "`cat /tmp/tmpmsg`" 14 70
+    if [ ! $? = 0 ]; then
+	rm -f /tmp/tmpmsg
+	exit
+    fi
+    rm -f /tmp/tmpmsg
+    change_tradnet
+fi
+
+exec /sbin/netconfig.tradnet

@@ -1,0 +1,171 @@
+#
+# Arrays for ypmake
+#
+# Copyright (C) 1996, 1997, Olaf Kirch <okir@monad.swb.de>
+#
+
+##################################################################
+#
+# Aliases for NIS maps that are somehow related
+#
+##################################################################
+%mapalias = (
+    aliases,		'mail_aliases',
+    default,		'passwd:group:hosts:networks:protocols:services:rpc',
+    ethers,		'ethers_byname:ethers_byaddr',
+    group,		'group_byname:group_bygid',
+    gshadow,		'gshadow_byname',
+    hosts,		'hosts_byname:hosts_byaddr',
+    netid,		'netid_byname',
+    networks,		'networks_byaddr:networks_byname',
+    passwd,		'passwd_byname:passwd_byuid',
+    protocols,		'protocols_bynumber:protocols_byname',
+    publickey,		'publickey_byname',
+    revnetgroup,	'netgroup_byhost:netgroup_byuser',
+    rpc,		'rpc_byname:rpc_bynumber',
+    services,		'services_byname',
+    shadow,		'shadow_byname',
+);
+
+##################################################################
+#
+# Source file for NIS maps built from a single source
+#
+##################################################################
+%source = (
+    aliases,		'/etc/aliases',
+    amd_master,		'/etc/amd.master',
+    auto_master,	'/etc/auto.master',
+    ethers,		'/etc/ethers',
+    ethers_byname,	'/etc/ethers',
+    ethers_byaddr,	'/etc/ethers',
+    group,		'/etc/group',
+    group_byname,	'/etc/group',
+    group_bygid,	'/etc/group',
+    gshadow,		'/etc/gshadow',
+    gshadow_byname,	'/etc/gshadow',
+    hosts,		'/etc/hosts',
+    hosts_byname,	'/etc/hosts',
+    hosts_byaddr,	'/etc/hosts',
+    mail_aliases,	'/etc/aliases',
+    netgroup,		'/etc/netgroup',
+    netgroup_byuser,	'/etc/netgroup',
+    netgroup_byhost,	'/etc/netgroup',
+    networks,		'/etc/networks',
+    networks_byname,	'/etc/networks',
+    networks_byaddr,	'/etc/networks',
+    passwd,		'/etc/passwd',
+    passwd_byname,	'/etc/passwd',
+    passwd_byuid,	'/etc/passwd',
+    protocols,		'/etc/protocols',
+    protocols_byname,	'/etc/protocols',
+    protocols_bynumber,	'/etc/protocols',
+    publickey,		'/etc/publickey',
+    publickey_byname,	'/etc/publickey',
+    revnetgroup,	'/etc/netgroup',
+    rpc,		'/etc/rpc',
+    rpc_byname,		'/etc/rpc',
+    rpc_bynumber,	'/etc/rpc',
+    services,		'/etc/services',
+    services_byname,	'/etc/services',
+    shadow,		'/etc/shadow',
+    shadow_byname,	'/etc/shadow',
+    ypservers,		'/etc/ypservers',
+);
+
+##################################################################
+#
+# Dependencies for maps built from multiple sources
+#
+##################################################################
+%mapdepend = (
+    netid,			'passwd:group:hosts',
+    netid_byname,		'passwd:group:hosts',
+);
+
+##################################################################
+#
+# Long Map file names
+#
+##################################################################
+%longnames = (
+    amd_master,			'amd.master',
+    auto_master,		'auto.master',
+    ethers_byaddr,		'ethers.byaddr',
+    ethers_byname,		'ethers.byname',
+    group_bygid,		'group.bygid',
+    group_byname,		'group.byname',
+    gshadow_byname,		'gshadow.byname',
+    hosts_byaddr,		'hosts.byaddr',
+    hosts_byname,		'hosts.byname',
+    mail_aliases,		'mail.aliases',
+    netgroup,			'netgroup',
+    netgroup_byhost,		'netgroup.byhost',
+    netgroup_byuser,		'netgroup.byuser',
+    netid_byname,		'netid.byname',
+    networks_byaddr,		'networks.byaddr',
+    networks_byname,		'networks.byname',
+    passwd_byname,		'passwd.byname',
+    passwd_byuid,		'passwd.byuid',
+    protocols_byname,		'protocols.byname',
+    protocols_bynumber,		'protocols.bynumber',
+    publickey_byname,		'publickey.byname',
+    rpc_byname,			'rpc.byname',
+    rpc_bynumber,		'rpc.bynumber',
+    services_byname,		'services.byname',
+    shadow_byname,		'shadow.byname',
+    ypservers,			'ypservers',
+);
+
+##################################################################
+#
+# perl modules to implement specific maps
+#
+##################################################################
+%implementation = (
+    amd_master,			automount,
+    auto_master,		automount,
+    ethers_byaddr,		ethers,
+    ethers_byname,		ethers,
+    group_bygid,		group,
+    group_byname,		group,
+    gshadow_byname,		gshadow,
+    hosts_byaddr,		hosts,
+    hosts_byname,		hosts,
+    mail_aliases,		aliases,
+    netgroup,			netgroup,
+    netgroup_byhost,		netgroup,
+    netgroup_byuser,		netgroup,
+    netid_byname,		netid,
+    networks_byaddr,		networks,
+    networks_byname,		networks,
+    passwd_byname,		passwd,
+    passwd_byuid,		passwd,
+    protocols_byname,		protocols,
+    protocols_bynumber,		protocols,
+    publickey_byname,		publickey,
+    rpc_byname,			rpc,
+    rpc_bynumber,		rpc,
+    services_byname,		services,
+    shadow_byname,		shadow,
+    ypservers,			ypservers,
+);
+
+##################################################################
+#
+# default protection types for individual maps
+# mapprot	allow access only from privileged ports
+# mapsecure	allow only secure rpc access
+#
+##################################################################
+%mapprot = (
+    group_adjunct,		1,
+    gshadow_byname,		1,
+    passwd_adjunct,		1,
+    shadow_byname,		1,
+);
+
+%mapsecure = (
+);
+
+1;

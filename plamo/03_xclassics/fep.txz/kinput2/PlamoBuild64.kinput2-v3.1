@@ -1,0 +1,329 @@
+#!/bin/sh
+
+######################################################################
+url="ftp://ftp.sra.co.jp/pub/x11/kinput2/kinput2-v3.1.tar.gz
+    http://plamo.linet.gr.jp/~tamuki/src/kinput2-v3.1-canna-keybind.patch.gz
+    http://plamo.linet.gr.jp/~tamuki/src/kinput2-v3.1-canna-keybind2.patch.gz
+    http://plamo.linet.gr.jp/~tamuki/src/kinput2-v3.1-canna-keybind3.patch.gz
+    http://plamo.linet.gr.jp/~tamuki/src/kinput2-v3.1-sj3-numlock.patch.gz"
+pkgbase=kinput2
+vers=v3.1
+arch=x86_64
+build=P1
+src=$pkgbase-$vers
+OPT_CONFIG=""
+DOCS="README NEWS `echo doc/{protocol,sj3{def,guide.{ps,tex}}}`
+    `echo doc/{defaultkeys,resources,problems,classes,ccdef,defkeys.wnn}`"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+if [ $# -eq 0 ] ; then
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+  cd $B
+  gunzip -c $W/kinput2-v3.1-canna-keybind.patch.gz | patch -Np1 -i -
+  gunzip -c $W/kinput2-v3.1-canna-keybind2.patch.gz | patch -Np1 -i -
+  gunzip -c $W/kinput2-v3.1-canna-keybind3.patch.gz | patch -Np1 -i -
+  gunzip -c $W/kinput2-v3.1-sj3-numlock.patch.gz | patch -Np1 -i -
+  cp -p Kinput2.conf Kinput2.conf.orig
+  uudecode <<- "EOF" | gunzip | patch Kinput2.conf
+	begin-base64 644 /dev/stdout
+	H4sIAAAAAAAAA51UXW/aMBR9bn6FpfIAVZgx+aJSF4mGTcpGgwRM5W1KTcrcpUmVEKb++904TuJ8
+	lKE94Bj73HPPPdc2mVEyU+4QvkHX++CZRQH6kQaPUYRu8BUsijX2jN7jDPlJgA4xiw7oGKMsDVAO
+	HJ50FZ1MFCfoZI0gThmPx4rd4rv6bzbNoprVlAjAJXtasAThNH4N8FtAs5D5Cd6zJKDHOHnHf3gJ
+	LSlSXJYmOGRPpp4jFV2nug45HGfx5evPhbtGn9FguHTvYTrClEK8oJIREsmOEAEzDGoYQLVzVg8P
+	6NHzXM+R4ABcm5hFNMz2Ac9d8HaAMsSwqGHJnKAMcOOwES8vmppqGpSPEAebm7XDa3JW3nbt3sPf
+	EX5L4kPiv6Z4lzIM3hTISsZgWMSNSi3FfpGm3nwBB3IXIO0nX6iphF6U1u4xq5vcbpf/kYQZUWca
+	5WPlmTP3vLnrbbZy52Lqh5j6UeQ3cZVoKUg2QYKWnnMWYpaHpJutXD3Pbfez3k7UW0L5mB/SBk+f
+	sU4ep01LrKBbiqwcmzsm6Dvy+6w4l8buceSCZGSiUfiBys03re/epS9affEaGN6/9Be8IDlIIURT
+	CdGp+FYtgpiiAKnf7TYCprQbqEBpnU+KrRvUxZPpRCVTQsW3qOescbnmu5ppMCwCeMXiKBez1oW6
+	hNdu13WWncDrSvjzOt+uvpeF+cf4N5lG1Sw7srAh5J/gv9ArnyRYBgAA
+	====
+	EOF
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+  done
+  xmkmf -a
+  find . -name "Makefile" -exec sed -i -e '/MANPATH =/s@man$@share/man@g' \
+      -e '/CONFDIR =/s@ETCX11@LIB@g' {} \;
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make install install.man DESTDIR=$P
+    fi
+  done
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+  install -d $P/usr/libexec
+  cp -p $P/usr/bin/kinput2 $P/usr/libexec
+  uudecode <<- "EOF" | gunzip > $P/usr/bin/kinput2
+	begin-base64 644 /dev/stdout
+	H4sIAAAAAAAAA51WbW/bNhD+HP2Km2NkzQZHbVf0Q/yCBZmHeW3joi62AUGAUhRlMZZIgaTdJPX2
+	23ekKEV2LGWYP0gy7+65e+6F5PF3YcRFqNPgGNaaLNk5rLgo1uY1XGsji61i2hBlbmAkFV9yQbJa
+	gailngTB+/nlu3H/t/mHaXjmRWcfZ78El/OrP6afFrP51eX72fTq89gLA3ZXSGVgXx4EPIFrGCSw
+	C6Yo3MAQTMpEAF7B+sTVkxNAT+MvlJhy7QtqUKIZ9F8Bt+qWwym+naGAXh/1e6VlocH+g5MJhDHb
+	hGKdZXZ9xfHtJENQufc1BHbHDbyE4RDRfFJK4P5L5wVVdMoT41QZtcu9/s+90oBpQvF19oRaHe9i
+	+gmzUQZNiRBk+1WIrb79qXRSpqZBoE6Ilx5ks6OEUdBUQq8qH9eg1kJwsQQpoMT1NF95E5ZpVltX
+	ufALCQ8aLwfd78OkkS9MQrjWKsx4ZP+EleNBRbY///h54bLkMFymfjh9xOtxsSEZj+GfRsb2gnxM
+	rw/2GHPIDUe7B4YtzdT3yJMmPGPwoolj/ZReqGLE2DTsuHF1MDAaDaA3nf/aA8ttv3pHx1ByOS+L
+	BiFg2fCJhQuOStHYSYIjq2wJn4MsDJdCQyJVNUxWCDCIKHT9IkJXX4mKgcq8wJgjJJXLmHnrRAoM
+	2D4nh6wvFpezGTglIyFy2Ym96YqIW95u/+7i6vcOU9LhGU0vWizDH0v2LWwJNXxDDMN+rj59uqBQ
+	0kgqM0hIzrP7Gu+O50Vr9g7h/WUNKrQmTHsRDsLAzMX1gZlUxvuAJkoZX6aYIbHOI6b2cqQLRnly
+	D4UsBusCdxGWZdi0hpuMRURBaVx1CLbAUsm1iGGEHuQeWEPspHVnKNZh1RA3rdSmPQtgd8ENU7h3
+	bXjMZLMPY66LjNzDyH+08PVSb2SxcCranBWKYwtVSlxgyDmxYwQEo7YbgsUZ2ZFy8zbxsOVYtv6w
+	G+HSqbyYKZmSUyDabpqYB1E5YwLPPc/tWwmI2wpKtwOq/4ZRKrURJGeT63NxU7Nr6IHVaMbjdqNR
+	/dnIz4410DWeLLndyKxaTRC3mIqe3W06fpben6jSTWpw6+N8pHKwYLcH6NCYJUjFvvao7NBJicJh
+	QdtGCGhyVhMruTCxse5xUJ4EUWNZPqjHlRQ5w56wqjsIir6BUfXZDKoNwZXDJhYFb/ag3v5/qLd7
+	UIeROqHqkuN5UpUcP58r+QJVnik5othqPlfyhCttoFJuFN4vvW4BqOw1wwDiFgB7OsPIPp+eVxWA
+	03E9gUCCUXeMeLhqJMuEbhFSUZzHlpHCS5tcK8ps37krAqbksfu+DXRUoeioHUXf5xGeO4bYs7dp
+	rlZ1EKuOIGRO3ImJdBpzcCietAZMOwBTriyg+Q+AD2kF+JC2Az4wEaZEdMHZW8y419wJIZOUZLa6
+	veAIb0v2blVeggO8IP4LDlvP8mUMAAA=
+	====
+	EOF
+  touch -t `date '+%m%d0900'` $P/usr/bin/kinput2
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+  convert
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64/X11/app-defaults | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/lib64/X11/ccdef
+  tar rvpf $pkg.tar -C $P usr/share/sj3
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
+fi

@@ -1,0 +1,120 @@
+#
+# Parse ypmake.conf
+#
+# Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
+
+sub parse_config {
+
+	local($conf, $optional) = @_;
+	local($confline, $cmd, $val, $opt, $doit);
+
+	if (!open(CONFIG, "$conf")) {
+		&fatal("can't open $conf: $!")
+			unless ($optional);
+		return;
+	}
+
+	$confline = 0;
+	$header = 1;
+	$doit = 0;
+	while (<CONFIG>) {
+		$confline++;
+		chop;
+		s/\s*#.*//o;
+		next if (/^$/o);
+		($cmd, $val, $opt) = split(/\s+/, $_, 3);
+
+		if ($cmd eq "domain") {
+			$header = 0;
+			$doit = 0;
+			next if ($val ne "default" && $val ne $domain);
+			$doit = 1;
+			next;
+		}
+		unless ($doit) {
+			if ($header) {
+				die "ypmake: $conf line $confline: " .
+				    "command \`$cmd\' before first domain " .
+				    "statement.\n";
+			}
+			next;
+		}
+#		if ($cmd eq "shortnames") {
+#			%mapname = %shortnames;
+#			next;
+#		}
+#		if ($cmd eq "longnames") {
+#			%mapname = %longnames;
+#			next;
+#		}
+		if ($cmd eq "push") {
+			$pushmaps = ($val =~ /yes/io);
+			$mapalias{default} .= ":ypservers";
+			next;
+		}
+		if ($cmd eq "map") {
+			$mapname{$val} = $opt;
+			next;
+		}
+		if ($cmd eq "alias") {
+			if ($mapalias{$val} ne "") {
+				$opt = ":$opt";
+			}
+			$mapalias{$val} .= $opt;
+			next;
+		}
+		if ($cmd eq "source") {
+			$val .= ":$mapalias{$val}"
+				if ($mapalias{$val} ne '');
+			($opt, $cmd) = split(/\s+/, $opt, 2);
+			foreach $val (split(/:/,$val)) {
+				$source{$val} = $opt
+					if (&checkmap($cmd, $val));
+				$builder{$val} = $cmd;
+			}
+			next;
+		}
+		if ($cmd eq "module") {
+			$val = $mapalias{$val}
+				if ($mapalias{$val} ne '');
+			foreach $val (split(/:/,$val)) {
+				$implementation{$val} = $opt
+					if (&checkmap($cmd, $val));
+			}
+			next;
+		}
+		if ($cmd eq "mode") {
+			$mode{$val} = $opt if (&checkmap($cmd, $val));
+			next;
+		}
+		if ($cmd eq "secure") {
+			$secure{$val} = 1 if (&checkmap($cmd, $val));
+			next;
+		}
+		if ($cmd eq "privport") {
+			$mapprot{$cmd} = 1 if (&checkmap($cmd, $val));
+			next;
+		}
+		die "ypmake: $conf line $confline: " .
+		    "unknown command $cmd.\n";
+	}
+	close(CONFIG);
+}
+
+sub checkmap {
+	local($cmd, $map) = @_;
+
+	if ($mapname{$map} eq '' && $mapalias{$map} eq '') {
+		&conferr("unknown map in $cmd command");
+		return 0;
+	}
+	return 1;
+}
+
+sub conferr {
+	local($msg) = @_;
+
+	printf STDERR "ypmake: ypmap.conf $confline: $msg\n";
+}
+
+1;

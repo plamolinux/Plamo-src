@@ -1,0 +1,17 @@
+--- iputils-s20101006/Makefile	2010-10-06 20:59:20.000000000 +0900
++++ build/Makefile	2011-01-08 10:00:29.000000000 +0900
+@@ -27,9 +28,12 @@
+ 
+ 
+ tftpd: tftpd.o tftpsubs.o
+-arping: arping.o -lsysfs
++# arping: arping.o -lsysfs
++arping: arping.o
++	gcc -o arping arping.o -L@LIBDIR@ -lsysfs
+ ping: ping.o ping_common.o
+-ping6: ping6.o ping_common.o -lresolv -lcrypto
++ping6: ping6.o ping_common.o
++	gcc -o ping6 ping6.o ping_common.o -L@LIBDIR@ -lresolv -lcrypto
+ ping.o ping6.o ping_common.o: ping_common.h
+ tftpd.o tftpsubs.o: tftp.h
+ 

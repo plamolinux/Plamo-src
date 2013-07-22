@@ -1,0 +1,377 @@
+#!/bin/sh
+##############################################################
+url='ftp://ftp.samba.org/pub/ppp/ppp-2.4.5.tar.gz'
+pkgbase=ppp
+vers=2.4.5
+arch=x86_64
+# arch=i586
+build=P2
+src=ppp-2.4.5
+OPT_CONFIG=''
+DOCS='Changes-2.3 FAQ PLUGINS README README.MPPE README.MSCHAP80 README.MSCHAP81 README.cbcp README.eap-srp README.linux README.pppoe README.pppol2tp README.pwfd README.sol2 SETUP'
+patchfiles='ppp-2.4.5-plamo.patch'
+compress=txz
+##############################################################
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    # files=`ls -a --indicator-style=none | tail -n+3`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} 
+  if [ $arch = "x86_64" ]; then
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+xmandir=$P/usr/X11R7/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+    suffix="64"
+else
+    target="-m32"
+    libdir="lib"
+    suffix=""
+fi
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+######################################################################
+# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
+#   記述します。
+######################################################################
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+  # derived from Arch Linux's PKGBUILD
+  # fix CFLAGS
+  # -D_GNU_SOURCE is needed for IPv6 to work apparently
+    export CFLAGS="$CFLAGS -D_GNU_SOURCE"
+    sed -i "s:-O2 -pipe -Wall -g:${CFLAGS}:" pppd/Makefile.linux
+    sed -i "s:-g -O2:${CFLAGS}:" pppd/plugins/Makefile.linux
+    sed -i "s:-O2:${CFLAGS}:" pppstats/Makefile.linux
+    sed -i "s:-O2 -g -pipe:${CFLAGS}:" chat/Makefile.linux
+    sed -i "s:-O:${CFLAGS}:" pppdump/Makefile.linux
+
+  # enable active filter
+    sed -i "s:^#FILTER=y:FILTER=y:" pppd/Makefile.linux
+  # enable ipv6 support
+    sed -i "s:^#HAVE_INET6=y:HAVE_INET6=y:" pppd/Makefile.linux
+  # Enable Microsoft proprietary Callback Control Protocol
+    sed -i "s:^#CBCP=y:CBCP=y:" pppd/Makefile.linux 
+  
+  # Fix build error with recent kernels
+    rm include/linux/if_pppol2tp.h 
+
+  # end from PKGBUILD
+  
+    
+    if [ -x configure ] ; then
+        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+        export LDFLAGS='-Wl,--as-needed' 
+        export CC="gcc -isystem /usr/include $target" 
+        export CXX="g++ -isystem /usr/include $target "
+        ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+    for mk in pppd/plugins/Makefile pppd/plugins/pppoatm/Makefile pppd/plugins/pppol2tp/Makefile pppd/plugins/radius/Makefile pppd/plugins/rp-pppoe/Makefile ; do
+	sed -i -e 's|$(DESTDIR)/lib/|$(DESTDIR)/${libdir}/|' $mk
+    done
+    sed -i -e 's|DESTDIR = /usr|DESTDIR = $(INSTROOT)/usr|' pppd/plugins/pppol2tp/Makefile
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make USE_PAM=y
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install INSTROOT=$P libdir=${libdir}
+    fi
+    mkdir -p $P/usr/bin
+    mkdir -p $P/etc/ppp
+
+    install Plamo_scripts/pon.sh $P/usr/sbin
+    install Plamo_scripts/poff.sh $P/usr/sbin
+    install Plamo_scripts/pppsetup.sh $P/usr/sbin
+
+    install Plamo_scripts/pppselect.sh $P/usr/bin
+    install Plamo_scripts/xpppselect.py $P/usr/bin
+
+    install Plamo_scripts/ip-up.sh $P/etc/ppp
+    install Plamo_scripts/ip-down.sh $P/etc/ppp
+
+    echo "lock" > $P/etc/ppp/options
+
+    mkdir -p $P/etc/pam.d
+    cp pppd/ppp.pam $P/etc/pam.d/ppp
+
+    chk_me=`whoami | grep root`
+    if [ "$chk_me.x" != ".x" ]; then
+	chown root.root $P/usr/sbin/{pon,poff,pppsetup}.sh
+	chmod 0755 $P/usr/sbin/{pon,poff,pppsetup}.sh
+
+	chown root.root $P/usr/bin/{pppselect.sh,xpppselect.py}
+	chmod 0755 $P/usr/bin/{pppselect.sh,xpppselect.py}
+
+	chown root.root $P/etc/ppp/{ip-up,ip-down}.sh
+	chmod 0755 $P/etc/ppp/{ip-up,ip-down}.sh
+
+	chown root.root $P/etc/ppp/options $P/etc/pam.d/ppp
+	chmod 644 $P/etc/ppp/options $P/etc/pam.d/ppp
+    fi
+
+  done
+
+######################################################################
+# * make install でコピーされないファイルがある場合はここに記述します。
+######################################################################
+  mkdir -p $docdir/$src
+  cp 00README-Plamo.euc $docdir/$src
+  gzip $docdir/$src/00README-Plamo.euc
+
+# remove locales except ja
+# 
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
+    for loc in * ; do
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
+  fi
+
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+######################################################################
+# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
+#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
+# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
+######################################################################
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
+  done
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  convert
+######################################################################
+# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
+#   記述します(prune_symlink を使います)。
+# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
+#   します(こだわりを求めないなら単に makepkg でも良いです)。
+######################################################################
+# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+# tar rvpf $pkg.tar -C $P usr/share/doc/$src
+# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
+# mv $pkg.tar.gz $pkg.tgz
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

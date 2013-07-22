@@ -1,0 +1,62 @@
+These are patches for kpdf (for qt-3) or okular (for qt-4) that enable
+the following additional feature:
+
+   If the PDF being viewed is a prerex-formatted chart (with the
+   coordinate grid enabled), clicking in a course box/mini or arrow will
+   put the coordinates of the box/mini centre or of the arrow source
+   and target boxes into the X clipboard; the coordinates can then
+   be "pasted" into a command being composed at the prerex prompt by
+   middle-clicking the mouse. Similarly, clicking on any point in the
+   background coordinate grid will put the coordinates of that point
+   into the X clipboard. The "hand" or "arrow" cursor changes to a
+   "crosshair" cursor to signal successful capture of coordinate values
+   (until the mouse moves).
+
+Note that this approach is now deprecated; the previewer is a lightweight
+application which doesn't have to be re-patched every time the KDE version
+changes.
+
+Installation
+
+kpdf/okular is distributed as part of the kdegraphics package. Install
+kdegraphics-x.y.z (and the KDE libraries it depends on), where x.y.z
+is the version number in the name of the patch file. Also obtain the
+sources for the relevant version of kdegraphics, either directly from
+
+ftp://ftp.kde.org/pub/kde/stable/
+
+or using the source package for a distribution. Unpack the source and
+apply any distributor-supplied patches.
+
+Move to the kdegraphics-x.y.z directory and do
+
+ cp -r kpdf kpdf.orig
+
+or
+
+ cp -r okular okular.orig
+
+Copy the patch file to the kdegraphics directory and do
+
+ patch -p0 < patch-file 
+
+If the patch is successful, do
+
+ ./configure --prefix=/usr
+
+for kde-3 or 
+
+ cmake -D CMAKE_INSTALL_PREFIX:PATH=/usr .
+
+for kde-4. 
+
+If the configuration step is successful, move to the (patched) 
+kpdf/okular directory and do
+
+ make 
+ make install  (as root)
+
+You do not have to build and re-install all parts of kdegraphics;
+the "make" and "make install" will build and over-write just the
+kpdf/okular-related portions.
+

@@ -1,0 +1,100 @@
+#
+# This one produces output for the netgroup NIS maps.
+#
+# Copyright (C) 1996, O.Kirch <okir@monad.swb.de>
+
+$have_netgroup = 0;
+
+
+sub read_netgroup {
+	local($grname, $members, $_, $input);
+	local($host, $user, $dom);
+
+	return if ($have_netgroup);
+
+	open (NETGROUP, "<$source{netgroup}") ||
+		&fatal("can't open $source{netgroup}: $!");
+	while (<NETGROUP>) {
+		chop;
+		$input = $_;
+		while (/\\$/o && ($_ = <NETGROUP>)) {
+			$input =~ s/\\$//o;
+			chop;
+			print "## $_\n";
+			$input .= $_;
+		}
+		$input =~ s/\s+/ /og;
+		print ">> $input\n";
+		$_ = $input;
+		($grname, $members) = /(\S*)\s+(.*)/o;
+		$netgroup{$grname} = $members;
+		# print "$grname:\n";
+
+		foreach (split(/\s+/, $members)) {
+			s/\((.*)\)/\1/o;
+			($host, $user, $dom) = split(/,/);
+			# print "$host\t$user\t$dom\n";
+			#	/\(\s*([^,]*)\s*,\s*([^,]*)\s*,\s*(.*)\)/o;
+			$user = "*" if ($user eq "");
+			$host = "*" if ($host eq "");
+			if ($user ne "-") {
+				$user2netgroups{$user} .= "$grname ";
+			}
+			if ($host ne "-") {
+				$host2netgroups{$host} .= "$grname ";
+			}
+		}
+	}
+	close NETGROUP;
+	$have_netgroup = 1;
+}
+
+sub netgroup {
+
+	local($group);
+
+	&read_netgroup;
+
+	foreach $group (keys netgroup) {
+		print OUT "$group\t$netgroup{$group}\n";
+	}
+}
+
+sub netgroup_byuser {
+	local($user, $list);
+
+	&read_netgroup;
+
+	foreach $user (keys %user2netgroups) {
+		$list = &netgrpuniq($user2netgroups{$user});
+		printf OUT "$user\t$list\n";
+	}
+}
+
+sub netgroup_byhost {
+	local($host, $list);
+
+	&read_netgroup;
+
+	foreach $host (keys %host2netgroups) {
+		$list = &netgrpuniq($host2netgroups{$host});
+		printf OUT "$host\t$list\n";
+	}
+}
+
+sub netgrpuniq {
+	local($input) = @_;
+	local($_, $list, $last);
+
+	$last = "";
+	$list = "";
+	foreach (sort split(/\s+/, $input)) {
+		next if ($last eq $_);
+		$list .= " $_";
+		$last = $_;
+	}
+	$list =~ s/ $//o;
+	return $list;
+}
+
+1;
