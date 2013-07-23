@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.jaist.ac.jp/pub/apache/httpd/httpd-2.4.4.tar.gz'
-verify=$url.asc
+url='http://ftp.jaist.ac.jp/pub/apache/httpd/httpd-2.4.6.tar.gz'
+verify='http://www.apache.org/dist/httpd/httpd-2.4.6.tar.gz.asc'
 pkgbase=httpd
-vers=2.4.4
+vers=2.4.6
 arch=x86_64
 # arch=i586
-build=P4
-src=httpd-2.4.4
+build=P1
+src=httpd-2.4.6
 OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --mandir=/usr/share/man"
 DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
 patchfiles='httpdlogrotate_plamo.patch'
