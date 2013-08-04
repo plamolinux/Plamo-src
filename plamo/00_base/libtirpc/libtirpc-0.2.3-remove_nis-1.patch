@@ -1,7 +1,14 @@
-diff -uprN libtirpc-0.2.3/src/Makefile.am build/src/Makefile.am
---- libtirpc-0.2.3/src/Makefile.am	2013-02-14 00:13:59.000000000 +0900
-+++ build/src/Makefile.am	2013-04-08 12:47:36.000000000 +0900
-@@ -50,7 +50,7 @@ libtirpc_la_SOURCES = auth_none.c auth_u
+Submitted By:            Armin K. <krejzi at email dot com>
+Date:                    2013-03-01
+Initial Package Version: 0.2.2
+Upstream Status:         Not submitted
+Origin:                  Upstream and LFS
+Description:             This patch contains removes nis references that
+                         have been removed from glibc.
+
+--- a/src/Makefile.am	2013-02-13 16:13:59.000000000 +0100
++++ b/src/Makefile.am	2013-03-01 13:56:39.911072502 +0100
+@@ -50,7 +50,7 @@
          rpc_callmsg.c rpc_generic.c rpc_soc.c rpcb_clnt.c rpcb_prot.c \
          rpcb_st_xdr.c svc.c svc_auth.c svc_dg.c svc_auth_unix.c svc_auth_none.c \
          svc_generic.c svc_raw.c svc_run.c svc_simple.c svc_vc.c getpeereid.c \
@@ -10,10 +17,9 @@ diff -uprN libtirpc-0.2.3/src/Makefile.am build/src/Makefile.am
  
  ## XDR
  libtirpc_la_SOURCES += xdr.c xdr_rec.c xdr_array.c xdr_float.c xdr_mem.c xdr_reference.c xdr_stdio.c
-diff -uprN libtirpc-0.2.3/src/rpc_soc.c build/src/rpc_soc.c
---- libtirpc-0.2.3/src/rpc_soc.c	2013-02-14 00:13:59.000000000 +0900
-+++ build/src/rpc_soc.c	2013-04-08 12:47:25.000000000 +0900
-@@ -524,6 +524,7 @@ clnt_broadcast(prog, vers, proc, xargs,
+--- a/src/rpc_soc.c	2013-02-13 16:13:59.000000000 +0100
++++ b/src/rpc_soc.c	2013-03-01 13:56:11.700582054 +0100
+@@ -524,6 +524,7 @@
   * Create the client des authentication object. Obsoleted by
   * authdes_seccreate().
   */
@@ -21,7 +27,7 @@ diff -uprN libtirpc-0.2.3/src/rpc_soc.c build/src/rpc_soc.c
  AUTH *
  authdes_create(servername, window, syncaddr, ckey)
  	char *servername;		/* network name of server */
-@@ -551,6 +552,7 @@ fallback:
+@@ -551,6 +552,7 @@
  	dummy = authdes_seccreate(servername, window, NULL, ckey);
  	return (dummy);
  }
