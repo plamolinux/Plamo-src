@@ -1,0 +1,75 @@
+#!/bin/sh
+
+LXC_BRIDGE="lxcbr0"
+LXC_ADDR="10.0.100.1"
+LXC_NETMASK="255.255.255.0"
+LXC_BROADCAST="10.0.100.255"
+LXC_NETWORK="10.0.100.0/24"
+LXC_DHCP_RANGE="10.0.100.3,10.0.100.254"
+LXC_DHCP_MAX="253"
+
+cleanup() {
+    iptables -t mangle -o ${LXC_BRIDGE} -D POSTROUTING -p udp --dport bootpc -j CHECKSUM --checksum-fill || true
+    iptables -t nat -D POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_NETWORK} -j MASQUERADE || true
+    ifconfig ${LXC_BRIDGE} down || true
+    brctl delbr ${LXC_BRIDGE} || true
+}
+
+start() {
+    if [ -d /sys/class/net/${LXC_BRIDGE} ]; then
+        if [ ! -f /var/run/lxc/network_up ]; then
+            stop
+        fi
+        exit 0
+    fi
+
+    mkdir -p /var/run/lxc
+
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+
+    brctl addbr ${LXC_BRIDGE}
+    ip -4 addr add ${LXC_ADDR}/${LXC_NETMASK} broadcast ${LXC_BROADCAST} dev ${LXC_BRIDGE}
+    ip link set ${LXC_BRIDGE} up
+
+    iptables -t nat -A POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_NETWORK} -j MASQUERADE
+    iptables -t mangle -o ${LXC_BRIDGE} -A POSTROUTING -p udp --dport bootpc -j CHECKSUM --checksum-fill
+    dnsmasq --strict-order --bind-interfaces --pid-file=/var/run/lxc/dnsmasq.pid --conf-file= --listen-address=${LXC_ADDR} --dhcp-range=${LXC_DHCP_RANGE} --dhcp-lease-max=${LXC_DHCP_MAX} --dhcp-no-override --dhcp-leasefile=/var/run/lxc/lxc.leases --except-interface=lo --interface=${LXC_BRIDGE} || cleanup
+    touch /var/run/lxc/network_up
+}
+
+stop() {
+    if [ ! -f /var/run/lxc/network_up ]; then
+        exit 0
+    fi
+    ls /sys/class/net/${LXC_BRIDGE}/brif/* > /dev/null 2>&1 && exit 0;
+
+    if [ -d /sys/class/net/${LXC_BRIDGE} ]; then
+        ip link set ${LXC_BRIDGE} down
+        ip addr del ${LXC_ADDR}/${LXC_NETMASK} dev ${LXC_BRIDGE}
+        iptables -t mangle -o ${LXC_BRIDGE} -D POSTROUTING -p udp --dport bootpc -j CHECKSUM --checksum-fill || true
+        iptables -t nat -D POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_NETWORK} -j MASQUERADE || true
+        pid=`cat /var/run/lxc/dnsmasq.pid 2>/dev/null` && kill $pid || true
+        rm -f /var/run/lxc/dnsmasq.pid
+        brctl delbr ${LXC_BRIDGE}
+    fi
+    rm -f /var/run/lxc/network_up
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+restart)
+    stop
+    start
+    ;;
+*)
+    echo $"Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
