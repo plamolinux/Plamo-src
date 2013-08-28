@@ -1,0 +1,61 @@
+#!/bin/sh
+#
+# mount cgroup filesystems per subsystem
+#
+
+start() {
+
+    # if cgroupfs is mounted by fstab, don't run
+    if grep -v '^#' /etc/fstab | grep -q cgroup; then
+        echo "cgroups mounted from fstab, not mounting /sys/fs/cgroup"
+        exit 0
+    fi
+
+    # kernel provides cgroups?
+    if [ ! -e /proc/cgroups ]; then
+        exit 0
+    fi
+
+    mountpoint -q /sys/fs/cgroup || mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
+
+    # get list of cgroup controllers
+    for d in `sed -e '1d;s/\([^\t]\)\t.*$/\1/' /proc/cgroups`; do
+        mkdir -p /sys/fs/cgroup/$d
+        mountpoint -q /sys/fs/cgroup/$d || (mount -n -t cgroup -o $d cgroup /sys/fs/cgroup/$d || rmdir /sys/fs/cgroup/$d || true)
+    done
+}
+
+stop() {
+
+    # If /sys/fs/cgroup is not mounted, we don't bother
+    mountpoint -q /sys/fs/cgroup || exit 0
+
+    # Don't try to get too smart, just optimistically try to umount all
+    # that we think we mounted
+    cd /sys/fs/cgroup
+    for d in `sed -e '1d;s/\([^\t]\)\t.*$/\1/' /proc/cgroups`; do
+        mountpoint -q $d && umount $d
+        [ -d $d ] && rmdir $d
+    done
+
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+restart)
+    stop
+    start
+    ;;
+*)
+    echo $"Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
+
