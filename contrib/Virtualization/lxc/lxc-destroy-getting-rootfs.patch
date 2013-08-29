@@ -1,0 +1,12 @@
+diff -ur lxc-0.9.0.orig/src/lxc/lxc-destroy.in lxc-0.9.0/src/lxc/lxc-destroy.in
+--- lxc-0.9.0.orig/src/lxc/lxc-destroy.in	2013-03-19 07:17:01.000000000 +0900
++++ lxc-0.9.0/src/lxc/lxc-destroy.in	2013-08-29 14:52:58.440318752 +0900
+@@ -123,7 +123,7 @@
+ # Deduce the type of rootfs
+ # If LVM partition, destroy it. For btrfs, we delete the subvolue. If anything
+ # else, ignore it. We'll support deletion of others later.
+-rootdev=`grep lxc.rootfs $lxc_path/$lxc_name/config 2>/dev/null | sed -e 's/^[^/]*/\//'`
++rootdev=`grep '^\s*lxc\.rootfs' $lxc_path/$lxc_name/config 2>/dev/null | sed -e 's/^[^/]*/\//'`
+ if [ -n "$rootdev" ]; then
+     if [ -b "$rootdev" -o -h "$rootdev" ]; then
+         lvdisplay $rootdev > /dev/null 2>&1
