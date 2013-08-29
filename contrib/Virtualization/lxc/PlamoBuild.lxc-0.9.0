@@ -7,13 +7,12 @@ template='https://raw.github.com/tenforward/lxc-plamo/master/lxc-plamo'
 jamanpage='git://github.com/tenforward/lxc-doc-ja.git'
 pkgbase=lxc
 vers=0.9.0
-arch=x86_64
-# arch=i586
-build=P7
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P8
 src=lxc-0.9.0
 OPT_CONFIG="--docdir=/usr/share/doc/$src --disable-apparmor --enable-lua --enable-python --enable-seccomp"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README TODO'
-patchfiles='lxc.conf.patch'
+patchfiles='lxc.conf.patch lxc-destroy-getting-rootfs.patch'
 compress=txz
 ##############################################################
 
