@@ -90,10 +90,12 @@ def make_headers(url, filename, vers, readme, patchfiles):
     header = '''#!/bin/sh
 ##############################################################
 url=%s
+verify=
 pkgbase=%s
 vers=%s
-arch=x86_64
+# arch=x86_64
 # arch=i586
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=%s-%s
 OPT_CONFIG=''
@@ -117,11 +119,11 @@ strip_all() {
     if [ "$chk_elf.x" != ".x" ]; then
       chk_lib=`echo $chk | grep lib`
       if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
+        echo "stripping $chk with -g "
+        strip -g $chk
       else
-         echo "stripping $chk"
-         strip $chk
+        echo "stripping $chk"
+        strip $chk
       fi
     fi
   done
@@ -166,13 +168,27 @@ compress_all() {
   strip_all
 }  
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+    B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+    B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -184,13 +200,13 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
+  target="-m64"
+  libdir="lib64"
+  suffix="64"
 else
-    target="-m32"
-    libdir="lib"
-    suffix=""
+  target="-m32"
+  libdir="lib"
+  suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -208,13 +224,33 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -235,20 +271,20 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+      patch -p1 < $W/$patch
     done
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi'''
+    if [ -x configure ] ; then
+      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CFLAGS="-isystem /usr/include $target" 
+      export CPPFLAGS="-isystem /usr/include $target "
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi'''
     elif type == "KDE":
         config = '''
 if [ $opt_config -eq 1 ] ; then
@@ -262,29 +298,29 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#S[@]} - 1))` ; do
     cd $S
     for patch in $patchfiles ; do
-       if [ ! -f ".$patch" ]; then
-           patch -p1 < $W/$patch
-           touch ".$patch"
-       fi
+      if [ ! -f ".$patch" ]; then
+        patch -p1 < $W/$patch
+        touch ".$patch"
+      fi
     done
 
-   cd $B
-      if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target"
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-      fi'''
+    cd $B
+    if [ -f $S/CMakeLists.txt ]; then
+      export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CC="gcc -isystem /usr/include $target" 
+      export CXX="g++ -isystem /usr/include $target"
+      cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+    fi'''
 
     return config
 
 def make_body2():
     body='''
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -309,7 +345,7 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+      sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
@@ -321,39 +357,39 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
+    mkdir -p $P/install
+    for omf in $P/usr/share/omf/* ; do
+      omf_name=`basename $omf`
+      cat << EOF >> $P/install/initpkg
 if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
 fi
 EOF
-      done
+    done
   fi
 
   if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
+    mkdir -p $P/install
+    for schema in $P/etc/gconf/schemas/* ; do
+      cat << EOF >> $P/install/initpkg
 if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+  ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
 fi
 EOF
-      done
+    done
   fi
 
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+    pushd $loc_dir
+    for loc in * ; do
+      if [ "$loc" != "ja" ]; then
+        rm -rf $loc
+      fi
+    done
+    popd
+  done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
@@ -361,9 +397,9 @@ EOF
   cd $P
   compress_all
   if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
+    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+      gzip_dir $mdir
+    done
   fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
@@ -389,8 +425,8 @@ EOF
   done
 
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
 
 ############################################################
@@ -400,7 +436,7 @@ EOF
 
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
+    chown -R root.root $P/usr/share/doc
   fi
 
 ######################################################################
