@@ -5,3 +5,6 @@ pivot/
 work/
 i.et
 i.st
+*.sig
+*.asc
+*.txz
