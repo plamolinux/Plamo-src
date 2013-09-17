@@ -1,17 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.2p1.tar.gz'
+url='http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.3p1.tar.gz'
 verify=$url.asc
 pkgbase=openssh
-vers=6.2p1
-arch=x86_64
-# arch=i586
-build=P2
-src=openssh-6.2p1
+vers=6.3p1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=${pkgbase}-${vers}
 OPT_CONFIG='--with-privsep-user=sshd --with-privsep-path=/var/lib/sshd --sysconfdir=/etc/ssh --localstatedir=/var --with-pam'
 DOCS='ChangeLog INSTALL README README.dns README.platform README.privsep README.tun TODO'
-patchfiles='openssh-6.2p1_nokey_message.patch openssh-6.2p1_normal_disconnect.patch'
-# https://bugzilla.mindrot.org/attachment.cgi?id=2238&action=diff&context=patch&collapsed=&headers=1&format=raw
+patchfiles=''
 compress=txz
 ##############################################################
 
