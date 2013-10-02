@@ -1,20 +1,51 @@
 #!/bin/sh
-# lxc build script
-# Require contrib/docbook2x for japanese man pages
-##############################################################
-url='http://lxc.sourceforge.net/download/lxc/lxc-0.9.0.tar.gz'
-template='https://raw.github.com/tenforward/lxc-plamo/master/lxc-plamo'
-jamanpage='git://github.com/tenforward/lxc-doc-ja.git'
+
+######################################################################
+url="http://lxc.sourceforge.net/download/lxc/lxc-0.9.0.tar.gz
+    https://raw.github.com/tenforward/lxc-plamo/master/lxc-plamo
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
+    git://github.com/tenforward/lxc-doc-ja.git
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
 vers=0.9.0
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P8
-src=lxc-0.9.0
-OPT_CONFIG="--docdir=/usr/share/doc/$src --disable-apparmor --enable-lua --enable-python --enable-seccomp"
-DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README TODO'
-patchfiles='lxc.conf.patch lxc-destroy-getting-rootfs.patch'
-compress=txz
-##############################################################
+arch=`uname -m | sed 's/i.86/i586/'`
+build=P10
+src=$pkgbase-$vers
+OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var --enable-python
+    --enable-lua"
+DOCS="COPYING README INSTALL MAINTAINERS ChangeLog AUTHORS TODO
+    CONTRIBUTING NEWS"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
@@ -28,7 +59,7 @@ strip_bindir() {
     for i in * ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
          echo "stripping -p $i"
          strip -p $i
       fi
@@ -44,7 +75,7 @@ strip_libdir() {
     for i in *.so *.so.* *.a ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
         if [ $i != ${i%.a} ] ; then
           echo -n "ranlib and "
           touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
@@ -61,7 +92,6 @@ gzip_dir() {
   if [ -d $1 ] ; then (
     cd $1
     files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -91,13 +121,11 @@ gzip_one() {
 }
 
 compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
 }
 
 prune_symlink() {
@@ -108,8 +136,7 @@ prune_symlink() {
     for i in `find ${1#$P/} -type l` ; do
       target=`readlink $i`
       echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
     done
     COUNT=1
     LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
@@ -133,47 +160,25 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+fscheck
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-else
-    target="-m32"
-    libdir="lib"
-fi
-
-# Is there docbook2x-man?
-if [ -x /usr/bin/docbook2x-man ]; then
-  opt_ja_man_build=1
-  jamanpagesdir=`basename ${jamanpage##*/} .git`
-else
-  opt_ja_man_build=0
-fi
-
+case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -187,82 +192,66 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    case ${i##*.} in
+    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
+    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
+    esac
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/master ; git reset --hard 12ec024 ) ;;
     esac
   done
-
-  # lxc-plamo template
-  rm -f ${template##*/}
-  wget $template
-
-  # japanese man pages
-  if [ $opt_ja_man_build -eq 1 ]; then
-    jamanpagesdir=`basename ${jamanpage##*/} .git`
-    rm -rf $jamanpagesdir
-    git clone $jamanpage
-  fi
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
+  cd $B
+  cat <<- "EOF" | patch config/default.conf.unknown
+	0a1,6
+	> # If you use /etc/rc.d/init.d/lxc-net, enable following 3 lines.
+	> #lxc.network.type=veth
+	> #lxc.network.link=lxcbr0
+	> #lxc.network.flags=up
+	> # else if you make configure yourself, make appropriate changes for
+	> # following lines.
+	EOF
+  sed -i "/^rootdev/s@lxc\.rootfs@'^\\\\s*lxc\\\\.rootfs'@g" \
+      src/lxc/lxc-destroy.in
+  cd $W/lxc-doc-ja
+  sed -i '/legacy/d' configure.ac doc{,-ja}/Makefile.am
+  ./autogen.sh
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
-
-    #if [ -f autogen.sh ] ; then
-    #  sh ./autogen.sh
-    #fi
-
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
     if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
   done
-
-  # configure ja man pages
-  if [ $opt_ja_man_build -eq 1 ]; then
-    cd $W/$jamanpagesdir
-    ./autogen.sh
-    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
-  fi
-  
+  cd $W/lxc-doc-ja
+  ./configure --prefix=/usr --mandir=/usr/share/man/ja
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make
     fi
   done
-  # build ja man pages
-  if [ $opt_ja_man_build -eq 1 ]; then
-    cd $W/$jamanpagesdir
-    make
-  fi
+  cd $W/lxc-doc-ja
+  make
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -276,70 +265,36 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
   done
-  if [ $opt_ja_man_build -eq 1 ]; then
-    cd $W/$jamanpagesdir/doc-ja
-
-    for n in 1 5 7
-    do
-      #if [ -f /var/log/packages/man_db ]; then
-      #  mkdir -p $mandir/ja_JP.UTF-8/man$n
-      #  cp *.$n $mandir/ja_JP.UTF-8/man$n/
-      #else
-        mkdir -p $mandir/ja_JP.eucJP/man$n
-        for f in `ls *.$n`
-        do
-          nkf -We $f > $mandir/ja_JP.eucJP/man$n/$f
-        done
-        # 現時点では python3 がないので legacy の shell で書かれた lxc-ls が入るため
-        nkf -We legacy/lxc-ls.1 > $mandir/ja_JP.eucJP/man$n/lxc-ls.1
-      #fi
-    done
-      
-  fi
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-  cp ${B[$i]}/doc/*.1 $P/usr/share/man/man1
-  cp ${B[$i]}/doc/*.5 $P/usr/share/man/man5
-  cp ${B[$i]}/doc/*.7 $P/usr/share/man/man7
-  mkdir -p $P/etc/rc.d/init.d
-  mkdir -p $P/etc/lxc
-  install -m 0644 $W/cgroups-mount $P/etc/rc.d/init.d
-  install -m 0644 $W/lxc-net $P/etc/rc.d/init.d
-  install -m 0755 $W/lxc-plamo $P/usr/share/lxc/templates
-  mkdir -p $P/var/lib/lxc
-  mkdir -p $docdir/$src
-  install -m 0644 $W/README.plamo $docdir/$src
-
-# remove locales except ja
-# 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
-
+  touch $P/usr/$libdir/python*/site-packages/_lxc.cpython-33m.so
+  install $W/lxc-plamo $P/usr/share/lxc/templates
+  install -d $P/etc/rc.d/init.d
+  install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
+  install -m 644 $W/lxc-net $P/etc/rc.d/init.d
+  cd $W/lxc-doc-ja/doc-ja
+  make install-man DESTDIR=$P
+  re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
+  dt=`echo $(LANG=C date '+%a %b %e 09:00:00 %Z %G')`
+  find $mandir -type f -exec sed -i "/^\.TH/s@$re@$dt@g" {} \;
+  install -d $mandir/ja_JP.eucJP/man{1,5,7}
+  for i in `cd $mandir/ja ; find . -type f` ; do
+    nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
+  done
+  find $mandir/ja_JP.eucJP -type f -exec sed -i "s@UTF-8@EUC-JP@g" {} \;
   touch $W/i.et
   cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
   compress
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
+  strip_libdir $P/usr/$libdir/python*/site-packages
+  strip_libdir $P/usr/$libdir/lua/5.1/lxc
+  touch -t `date '+%m%d0900'` $P/usr/$libdir/lua/5.1/lxc
+  gzip_dir $mandir/ja_JP.eucJP/man1
+  gzip_dir $mandir/ja_JP.eucJP/man5
+  gzip_dir $mandir/ja_JP.eucJP/man7
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -357,30 +312,45 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
+  mv $docdir/lxc/examples $docdir/$src
+  install -m 644 $W/README.plamo $docdir/$src
+  touch -t `date '+%m%d0900'` $docdir/$src/README.plamo
+  mv $docdir/$src/{examples,{COPYING,README,INSTALL,MAINTAINERS}.gz} $C
+  mv $docdir/$src/{ChangeLog,AUTHORS,TODO,CONTRIBUTING,NEWS}.gz $C
+  mv $docdir/$src/{README.plamo,$myname.gz} $C
+  mv $C/{examples,{COPYING,README,INSTALL,MAINTAINERS}.gz} $docdir/$src
+  mv $C/{ChangeLog,AUTHORS,TODO,CONTRIBUTING,NEWS}.gz $docdir/$src
+  mv $C/{README.plamo,$myname.gz} $docdir/$src
+  touch -r $S $docdir/$src
   convert
-######################################################################
-# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
-#   記述します(prune_symlink を使います)。
-# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
-#   します(こだわりを求めないなら単に makepkg でも良いです)。
-######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/libexec/lxc
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -name liblxc.*`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/$libdir/python*/site-packages -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/$libdir/lua/5.1/lxc
+  tar rvpf $pkg.tar -C $P usr/$libdir/lxc
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/include/lxc
+  tar rvpf $pkg.tar -C $P usr/share/lxc
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/lua/5.1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P etc/lxc
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc/rc.d/init.d | tail -n+2`
+  tar rvpf $pkg.tar -C $P var/lib/lxc
+  tar rvpf $pkg.tar -C $P var/cache/lxc
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/share/man/ja_JP.eucJP/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/share/man/ja_JP.eucJP/man7 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
 fi
