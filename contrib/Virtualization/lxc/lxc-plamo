@@ -1,0 +1,370 @@
+#!/bin/bash
+
+#
+# template script for generating Plamo Linux container for LXC
+#
+
+#
+# lxc: linux Container library
+
+# Authors:
+# KATOH Yasufumi <karma@jazz.email.ne.jp>
+# TAMUKI Shoichi <tamuki@linet.gr.jp>
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+# ref. https://github.com/Ponce/lxc-slackware/blob/master/lxc-slackware
+#      lxc-ubuntu script
+
+[ -r /etc/default/lxc ] && . /etc/default/lxc
+MIRRORSRV=${MIRRORSRV:-"ftp.ne.jp"}
+MIRRORPATH=${MIRRORPATH:-"/Linux/distributions/plamolinux"}
+PACKAGES=${PACKAGES:-"aaa_base attr acl bash bzip2 coreutils cracklib
+    dcron dhcp dialog glibc etc file findutils gawk grep groff gzip
+    hdsetup iproute2 iputils less libcap libgcc linux_pam logrotate
+    man mlocate ncurses net_tools netkit_combo network_configs nvi
+    openbsd_inetd openssh openssl procps_ng readline rsyslog sed
+    shadow sudo sysvinit tar tcp_wrappers tcsh timezone traceroute
+    udev util_linux xz zlib libtirpc"}
+
+download_plamo() {
+  # check the mini plamo was not already downloaded
+  if ! mkdir -p $ptcache ; then
+    echo "Failed to create '$ptcache' directory."
+    return 1
+  fi
+  # download a mini plamo into a cache
+  echo "Downloading Plamo-$release minimal..."
+  echo "open $MIRRORSRV" > /tmp/getpkg
+  for p in $PACKAGES ; do
+    cat <<- EOF >> /tmp/getpkg
+	mget $MIRRORPATH/Plamo-$release/$arch/plamo/00_base/$p*.t?z
+	EOF
+  done
+  echo "close" >> /tmp/getpkg
+  cd $ptcache
+  if ! lftp -f /tmp/getpkg ; then
+    echo "Failed to download the rootfs, aborting."
+    return 1
+  fi
+  rm -f /tmp/getpkg
+  mv $ptcache $dlcache
+  echo "Download complete."
+  return 0
+}
+
+copy_plamo() {
+  # make a local copy of the mini plamo
+  echo "Copying $rtcache to $rootfs..."
+  [ -d $rootfs ] && rm -rf $rootfs
+  cp -a $rtcache $rootfs || return 1
+  return 0
+}
+
+install_plamo() {
+  mkdir -p /var/lock/subsys
+  (
+    if ! flock -n 200 ; then
+      echo "Cache repository is busy."
+      return 1
+    fi
+    echo "Checking cache download in $dlcache..."
+    if [ ! -d $dlcache ] ; then
+      if ! download_plamo ; then
+        echo "Failed to download plamo $release base packages."
+        return 1
+      fi
+    fi
+    echo "Installing packages to $rtcache..."
+    if [ ! -d $rtcache ] ; then
+      mkdir -p $rtcache
+      for p in $PACKAGES ; do
+        filename=`basename 00_base/$p`
+        installpkg -root $rtcache -priority ADD $dlcache/$filename*.t?z
+      done
+    fi
+    echo "Copy $rtcache to $rootfs..."
+    if ! copy_plamo ; then
+      echo "Failed to copy rootfs."
+      return 1
+    fi
+    return 0
+  ) 200> /var/lock/subsys/lxc
+}
+
+configure_plamo() {
+  # create /dev
+  mknod -m 666 $rootfs/dev/zero c 1 5
+  mknod -m 666 $rootfs/dev/random c 1 8
+  mknod -m 666 $rootfs/dev/urandom c 1 9
+  mkdir -m 755 $rootfs/dev/pts
+  mknod -m 666 $rootfs/dev/tty c 5 0
+  mknod -m 600 $rootfs/dev/console c 5 1
+  mknod -m 666 $rootfs/dev/tty0 c 4 0
+  mknod -m 666 $rootfs/dev/tty1 c 4 1
+  mknod -m 666 $rootfs/dev/tty2 c 4 2
+  mknod -m 666 $rootfs/dev/tty3 c 4 3
+  mknod -m 666 $rootfs/dev/tty4 c 4 4
+  mknod -m 666 $rootfs/dev/full c 1 7
+  mknod -m 600 $rootfs/dev/initctl p
+  mknod -m 666 $rootfs/dev/ptmx c 5 2
+  # suppress log level output for udev
+  sed -i 's/="err"/=0/' $rootfs/etc/udev/udev.conf
+  # /etc/fstab
+  cat <<- "EOF" > $rootfs/etc/fstab
+	none             /proc    proc        defaults   0   0
+	none             /sys     sysfs       defaults   0   0
+	none             /dev     tmpfs       defaults   0   0
+	none		    /tmp     tmpfs       defaults   0   0
+	none            /dev/pts        devpts  gid=5,mode=620    0 0
+	none            /proc/bus/usb             usbfs        noauto   0   0
+	none             /var/lib/nfs/rpc_pipefs rpc_pipefs  defaults   0   0
+	EOF
+  # /etc/inittab
+  cat <<- "EOF" | patch $rootfs/etc/inittab
+	47a48
+	> 1:1235:respawn:/sbin/agetty 38400 console
+	52,53d52
+	< c5:1235:respawn:/sbin/agetty 38400 tty5 linux
+	< c6:12345:respawn:/sbin/agetty 38400 tty6 linux
+	EOF
+  # set the hostname
+  echo "$name" > $rootfs/etc/HOSTNAME
+  # set minimal hosts
+  echo "127.0.0.1 localhost $name" > $rootfs/etc/hosts
+  # configure the network using the dhcp
+  echo "DHCP" > $rootfs/var/run/inet1-scheme
+  # localtime (JST)
+  ln -s ../usr/share/zoneinfo/Asia/Tokyo $rootfs/etc/localtime
+  # disable pam_loginuid.so in /etc/pam.d/login (for libvirt's lxc driver)
+  sed -i '/pam_loginuid/s/^/#/' $rootfs/etc/pam.d/login
+  # root password
+  echo "Please change root-password!"
+  echo "root:root" | chroot $rootfs chpasswd
+  # /etc/rc.d/rc.S
+  ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+	230,261d
+	156,163d
+	26,147d
+	16,22d
+	w
+	EOF
+  # /etc/rc.d/rc.M
+  ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
+	247,248d
+	56,79d
+	31,38d
+	w
+	EOF
+  # /etc/rc.d/rc.inet1.tradnet
+  uudecode <<- "EOF" | gunzip > $rootfs/etc/rc.d/rc.inet1.tradnet
+	begin-base64 755 /dev/stdout
+	H4sIAAAAAAAAA3VVbW/aSBD+jH/FBJDaSsRATlHVXqM7jvgO1BQiIK2iU3VZ7DVexd61dtchuSj/
+	vTPrF0hChEDYu/PMzPPMS+cI+msh+ybxOl4HdOgLye2wtUqEAZPwNAUTapFbWCtlDRQ52ITDmhkO
+	01mwAvNgLM98Z/2dayOU/Nz6833nQ5/bsI94Ub8BHfqDYWtw2j/52P/0G1p4k/lyNRt9C85uQmbB
+	WdSvbjwEHFnLwsR5TJXK1yy8hYjfiZD7Xt9Q3CIOlYzFBs9hePLRH+BnWJ1pVVgOLIrgGN03xwPA
+	p4yZWzg5Pa3epMrzRAz/wnEM/Tum+7pAbAr62IQJzzj8hN8pDumBy3v433I8CZrID5nceDw1/OX9
+	dizuedT2YlF5bHf3z9twBtWVnUvE6MD0b7ieX8Fk9D2A0QyC1SRYkADj+WwWjFfT+awHBaqCFvib
+	YiQG1jxVW7AKSpIK7Y7B4XGbDEBIy3XMkE+YxvCgind4Rcn0AaGE3OxYVxqWF9PLHkRKvrNoF6ZF
+	5NAcmObGgopLpZxrIfEBaygWKYrlLgWRsBAjEvrRYLgtcp/ouRydny/O2o187VarA4vg8mI0DmAr
+	bEKJL/AeaYmezBFaYerfRsuvZ+03blcaV1d/zBdfdx4Gb9tslb7dd/PXYj46H4+WK3J0yGatFYtC
+	hulXVj0Qjkmv1SIvCbsjRkuCpbI9SDm9WqdMoicZASdanFLExj+jVfBjdP1mXhtm+ZY97GJ01F7J
+	UGUZl7ZR4JD2jnfUnWvqh5DpiDy+aCRXF93HUpWnvfy6jw0ZT00LdR8rIZ6qKt3VALC1wkSxBoo6
+	Oh713HGoojrAkElgqVH4uH/PL9EslgkVU4nahL5lBnKtcq6xUoUUVrBU/E/oROhG3KENGbAowzo0
+	KiurNMFyNxRWgRAJ9i2yEylCFw4TK5v8urY8gu4f2IsD+Nn0PQD1+pcvEMzOvetXXLqoUOH9gJoo
+	fYAJRwkYfike7BhmlDQYx4NrFC9DUV2xJCzPuayToTSMSguLg9V89oY+OM+35DfF6HnpE8WzjHIt
+	8lzpvTZzKmOTuYallmY40qsh0BR8pJEy7ZqWwYWQxX3tgOTJ2C0nhqxSkDK94cQbv+PS7QQXJoFR
+	WlZkrvdrZ/zeatbAE1jIaEiVWwNTlRuD0a1UEzgFTWg1tT3ggv6WbfJsqWQqKlJSGsPCIi2pqmBY
+	ubAonh7BIR1YWzkOI8eqkMYSEazO01I5VCSaGsX3Thzd1dBz6mAKz1TvEWnbROCaCmkpYvy4N1WR
+	RlC3JJWbk5hI4iEpSbPy9YJEJt5fSUzJOJjSK1ZwRF1AdLqJyrVW2vf9Dx7VIQBtklczwDiRcMbS
+	xnaFgOOTFqKDYWsaymR0cFO6pqaReajP3YDYdUm7W00st7na++3yEjviMStSC5stwlVWOw+DahVj
+	EWkRwrDMjKdvLckoCfM2HKtDZ+eT8WV7f2WXu/0e+oXRZVhongoia+8WHDqv0q12+bMZcOB2PQNi
+	VUgcYpc47FGKutymyzFQbP5OOlIPVyNqjCVRF4L3CxV3iMyXCQAA
+	====
+	EOF
+  chmod 755 $rootfs/etc/rc.d/rc.inet1.tradnet
+  return 0
+}
+
+copy_configuration() {
+  ret=0
+  cat <<- EOF >> $path/config || let ret++
+	lxc.utsname = $name
+
+	lxc.tty = 4
+	lxc.pts = 1024
+	lxc.rootfs = $rootfs
+	lxc.mount  = $path/fstab
+	lxc.arch = $arch
+
+	lxc.cgroup.devices.deny = a
+	# /dev/null and zero
+	lxc.cgroup.devices.allow = c 1:3 rwm
+	lxc.cgroup.devices.allow = c 1:5 rwm
+	# consoles
+	lxc.cgroup.devices.allow = c 5:1 rwm
+	lxc.cgroup.devices.allow = c 5:0 rwm
+	#lxc.cgroup.devices.allow = c 4:0 rwm
+	#lxc.cgroup.devices.allow = c 4:1 rwm
+	# /dev/{,u}random
+	lxc.cgroup.devices.allow = c 1:9 rwm
+	lxc.cgroup.devices.allow = c 1:8 rwm
+	lxc.cgroup.devices.allow = c 136:* rwm
+	lxc.cgroup.devices.allow = c 5:2 rwm
+	# rtc
+	lxc.cgroup.devices.allow = c 254:0 rwm
+	#fuse
+	lxc.cgroup.devices.allow = c 10:229 rwm
+	EOF
+  cat <<- EOF > $path/fstab || let ret++
+	proc	$rootfs/proc	proc	nodev,noexec,nosuid	0	0
+	sysfs	$rootfs/sys	sysfs	defaults	0	0
+	EOF
+  if [ $ret -ne 0 ] ; then
+    echo "Failed to add configuration."
+    return 1
+  fi
+  return 0
+}
+
+trim() {
+  # nothing do in Plamo Linux
+  true
+}
+
+post_process() {
+  if [ $trim_container -eq 1 ] ; then
+    trim
+  fi
+}
+
+do_bindhome() {
+  # bind-mount the user's path into the container's /home
+  h=`getent passwd $bindhome | cut -d: -f6`
+  mkdir -p $rootfs/$h
+  echo "$h $rootfs/$h none bind 0 0" >> $path/fstab
+  # copy /etc/passwd, /etc/shadow, and /etc/group entries into container
+  if ! pwd=`getent passwd $bindhome` ; then
+    echo "Warning: failed to copy password entry for $bindhome."
+  else
+    echo $pwd >> $rootfs/etc/passwd
+  fi
+  echo `getent shadow $bindhome` >> $rootfs/etc/shadow
+}
+
+cleanup() {
+  [ -d $dlcache -a -d $rtcache ] || return 0
+  # lock, so we won't purge while someone is creating a repository
+  (
+    if ! flock -n 200 ; then
+      echo "Cache repository is busy."
+      return 1
+    fi
+    echo "Purging the download cache..."
+    rm -rf --one-file-system $dlcache $rtcache || return 1
+    echo "Done."
+    return 0
+  ) 200> /var/lock/subsys/lxc
+}
+
+usage() {
+  cat <<- EOF
+	$prog [-h|--help] -p|--path=<path> -n|--name=<name> [--clean]
+	    [-r|--release=<release>] [-b|--bindhome=<user>] [-a|--arch=<arch>]
+	    [-x|--trim]
+	release: $release
+	bindhome: bind <user>'s home into the container
+	arch: x86 or x86_64: defaults to host arch
+	trim: (do nothing)
+	EOF
+}
+
+prog=`basename $0`
+path="" ; name=""
+clean=0
+release=${release:-5.x}
+bindhome=""
+arch=`uname -m | sed 's/i.86/x86/'` ; hostarch=$arch
+trim_container=0
+sopts=hp:n:cr:b:a:x
+lopts=help,path:,name:,clean,release:,bindhome:,arch:,trim
+if ! options=`getopt -o $sopts -l $lopts -- "$@"` ; then
+  usage
+  exit 1
+fi
+eval set -- "$options"
+while true ; do
+  case "$1" in
+  -h|--help) usage && exit 0 ;;
+  -p|--path) path=$2 ; shift 2 ;;
+  -n|--name) name=$2 ; shift 2 ;;
+  -c|--clean) clean=1 ; shift 1 ;;
+  -r|--release) release=$2 ; shift 2 ;;
+  -b|--bindhome) bindhome=$2 ; shift 2 ;;
+  -a|--arch) arch=$2 ; shift 2 ;;
+  -x|--trim) trim_container=1 ; shift 1 ;;
+  --) shift 1 ; break ;;
+  *) break ;;
+  esac
+done
+if [ $clean -eq 1 -a -z "$path" ] ; then
+  cleanup || exit 1
+  exit 0
+fi
+if [ $hostarch == "x86" -a $arch == "x86_64" ] ; then
+  echo "Can't create x86_64 container on x86."
+  exit 1
+fi
+if ! type installpkg ; then
+  echo "'installpkg' command is missing."
+  exit 1
+fi
+if [ -z "$path" ] ; then
+  echo "'path' parameter is required."
+  exit 1
+fi
+if [ -z "$name" ] ; then
+  echo "'name' parameter is required."
+  exit 1
+fi
+if [ `id -u` -ne 0 ] ; then
+  echo "This script should be run as 'root'."
+  exit 1
+fi
+cache=/var/cache/lxc
+ptcache=$cache/partial-${prog##*-}-$release-$arch
+dlcache=$cache/cache-${prog##*-}-$release-$arch
+rtcache=$cache/rootfs-${prog##*-}-$release-$arch
+rootfs=$path/rootfs
+if ! install_plamo ; then
+  echo "Failed to install plamo $release."
+  exit 1
+fi
+if ! configure_plamo ; then
+  echo "Failed to configure plamo $release for a container."
+  exit 1
+fi
+if ! copy_configuration ; then
+  echo "Failed to write configuration file."
+  exit 1
+fi
+post_process
+if [ -n "$bindhome" ] ; then
+  do_bindhome
+fi
+if [ $clean -eq 1 ] ; then
+  cleanup || exit 1
+  exit 0
+fi
