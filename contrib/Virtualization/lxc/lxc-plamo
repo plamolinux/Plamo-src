@@ -50,10 +50,12 @@ download_plamo() {
   # download a mini plamo into a cache
   echo "Downloading Plamo-$release minimal..."
   echo "open $MIRRORSRV" > /tmp/getpkg
-  for p in $PACKAGES ; do
-    cat <<- EOF >> /tmp/getpkg
-	mget $MIRRORPATH/Plamo-$release/$arch/plamo/$CATEGORY/$p*.t?z
+  for i in `seq 0 $((${#CATEGORY[@]} - 1))` ; do
+    for p in ${PACKAGES[$i]} ; do
+      cat <<- EOF >> /tmp/getpkg
+	mget $MIRRORPATH/Plamo-$release/$arch/plamo/${CATEGORY[$i]}/$p-*.t?z
 	EOF
+    done
   done
   echo "close" >> /tmp/getpkg
   cd $ptcache
@@ -92,9 +94,10 @@ install_plamo() {
     echo "Installing packages to $rtcache..."
     if [ ! -d $rtcache ] ; then
       mkdir -p $rtcache
-      for p in $PACKAGES ; do
-        filename=`basename $CATEGORY/$p`
-        installpkg -root $rtcache -priority ADD $dlcache/$filename*.t?z
+      for i in `seq 0 $((${#CATEGORY[@]} - 1))` ; do
+        for p in ${PACKAGES[$i]} ; do
+          installpkg -root $rtcache -priority ADD $dlcache/$p-*.t?z
+        done
       done
     fi
     echo "Copy $rtcache to $rootfs..."
