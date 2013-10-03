@@ -29,15 +29,17 @@
 #      lxc-ubuntu script
 
 [ -r /etc/default/lxc ] && . /etc/default/lxc
+
 MIRRORSRV=${MIRRORSRV:-"ftp.ne.jp"}
 MIRRORPATH=${MIRRORPATH:-"/Linux/distributions/plamolinux"}
-PACKAGES=${PACKAGES:-"aaa_base attr acl bash bzip2 coreutils cracklib
-    dcron dhcp dialog glibc etc file findutils gawk grep groff gzip
-    hdsetup iproute2 iputils less libcap libgcc linux_pam logrotate
-    man mlocate ncurses net_tools netkit_combo network_configs nvi
-    openbsd_inetd openssh openssl procps_ng readline rsyslog sed
-    shadow sudo sysvinit tar tcp_wrappers tcsh timezone traceroute
-    udev util_linux xz zlib libtirpc"}
+CATEGORY=${CATEGORY:-"00_base"}
+PACKAGES=${PACKAGES:-"aaa_base acl attr bash bzip2 coreutils cracklib
+    dcron dhcp dialog etc file findutils gawk glibc grep groff gzip
+    hdsetup iproute2 iputils less libcap libgcc libtirpc linux_pam
+    logrotate man mlocate ncurses net_tools netkit_combo network_configs
+    nvi openbsd_inetd openssh openssl procps_ng readline rsyslog sed
+    shadow sudo sysvinit tar tcp_wrappers tcsh timezone traceroute udev
+    util_linux xz zlib"}
 
 download_plamo() {
   # check the mini plamo was not already downloaded
@@ -50,7 +52,7 @@ download_plamo() {
   echo "open $MIRRORSRV" > /tmp/getpkg
   for p in $PACKAGES ; do
     cat <<- EOF >> /tmp/getpkg
-	mget $MIRRORPATH/Plamo-$release/$arch/plamo/00_base/$p*.t?z
+	mget $MIRRORPATH/Plamo-$release/$arch/plamo/$CATEGORY/$p*.t?z
 	EOF
   done
   echo "close" >> /tmp/getpkg
@@ -91,7 +93,7 @@ install_plamo() {
     if [ ! -d $rtcache ] ; then
       mkdir -p $rtcache
       for p in $PACKAGES ; do
-        filename=`basename 00_base/$p`
+        filename=`basename $CATEGORY/$p`
         installpkg -root $rtcache -priority ADD $dlcache/$filename*.t?z
       done
     fi
@@ -182,9 +184,8 @@ configure_plamo() {
 	LOOPBACK=y
 	make_config_file
 	EOF
-  chmod 755 /tmp/netconfig.rconly
   rm -f $rootfs/etc/rc.d/rc.inet1.tradnet
-  /tmp/netconfig.rconly
+  sh /tmp/netconfig.rconly
   rm -f /tmp/netconfig.rconly
   return 0
 }
