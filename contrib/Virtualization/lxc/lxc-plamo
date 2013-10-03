@@ -32,14 +32,46 @@
 
 MIRRORSRV=${MIRRORSRV:-"ftp.ne.jp"}
 MIRRORPATH=${MIRRORPATH:-"/Linux/distributions/plamolinux"}
-CATEGORY=${CATEGORY:-"00_base"}
-PACKAGES=${PACKAGES:-"aaa_base acl attr bash bzip2 coreutils cracklib
-    dcron dhcp dialog etc file findutils gawk glibc grep groff gzip
-    hdsetup iproute2 iputils less libcap libgcc libtirpc linux_pam
-    logrotate man mlocate ncurses net_tools netkit_combo network_configs
-    nvi openbsd_inetd openssh openssl procps_ng readline rsyslog sed
-    shadow sudo sysvinit tar tcp_wrappers tcsh timezone traceroute udev
-    util_linux xz zlib"}
+CATEGORY[0]=${CATEGORY:-"00_base"}
+PACKAGES[0]=${PACKAGES:-"aaa_base acl at attr bash btrfs_progs bzip2
+    coreutils cracklib dcron devs dhcp dialog dosfstools dump e2fsprogs
+    ed eject etc extipl file findutils gawk glibc grep groff grub gzip
+    hdsetup hibernate_script iproute2 iputils kbd kernel kmod less libcap
+    libgcc libtirpc lilo linux_firmware linux_pam logrotate lvm2 man
+    mdadm microcode_ctl mlocate ncurses net_tools netkit_combo
+    network_configs nvi openbsd_inetd openssh openssl os_prober pciutils
+    pm_utils procinfo_ng procps_ng readline reiserfsprogs rsyslog sed
+    shadow sudo sysfsutils syslinux sysvinit tar tcp_wrappers tcsh
+    timezone traceroute udev unicon_tools util_linux xz zlib"}
+CATEGORY[1]="01_minimum"
+PACKAGES[1]="FDclone autofs bc berkeley_db bsd_games cpio cpufreqd
+    cpufrequtils fortune_mod gc gdbm gpm hddtemp hdparm keyutils libelf
+    libieee1284 libusb libusb_compat libxml2 libzip linux_howto lm_sensors
+    lshw lsof lv man_pages man_pages_ja nilfs_utils nkf pcre perl popt
+    psmisc python recode rpm2targz ruby screen sg3_utils sharutils sqlite
+    squashfs_lzma sysstat texinfo time tree unzip usbutils utempter which
+    yaml zip zsh"
+CATEGORY[2]="01_minimum/alsa.txz"
+PACKAGES[2]="alsa_lib alsa_plugins alsa_utils"
+CATEGORY[3]="01_minimum/aspell.txz"
+PACKAGES[3]="aspell aspell6_en"
+CATEGORY[4]="01_minimum/devel.txz"
+PACKAGES[4]="autoconf automake binutils bison cloog cvs diffutils flex
+    g++ gcc gdb gettext gmp indent intltool kernel_headers libc libtool
+    m4 make mpc mpfr onig patch pkg_config ppl pth slang strace yasm"
+CATEGORY[5]="01_minimum/gnupg_tls.txz"
+PACKAGES[5]="gnupg gnutls gpgme libassuan libgcrypt libgpg_error libksba
+    libtasn1"
+CATEGORY[6]="01_minimum/network.txz"
+PACKAGES[6]="bind bridge_utils curl cyrus_sasl dnsmasq ethtool fetchmail
+    heimdal hostapd iptables iw libidn libiec61883 libnl3 libpcap
+    libraw1394 libssh2 mailx metamail ncftp ntp ntrack parprouted postfix
+    ppp procmail rsync setserial uml_utilities w3m wget wireless_tools
+    wpa_supplicant"
+CATEGORY[7]="01_minimum/nfs.txz"
+PACKAGES[7]="libevent libnfsidmap nfs_utils rpcbind"
+CATEGORY[8]="01_minimum/tcl.txz"
+PACKAGES[8]="expect itcl tcl tclx"
 
 download_plamo() {
   # check the mini plamo was not already downloaded
