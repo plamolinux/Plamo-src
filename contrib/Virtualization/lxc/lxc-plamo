@@ -169,32 +169,23 @@ configure_plamo() {
 	w
 	EOF
   # /etc/rc.d/rc.inet1.tradnet
-  uudecode <<- "EOF" | gunzip > $rootfs/etc/rc.d/rc.inet1.tradnet
-	begin-base64 755 /dev/stdout
-	H4sIAAAAAAAAA3VVbW/aSBD+jH/FBJDaSsRATlHVXqM7jvgO1BQiIK2iU3VZ7DVexd61dtchuSj/
-	vTPrF0hChEDYu/PMzPPMS+cI+msh+ybxOl4HdOgLye2wtUqEAZPwNAUTapFbWCtlDRQ52ITDmhkO
-	01mwAvNgLM98Z/2dayOU/Nz6833nQ5/bsI94Ub8BHfqDYWtw2j/52P/0G1p4k/lyNRt9C85uQmbB
-	WdSvbjwEHFnLwsR5TJXK1yy8hYjfiZD7Xt9Q3CIOlYzFBs9hePLRH+BnWJ1pVVgOLIrgGN03xwPA
-	p4yZWzg5Pa3epMrzRAz/wnEM/Tum+7pAbAr62IQJzzj8hN8pDumBy3v433I8CZrID5nceDw1/OX9
-	dizuedT2YlF5bHf3z9twBtWVnUvE6MD0b7ieX8Fk9D2A0QyC1SRYkADj+WwWjFfT+awHBaqCFvib
-	YiQG1jxVW7AKSpIK7Y7B4XGbDEBIy3XMkE+YxvCgind4Rcn0AaGE3OxYVxqWF9PLHkRKvrNoF6ZF
-	5NAcmObGgopLpZxrIfEBaygWKYrlLgWRsBAjEvrRYLgtcp/ouRydny/O2o187VarA4vg8mI0DmAr
-	bEKJL/AeaYmezBFaYerfRsuvZ+03blcaV1d/zBdfdx4Gb9tslb7dd/PXYj46H4+WK3J0yGatFYtC
-	hulXVj0Qjkmv1SIvCbsjRkuCpbI9SDm9WqdMoicZASdanFLExj+jVfBjdP1mXhtm+ZY97GJ01F7J
-	UGUZl7ZR4JD2jnfUnWvqh5DpiDy+aCRXF93HUpWnvfy6jw0ZT00LdR8rIZ6qKt3VALC1wkSxBoo6
-	Oh713HGoojrAkElgqVH4uH/PL9EslgkVU4nahL5lBnKtcq6xUoUUVrBU/E/oROhG3KENGbAowzo0
-	KiurNMFyNxRWgRAJ9i2yEylCFw4TK5v8urY8gu4f2IsD+Nn0PQD1+pcvEMzOvetXXLqoUOH9gJoo
-	fYAJRwkYfike7BhmlDQYx4NrFC9DUV2xJCzPuayToTSMSguLg9V89oY+OM+35DfF6HnpE8WzjHIt
-	8lzpvTZzKmOTuYallmY40qsh0BR8pJEy7ZqWwYWQxX3tgOTJ2C0nhqxSkDK94cQbv+PS7QQXJoFR
-	WlZkrvdrZ/zeatbAE1jIaEiVWwNTlRuD0a1UEzgFTWg1tT3ggv6WbfJsqWQqKlJSGsPCIi2pqmBY
-	ubAonh7BIR1YWzkOI8eqkMYSEazO01I5VCSaGsX3Thzd1dBz6mAKz1TvEWnbROCaCmkpYvy4N1WR
-	RlC3JJWbk5hI4iEpSbPy9YJEJt5fSUzJOJjSK1ZwRF1AdLqJyrVW2vf9Dx7VIQBtklczwDiRcMbS
-	xnaFgOOTFqKDYWsaymR0cFO6pqaReajP3YDYdUm7W00st7na++3yEjviMStSC5stwlVWOw+DahVj
-	EWkRwrDMjKdvLckoCfM2HKtDZ+eT8WV7f2WXu/0e+oXRZVhongoia+8WHDqv0q12+bMZcOB2PQNi
-	VUgcYpc47FGKutymyzFQbP5OOlIPVyNqjCVRF4L3CxV3iMyXCQAA
-	====
+  head -n-93 $rootfs/sbin/netconfig.tradnet > /tmp/netconfig.rconly
+  cat <<- EOF >> /tmp/netconfig.rconly
+	PCMCIA=n
+	RC=$rootfs/etc/rc.d/rc.inet1.tradnet
+	IFCONFIG=sbin/ifconfig
+	ROUTE=sbin/route
+	INET1SCHEME=var/run/inet1-scheme
+	IPADDR=127.0.0.1
+	NETWORK=127.0.0.0
+	DHCPCD=usr/sbin/dhclient
+	LOOPBACK=y
+	make_config_file
 	EOF
-  chmod 755 $rootfs/etc/rc.d/rc.inet1.tradnet
+  chmod 755 /tmp/netconfig.rconly
+  rm -f $rootfs/etc/rc.d/rc.inet1.tradnet
+  /tmp/netconfig.rconly
+  rm -f /tmp/netconfig.rconly
   return 0
 }
 
