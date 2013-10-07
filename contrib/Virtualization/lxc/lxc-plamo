@@ -23,7 +23,7 @@
 
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # ref. https://github.com/Ponce/lxc-slackware/blob/master/lxc-slackware
 #      lxc-ubuntu script
@@ -104,8 +104,8 @@ download_plamo() {
 copy_plamo() {
   # make a local copy of the mini plamo
   echo "Copying $rtcache to $rootfs..."
-  [ -d $rootfs ] && rm -rf $rootfs
-  cp -a $rtcache $rootfs || return 1
+  mkdir -p $rootfs
+  find $rtcache -mindepth 1 -maxdepth 1 -exec cp -a {} $rootfs \; || return 1
   return 0
 }
 
@@ -144,11 +144,11 @@ install_plamo() {
 configure_plamo() {
   # create /dev
   mknod -m 666 $rootfs/dev/zero c 1 5
-  mknod -m 666 $rootfs/dev/random c 1 8
+  chmod    666 $rootfs/dev/random
   mknod -m 666 $rootfs/dev/urandom c 1 9
   mkdir -m 755 $rootfs/dev/pts
-  mknod -m 666 $rootfs/dev/tty c 5 0
-  mknod -m 600 $rootfs/dev/console c 5 1
+  chmod    666 $rootfs/dev/tty
+  chmod    600 $rootfs/dev/console
   mknod -m 666 $rootfs/dev/tty0 c 4 0
   mknod -m 666 $rootfs/dev/tty1 c 4 1
   mknod -m 666 $rootfs/dev/tty2 c 4 2
@@ -188,8 +188,9 @@ configure_plamo() {
   # disable pam_loginuid.so in /etc/pam.d/login (for libvirt's lxc driver)
   sed -i '/pam_loginuid/s/^/#/' $rootfs/etc/pam.d/login
   # root password
-  echo "Please change root-password!"
+  echo "Setting root password to 'root'..."
   echo "root:root" | chroot $rootfs chpasswd
+  echo "Please change root password!"
   # /etc/rc.d/rc.S
   ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
 	230,261d
@@ -232,27 +233,25 @@ copy_configuration() {
 	
 	lxc.tty = 4
 	lxc.pts = 1024
-	lxc.rootfs = $rootfs
 	lxc.mount  = $path/fstab
 	lxc.arch = $arch
+	lxc.cap.drop = sys_module mac_admin mac_override sys_time
 	
 	lxc.cgroup.devices.deny = a
 	# /dev/null and zero
 	lxc.cgroup.devices.allow = c 1:3 rwm
 	lxc.cgroup.devices.allow = c 1:5 rwm
 	# consoles
-	lxc.cgroup.devices.allow = c 5:1 rwm
 	lxc.cgroup.devices.allow = c 5:0 rwm
-	#lxc.cgroup.devices.allow = c 4:0 rwm
-	#lxc.cgroup.devices.allow = c 4:1 rwm
+	lxc.cgroup.devices.allow = c 5:1 rwm
 	# /dev/{,u}random
-	lxc.cgroup.devices.allow = c 1:9 rwm
 	lxc.cgroup.devices.allow = c 1:8 rwm
-	lxc.cgroup.devices.allow = c 136:* rwm
+	lxc.cgroup.devices.allow = c 1:9 rwm
 	lxc.cgroup.devices.allow = c 5:2 rwm
+	lxc.cgroup.devices.allow = c 136:* rwm
 	# rtc
-	lxc.cgroup.devices.allow = c 254:0 rwm
-	#fuse
+	lxc.cgroup.devices.allow = c 254:0 rm
+	# fuse
 	lxc.cgroup.devices.allow = c 10:229 rwm
 	EOF
   cat <<- EOF > $path/fstab || let ret++
@@ -308,9 +307,9 @@ cleanup() {
 
 usage() {
   cat <<- EOF
-	$prog [-h|--help] -p|--path=<path> -n|--name=<name> [--clean]
-	    [-r|--release=<release>] [-b|--bindhome=<user>] [-a|--arch=<arch>]
-	    [-x|--trim]
+	$prog [-h|--help] -p|--path=<path> -n|--name=<name> --rootfs=<rootfs>
+	          [--clean] [-r|--release=<release>] [-b|--bindhome=<user>]
+	          [-a|--arch=<arch>] [-x|--trim]
 	release: $release
 	bindhome: bind <user>'s home into the container
 	arch: x86 or x86_64: defaults to host arch
@@ -319,14 +318,14 @@ usage() {
 }
 
 prog=`basename $0`
-path="" ; name=""
+path="" ; name="" ; rootfs=""
 clean=0
 release=${release:-5.x}
 bindhome=""
 arch=`uname -m | sed 's/i.86/x86/'` ; hostarch=$arch
 trim_container=0
 sopts=hp:n:cr:b:a:x
-lopts=help,path:,name:,clean,release:,bindhome:,arch:,trim
+lopts=help,path:,name:,rootfs:,clean,release:,bindhome:,arch:,trim
 if ! options=`getopt -o $sopts -l $lopts -- "$@"` ; then
   usage
   exit 1
@@ -337,6 +336,7 @@ while true ; do
   -h|--help) usage && exit 0 ;;
   -p|--path) path=$2 ; shift 2 ;;
   -n|--name) name=$2 ; shift 2 ;;
+  --rootfs) rootfs=$2 ; shift 2 ;;
   -c|--clean) clean=1 ; shift 1 ;;
   -r|--release) release=$2 ; shift 2 ;;
   -b|--bindhome) bindhome=$2 ; shift 2 ;;
@@ -374,7 +374,13 @@ cache=/var/cache/lxc
 ptcache=$cache/partial-${prog##*-}-$release-$arch
 dlcache=$cache/cache-${prog##*-}-$release-$arch
 rtcache=$cache/rootfs-${prog##*-}-$release-$arch
-rootfs=$path/rootfs
+if [ -z "$rootfs" ] ; then
+  if grep -q "^lxc.rootfs" $path/config ; then
+    rootfs=`grep "^lxc.rootfs" $path/config | awk -F= '{print $2}'`
+  else
+    rootfs=$path/rootfs
+  fi
+fi
 if ! install_plamo ; then
   echo "Failed to install plamo $release."
   exit 1
