@@ -233,7 +233,7 @@ copy_configuration() {
 	
 	lxc.tty = 4
 	lxc.pts = 1024
-	lxc.mount  = $path/fstab
+	lxc.mount = $path/fstab
 	lxc.arch = $arch
 	lxc.cap.drop = sys_module mac_admin mac_override sys_time
 	
@@ -253,6 +253,10 @@ copy_configuration() {
 	lxc.cgroup.devices.allow = c 254:0 rm
 	# fuse
 	lxc.cgroup.devices.allow = c 10:229 rwm
+	
+	# mounts point
+	lxc.mount.entry = proc proc proc nodev,noexec,nosuid 0 0
+	lxc.mount.entry = sysfs sys sysfs defaults 0 0
 	EOF
   cat <<- EOF > $path/fstab || let ret++
 	proc	$rootfs/proc	proc	nodev,noexec,nosuid	0	0
@@ -265,15 +269,9 @@ copy_configuration() {
   return 0
 }
 
-trim() {
+post_process() {
   # nothing do in Plamo Linux
   true
-}
-
-post_process() {
-  if [ $trim_container -eq 1 ] ; then
-    trim
-  fi
 }
 
 do_bindhome() {
@@ -309,11 +307,10 @@ usage() {
   cat <<- EOF
 	$prog [-h|--help] -p|--path=<path> -n|--name=<name> --rootfs=<rootfs>
 	          [--clean] [-r|--release=<release>] [-b|--bindhome=<user>]
-	          [-a|--arch=<arch>] [-x|--trim]
+	          [-a|--arch=<arch>]
 	release: $release
 	bindhome: bind <user>'s home into the container
 	arch: x86 or x86_64: defaults to host arch
-	trim: (do nothing)
 	EOF
 }
 
@@ -323,9 +320,8 @@ clean=0
 release=${release:-5.x}
 bindhome=""
 arch=`uname -m | sed 's/i.86/x86/'` ; hostarch=$arch
-trim_container=0
-sopts=hp:n:cr:b:a:x
-lopts=help,path:,name:,rootfs:,clean,release:,bindhome:,arch:,trim
+sopts=hp:n:cr:b:a:
+lopts=help,path:,name:,rootfs:,clean,release:,bindhome:,arch:
 if ! options=`getopt -o $sopts -l $lopts -- "$@"` ; then
   usage
   exit 1
@@ -341,7 +337,6 @@ while true ; do
   -r|--release) release=$2 ; shift 2 ;;
   -b|--bindhome) bindhome=$2 ; shift 2 ;;
   -a|--arch) arch=$2 ; shift 2 ;;
-  -x|--trim) trim_container=1 ; shift 1 ;;
   --) shift 1 ; break ;;
   *) break ;;
   esac
