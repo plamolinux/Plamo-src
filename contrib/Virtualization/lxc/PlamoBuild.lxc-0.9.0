@@ -2,7 +2,7 @@
 
 ######################################################################
 url="http://lxc.sourceforge.net/download/lxc/lxc-0.9.0.tar.gz
-    https://raw.github.com/tenforward/lxc-plamo/master/lxc-plamo
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-plamo
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     git://github.com/tenforward/lxc-doc-ja.git
@@ -10,7 +10,7 @@ url="http://lxc.sourceforge.net/download/lxc/lxc-0.9.0.tar.gz
 pkgbase=lxc
 vers=0.9.0
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P10
+build=P11
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var --enable-python
     --enable-lua"
@@ -203,7 +203,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master ; git reset --hard 12ec024 ) ;;
+        git checkout origin/master ; git reset --hard lxc-0.9.0 ) ;;
     esac
   done
 fi
@@ -241,7 +241,7 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
   cd $W/lxc-doc-ja
-  ./configure --prefix=/usr --mandir=/usr/share/man/ja
+  ./configure --prefix=/usr --localstatedir=/var --mandir=/usr/share/man/ja
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
