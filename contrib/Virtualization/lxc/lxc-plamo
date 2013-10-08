@@ -37,7 +37,7 @@ PACKAGES[0]=${PACKAGES:-"aaa_base acl at attr bash btrfs_progs bzip2
     coreutils cracklib dcron devs dhcp dialog dosfstools dump e2fsprogs
     ed eject etc extipl file findutils gawk glibc grep groff grub gzip
     hdsetup hibernate_script iproute2 iputils kbd kernel kmod less libcap
-    libgcc libtirpc lilo linux_firmware linux_pam logrotate lvm2 man
+    libgcc libtirpc lilo linux_pam logrotate lvm2 man
     mdadm microcode_ctl mlocate ncurses net_tools netkit_combo
     network_configs nvi openbsd_inetd openssh openssl os_prober pciutils
     pm_utils procinfo_ng procps_ng readline reiserfsprogs rsyslog sed
@@ -65,7 +65,7 @@ PACKAGES[5]="gnupg gnutls gpgme libassuan libgcrypt libgpg_error libksba
 CATEGORY[6]="01_minimum/network.txz"
 PACKAGES[6]="bind bridge_utils curl cyrus_sasl dnsmasq ethtool fetchmail
     heimdal hostapd iptables iw libidn libiec61883 libnl3 libpcap
-    libraw1394 libssh2 mailx metamail ncftp ntp ntrack parprouted postfix
+    libraw1394 libssh2 mailx metamail ncftp ntrack parprouted postfix
     ppp procmail rsync setserial uml_utilities w3m wget wireless_tools
     wpa_supplicant"
 CATEGORY[7]="01_minimum/nfs.txz"
