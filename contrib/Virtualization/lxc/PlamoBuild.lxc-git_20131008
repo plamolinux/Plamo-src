@@ -8,7 +8,7 @@ url="https://github.com/lxc/lxc.git
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=git_20131002
+vers=git_20131008
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -203,7 +203,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master ; git reset --hard 449989a
+        git checkout origin/master ; git reset --hard 41246ce
         perl $W/git-set-file-times ) ;;
     esac
   done
