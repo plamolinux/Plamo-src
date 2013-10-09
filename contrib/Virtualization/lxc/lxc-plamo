@@ -254,10 +254,6 @@ copy_configuration() {
 	# fuse
 	lxc.cgroup.devices.allow = c 10:229 rwm
 	EOF
-  cat <<- EOF > $path/fstab || let ret++
-	proc	$path/rootfs/proc	proc	nodev,noexec,nosuid	0	0
-	sysfs	$path/rootfs/sys	sysfs	defaults	0	0
-	EOF
   if [ $ret -ne 0 ] ; then
     echo "Failed to add configuration."
     return 1
