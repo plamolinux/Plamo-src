@@ -5,3 +5,9 @@ pivot/
 work/
 i.et
 i.st
+*-x86_64-P*.txz
+*-i586-P*.txz
+*.asc
+*.tar.gz
+*.tar.bz2
+*.tar.xz
