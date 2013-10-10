@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libpng/libpng-1.6.3.tar.xz'
+url='http://downloads.sourceforge.net/libpng/libpng-1.6.6.tar.xz'
 pkgbase=libpng
-vers=1.6.3
-arch=x86_64
-# arch=i586
+vers=1.6.6
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libpng-1.6.3
+src=libpng-1.6.6
 OPT_CONFIG='--disable-static'
 DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
-patchfiles='libpng-1.6.3-apng.patch'
+patchfiles='libpng-1.6.6-apng.patch'
 # http://downloads.sourceforge.net/libpng-apng/libpng-1.6.3-apng.patch.gz
 compatlibs="libpng14.so.14.12.0"
 compress=txz
