@@ -3,11 +3,16 @@ build/
 build32/
 pivot/
 work/
+
 i.et
 i.st
+ 
 *-x86_64-P*.txz
 *-i586-P*.txz
+ 
 *.asc
+*.sig
+
 *.tar.gz
 *.tar.bz2
 *.tar.xz
