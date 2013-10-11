@@ -10,7 +10,7 @@ url="https://github.com/lxc/lxc.git
 pkgbase=lxc
 vers=git_20131008
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+build=P2
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var
     --docdir=/usr/share/doc/lxc~ --enable-python --enable-lua"
@@ -267,6 +267,7 @@ if [ $opt_package -eq 1 ] ; then
   install -d $P/etc/rc.d/init.d
   install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
   install -m 644 $W/lxc-net $P/etc/rc.d/init.d
+  sed -i "s@\(/usr/share/doc/\)lxc~@\1$src@g" $mandir/{,ja/}man5/lxc.conf.5
   re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
   dt=`echo $(LANG=C date '+%a %b %e 09:00:00 %Z %G')`
   find $mandir -type f -exec sed -i "/^\.TH/s@$re@$dt@g" {} \;
