@@ -5,11 +5,11 @@ pkgbase=system_config_printer
 vers=1.3.11
 arch=x86_64
 # arch=i586
-build=P1
+build=P2
 src=system-config-printer-1.3.11
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-OLD INSTALL NEWS README installpackage.py'
-patchfiles=''
+patchfiles='system-config-printer-utf8.patch'
 compress=txz
 ##############################################################
 
@@ -185,6 +185,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
