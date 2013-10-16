@@ -4,13 +4,12 @@ url='http://ftp.isc.org/isc/dhcp/4.2.5-P1/dhcp-4.2.5-P1.tar.gz'
 verify=$url.asc
 pkgbase=dhcp
 vers=4.2.5_P1
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=dhcp-4.2.5-P1
 OPT_CONFIG=''
 DOCS='LICENSE README'
-patchfiles='dhcp-4.2.0-scripts.patch'
+patchfiles='dhcp-4.2.0-scripts.patch udp_checksum_offloading dhcp-ffff-checksum.patch'
 compress=txz
 ##############################################################
 
@@ -196,7 +195,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make
     fi
   done
 fi
