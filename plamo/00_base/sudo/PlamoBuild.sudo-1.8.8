@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://www.sudo.ws/sudo/dist/sudo-1.8.7.tar.gz'
+url='http://www.sudo.ws/sudo/dist/sudo-1.8.8.tar.gz'
 verify=$url.sig
 pkgbase=sudo
-vers=1.8.7
-arch=x86_64
-# arch=i586
+vers=1.8.8
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=sudo-1.8.7
+src=${pkgbase}-${vers}
 OPT_CONFIG="--disable-static --with-pam --without-sendmail --with-hal-insults --with-secure-path --docdir=/usr/share/doc/$src --with-env-editor --with-all-insults"
 DOCS='ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
 patchfiles=''
