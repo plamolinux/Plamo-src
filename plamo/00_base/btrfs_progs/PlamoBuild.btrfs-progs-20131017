@@ -2,9 +2,8 @@
 ##############################################################
 url='git://git.kernel.org/pub/scm/linux/kernel/git/mason/btrfs-progs.git'
 pkgbase=btrfs_progs
-vers=20121105
-arch=x86_64
-# arch=i586
+vers=20131017
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=btrfs-progs
 OPT_CONFIG=''
@@ -119,7 +118,7 @@ if [ $opt_download -eq 1 ] ; then
     fi
   done
   cd $src
-  git checkout ; git reset --hard 91d9eec
+  git checkout ; git reset --hard 194aa4a
 
 
 fi
