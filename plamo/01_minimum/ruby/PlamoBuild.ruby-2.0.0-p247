@@ -4,7 +4,7 @@ url='ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p247.tar.bz2'
 pkgbase=ruby
 vers=2.0.0_p247
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
+build=P2
 src=ruby-2.0.0-p247
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README README.EXT README.EXT.ja README.ja ToDo'
