@@ -3,9 +3,8 @@
 url='http://www.openssl.org/source/openssl-1.0.1e.tar.gz'
 pkgbase=openssl
 vers=1.0.1e
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=openssl-1.0.1e
 OPT_CONFIG=''
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
@@ -180,6 +179,11 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+
+  # get CA cert
+  rm -f $W/ca-bundle.crt
+  $W/mkcabundle.pl > $W/ca-bundle.crt
+
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -241,65 +245,17 @@ if [ $opt_package -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      LC_ALL=C make INSTALL_PREFIX=$P PERL=/usr/bin/perl MANDIR=/usr/share/man LIBDIR=${libdir} install
+      LC_ALL=C make INSTALL_PREFIX=$P PERL=/usr/bin/perl MANDIR=/usr/share/man LIBDIR=${libdir} MANSUFFIX=ssl install
     fi
     ( cd $P/usr/share ; ln -sf ../../etc/ssl ssl )
     cp -v -r certs $P/etc/ssl
   done
+  # CA 証明書ファイル生成スクリプトと証明書ファイルのコピー
+  install -m0755 $W/mkcabundle.pl $P/etc/ssl/mkcabundle.pl
+  install -m0644 $W/ca-bundle.crt $P/etc/ssl/certs/ca-bundle.crt
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-cat > $P/etc/ssl/mkcabundle.pl << "EOF"
-#!/usr/bin/perl -w
-#
-# Used to regenerate ca-bundle.crt from the Mozilla certdata.txt.
-# Run as ./mkcabundle.pl > ca-bundle.crt
-#
-
-my $cvsroot = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-my $certdata = 'mozilla/security/nss/lib/ckfw/builtins/certdata.txt';
-
-open(IN, "cvs -d $cvsroot co -p $certdata|")
-    || die "could not check out certdata.txt";
-
-my $incert = 0;
-
-print<<EOH;
-# This is a bundle of X.509 certificates of public Certificate
-# Authorities.  It was generated from the Mozilla root CA list.
-#
-# Source: $certdata
-#
-EOH
-
-while (<IN>) {
-    if (/^CKA_VALUE MULTILINE_OCTAL/) {
-        $incert = 1;
-        open(OUT, "|openssl x509 -text -inform DER -fingerprint")
-            || die "could not pipe to openssl x509";
-    } elsif (/^END/ && $incert) {
-        close(OUT);
-        $incert = 0;
-        print "\n\n";
-    } elsif ($incert) {
-        my @bs = split(/\\/);
-        foreach my $b (@bs) {
-            chomp $b;
-            printf(OUT "%c", oct($b)) unless $b eq '';
-        }
-    } elsif (/^CVS_ID.*Revision: ([^ ]*).*/) {
-        print "# Generated from certdata.txt RCS revision $1\n#\n";
-    }
-}
-EOF
-chmod +x $P/etc/ssl/mkcabundle.pl
-
-mkdir -p $P/install
-cat <<"EOF" > $P/install/initpkg
-if [ ! -f /etc/ssl/certs/ca-bundle.crt ]; then
-/etc/ssl/mkcabundle.pl > /etc/ssl/certs/ca-bundle.crt
-fi
-EOF
 
 # remove locales except ja
 # 
