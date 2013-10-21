@@ -3,9 +3,8 @@
 url='ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p247.tar.bz2'
 pkgbase=ruby
 vers=2.0.0_p247
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=ruby-2.0.0-p247
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README README.EXT README.EXT.ja README.ja ToDo'
@@ -254,6 +253,13 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/etc/profile.d
+  cat <<EOF > $P/etc/profile.d/ruby.sh
+export SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+EOF
+  cat <<EOF > $P/etc/profile.d/ruby.csh
+setenv SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt
+EOF
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
