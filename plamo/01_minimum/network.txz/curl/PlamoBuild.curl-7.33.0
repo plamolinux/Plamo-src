@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://curl.haxx.se/download/curl-7.31.0.tar.bz2'
+url='http://curl.haxx.se/download/curl-7.33.0.tar.bz2'
 verify=$url.asc
 pkgbase=curl
-vers=7.31.0
-arch=x86_64
-# arch=i586
+vers=7.33.0
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=curl-7.31.0
+src=${pkgbase}-${vers}
 OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt'
 if [ "$arch" = "x86_64" ]; then
     OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib64"
