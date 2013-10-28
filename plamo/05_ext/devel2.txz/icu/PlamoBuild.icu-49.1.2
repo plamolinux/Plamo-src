@@ -3,13 +3,12 @@
 url='http://download.icu-project.org/files/icu4c/49.1.2/icu4c-49_1_2-src.tgz'
 pkgbase=icu
 vers=49.1.2
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=icu
 OPT_CONFIG=''
 DOCS='license.html readme.html unicode-license.txt'
-patchfiles=''
+patchfiles='icu.patch'
 compress=txz
 ##############################################################
 
