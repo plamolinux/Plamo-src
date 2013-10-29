@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/24.0/source/firefox-24.0.source.tar.bz2'
+url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0/source/firefox-25.0.source.tar.bz2'
 verify=$url.asc
 pkgbase=firefox
-vers=24.0
+vers=25.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=mozilla-release
-firefox_tag=FIREFOX_24_0_RELEASE
+firefox_tag=FIREFOX_25_0_RELEASE
 # after firefox 12.0, to use system cairo is broken.
 #	--enable-system-cairo \
 # after firefox 13.0, libpng 1.5 is required.
@@ -300,52 +300,61 @@ if [ $opt_config -eq 1 ] ; then
 #    fi
 
     cat > mozconfig <<EOF
+## Project
 . ${B[$i]}/browser/config/mozconfig
+export MOZILLA_OFFICIAL=0
 
 mk_add_options MOZ_MAKE_FLAGS="-j3"
+ac_add_options --enable-strip
+ac_add_options --disable-install-strip
+ac_add_options --disable-static 
+ac_add_options --enable-shared
 
+## Directory
 ac_add_options --prefix=/usr
 ac_add_options --libdir=/usr/${libdir}
 ac_add_options --localstatedir=/var
 
+## System Library
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
-# after firefox 18.0, libjpeg-turbo is required.
-# (libjpeg-turbo: http://libjpeg-turbo.virtualgl.org/)
-#ac_add_options --with-system-jpeg
+# jpeg-turbo
+ac_add_options --with-system-jpeg
 ac_add_options --with-system-zlib
 ac_add_options --with-system-bz2
-#ac_add_options --with-system-png
+# libpng-1.6
+ac_add_options --with-system-png
 ac_add_options --with-system-libevent
 ac_add_options --with-system-libvpx
 #ac_add_options --enable-system-hunspell
 ac_add_options --enable-system-sqlite
 ac_add_options --enable-system-ffi
-#ac_add_options --enable-system-cairo
 ac_add_options --enable-system-pixman
 ac_add_options --with-pthreads
 
-ac_add_options --with-branding=browser/branding/unofficial
+## Features
+ac_add_options --enable-safe-browsing
 ac_add_options --enable-startup-notification
 ac_add_options --enable-gio
 ac_add_options --enable-webm
 ac_add_options --disable-dbus
 ac_add_options --disable-necko-wifi
-ac_add_options --enable-safe-browsing
 ac_add_options --enable-canvas
-
+# disable feature
 ac_add_options --disable-gnomevfs
 ac_add_options --disable-gnomeui
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
 ac_add_options --disable-installer
-ac_add_options --enable-strip
 
+## Branding
+ac_add_options --with-branding=browser/branding/unofficial
+
+## Japanese
 ac_add_options --with-l10n-base=${B[$i]}/../l10n
 ac_add_options --enable-ui-locale=ja
 
-export MOZILLA_OFFICIAL=0
 EOF
 
     cat << EOF >> layout/build/Makefile.in
