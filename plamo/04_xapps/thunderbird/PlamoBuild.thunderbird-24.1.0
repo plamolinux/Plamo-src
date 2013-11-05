@@ -1,14 +1,14 @@
 #!/bin/sh
 set -x
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.0/source/thunderbird-24.0.source.tar.bz2'
+url='http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.1.0/source/thunderbird-24.1.0.source.tar.bz2'
 verify=$url.asc
 pkgbase=thunderbird
-vers=24.0
+vers=24.1.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=comm-esr24
-thunderbird_tag=THUNDERBIRD_24_0_RELEASE
+thunderbird_tag=THUNDERBIRD_24_1_0_RELEASE
 OPT_CONFIG=''
 DOCS='mail/README.html'
 patchfiles='thunderbird.desktop.patch'
