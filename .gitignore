@@ -11,3 +11,7 @@ i.st
 *.tar.gz
 *.tar.bz2
 *.tar.xz
+*.sha256sum
+*-*/
+l10n/
+git-set-file-times
