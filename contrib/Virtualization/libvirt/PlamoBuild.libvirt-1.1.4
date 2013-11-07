@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://libvirt.org/sources/libvirt-1.1.0.tar.gz'
+url='http://libvirt.org/sources/libvirt-1.1.4.tar.gz'
 pkgbase=libvirt
-vers=1.1.0
-arch=x86_64
-# arch=i586
-build=P3
-src=libvirt-1.1.0
-OPT_CONFIG='--with-udev --without-hal --with-init-script=redhat --with-lxc --with-capng --with-macvtap --with-qemu-group=kvm --with-qemu-user=libvirt-qemu --with-interface --with-yajl'
+vers=1.1.4
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=${pkgbase}-${vers}
+OPT_CONFIG="--with-capng --without-hal --with-udev --with-lxc
+    --with-init-script=redhat --with-qemu-user=libvirt-qemu
+    --with-qemu-group=kvm --with-macvtap"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-old INSTALL NEWS README TODO'
-patchfiles='libvirt_plamo.patch Allow-libvirt-group-to-access-the-socket.patch storage-fix.patch'
+patchfiles='libvirt_plamo.patch Allow-libvirt-group-to-access-the-socket.patch'
 compress=txz
 ##############################################################
 
@@ -200,14 +201,13 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    sed -i 's|#group =.*|group="kvm"|' src/qemu/qemu.conf
+    sed -i 's@#group = "root"@group = "kvm"@g' src/qemu/qemu.conf
 
     #if [ -f autogen.sh ] ; then
     #  sh ./autogen.sh
     #fi
 
     if [ -x configure ] ; then
-      export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
       export LDFLAGS='-Wl,--as-needed' 
       export CFLAGS="-isystem /usr/include $target"
       export CPPFLAGS="-isystem /usr/include $target"
