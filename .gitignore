@@ -7,4 +7,8 @@ i.et
 i.st
 *.sig
 *.asc
-*.txz
+*-x86_64-P*.txz
+*-i586-P*.txz
+*.tar.gz
+*.tar.bz2
+*.tar.xz

@@ -1,20 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://curl.haxx.se/download/curl-7.31.0.tar.bz2'
+url='http://rsync.samba.org/ftp/rsync/src/rsync-3.1.0.tar.gz'
 verify=$url.asc
-pkgbase=curl
-vers=7.31.0
-arch=x86_64
-# arch=i586
+pkgbase=rsync
+vers=3.1.0
 build=P1
-src=curl-7.31.0
-OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt'
-if [ "$arch" = "x86_64" ]; then
-    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib64"
-else
-    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
-fi
-DOCS='COPYING README RELEASE-NOTES'
+arch=`uname -m | sed -e 's/i.86/i586/'`
+src=${pkgbase}-${vers}
+OPT_CONFIG=''
+DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -142,6 +136,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -256,7 +264,6 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1

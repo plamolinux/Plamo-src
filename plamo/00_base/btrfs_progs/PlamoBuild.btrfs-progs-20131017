@@ -1,16 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://sqlite.org/2013/sqlite-autoconf-3071601.tar.gz'
-pkgbase=sqlite
-vers=3.7.16.1
-arch=x86_64
-#arch=i586
+url='git://git.kernel.org/pub/scm/linux/kernel/git/mason/btrfs-progs.git'
+pkgbase=btrfs_progs
+vers=20131017
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=sqlite-autoconf-3071601
-# SQLITE_SECURE_DELETE を定義する必要あり (firefox/thunderbird)．
-# --enable-threadsafe で有効になるのかな?
-OPT_CONFIG='--disable-static --enable-threadsafe --enable-readline --enable-dynamic-extensions'
-DOCS='INSTALL README'
+src=btrfs-progs
+OPT_CONFIG=''
+DOCS='COPYING INSTALL'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -19,40 +16,20 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_bindir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in * ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
-         echo "stripping -p $i"
-         strip -p $i
+strip_all() {
+  for chk in `find . ` ; do
+    chk_elf=`file $chk | grep ELF`
+    if [ "$chk_elf.x" != ".x" ]; then
+      chk_lib=`echo $chk | grep lib`
+      if [ "$chk_lib.x" != ".x" ]; then
+         echo "stripping $chk with -g "
+         strip -g $chk
+      else
+         echo "stripping $chk"
+         strip $chk
       fi
-    done
-  ) fi
-}
-
-strip_libdir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in *.so *.so.* *.a ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
-        if [ $i != ${i%.a} ] ; then
-          echo -n "ranlib and "
-          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
-        fi
-        echo "stripping -gp $i"
-        strip -gp $i
-      fi
-    done
-  ) fi
+    fi
+  done
 }
 
 gzip_dir() {
@@ -89,54 +66,10 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
-  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
-  gzip_dir $infodir
-  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
-}
-
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
-}
+compress_all() {
+  cd $P
+  strip_all
+}  
 
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
@@ -158,9 +91,11 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
+    suffix="64"
 else
     target="-m32"
     libdir="lib"
+    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -178,16 +113,16 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then 
+	git clone $i
+    fi
   done
-  for i in $url ; do
-    case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    esac
-  done
+  cd $src
+  git checkout ; git reset --hard 194aa4a
+
+
 fi
+
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -202,21 +137,21 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
 
-    if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1"
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
-    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -224,7 +159,8 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1" make -j3
+      make -j3
+      make btrfs-zero-log
     fi
   done
 fi
@@ -240,61 +176,58 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+    mkdir -p $P/sbin
+    mkdir -p $P/usr/share
+
+    make install prefix=$P/usr
+    mv $P/usr/man $P/usr/share/man
+    ( cd $P/sbin ; ln -sf /usr/bin/btrfs btrfs )
+    ( cd $P/sbin ; ln -sf /usr/bin/btrfsck fsck.btrfs )
+
+    # install mkfs.btrfs btrfs-vol btrfsck btrfs-debug-tree btrfs-find-root btrfs-corrupt-block btrfs-zero-log $P/sbin
+    # install btrfsctl btrfs-show btrfs btrfs-map-logical btrfs-restore calc-size $P/usr/sbin
+    # ( cd $P/sbin ; ln -sf btrfsck fsck.btrfs )
+    
+    # cd man
+    # for man in *.8.gz ; do
+    #	install $man $P/usr/share/man/man8/$man
+    #	chmod 644    $P/usr/share/man/man8/$man
+    # done
+    #
+    # cd ..
+
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
+  mkdir -p $docdir/$src
 
 # remove locales except ja
 # 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
+  for loc_dir in `find $P -name locale` ; do
+      pushd $loc_dir
+      for loc in * ; do
+          if [ "$loc" != "ja" ]; then
+              rm -rf $loc
+          fi
+      done
+      popd
+   done      
 
-  touch $W/i.et
-  cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
-  compress
+######################################################################
+# path に lib があるバイナリは strip -g, ないバイナリは strip する
+######################################################################
+  cd $P
+  compress_all
+  for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d`; do
+     gzip_dir mdir
+  done
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
+  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -305,7 +238,6 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -317,11 +249,17 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-  mv $docdir/$src $docdir/$pkgbase-$vers
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
-  convert
+
+############################################################
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
+############################################################
+
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share/doc
+  fi
+
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

@@ -1,18 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://sourceforge.net/projects/libpng/files/libpng14/1.4.12/libpng-1.4.12.tar.bz2'
-pkgbase=libpng
-vers=1.4.12
-arch=x86_64
-# arch=i586
-build=P1
-src=libpng-1.4.12
-OPT_CONFIG='--disable-static'
-DOCS='INSTALL LICENSE README TODO libpng-1.4.12.txt'
-# http://littlesvr.ca/apng/
-# http://animatedpng.com/
-# http://sourceforge.net/projects/apng/files/libpng/libpng14/
-patchfiles='libpng-1.4.10-apng.patch'
+url='http://www.openssl.org/source/openssl-1.0.1e.tar.gz'
+pkgbase=openssl
+vers=1.0.1e
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
+src=openssl-1.0.1e
+OPT_CONFIG=''
+DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
+patchfiles='openssl-1.0.1e-fix_parallel_build-1.patch openssl-1.0.1e-fix_pod_syntax-1.patch'
+# http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1e-fix_parallel_build-1.patch
+# http://www.linuxfromscratch.org/patches/blfs/svn/openssl-1.0.1e-fix_pod_syntax-1.patch
 compress=txz
 ##############################################################
 
@@ -181,6 +179,11 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+
+  # get CA cert
+  rm -f $W/ca-bundle.crt
+  $W/mkcabundle.pl > $W/ca-bundle.crt
+
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -203,20 +206,19 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
+    export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    export LC_ALL=C
+    # export CFLAGS="gcc -isystem /usr/include $target"
+    # export CPPFLAGS="g++ -isystem /usr/include $target"
+    # export CC="clang"
+    export CC="gcc"
+    if [ $arch = 'x86_64' ]; then
+      ./Configure shared zlib-dynamic --prefix=/usr --openssldir=/etc/ssl linux-x86_64
+    else
+      ./Configure shared zlib-dynamic --prefix=/usr --openssldir=/etc/ssl linux-elf
     fi
-
-    if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
-    fi
+    sed -i 's# libcrypto.a##;s# libssl.a##' Makefile
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -224,7 +226,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make "CC=gcc $target" PERL=/usr/bin/perl LIBDIR=${libdir}
     fi
   done
 fi
@@ -235,44 +237,25 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
+
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
+      LC_ALL=C make INSTALL_PREFIX=$P PERL=/usr/bin/perl MANDIR=/usr/share/man LIBDIR=${libdir} MANSUFFIX=ssl install
     fi
+    ( cd $P/usr/share ; ln -sf ../../etc/ssl ssl )
+    cp -v -r certs $P/etc/ssl
   done
+  # CA 証明書ファイル生成スクリプトと証明書ファイルのコピー
+  install -m0755 $W/mkcabundle.pl $P/etc/ssl/mkcabundle.pl
+  install -m0644 $W/ca-bundle.crt $P/etc/ssl/certs/ca-bundle.crt
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
 
 # remove locales except ja
 # 

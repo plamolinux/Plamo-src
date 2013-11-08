@@ -1,23 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://jp.php.net/get/php-5.4.17.tar.bz2/from/this/mirror'
-pkgbase=php
-vers=5.4.17
-arch=x86_64
-# arch=i586
+url='http://downloads.sourceforge.net/libpng/libpng-1.6.6.tar.xz'
+pkgbase=libpng
+vers=1.6.6
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=php-5.4.17
-# for 2.2
-#CONFDIR="/etc/httpd/conf/"
-#OPT_CONFIG="--with-apxs2=/usr/sbin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared "
-# for 2.4
-CONFDIR="/etc/httpd/"
-OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared"
-if [ $arch == 'x86_64' ]; then
-  OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
-fi
-DOCS='INSTALL LICENSE NEWS README.EXTENSIONS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.PHP4-TO-PHP5-THIN-CHANGES README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.namespaces'
-patchfiles=''
+src=libpng-1.6.6
+OPT_CONFIG='--disable-static'
+DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+patchfiles='libpng-1.6.6-apng.patch'
+# http://downloads.sourceforge.net/libpng-apng/libpng-1.6.3-apng.patch.gz
+compatlibs="libpng14.so.14.12.0"
 compress=txz
 ##############################################################
 
@@ -40,7 +33,6 @@ strip_all() {
     fi
   done
 }
-
 
 gzip_dir() {
   echo "compressing in $1"
@@ -80,45 +72,6 @@ compress_all() {
   cd $P
   strip_all
 }  
-
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
-}
 
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
@@ -162,9 +115,15 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget -O $src.tar.bz2 $i ; fi
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  tar xvpf  $src.tar.bz2
+  for i in $url ; do
+    case ${i##*.} in
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
+    esac
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -185,13 +144,20 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
+    if [ -f setup.py ]; then
+        python ./setup.py config        
+    elif [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       if [ -x /usr/bin/clang -a -x /usr/bin/clang++ ]; then
+	   export CC="clang"
+	   export CXX="clang++"
+       else
+	   export CC="gcc -isystem /usr/include $target" 
+	   export CXX="g++ -isystem /usr/include $target "
+       fi
+       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -201,7 +167,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py build
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -219,78 +187,50 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py install --root $P
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      # copy dummy httpd.conf
-      mkdir -p $P/$CONFDIR
-      cp $CONFDIR/original/httpd.conf $P/$CONFDIR
-      make install INSTALL_ROOT=$P
-      # delete unused files
-      rm -rf $P/$CONFDIR/httpd.conf*
-      ( cd $P ; rm -rf .channels .depdb .filemap .lock .registry .depdblock )
-      # /usr/${libdir}/build 以下を使用するソフトがある模様．
-      #( cd $P/usr/lib64/ ; rm -rf build )
+      make install DESTDIR=$P
     fi
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # Install php.ini
-  install -m 644 ${B[$i]}/php.ini-production $P/$CONFDIR/php.ini.dist
-  # Install Apache Configuration File
-  mkdir -p $P/$CONFDIR/extra.dist/
-  cat <<EOF > $P/$CONFDIR/extra.dist/php5.conf
-# 2.2
-#LoadModule php5_module        ${libdir}/apache/modules/libphp5.so
-# 2.4
-LoadModule php5_module        ${libdir}/httpd/modules/libphp5.so
-
-<FilesMatch \.php$>
-  SetHandler application/x-httpd-php
-</FilesMatch>
-EOF
-  mkdir -p $P/install
-  cat <<EOF > $P/install/initpkg
-if [ ! -f $CONFDIR/extra/php5.conf ]; then
-  ( cd $CONFDIR ; cp extra.dist/php5.conf extra/php5.conf )
-fi
-if [ ! -f $CONFDIR/php.ini ]; then
-  ( cd $CONFDIR ; cp php.ini.dist php.ini )
-fi
-EOF
-
+  # make libpng14.so.14.12.0 available
+  for i in $compatlibs ; do
+      cp /usr/${libdir}/$i $P/usr/${libdir}
+      ( cd $P/usr/${libdir} ; ln -sf $i ${i%.12.0} )
+      ( cd $P/usr/${libdir} ; ln -sf $i ${i%.14.12.0} )
+  done
+  # cheat system :-P
+  ( cd $P/usr/${libdir} ; ln -sf libpng{16,14}.la )
+  ( cd $P/usr/${libdir}/pkgconfig ; ln -sf libpng{16,14}.pc )
+      
   mkdir -p $docdir/$src
 
 # remove locales except ja
 # 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
+  for loc_dir in `find $P -name locale` ; do
+      pushd $loc_dir
+      for loc in * ; do
+          if [ "$loc" != "ja" ]; then
+              rm -rf $loc
+          fi
+      done
+      popd
+   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
-  for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-     gzip_dir mdir
-  done
-
-  if [ -d $P/usr/share/man ] ; then
-      for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d` ; do
-	  gzip_dir $mdir
+  if [ -d $P/usr/share/man ]; then
+      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+          gzip_dir $mdir
       done
   fi
-
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -307,7 +247,6 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -319,14 +258,17 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+
 ############################################################
 #   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
 #   紛れこみがちなので
 ############################################################
+
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
       chown -R root.root $P/usr/share/doc
   fi
+
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

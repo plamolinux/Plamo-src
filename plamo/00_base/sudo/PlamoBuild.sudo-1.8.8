@@ -1,17 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/17.0.7/source/thunderbird-17.0.7.source.tar.bz2'
-verify=$url.asc
-pkgbase=thunderbird
-vers=17.0.7
-arch=x86_64
-# arch=i586
+url='http://www.sudo.ws/sudo/dist/sudo-1.8.8.tar.gz'
+verify=$url.sig
+pkgbase=sudo
+vers=1.8.8
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=comm-esr17
-thunderbird_tag=THUNDERBIRD_17_0_7_RELEASE
-OPT_CONFIG=''
-DOCS='mail/README.html'
-patchfiles='thunderbird.desktop.patch'
+src=${pkgbase}-${vers}
+OPT_CONFIG="--disable-static --with-pam --without-sendmail --with-hal-insults --with-secure-path --docdir=/usr/share/doc/$src --with-env-editor --with-all-insults"
+DOCS='ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -138,6 +136,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      exit 1
+    fi
+  done
+  exit 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -178,14 +190,18 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $verify ; do
     if [ ! -f ${i##*/} ] ; then
       wget $i
-      wget $verify
     fi
   done
   for i in $verify ; do
     case ${i##*.} in
     asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
     esac
     if [ $? -ne 0 ]; then
       echo "archive verify was failed."
@@ -202,13 +218,6 @@ if [ $opt_download -eq 1 ] ; then
     esac
   done
 fi
-if [ -x /usr/bin/ccache ]; then
-  GCC="ccache gcc"
-  GPP="ccache g++"
-else
-  GCC="gcc"
-  GPP="g++"
-fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -223,83 +232,29 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    echo "hg clone start"
-    if [ -d ../l10n ]; then
-      rm -rf ../l10n
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
     fi
-    hg -v clone -r $thunderbird_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    echo " done."
-    if [ ! -d ../l10n ]; then
-      mkdir ../l10n
-    fi
-    mv ja ../l10n/
 
+    if [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-cat > mozconfig << EOF
-# Specify that Thunderbird should be built.
-mk_add_options MOZ_MAKE_FLAGS="-j3"
-ac_add_options --enable-application=mail
-ac_add_options --enable-calendar
-ac_add_options --disable-installer
-ac_add_options --enable-strip
-ac_add_options --disable-install-strip
-ac_add_options --disable-tests
-ac_add_options --enable-extensions=default
-ac_add_options --enable-single-profile
-ac_add_options --disable-profilesharing
-ac_add_options --disable-updater
-ac_add_options --disable-elf-dynstr-gc
-ac_add_options --disable-necko-wifi
-ac_add_options --disable-crashreporter
-ac_add_options --enable-chrome-format=jar
-ac_add_options --enable-svg
-ac_add_options --enable-webm
-ac_add_options --enable-system-lcms
-ac_add_options --enable-system-sqlite
-ac_add_options --with-system-jpeg
-ac_add_options --with-system-nspr
-ac_add_options --with-system-nss
-ac_add_options --with-system-zlib
-ac_add_options --with-system-bz2
-ac_add_options --with-system-libevent
-#ac_add_options --with-system-hunspell
-ac_add_options --with-pthreads
-ac_add_options --enable-system-ffi
-ac_add_options --disable-static 
-ac_add_options --enable-shared 
-ac_add_options --enable-safe-browsing
-ac_add_options --enable-ui-locale=ja
-ac_add_options --disable-gnomevfs
-ac_add_options --disable-gnomeui
-ac_add_options --with-l10n-base=../../l10n
-ac_add_options --prefix=/usr
-ac_add_options --libdir=/usr/${libdir}
-ac_add_options --localstatedir=/var
-ac_add_options --with-branding=mail/branding/aurora
-
-export CC="${GCC} -isystem /usr/include $target"
-export CXX="${GPP} -isystem /usr/include $target"
-export LDFLAGS='-Wl,--as-needed'
-export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-EOF
-
-    if [ $arch = "x86_64" ]; then
-      cat >> mozconfig << EOF
-export USE_ARCH=64
-EOF
-    else
-      cat >> mozconfig << EOF
-ac_add_options --host=i686-pc-linux-gnu
-ac_add_options --build=i686-pc-linux-gnu
-mk_add_options CONFIG_GUESS=i686-pc-linux-gnu
-export USE_ARCH=32
-EOF
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
     fi
-    make -j3 -f client.mk build
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -317,32 +272,34 @@ if [ $opt_package -eq 1 ] ; then
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    make -f client.mk install DESTDIR=$P
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
+    #chmod 0755 $P/var $P/var/lib
+    mv $P/etc/sudoers $P/etc/sudoers.new
+    mkdir -p $P/etc/pam.d
+cat <<"EOF" > $P/etc/pam.d/sudo
+#%PAM-1.0
+auth       include	plamo-default
+account    include	plamo-default
+password   include	plamo-default
+session    include	plamo-default
+EOF
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  install2 thunderbird.desktop $P/usr/share/applications/
-  ( cd $P/usr/$libdir ; ln -sf thunderbird-$vers thunderbird )
-
-#  mkdir -p $P/install
-#  cat <<EOF > $P/install/initpkg
-#lib_chk=\`grep thunderbird /etc/ld.so.conf\`
-#if [ "\$lib_chk.x" = ".x" ]; then
-#echo "adding /usr/$libdir/thunderbird to /etc/ld.so.conf"
-#echo "/usr/$libdir/thunderbird" >> /etc/ld.so.conf
-#ldconfig 2>/dev/null 1>/dev/null
-#fi
-#EOF
-
-
-# locale dataはソースコードには同梱されず，別途Mercurial経由で取り出す必要がある
-# ようなので，ズルして本家の日本語版バイナリから借用 :-P
-
-#  rm $P/usr/${libdir}/thunderbird-$vers/chrome/en-US.{jar,manifest}
-#  for i in $localefiles ; do
-#      cp $W/$i $P/usr/${libdir}/thunderbird-$vers/chrome
-#  done
+  mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+if [ ! -f /etc/sudoers ]; then
+    echo "making default sudoers file"
+    mv /etc/sudoers.new /etc/sudoers
+else
+    echo "sudoers file already exists."
+    rm /etc/sudoers.new
+fi
+EOF
 
 # remove locales except ja
 # 
@@ -390,16 +347,7 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
-  mv $docdir/$src $docdir/$pkgbase-$vers
   convert
-############################################################
-# /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-# 紛れこみがちなので
-############################################################
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share $P/usr/include $P/usr/${libdir}
-  fi
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

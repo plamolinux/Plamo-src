@@ -1,15 +1,20 @@
 #!/bin/sh
 ##############################################################
-url='http://www.openssl.org/source/openssl-1.0.0k.tar.gz'
-pkgbase=openssl
-vers=1.0.0k
-arch=x86_64
-# arch=i586
-build=P2
-src=openssl-1.0.0k
-OPT_CONFIG=''
-DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
-patchfiles='openssl-1.0.0c-32bit_x86_64-1.patch openssl-1.0.0c-fix_manpages-1.patch'
+url='http://curl.haxx.se/download/curl-7.33.0.tar.bz2'
+verify=$url.asc
+pkgbase=curl
+vers=7.33.0
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=${pkgbase}-${vers}
+OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt'
+if [ "$arch" = "x86_64" ]; then
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib64"
+else
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
+fi
+DOCS='COPYING README RELEASE-NOTES'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -178,11 +183,24 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-
-  # get CA cert
-  rm -f $W/ca-bundle.crt
-  $W/mkcabundle.pl > $W/ca-bundle.crt
-
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -205,15 +223,19 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    export LC_ALL=C
-    export CFLAGS="gcc -isystem /usr/include $target"
-    export CPPFLAGS="g++ -isystem /usr/include $target"
-    if [ $arch = 'x86_64' ]; then
-      ./Configure shared zlib-dynamic --prefix=/usr --openssldir=/etc/ssl linux-x86_64
-    else
-      ./config --prefix=/usr --openssldir=/etc/ssl shared zlib-dynamic
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
+
+    if [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
     fi
   done
 fi
@@ -222,7 +244,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make "CC=gcc $target" PERL=/usr/bin/perl LIBDIR=${libdir}
+      make -j3
     fi
   done
 fi
@@ -234,10 +256,7 @@ if [ $opt_package -eq 1 ] ; then
     fi
   fi
 
-  check_lib32=`echo $0 | grep 'lib32'`
-  if [ "$check_lib32.x" != ".x" ]; then
-      if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -247,16 +266,34 @@ if [ $opt_package -eq 1 ] ; then
     done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      LC_ALL=C make INSTALL_PREFIX=$P PERL=/usr/bin/perl MANDIR=/usr/share/man LIBDIR=${libdir} install
+      make install DESTDIR=$P
     fi
-    ( cd $P/usr/share ; ln -sf ../../etc/ssl ssl )
-    cp -v -r certs $P/etc/ssl
   done
-  install -m0755 $W/mkcabundle.pl $P/etc/ssl/mkcabundle.pl
-  install -m0644 $W/ca-bundle.crt $P/etc/ssl/certs/ca-bundle.crt
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 
