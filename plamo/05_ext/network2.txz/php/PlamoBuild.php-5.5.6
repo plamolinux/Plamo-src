@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://jp.php.net/get/php-5.5.5.tar.bz2/from/this/mirror'
+url='http://jp.php.net/get/php-5.5.6.tar.bz2/from/this/mirror'
 pkgbase=php
-vers=5.5.5
+vers=5.5.6
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=php-5.5.5
+src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
 OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared"
 if [ $arch == 'x86_64' ]; then
