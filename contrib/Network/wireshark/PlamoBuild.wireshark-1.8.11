@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://wiresharkdownloads.riverbed.com/wireshark/src/wireshark-1.8.9.tar.bz2'
-#verify='http://wiresharkdownloads.riverbed.com/wireshark/src/all-versions/SIGNATURES-1.8.4.txt'
+url='http://wiresharkdownloads.riverbed.com/wireshark/src/wireshark-1.8.11.tar.bz2'
+verify='http://wiresharkdownloads.riverbed.com/wireshark/src/all-versions/SIGNATURES-1.8.11.txt'
 pkgbase=wireshark
-vers=1.8.9
-arch=x86_64
-# arch=i586
+vers=1.8.11
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=wireshark-1.8.9
+src=${pkgbase}-${vers}
 OPT_CONFIG='--with-ssl --with-gtk3=no'
 DOCS='AUTHORS CMakeOptions.txt COPYING CPackConfig.txt ChangeLog INSTALL INSTALL.configure NEWS README README.DECT README.aix README.bsd README.cmake README.hpux README.irix README.linux README.macos README.tru64 README.vmware README.windows'
 patchfiles=''
