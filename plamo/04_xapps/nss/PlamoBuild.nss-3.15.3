@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_14_3_RTM/src/nss-3.14.3.tar.gz'
+url='http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_15_3_RTM/src/nss-3.15.3.tar.gz'
 pkgbase=nss
-vers=3.14.3
-arch=x86_64
-# arch=i586
+vers=3.15.3
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=nss-3.14.3
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS=''
 # http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.14.1-standalone-1.patch
-patchfiles='nss-3.14.3-standalone-1.patch'
+patchfiles='nss-3.15.3-standalone-2.patch'
 compress=txz
 ##############################################################
 
@@ -231,7 +230,7 @@ if [ $opt_build -eq 1 ] ; then
     if [ $arch = "x86_64" ]; then
       export USE_64=1
     fi
-    make -C mozilla/security/nss nss_build_all
+    cd nss && make 
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -249,8 +248,8 @@ if [ $opt_package -eq 1 ] ; then
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    export NSS_LINUXDIR=$( basename `ls -d $PWD/mozilla/dist/Linux*` )
-    pushd mozilla/dist
+    export NSS_LINUXDIR=$( basename `ls -d $PWD/dist/Linux*` )
+    pushd dist
     install -v -m755 -d $P/usr/${libdir}
     install -v -m755 $NSS_LINUXDIR/lib/*.so $P/usr/${libdir}
     install -v -m644 $NSS_LINUXDIR/lib/{*.chk,libcrmf.a} $P/usr/${libdir}

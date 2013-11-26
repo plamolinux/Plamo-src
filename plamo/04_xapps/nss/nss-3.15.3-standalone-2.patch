@@ -1,16 +1,16 @@
 Submitted By:            Armin K. <krejzi at email dot com>
-Date:                    2012-12-31
-Initial Package Version: 3.14.1
+Date:                    2013-07-02
+Initial Package Version: 3.15
 Upstream Status:         Not applicable
-Origin:                  Based on dj's original patch, rediffed for 3.14.1
+Origin:                  Based on dj's original patch, rediffed and modified for 3.15
 Description:             Adds auto-generated nss.pc and nss-config script, and allows
                          building without nspr in the source tree.
 
---- nss.orig/mozilla/security/nss/config/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ nss/mozilla/security/nss/config/Makefile	2012-12-31 13:27:51.694572567 +0100
+--- a/nss/config/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ b/nss/config/Makefile	2013-07-02 14:53:56.684750636 +0200
 @@ -0,0 +1,40 @@
-+CORE_DEPTH = ../..
-+DEPTH      = ../..
++CORE_DEPTH = ..
++DEPTH      = ..
 +
 +include $(CORE_DEPTH)/coreconf/config.mk
 +
@@ -33,7 +33,7 @@ Description:             Adds auto-generated nss.pc and nss-config script, and a
 +	    -e "s,@NSS_PATCH_VERSION@,$(NSS_PATCH_VERSION)," \
 +	    nss.pc.in > nss.pc
 +	chmod 0644 nss.pc
-+	ln -sf ../../../../security/nss/config/nss.pc $(DIST)/lib/pkgconfig
++	ln -sf ../../../../nss/config/nss.pc $(DIST)/lib/pkgconfig
 +
 +	# Create the nss-config script
 +	mkdir -p $(DIST)/bin
@@ -43,14 +43,14 @@ Description:             Adds auto-generated nss.pc and nss-config script, and a
 +	    -e "s,@NSS_PATCH_VERSION@,$(NSS_PATCH_VERSION)," \
 +	    nss-config.in > nss-config
 +	chmod 0755 nss-config
-+	ln -sf ../../../security/nss/config/nss-config $(DIST)/bin
++	ln -sf ../../../nss/config/nss-config $(DIST)/bin
 +
 +libs:
 +
 +dummy: all export libs
 +
---- nss.orig/mozilla/security/nss/config/nss-config.in	1970-01-01 01:00:00.000000000 +0100
-+++ nss/mozilla/security/nss/config/nss-config.in	2012-12-31 13:27:51.695572567 +0100
+--- a/nss/config/nss-config.in	1970-01-01 01:00:00.000000000 +0100
++++ b/nss/config/nss-config.in	2013-07-02 14:52:58.328084334 +0200
 @@ -0,0 +1,153 @@
 +#!/bin/sh
 +
@@ -205,8 +205,8 @@ Description:             Adds auto-generated nss.pc and nss-config script, and a
 +      echo $libdirs
 +fi      
 +
---- nss.orig/mozilla/security/nss/config/nss.pc.in	1970-01-01 01:00:00.000000000 +0100
-+++ nss/mozilla/security/nss/config/nss.pc.in	2012-12-31 13:27:51.695572567 +0100
+--- a/nss/config/nss.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ b/nss/config/nss.pc.in	2013-07-02 14:52:58.328084334 +0200
 @@ -0,0 +1,12 @@
 +prefix=@prefix@
 +exec_prefix=@exec_prefix@
@@ -220,24 +220,22 @@ Description:             Adds auto-generated nss.pc and nss-config script, and a
 +Libs: -L@libdir@ -lnss@NSS_MAJOR_VERSION@ -lnssutil@NSS_MAJOR_VERSION@ -lsmime@NSS_MAJOR_VERSION@ -lssl@NSS_MAJOR_VERSION@ -lsoftokn@NSS_MAJOR_VERSION@
 +Cflags: -I${includedir}
 +
---- nss.orig/mozilla/security/nss/Makefile	2012-11-14 02:14:07.000000000 +0100
-+++ nss/mozilla/security/nss/Makefile	2012-12-31 13:27:51.696572567 +0100
+--- a/nss/Makefile	2013-05-28 23:43:24.000000000 +0200
++++ b/nss/Makefile	2013-07-02 14:52:58.328084334 +0200
 @@ -44,7 +44,7 @@
  # (7) Execute "local" rules. (OPTIONAL).                              #
  #######################################################################
  
--nss_build_all: build_coreconf build_nspr build_dbm all
-+nss_build_all: build_coreconf build_dbm all
+-nss_build_all: build_nspr all
++nss_build_all: all
  
- nss_clean_all: clobber_coreconf clobber_nspr clobber_dbm clobber
+ nss_clean_all: clobber_nspr clobber
  
---- nss.orig/mozilla/security/nss/manifest.mn	2012-03-20 15:46:49.000000000 +0100
-+++ nss/mozilla/security/nss/manifest.mn	2012-12-31 13:27:51.696572567 +0100
-@@ -10,6 +10,6 @@
+--- a/nss/manifest.mn	2013-05-28 23:43:24.000000000 +0200
++++ b/nss/manifest.mn	2013-07-02 14:52:58.331417666 +0200
+@@ -10,4 +10,4 @@
  
  RELEASE = nss
  
--DIRS = lib cmd
-+DIRS = lib cmd config
- 
- 
+-DIRS = coreconf lib cmd
++DIRS = coreconf lib cmd config
