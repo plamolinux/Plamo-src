@@ -2,12 +2,11 @@
 
 ######################################################################
 url="https://github.com/lxc/lxc.git
-    http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=git_20131030
+vers=git_20131128
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -192,7 +191,8 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     case ${i##*.} in
-    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
+    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; else
+        ( cd `basename ${i##*/} .git` ; git pull origin master ) ; fi ;;
     *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
     esac
   done
@@ -202,8 +202,8 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git pull origin master ; git checkout origin/master ; git reset --hard 50266dc
-        perl $W/git-set-file-times ) ;;
+        git checkout origin/master ; git reset --hard e1a2f89
+        git set-file-times ) ;;
     esac
   done
 fi
