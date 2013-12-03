@@ -3,13 +3,12 @@
 url='http://poppler.freedesktop.org/poppler-0.20.3.tar.gz'
 pkgbase=poppler
 vers=0.20.3
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=poppler-0.20.3
 OPT_CONFIG='--enable-zlib --disable-static --enable-xpdf-headers --enable-libcurl'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README-XPDF TODO'
-patchfiles=''
+patchfiles='CVE-2013-4473.patch CVE-2013-4474.patch'
 compress=txz
 ##############################################################
 
