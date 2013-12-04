@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://upower.freedesktop.org/releases/upower-0.9.18.tar.xz'
+url='http://upower.freedesktop.org/releases/upower-0.9.23.tar.xz'
 pkgbase=upower
-vers=0.9.18
-arch=x86_64
-# arch=i586
+vers=0.9.23
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=upower-0.9.18
+src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
 patchfiles=''
