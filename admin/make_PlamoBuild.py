@@ -93,6 +93,7 @@ url=%s
 verify=
 pkgbase=%s
 vers=%s
+commitid=
 # arch=x86_64
 # arch=i586
 arch=`uname -m | sed -e 's/i.86/i586/'`
@@ -224,9 +225,20 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
+    case ${i##*.} in
+    git)
+      if [ ! -d `basename ${i##*/} .git` ] ; then
+        git clone $i
+      else
+        ( cd `basename ${i##*/} .git` ; git pull origin master )
+      fi
+      ;;
+    *)
+      if [ ! -f ${i##*/} ] ; then
+        wget $i
+      fi
+      ;;
+    esac
   done
   for i in $verify ; do
     if [ ! -f ${i##*/} ] ; then
@@ -250,6 +262,12 @@ if [ $opt_download -eq 1 ] ; then
     case ${i##*.} in
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/master
+        if [ -n "$commitid" ] ; then
+          git reset --hard $commitid
+        fi
+        git set-file-times ) ;;
     *) tar xvpf ${i##*/} ;;
     esac
   done
