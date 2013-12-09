@@ -1,11 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='git://git.kernel.org/pub/scm/linux/kernel/git/mason/btrfs-progs.git'
+url='https://www.kernel.org/pub/linux/kernel/people/mason/btrfs-progs/btrfs-progs-v3.12.tar.bz2'
+verify='https://www.kernel.org/pub/linux/kernel/people/mason/btrfs-progs/btrfs-progs-v3.12.tar.sign'
 pkgbase=btrfs_progs
-vers=20131017
+vers=3.12
+commitid=
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=btrfs-progs
+src=btrfs-progs-v3.12
 OPT_CONFIG=''
 DOCS='COPYING INSTALL'
 patchfiles=''
@@ -22,11 +24,11 @@ strip_all() {
     if [ "$chk_elf.x" != ".x" ]; then
       chk_lib=`echo $chk | grep lib`
       if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
+        echo "stripping $chk with -g "
+        strip -g $chk
       else
-         echo "stripping $chk"
-         strip $chk
+        echo "stripping $chk"
+        strip $chk
       fi
     fi
   done
@@ -71,13 +73,27 @@ compress_all() {
   strip_all
 }  
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+    B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+    B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -89,13 +105,13 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
+  target="-m64"
+  libdir="lib64"
+  suffix="64"
 else
-    target="-m32"
-    libdir="lib"
-    suffix=""
+  target="-m32"
+  libdir="lib"
+  suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -113,14 +129,52 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then 
-	git clone $i
+    case ${i##*.} in
+    git)
+      if [ ! -d `basename ${i##*/} .git` ] ; then
+        git clone $i
+      else
+        ( cd `basename ${i##*/} .git` ; git pull origin master )
+      fi
+      ;;
+    *)
+      if [ ! -f ${i##*/} ] ; then
+        wget $i
+      fi
+      ;;
+    esac
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
     fi
   done
-  cd $src
-  git checkout ; git reset --hard 194aa4a
-
-
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sign) bzip2 -cd ${url##*/} | gpg2 --verify ${i##*/} - ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/master
+        if [ -n "$commitid" ] ; then
+          git reset --hard $commitid
+        fi
+        git set-file-times ) ;;
+    *) tar xvpf ${i##*/} ;;
+    esac
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -134,24 +188,24 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+      patch -p1 < $W/$patch
     done
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -x configure ] ; then
+      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CFLAGS="-isystem /usr/include $target" 
+      export CPPFLAGS="-isystem /usr/include $target "
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -159,8 +213,9 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
-      make btrfs-zero-log
+      export CFLAGS="-isystem /usr/include $target" 
+      make CFLAGS="$CFLAGS"
+      make CFLAGS="$CFLAGS" btrfs-select-super
     fi
   done
 fi
@@ -176,52 +231,98 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    mkdir -p $P/sbin
-    mkdir -p $P/usr/share
+    for mk in `find . -name "[Mm]akefile" ` ; do
+      sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install prefix=$P/usr
 
-    make install prefix=$P/usr
-    mv $P/usr/man $P/usr/share/man
-    ( cd $P/sbin ; ln -sf /usr/bin/btrfs btrfs )
-    ( cd $P/sbin ; ln -sf /usr/bin/btrfsck fsck.btrfs )
+      mkdir -p $P/sbin
+      mkdir -p $P/usr/share
+      mv $P/usr/man $P/usr/share/man
+      ( cd $P/sbin ; ln -sf /usr/bin/btrfs btrfs )
+    fi
+    install -Dm755 btrfs-select-super $P/usr/bin
 
-    # install mkfs.btrfs btrfs-vol btrfsck btrfs-debug-tree btrfs-find-root btrfs-corrupt-block btrfs-zero-log $P/sbin
-    # install btrfsctl btrfs-show btrfs btrfs-map-logical btrfs-restore calc-size $P/usr/sbin
-    # ( cd $P/sbin ; ln -sf btrfsck fsck.btrfs )
-    
-    # cd man
-    # for man in *.8.gz ; do
-    #	install $man $P/usr/share/man/man8/$man
-    #	chmod 644    $P/usr/share/man/man8/$man
-    # done
-    #
-    # cd ..
+    cat <<'EOF' > $P/sbin/fsck.btrfs
+#!/bin/sh
+AUTO=false
+while getopts ":aApy" c
+do
+        case $c in
+        a|A|p|y)        AUTO=true;;
+        esac
+done
+eval DEV=\${$#}
+if [ ! -e $DEV ]; then
+        echo "$0: $DEV does not exist"
+        exit 8
+fi
+if $AUTO; then
+        echo "$0 $DEV: Btrfs file system."
+else
+        echo "If you wish to check the consistency of an unmounted"
+        echo "btrfs filesystem or recover files from or repair a"
+        echo "damaged filesystem, see btrfs check and btrfs restore help"
+        echo "output."
+fi
+exit 0
+
+EOF
+
+    chmod +x $P/sbin/fsck.btrfs
 
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+    mkdir -p $P/install
+    for omf in $P/usr/share/omf/* ; do
+      omf_name=`basename $omf`
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+    done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+    mkdir -p $P/install
+    for schema in $P/etc/gconf/schemas/* ; do
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+  ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+    done
+  fi
 
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+    pushd $loc_dir
+    for loc in * ; do
+      if [ "$loc" != "ja" ]; then
+        rm -rf $loc
+      fi
+    done
+    popd
+  done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
-  for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d`; do
-     gzip_dir mdir
-  done
+  if [ -d $P/usr/share/man ]; then
+    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+      gzip_dir $mdir
+    done
+  fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -246,8 +347,8 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
 
 ############################################################
@@ -257,7 +358,7 @@ if [ $opt_package -eq 1 ] ; then
 
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
+    chown -R root.root $P/usr/share/doc
   fi
 
 ######################################################################
