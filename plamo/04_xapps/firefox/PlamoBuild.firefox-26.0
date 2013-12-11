@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/source/firefox-25.0.1.source.tar.bz2'
+url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/source/firefox-26.0.source.tar.bz2'
 verify=$url.asc
 pkgbase=firefox
-vers=25.0.1
+vers=26.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=mozilla-release
-firefox_tag=FIREFOX_25_0_1_RELEASE
+firefox_tag=FIREFOX_26_0_RELEASE
 # after firefox 12.0, to use system cairo is broken.
 #	--enable-system-cairo \
 # after firefox 13.0, libpng 1.5 is required.
@@ -53,7 +53,7 @@ OPT_CONFIG_OLD=" \
 # Drop (build with external xulrunner)
 #OPT_CONFIG="$OPT_CONFIG --with-system-libxul --with-libxul-sdk=`pkg-config --variable=sdkdir libxul`"
 DOCS='LICENSE README.txt other-licenses xpinstall'
-patchfiles='firefox.desktop.patch shared-libs.patch firefox-url.patch'
+patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
 
@@ -283,6 +283,10 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
+
+    #
+    sed -i '/^PRE_RELEASE_SUFFIX := ""/s/ ""//' \
+      browser/base/Makefile.in
 
 #    echo "hg clone"
 #    if [ -d ../l10n ]; then
