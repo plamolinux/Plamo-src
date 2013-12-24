@@ -212,7 +212,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  cat <<- "EOF" | patch config/default.conf.unknown
+  cat <<- "EOF" | patch config/etc/default.conf.unknown
 	0a1,6
 	> # If you use /etc/rc.d/init.d/lxc-net, enable following 3 lines.
 	> #lxc.network.type=veth
