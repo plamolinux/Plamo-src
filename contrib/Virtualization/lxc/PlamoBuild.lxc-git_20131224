@@ -6,7 +6,7 @@ url="https://github.com/lxc/lxc.git
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=git_20131128
+vers=git_20131224
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -202,7 +202,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master ; git reset --hard e1a2f89
+        git checkout origin/master ; git reset --hard 2bc9375
         git set-file-times ) ;;
     esac
   done
@@ -304,7 +304,7 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   mv $docdir/lxc~/examples $docdir/$src
-  ( cd $S ; git log > $docdir/$src/ChangeLog )
+  ( cd $S ; git log | nkf -We > $docdir/$src/ChangeLog )
   install -m 644 $W/README.plamo $docdir/$src
   touch -t `date '+%m%d0900'` $docdir/$src/{ChangeLog,README.plamo}
   gzip_one $docdir/$src/ChangeLog
