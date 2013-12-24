@@ -8,7 +8,7 @@ url="https://github.com/lxc/lxc.git
 pkgbase=lxc
 vers=git_20131224
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+build=P2
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var
     --docdir=/usr/share/doc/lxc~ --enable-python --enable-lua"
