@@ -1,14 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libpng/libpng-1.6.7.tar.xz'
+url='http://downloads.sourceforge.net/libpng/libpng-1.6.8.tar.xz' 
+apngpatchurl='http://jaist.dl.sourceforge.net/project/libpng-apng/libpng16/1.6.8/libpng-1.6.8-apng.patch.gz'
 pkgbase=libpng
-vers=1.6.7
+vers=1.6.8
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libpng-1.6.7
+src=libpng-1.6.8
 OPT_CONFIG='--disable-static'
 DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
-patchfiles='libpng-1.6.6-apng.patch'
+apngpatch=`basename ${apngpatchurl##*/} .gz`
+patchfiles=""
 # http://downloads.sourceforge.net/libpng-apng/libpng-1.6.3-apng.patch.gz
 compatlibs="libpng14.so.14.12.0"
 compress=txz
@@ -124,6 +126,12 @@ if [ $opt_download -eq 1 ] ; then
     *) tar xvpf ${i##*/} ;;
     esac
   done
+  for i in $apngpatchurl ; do
+    if [ ! -f $apngpatch ] ; then wget $i ; fi
+  done
+  if [ ! -f $apngpatch ] ; then
+    gunzip ${i##*/}
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -139,6 +147,7 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
+    patch -p1 < $W/$apngpatch
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
