@@ -1,15 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://www.tcpdump.org/release/libpcap-1.4.0.tar.gz'
-verify=$url.sig
-pkgbase=libpcap
-vers=1.4.0
-arch=x86_64
-# arch=i586
+url='http://www.tcpdump.org/release/tcpdump-4.5.1.tar.gz'
+pkgbase=tcpdump
+vers=4.5.1
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libpcap-1.4.0
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
-DOCS='INSTALL.txt LICENSE README README.Win32 README.aix README.dag README.hpux README.linux README.macosx README.septel README.sita README.tru64 TODO'
+DOCS='CHANGES CREDITS INSTALL.txt LICENSE README.md Readme.Win32'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,20 +71,6 @@ compress_all() {
   strip_all
 }  
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
-    fi
-  done
-  exit 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -131,29 +115,11 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
-  done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -217,12 +183,33 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-    rm -f $P/usr/${libdir}/libpcap.a
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 
