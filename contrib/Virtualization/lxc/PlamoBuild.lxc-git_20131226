@@ -1,4 +1,5 @@
 #!/bin/sh
+
 ######################################################################
 url="https://github.com/lxc/lxc.git
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
@@ -7,7 +8,7 @@ url="https://github.com/lxc/lxc.git
 pkgbase=lxc
 vers=git_20131226
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+build=P2
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var
     --docdir=/usr/share/doc/lxc~ --enable-python --enable-lua"
@@ -259,8 +260,6 @@ if [ $opt_package -eq 1 ] ; then
     if [ -f Makefile ] ; then
       make install DESTDIR=$P
     fi
-    install -d $docdir/$src/api
-    cp -a doc/api/html $docdir/$src/api
   done
   touch $P/usr/$libdir/python*/site-packages/_lxc.cpython-33m.so
   install -d $P/etc/rc.d/init.d
@@ -275,6 +274,8 @@ if [ $opt_package -eq 1 ] ; then
     nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
   done
   find $mandir/ja_JP.eucJP -type f -exec sed -i "s@UTF-8@EUC-JP@g" {} \;
+  install -d $docdir/lxc~/api
+  cp -R doc/api/html $docdir/lxc~/api
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
@@ -305,16 +306,17 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   mv $docdir/lxc~/examples $docdir/$src
+  mv $docdir/lxc~/api $docdir/$src
   ( cd $S ; git log | nkf -We > $docdir/$src/ChangeLog )
   install -m 644 $W/README.plamo $docdir/$src
   touch -t `date '+%m%d0900'` $docdir/$src/{ChangeLog,README.plamo}
   gzip_one $docdir/$src/ChangeLog
   gzip_one $docdir/$src/README.plamo
   mv $docdir/$src/{examples,{AUTHORS,CONTRIBUTING,COPYING,INSTALL}.gz} $C
-  mv $docdir/$src/{MAINTAINERS,NEWS,README,TODO}.gz $C
+  mv $docdir/$src/{{MAINTAINERS,NEWS,README,TODO}.gz,api} $C
   mv $docdir/$src/{ChangeLog,README.plamo,$myname}.gz $C
   mv $C/{examples,{AUTHORS,CONTRIBUTING,COPYING,INSTALL}.gz} $docdir/$src
-  mv $C/{MAINTAINERS,NEWS,README,TODO}.gz $docdir/$src
+  mv $C/{{MAINTAINERS,NEWS,README,TODO}.gz,api} $docdir/$src
   mv $C/{ChangeLog,README.plamo,$myname}.gz $docdir/$src
   touch -t `date '+%m%d0900'` $docdir/$src
   convert
@@ -344,7 +346,6 @@ if [ $opt_package -eq 1 ] ; then
       `cd $P ; find usr/share/man/ja_JP.eucJP/man7 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   tar rvpf $pkg.tar -C $P install/doinst.sh
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/doc/$src/api | tail -n+2`
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans
