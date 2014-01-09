@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://www.tcpdump.org/release/libpcap-1.4.0.tar.gz'
+url='http://www.tcpdump.org/release/libpcap-1.5.2.tar.gz'
 verify=$url.sig
 pkgbase=libpcap
-vers=1.4.0
-arch=x86_64
-# arch=i586
+vers=1.5.2
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libpcap-1.4.0
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='INSTALL.txt LICENSE README README.Win32 README.aix README.dag README.hpux README.linux README.macosx README.septel README.sita README.tru64 TODO'
 patchfiles=''
