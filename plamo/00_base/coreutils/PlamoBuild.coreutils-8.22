@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/coreutils/coreutils-8.21.tar.xz'
+url='http://ftp.gnu.org/gnu/coreutils/coreutils-8.22.tar.xz'
+verify=$url.sig
 pkgbase=coreutils
-vers=8.21
-arch=x86_64
-# arch=i586
-build=P2
-src=coreutils-8.21
+vers=8.22
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=${pkgbase}-${vers}
 OPT_CONFIG='--without-gmp --enable-no-install-program=kill,uptime,su --enable-install-program=arch'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2005 ChangeLog-2006 ChangeLog-2007 ChangeLog-2008 INSTALL NEWS README THANKS THANKS-to-translators TODO thanks-gen'
 patchfiles=''
@@ -72,6 +72,20 @@ compress_all() {
   strip_all
 }  
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -115,6 +129,24 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
