@@ -3,13 +3,12 @@
 url='http://www.libimobiledevice.org/downloads/libimobiledevice-1.1.4.tar.bz2'
 pkgbase=libimobiledevice
 vers=1.1.4
-arch=x86_64
-# arch=i586
-build=P2
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P3
 src=libimobiledevice-1.1.4
 OPT_CONFIG='--enable-dev-tools'
 DOCS='AUTHORS COPYING COPYING.LESSER NEWS README'
-patchfiles='segfault-for-1.1.4.patch'
+patchfiles='fix-insecure-tmp-dir.patch'
 compress=txz
 ##############################################################
 
