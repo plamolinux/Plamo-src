@@ -3,13 +3,12 @@
 url='ftp://ftp.remotesensing.org/pub/libtiff/tiff-4.0.3.tar.gz'
 pkgbase=tiff
 vers=4.0.3
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=tiff-4.0.3
 OPT_CONFIG='--disable-static --with-x  --enable-cxx'
 DOCS='ChangeLog HOWTO-RELEASE README README.vms RELEASE-DATE TODO'
-patchfiles=''
+patchfiles='cve-2013-4231.patch'
 compress=txz
 ##############################################################
 
