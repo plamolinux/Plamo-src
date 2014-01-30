@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://mirror.postfix.jp/postfix-release/official/postfix-2.10.2.tar.gz'
+url='http://mirror.postfix.jp/postfix-release/official/postfix-2.11.0.tar.gz'
 verify=$url.sig
 pkgbase=postfix
-vers=2.10.2
+vers=2.11.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
-DOCS='HISTORY IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 TLS_TODO pflogsumm_quickfix.txt postfix-install'
+DOCS='HISTORY IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-2.10 TLS_TODO pflogsumm_quickfix.txt postfix-install'
 patchfiles=''
 compress=txz
 ##############################################################
