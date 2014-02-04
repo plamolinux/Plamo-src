@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/grep/grep-2.14.tar.xz'
+url='http://ftp.gnu.org/gnu/grep/grep-2.16.tar.xz'
 verify=$url.sig
 pkgbase=grep
-vers=2.14
-arch=x86_64
-# arch=i586
+vers=2.16
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=grep-2.14
+src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-perl-regexp'
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-alpha README-boot README-release THANKS TODO'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-alpha README-release THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
