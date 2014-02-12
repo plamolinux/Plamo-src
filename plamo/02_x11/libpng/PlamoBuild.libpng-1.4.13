@@ -1,18 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libpng/libpng-1.6.8.tar.xz' 
-apngpatchurl='http://jaist.dl.sourceforge.net/project/libpng-apng/libpng16/1.6.8/libpng-1.6.8-apng.patch.gz'
-pkgbase=libpng
-vers=1.6.8
+url='http://downloads.sourceforge.net/libpng/libpng-1.4.13.tar.xz' 
+apngpatchurl='http://jaist.dl.sourceforge.net/project/libpng-apng/libpng14/1.4.13/libpng-1.4.13-apng.patch.gz'
+pkgbase=libpng14
+vers=1.4.13
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libpng-1.6.8
+src=libpng-${vers}
 OPT_CONFIG='--disable-static'
-DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+DOCS='INSTALL LICENSE README TODO'
 apngpatch=`basename ${apngpatchurl##*/} .gz`
 patchfiles=""
-# http://downloads.sourceforge.net/libpng-apng/libpng-1.6.3-apng.patch.gz
-compatlibs="libpng14.so.14.12.0"
 compress=txz
 ##############################################################
 
@@ -203,19 +201,15 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
+  rm -rf $P/usr/share
+  rm -rf $P/usr/bin/libpng-config
+  rm -rf $P/usr/${libdir}/libpng.so
+  rm -rf $P/usr/${libdir}/libpng.la
+  rm -rf $P/usr/${libdir}/pkgconfig/libpng.pc
+  rm -rf $P/usr/include/*.h
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # make libpng14.so.14.12.0 available
-  for i in $compatlibs ; do
-      cp /usr/${libdir}/$i $P/usr/${libdir}
-      ( cd $P/usr/${libdir} ; ln -sf $i ${i%.12.0} )
-      ( cd $P/usr/${libdir} ; ln -sf $i ${i%.14.12.0} )
-  done
-  # cheat system :-P
-  ( cd $P/usr/${libdir} ; ln -sf libpng{16,14}.la )
-  ( cd $P/usr/${libdir}/pkgconfig ; ln -sf libpng{16,14}.pc )
-      
   mkdir -p $docdir/$src
 
 # remove locales except ja
