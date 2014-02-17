@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.isc.org/isc/bind9/9.9.4-P2/bind-9.9.4-P2.tar.gz'
+url='ftp://ftp.isc.org/isc/bind9/9.9.5/bind-9.9.5.tar.gz'
 verify=$url.asc
 pkgbase=bind
-vers=9.9.4_P2
+vers=9.9.5
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=${pkgbase}-9.9.4-P2
+src=${pkgbase}-9.9.5
 OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no'
 DOCS='HISTORY README'
 mainconf="named.conf"
