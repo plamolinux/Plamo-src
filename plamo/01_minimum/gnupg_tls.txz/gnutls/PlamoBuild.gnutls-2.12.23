@@ -4,13 +4,12 @@ url='ftp://ftp.gnutls.org/gcrypt/gnutls/v2.12/gnutls-2.12.23.tar.bz2'
 verify=$url.sig
 pkgbase=gnutls
 vers=2.12.23
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=gnutls-2.12.23
 OPT_CONFIG='--with-libgcrypt --without-p11-kit --disable-static'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
-patchfiles=''
+patchfiles='cve-2014-1959.patch'
 compress=txz
 ##############################################################
 
