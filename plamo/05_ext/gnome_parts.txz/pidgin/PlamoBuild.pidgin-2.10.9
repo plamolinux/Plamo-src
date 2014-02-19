@@ -1,17 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://sourceforge.net/projects/pidgin/files/Pidgin/2.10.7/pidgin-2.10.7.tar.bz2'
+url='http://sourceforge.net/projects/pidgin/files/Pidgin/2.10.9/pidgin-2.10.9.tar.bz2'
 verify=$url.asc
 pkgbase=pidgin
-vers=2.10.7
-arch=x86_64
-# arch=i586
+vers=2.10.9
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=pidgin-2.10.7
+src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-nm --disable-vv --disable-farsight --enable-cyrus-sasl --disable-tk'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.API ChangeLog.win32 HACKING INSTALL NEWS README README.MTN README.mingw'
-patchurl='http://www.honeyplanet.jp/pidgin-2.10.6_jp.diff.gz'
-patchfile=`basename ${patchurl##*/} .gz`
+patchfile='pidgin-2.10.9_jp.diff'
 compress=txz
 ##############################################################
 
@@ -194,10 +192,6 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  if [ ! -f $patchfile ]; then
-    wget $patchurl
-    gzip -d ${patchfile}.gz
-  fi
   for i in $verify ; do
     if [ ! -f ${i##*/} ] ; then
       wget $i
