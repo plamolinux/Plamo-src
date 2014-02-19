@@ -1,0 +1,2572 @@
+diff -uNr pidgin-2.10.9.orig/configure.ac pidgin-2.10.9/configure.ac
+--- pidgin-2.10.9.orig/configure.ac	2014-02-03 06:29:16.000000000 +0900
++++ pidgin-2.10.9/configure.ac	2014-02-19 15:16:20.800847516 +0900
+@@ -2074,7 +2074,7 @@
+ 					esac
+ 				fi
+ 			else
+-				nsslibs="-lssl3 -lsmime3 -lnss3 -lsoftokn3"
++				nsslibs="-lssl3 -lsmime3 -lnss3 -lsoftokn3 -lsqlite3"
+ 			fi
+ 
+ 			AC_CACHE_CHECK([for Mozilla nss libraries], ac_cv_moz_nss_libs,
+@@ -2088,7 +2088,7 @@
+ 					[ac_cv_moz_nss_libs="no"])
+ 
+ 				if test "x$ac_cv_moz_nss_libs" = "xno"; then
+-					nsslibs="-lssl3 -lsmime3 -lnss3 -lsoftokn3"
++					nsslibs="-lssl3 -lsmime3 -lnss3 -lsoftokn3 -lsqlite3"
+ 					LDFLAGS="$LDFLAGS -L$with_nspr_libs -L$with_nss_libs"
+ 					LIBS="$LIBS $nsslibs"
+ 					AC_TRY_LINK_FUNC(NSS_Init,
+diff -uNr pidgin-2.10.9.orig/libpurple/conversation.c pidgin-2.10.9/libpurple/conversation.c
+--- pidgin-2.10.9.orig/libpurple/conversation.c	2014-02-03 06:29:17.000000000 +0900
++++ pidgin-2.10.9/libpurple/conversation.c	2014-02-19 15:16:20.800847516 +0900
+@@ -735,6 +735,8 @@
+ 	PurpleBuddy *b;
+ 	PurpleChat *chat;
+ 	const char *text = NULL, *name;
++	gchar *utf8;
++	gsize dummy;
+ 
+ 	g_return_if_fail(conv != NULL);
+ 
+@@ -753,7 +755,9 @@
+ 	if(text == NULL)
+ 		text = name;
+ 
+-	purple_conversation_set_title(conv, text);
++	utf8 = sanitize_utf(text, strlen(text), &dummy);
++	purple_conversation_set_title(conv, utf8);
++	g_free(utf8);
+ }
+ 
+ void
+@@ -1234,6 +1238,7 @@
+ 			  PurpleMessageFlags flags, time_t mtime)
+ {
+ 	PurpleConversation *c;
++	char *tmpmessage = NULL;
+ 
+ 	g_return_if_fail(im != NULL);
+ 	g_return_if_fail(message != NULL);
+@@ -1244,11 +1249,20 @@
+ 		purple_conv_im_set_typing_state(im, PURPLE_NOT_TYPING);
+ 	}
+ 
++	// yaz
++	if (purple_prefs_get_bool("/purple/conversations/msnstyle")) {
++		tmpmessage = g_strdup_printf("<br>%s", message);
++	} else {
++		tmpmessage = g_strdup_printf("%s", message);
++	}
++
+ 	/* Pass this on to either the ops structure or the default write func. */
+ 	if (c->ui_ops != NULL && c->ui_ops->write_im != NULL)
+-		c->ui_ops->write_im(c, who, message, flags, mtime);
++		c->ui_ops->write_im(c, who, tmpmessage, flags, mtime);
+ 	else
+-		purple_conversation_write(c, who, message, flags, mtime);
++		purple_conversation_write(c, who, tmpmessage, flags, mtime);
++
++	g_free(tmpmessage);
+ }
+ 
+ gboolean purple_conv_present_error(const char *who, PurpleAccount *account, const char *what)
+diff -uNr pidgin-2.10.9.orig/libpurple/notify.c pidgin-2.10.9/libpurple/notify.c
+--- pidgin-2.10.9.orig/libpurple/notify.c	2014-02-03 06:29:17.000000000 +0900
++++ pidgin-2.10.9/libpurple/notify.c	2014-02-19 15:16:20.800847516 +0900
+@@ -417,6 +417,9 @@
+ 		purple_signal_emit(purple_notify_get_handle(), "displaying-userinfo",
+ 						 purple_connection_get_account(gc), who, user_info);
+ 
++		g_return_val_if_fail(g_utf8_validate(who, -1, NULL), NULL); //yaz
++		g_return_val_if_fail(g_utf8_validate(user_info, -1, NULL), NULL); //yaz
++
+ 		ui_handle = ops->notify_userinfo(gc, who, user_info);
+ 
+ 		if (ui_handle != NULL) {
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/gg/lib/pubdir50.c pidgin-2.10.9/libpurple/protocols/gg/lib/pubdir50.c
+--- pidgin-2.10.9.orig/libpurple/protocols/gg/lib/pubdir50.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/gg/lib/pubdir50.c	2014-02-19 15:16:20.800847516 +0900
+@@ -29,6 +29,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <time.h>
++#include <glib.h>
+ 
+ #include "libgadu.h"
+ #include "libgadu-config.h"
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/irc/irc.c pidgin-2.10.9/libpurple/protocols/irc/irc.c
+--- pidgin-2.10.9.orig/libpurple/protocols/irc/irc.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/irc/irc.c	2014-02-19 15:20:51.818953089 +0900
+@@ -1051,6 +1051,12 @@
+ 	option = purple_account_option_bool_new(_("Auto-detect incoming UTF-8"), "autodetect_utf8", IRC_DEFAULT_AUTODETECT);
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ 
++	option = purple_account_option_bool_new(_("Use SO/SI to send hankaku kana"), "irc_use_sosi", FALSE);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
++
++	option = purple_account_option_bool_new(_("Use 8bit to send hankaku kana"), "irc_use_8bit", FALSE);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
++
+ 	option = purple_account_option_string_new(_("Ident name"), "username", "");
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/irc/parse.c pidgin-2.10.9/libpurple/protocols/irc/parse.c
+--- pidgin-2.10.9.orig/libpurple/protocols/irc/parse.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/irc/parse.c	2014-02-19 15:16:20.804180654 +0900
+@@ -35,7 +35,7 @@
+ #include <ctype.h>
+ 
+ static char *irc_send_convert(struct irc_conn *irc, const char *string);
+-static char *irc_recv_convert(struct irc_conn *irc, const char *string);
++static char *irc_recv_convert(struct irc_conn *irc, char *string);
+ 
+ static void irc_parse_error_cb(struct irc_conn *irc, char *input);
+ 
+@@ -178,6 +178,20 @@
+ 	{ NULL, NULL, NULL, NULL }
+ };
+ 
++/* yaz */
++#define ASCII	0
++#define KANJI	1
++#define KANA	2
++#define ROMAN	3
++char seq_ascii[] = {0x1B,0x28,0x42,0x00}; /* ESC ( B */
++char seq_kanji[] = {0x1B,0x24,0x42,0x00}; /* ESC $ B */
++char seq_kana[]  = {0x1B,0x28,0x49,0x00}; /* ESC ( I */
++char seq_roman[] = {0x1B,0x28,0x4A,0x00}; /* ESC ( J */
++char *seq[4] = {seq_ascii, seq_kanji, seq_kana, seq_roman};
++char *jisstate[5] = {"ASCII", "KANJI", "KANA", "ROMAN"};
++char SO[] = {0x0E,0x00};
++char SI[] = {0x0F,0x00};
++
+ static PurpleCmdRet irc_parse_purple_cmd(PurpleConversation *conv, const gchar *cmd,
+                                         gchar **args, gchar **error, void *data)
+ {
+@@ -245,34 +259,111 @@
+ 	GError *err = NULL;
+ 	gchar **encodings;
+ 	const gchar *enclist;
++	char *escpos = NULL;
++	char *temp = NULL;
++	gboolean iskana = FALSE;
++	char *pos = NULL;
++	gboolean irc_use_sosi, irc_use_8bit;
++	char *strtmp;
++	gsize strtmp_len;
+ 
+ 	enclist = purple_account_get_string(irc->account, "encoding", IRC_DEFAULT_CHARSET);
+ 	encodings = g_strsplit(enclist, ",", 2);
+ 
++	irc_use_sosi = purple_account_get_bool(irc->account, "irc_use_sosi", FALSE);
++	irc_use_8bit = purple_account_get_bool(irc->account, "irc_use_8bit", FALSE);
++
+ 	if (encodings[0] == NULL || !g_ascii_strcasecmp("UTF-8", encodings[0])) {
+ 		g_strfreev(encodings);
+ 		return NULL;
+ 	}
+ 
+-	utf8 = g_convert(string, strlen(string), encodings[0], "UTF-8", NULL, NULL, &err);
++	strtmp  = botch_utf(string, strlen(string), &strtmp_len);
++	utf8 = g_convert(strtmp, strlen(strtmp), encodings[0], "UTF-8", NULL, NULL, &err);
++
+ 	if (err) {
+ 		purple_debug(PURPLE_DEBUG_ERROR, "irc", "Send conversion error: %s\n", err->message);
+ 		purple_debug(PURPLE_DEBUG_ERROR, "irc", "Sending as UTF-8 instead of %s\n", encodings[0]);
+-		utf8 = g_strdup(string);
++		utf8 = g_strdup(strtmp);
+ 		g_error_free(err);
+ 	}
+-	g_strfreev(encodings);
+ 
++	/* yaz */
++	if (!strncasecmp("iso-2022-jp", encodings[0], strlen("iso-2022-jp"))) {
++		escpos = strrchr(utf8, 0x1B);
++		if(escpos && (!strncmp(seq_kanji, escpos, 3) || !strncmp(seq_kana, escpos, 3))){
++			char *oldutf8 = utf8;
++			utf8 = g_realloc(utf8, strlen(utf8)+1+3);
++			if(utf8)
++				strncat(utf8, seq_ascii, 3);
++			else
++				utf8 = oldutf8;
++		}
++
++		if(irc_use_sosi || irc_use_8bit){
++			/* SO/SI */
++			//find kana escape and replace with roman+SO
++			temp = g_malloc0(strlen(utf8) * 7); //XXX should be reasonable size
++			pos = utf8;
++			while(pos < utf8+strlen(utf8)){
++				escpos = strchr(pos, 0x1B);
++				if(escpos){
++					if(!strncmp(seq_kana, escpos, 3)){ /* kana found */
++						iskana = TRUE;
++						strncat(temp, pos, escpos-pos);
++						strcat(temp, seq_roman);
++						if(irc_use_sosi)
++							strcat(temp, SO);
++						pos = escpos+3;
++					} else {
++						if(iskana){
++							char *ptr;
++							ptr = temp + strlen(temp);
++							while(pos<escpos){
++								if(irc_use_8bit)
++									*ptr = *pos + 128; // convert to 8bit
++								else
++									*ptr = *pos;
++								ptr++; pos++;
++							}
++							if(irc_use_sosi)
++								strcat(temp, SI);
++							strncat(temp, escpos, 3);
++							pos = escpos+3;
++							iskana = FALSE;
++						} else {
++							strncat(temp, pos, escpos-pos+3); //include esc
++							pos = escpos+3;
++						}
++					}
++				} else { /* escpos == NULL */
++					strcat(temp, pos);
++					break;
++				}
++			}
++			g_free(utf8);
++			utf8 = temp;
++		}
++	}
++
++	g_strfreev(encodings);
++	g_free(strtmp);
+ 	return utf8;
+ }
+ 
+-static char *irc_recv_convert(struct irc_conn *irc, const char *string)
++static char *irc_recv_convert(struct irc_conn *irc, char *string)
+ {
+ 	char *utf8 = NULL;
+ 	const gchar *charset, *enclist;
+ 	gchar **encodings;
+ 	gboolean autodetect;
+ 	int i;
++	GError *err;
++	gboolean retry;
++	gsize in_len, out_len;
++	int conv_len;
++	char *strtmp;
++	gsize strtmp_len;
+ 
+ 	autodetect = purple_account_get_bool(irc->account, "autodetect_utf8", IRC_DEFAULT_AUTODETECT);
+ 
+@@ -296,13 +387,123 @@
+ 		if (!g_ascii_strcasecmp("UTF-8", charset)) {
+ 			if (g_utf8_validate(string, -1, NULL))
+ 				utf8 = g_strdup(string);
++		} else if (!strncasecmp("iso-2022-jp-2", charset, strlen("iso-2022-jp-2"))){
++			/* pre-process quirky jis */
++			unsigned char *jisstr;
++			unsigned char *ptr, *ptr2;
++			int state = ASCII;
++			int is8bit = FALSE;
++
++			jisstr = (unsigned char *)calloc(1, strlen(string)*7); /* enough? */
++			ptr = (unsigned char *)string; ptr2 = jisstr;
++
++			while(*ptr){
++				if(*ptr == 0x1B){
++					/* escape sequence. */
++					if(*(ptr+1) == 0x28 && *(ptr+2) == 0x42){
++						state = ASCII;
++
++					} else if(*(ptr+1) == 0x24 && *(ptr+2) == 0x42){
++						state = KANJI;
++
++					} else if(*(ptr+1) == 0x28 && *(ptr+2) == 0x49){
++						state = KANA;
++
++					} else if(*(ptr+1) == 0x28 && *(ptr+2) == 0x4a){
++						state = ROMAN;
++
++					}
++					purple_debug(PURPLE_DEBUG_INFO, "irc", "state %s\n", jisstate[state]);
++				}
++				if(*ptr >= 0xA1 && *ptr <= 0xDF){
++					/* raw 8bit */
++					if(!is8bit){
++						strcat((char *)jisstr, seq[KANA]);
++						ptr2 += 3;
++						is8bit = TRUE;
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "8bit = TRUE\n");
++					}
++					*ptr2 = *ptr - 0x80;
++					ptr++ ; ptr2++;
++				} else {
++					/* 7bit */
++					if(*ptr == 0x0E){
++						/* SO */
++						strcat((char *)jisstr, seq[KANA]);
++						ptr++; ptr2 += 3;
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "SO\n");
++						continue;
++					} else if(*ptr == 0x0F){
++						/* SI */
++						strcat((char *)jisstr, seq[state]);
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "SI to %s\n", jisstate[state]);
++						ptr++; ptr2 += 3;
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "SI\n");
++						continue;
++					}
++					if(is8bit){ /* the edge of 8bit -> 7bit */
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "8bit to %s\n", jisstate[state]);
++						strcat((char *)jisstr, seq[state]);
++						ptr2 += 3;
++						is8bit=FALSE;
++						purple_debug(PURPLE_DEBUG_INFO, "irc", "8bit = FALSE\n");
++					}
++					/* copy str */
++					*ptr2 = *ptr;
++					ptr++; ptr2++;
++				}
++			}
++
++			/* convert & error recovery */
++			do {
++				err = NULL;
++				retry = FALSE;
++
++				conv_len = strlen((char *)jisstr);
++				utf8 = g_convert_with_fallback((char *)jisstr, conv_len, "UTF-8", charset,
++							       "?", &in_len, &out_len, &err);
++				if(err != NULL){
++					if(err->code == G_CONVERT_ERROR_ILLEGAL_SEQUENCE){
++						memmove(jisstr + in_len, jisstr + in_len + 1,
++							conv_len - in_len -1);
++						conv_len--;
++						*(jisstr + conv_len) = '\0';
++						retry = TRUE;
++					}
++					g_error_free(err);
++				}
++			} while(retry);
++
++			if(jisstr)
++				free(jisstr);
++
+ 		} else {
+-			utf8 = g_convert(string, -1, "UTF-8", charset, NULL, NULL, NULL);
++			do {
++				err = NULL;
++				retry = FALSE;
++
++				conv_len = strlen(string);
++				utf8 = g_convert_with_fallback(string, conv_len, "UTF-8", charset,
++							       "?", &in_len, &out_len, &err);
++				if(err != NULL){
++					if(err->code == G_CONVERT_ERROR_ILLEGAL_SEQUENCE){
++						memmove(string + in_len, string + in_len + 1,
++							 conv_len - in_len -1);
++						conv_len--;
++						*(string + conv_len) = '\0';
++						retry = TRUE;
++					}
++					g_error_free(err);
++				}
++			} while(retry);
+ 		}
+ 
+-		if (utf8) {
+-			g_strfreev(encodings);
+-			return utf8;
++
++		if(utf8){
++			strtmp = sanitize_utf(utf8, strlen(utf8), &strtmp_len);
++ 			g_strfreev(encodings);
++			g_free(utf8);
++			return strtmp;
+ 		}
+ 	}
+ 	g_strfreev(encodings);
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/jabber/jabber.c pidgin-2.10.9/libpurple/protocols/jabber/jabber.c
+--- pidgin-2.10.9.orig/libpurple/protocols/jabber/jabber.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/jabber/jabber.c	2014-02-19 15:16:20.804180654 +0900
+@@ -586,8 +586,9 @@
+                            gpointer unused)
+ {
+ 	JabberStream *js;
+-	char *txt;
++	char *txt, *utf;
+ 	int len;
++	gsize utflen;
+ 
+ 	if (NULL == packet)
+ 		return;
+@@ -605,8 +606,9 @@
+ 				g_str_equal((*packet)->name, "presence"))
+ 			xmlnode_set_namespace(*packet, NS_XMPP_CLIENT);
+ 	txt = xmlnode_to_str(*packet, &len);
+-	jabber_send_raw(js, txt, len);
+-	g_free(txt);
++	utf = botch_utf(txt, len, &utflen); //yaz
++	jabber_send_raw(js, utf, utflen);
++	g_free(txt); g_free(utf);
+ }
+ 
+ void jabber_send(JabberStream *js, xmlnode *packet)
+@@ -2321,6 +2323,7 @@
+ 				const char *title = purple_status_get_attr_string(tune, PURPLE_TUNE_TITLE);
+ 				const char *artist = purple_status_get_attr_string(tune, PURPLE_TUNE_ARTIST);
+ 				const char *album = purple_status_get_attr_string(tune, PURPLE_TUNE_ALBUM);
++
+ 				char *playing = purple_util_format_song_info(title, artist, album, NULL);
+ 				if (playing) {
+ 					purple_notify_user_info_add_pair(user_info, _("Now Listening"), playing);
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/jabber/message.c pidgin-2.10.9/libpurple/protocols/jabber/message.c
+--- pidgin-2.10.9.orig/libpurple/protocols/jabber/message.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/jabber/message.c	2014-02-19 15:16:20.804180654 +0900
+@@ -586,15 +586,20 @@
+ 				jm->thread_id = xmlnode_get_data(child);
+ 		} else if(!strcmp(child->name, "body") && !strcmp(xmlns, NS_XMPP_CLIENT)) {
+ 			if(!jm->body) {
+-				char *msg = xmlnode_get_data(child);
+-				char *escaped = purple_markup_escape_text(msg, -1);
+-				jm->body = purple_strdup_withhtml(escaped);
++				char *tmp, *msg, *escaped;
++				gsize len;
++				tmp = xmlnode_get_data(child);
++				escaped = purple_markup_escape_text(tmp, -1);
++				msg = sanitize_utf(escaped, strlen(escaped), &len);
++				jm->body = purple_strdup_withhtml(msg);
++				g_free(tmp);
+ 				g_free(escaped);
+ 				g_free(msg);
+ 			}
+ 		} else if(!strcmp(child->name, "html") && !strcmp(xmlns, NS_XHTML_IM)) {
+ 			if(!jm->xhtml && xmlnode_get_child(child, "body")) {
+ 				char *c;
++				gsize len;
+ 
+ 				const PurpleConnection *gc = js->gc;
+ 				PurpleAccount *account = purple_connection_get_account(gc);
+@@ -645,7 +650,9 @@
+ 				reformatted_xhtml =
+ 					jabber_message_xml_to_string_strip_img_smileys(child);
+ 
+-				jm->xhtml = reformatted_xhtml;
++				jm->xhtml =
++					sanitize_utf(reformatted_xhtml,
++								 strlen(reformatted_xhtml), &len);
+ 
+ 				/* add known custom emoticons to the conversation */
+ 				/* note: if there were no smileys in the incoming message, or
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/jabber/si.c pidgin-2.10.9/libpurple/protocols/jabber/si.c
+--- pidgin-2.10.9.orig/libpurple/protocols/jabber/si.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/jabber/si.c	2014-02-19 15:16:20.804180654 +0900
+@@ -42,6 +42,8 @@
+ #define STREAMHOST_CONNECT_TIMEOUT 15
+ #define ENABLE_FT_THUMBNAILS 0
+ 
++#include "util.h"
++
+ typedef struct _JabberSIXfer {
+ 	JabberStream *js;
+ 
+@@ -1241,13 +1243,24 @@
+ 	JabberIq *iq;
+ 	xmlnode *si, *file, *feature, *x, *field, *option, *value;
+ 	char buf[32];
++	gchar *f1 = NULL, *f2 = NULL;
++	gsize dummy;
+ #if ENABLE_FT_THUMBNAILS
+ 	gconstpointer thumb;
+ 	gsize thumb_size;
+ 
+ 	purple_xfer_prepare_thumbnail(xfer, "jpeg,png");
+ #endif
+-	xfer->filename = g_path_get_basename(xfer->local_filename);
++	/* yaz */
++	f1 = g_filename_display_basename(xfer->local_filename);
++	f2 = botch_utf(f1, strlen(f1), &dummy);
++	if(f2) {
++		xfer->filename = f2;
++		g_free(f1); f1 = NULL;
++	}
++    else {
++		xfer->filename = f1;
++    }
+ 
+ 	iq = jabber_iq_new(jsx->js, JABBER_IQ_SET);
+ 	xmlnode_set_attrib(iq->node, "to", xfer->who);
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/msn/msg.c pidgin-2.10.9/libpurple/protocols/msn/msg.c
+--- pidgin-2.10.9.orig/libpurple/protocols/msn/msg.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/msn/msg.c	2014-02-19 15:16:20.807513690 +0900
+@@ -108,7 +108,8 @@
+ msn_message_new_plain(const char *message)
+ {
+ 	MsnMessage *msg;
+-	char *message_cr;
++	char *message_cr, *message_cr2;
++	gsize len;
+ 
+ 	msg = msn_message_new(MSN_MSG_TEXT);
+ 	msg->retries = 1;
+@@ -120,8 +121,10 @@
+ 						 "FN=Segoe%20UI; EF=; CO=0; CS=1;PF=0");
+ 
+ 	message_cr = purple_str_add_cr(message);
+-	msn_message_set_bin_data(msg, message_cr, strlen(message_cr));
++	message_cr2 = botch_utf((gchar *)message_cr, -1, &len);
++	msn_message_set_bin_data(msg, message_cr2, len);
+ 	g_free(message_cr);
++	g_free(message_cr2);
+ 
+ 	return msg;
+ }
+@@ -657,16 +660,20 @@
+ {
+ 	PurpleConnection *gc;
+ 	const char *body;
++	char *body_str;
+ 	char *body_enc;
+ 	char *body_final;
+-	size_t body_len;
++	char *yaz_body_final;
++	size_t body_len, new_len;
+ 	const char *passport;
+ 	const char *value;
+ 
+ 	gc = cmdproc->session->account->gc;
+ 
+ 	body = msn_message_get_bin_data(msg, &body_len);
+-	body_enc = g_markup_escape_text(body, body_len);
++	body_str = sanitize_utf(body, body_len, &new_len);
++	body_enc = g_markup_escape_text(body_str, -1);
++	g_free(body_str);
+ 
+ 	passport = msg->remote_user;
+ 
+@@ -701,23 +708,30 @@
+ 		body_final = body_enc;
+ 	}
+ 
++	/* yaz */
++	/* replace 0D 0A with <br> */
++	yaz_body_final = purple_strreplace(body_final, "\r\n", "<br>");
++//	purple_debug_info("yaz msn", "yaz_body_final=%s\n", yaz_body_final);
++	g_free(body_final);
++	body_final = yaz_body_final;
++
+ 	if (cmdproc->servconn->type == MSN_SERVCONN_SB) {
+ 		MsnSwitchBoard *swboard = cmdproc->data;
+ 
+ 		swboard->flag |= MSN_SB_FLAG_IM;
+ 
+ 		if (swboard->current_users > 1 ||
+-			((swboard->conv != NULL) &&
+-			 purple_conversation_get_type(swboard->conv) == PURPLE_CONV_TYPE_CHAT))
++		    ((swboard->conv != NULL) &&
++		     purple_conversation_get_type(swboard->conv) == PURPLE_CONV_TYPE_CHAT))
+ 		{
+ 			/* If current_users is always ok as it should then there is no need to
+ 			 * check if this is a chat. */
+ 			if (swboard->current_users <= 1)
+ 				purple_debug_misc("msn", "plain_msg: current_users(%d)\n",
+-								swboard->current_users);
++						  swboard->current_users);
+ 
+ 			serv_got_chat_in(gc, swboard->chat_id, passport, 0, body_final,
+-							 time(NULL));
++					 time(NULL));
+ 			if (swboard->conv == NULL)
+ 			{
+ 				swboard->conv = purple_find_chat(gc, swboard->chat_id);
+@@ -731,7 +745,7 @@
+ 			if (swboard->conv == NULL)
+ 			{
+ 				swboard->conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,
+-										passport, purple_connection_get_account(gc));
++										      passport, purple_connection_get_account(gc));
+ 				swboard->flag |= MSN_SB_FLAG_IM;
+ 			}
+ 		}
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/msn/msn.c pidgin-2.10.9/libpurple/protocols/msn/msn.c
+--- pidgin-2.10.9.orig/libpurple/protocols/msn/msn.c	2014-02-03 06:29:18.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/msn/msn.c	2014-02-19 15:16:20.807513690 +0900
+@@ -241,33 +241,43 @@
+ 	MsnSession *session;
+ 	MsnTransaction *trans;
+ 	PurpleAccount *account;
+-	char real_alias[BUDDY_ALIAS_MAXLEN + 1];
++	const char *real_alias;
+ 	struct public_alias_closure *closure;
++	gchar *tmp;
++	gsize dummy;
+ 
+ 	session = purple_connection_get_protocol_data(pc);
+ 	cmdproc = session->notification->cmdproc;
+ 	account = purple_connection_get_account(pc);
+ 
+-	if (alias && *alias) {
+-		if (!msn_encode_spaces(alias, real_alias, BUDDY_ALIAS_MAXLEN + 1)) {
+-			if (failure_cb) {
+-				struct public_alias_closure *closure =
+-					g_new0(struct public_alias_closure, 1);
+-				closure->account = account;
+-				closure->failure_cb = failure_cb;
+-				purple_timeout_add(0, set_public_alias_length_error, closure);
+-			} else {
+-				purple_notify_error(pc, NULL,
+-				                    _("Your new MSN friendly name is too long."),
+-				                    NULL);
+-			}
+-			return;
++	if (alias && *alias)
++	{
++		char *tmp = botch_utf(alias, strlen(alias), &dummy);
++		real_alias = purple_url_encode(g_strstrip(tmp));
++		g_free(tmp);
++	}
++	else
++		real_alias = "";
++
++	if (strlen(real_alias) > BUDDY_ALIAS_MAXLEN)
++	{
++		if (failure_cb) {
++			struct public_alias_closure *closure =
++				g_new0(struct public_alias_closure, 1);
++			closure->account = account;
++			closure->failure_cb = failure_cb;
++			purple_timeout_add(0, set_public_alias_length_error, closure);
++		} else {
++			purple_notify_error(pc, NULL,
++			                    _("Your new MSN friendly name is too long."),
++			                    NULL);
+ 		}
++		return;
++	}
+ 
+-		if (real_alias[0] == '\0')
+-			g_strlcpy(real_alias, purple_account_get_username(account), sizeof(real_alias));
+-	} else
+-		g_strlcpy(real_alias, purple_account_get_username(account), sizeof(real_alias));
++	if (real_alias[0] == '\0') {
++		real_alias = purple_url_encode(purple_account_get_username(account));
++	}
+ 
+ 	closure = g_new0(struct public_alias_closure, 1);
+ 	closure->account = account;
+@@ -580,6 +590,23 @@
+ }
+ 
+ static void
++msn_ipc_init(PurplePlugin *plugin)
++{
++	purple_plugin_ipc_register(plugin, "msn_set_friendly_name",
++				   PURPLE_CALLBACK(msn_act_id),
++				   purple_marshal_VOID__POINTER_POINTER,
++				   purple_value_new(PURPLE_TYPE_UNKNOWN),2,
++				   purple_value_new(PURPLE_TYPE_POINTER),
++				   purple_value_new(PURPLE_TYPE_POINTER));
++}
++
++static void
++msn_ipc_end(PurplePlugin *plugin)
++{
++	purple_plugin_ipc_unregister_all(plugin);
++}
++
++static void
+ enable_mpop_cb(PurpleConnection *pc)
+ {
+ 	MsnSession *session = purple_connection_get_protocol_data(pc);
+@@ -1435,13 +1462,18 @@
+ msn_send_emoticons(MsnSwitchBoard *swboard, GString *body)
+ {
+ 	MsnMessage *msg;
++	gchar *tmp;
++	gsize len;
+ 
+ 	g_return_if_fail(body != NULL);
+ 
+ 	msg = msn_message_new(MSN_MSG_SLP);
+ 	msn_message_set_content_type(msg, "text/x-mms-emoticon");
+ 	msn_message_set_flag(msg, 'N');
+-	msn_message_set_bin_data(msg, body->str, body->len);
++
++	tmp = botch_utf(body->str, -1, &len);
++	msn_message_set_bin_data(msg, tmp, len);
++	g_free(tmp);
+ 
+ 	msn_switchboard_send_msg(swboard, msg, TRUE);
+ 	msn_message_unref(msg);
+@@ -2828,6 +2860,9 @@
+ 	msn_notification_init();
+ 	msn_switchboard_init();
+ 
++	// yaz
++	msn_ipc_init(plugin);
++
+ 	return TRUE;
+ }
+ 
+@@ -2836,6 +2871,9 @@
+ 	msn_notification_end();
+ 	msn_switchboard_end();
+ 
++	// yaz
++	msn_ipc_end(plugin);
++
+ 	return TRUE;
+ }
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/encoding.c pidgin-2.10.9/libpurple/protocols/oscar/encoding.c
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/encoding.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/encoding.c	2014-02-19 15:16:20.807513690 +0900
+@@ -107,13 +107,32 @@
+ 	gchar *extracted_encoding = encoding_extract(encoding);
+ 
+ 	if (extracted_encoding == NULL || *extracted_encoding == '\0') {
+-		purple_debug_info("oscar", "Empty encoding, assuming UTF-8\n");
++		purple_debug_info("yaz oscar", "Empty encoding, validate as UTF-8\n");
++		if(g_utf8_validate(text, textlen, NULL)){
++			gsize newlen;
++			utf8 = sanitize_utf(text, textlen, &newlen);
++			goto done;
++		}
++		// not UTF-8
++		purple_debug_info("yaz oscar", "Empty encoding, assuming UTF-16BE\n");
++		sanitize_ucs((gchar *)text, textlen);
++		utf8 = g_convert(text, textlen, "UTF-8", "UTF-16BE", NULL, NULL, NULL);
++		if(utf8){
++			if(!g_utf8_validate(utf8, strlen(utf8), NULL)){
++				purple_debug_info("yaz oscar", "Invalid conversion\n");
++				g_free(utf8);
++				utf8 = NULL;
++			}
++		} else {
++			purple_debug_info("yaz oscar", "Conversion failed\n");
++		}
+ 	} else if (!g_ascii_strcasecmp(extracted_encoding, "iso-8859-1")) {
+ 		glib_encoding = "iso-8859-1";
+ 	} else if (!g_ascii_strcasecmp(extracted_encoding, "ISO-8859-1-Windows-3.1-Latin-1") || !g_ascii_strcasecmp(extracted_encoding, "us-ascii")) {
+ 		glib_encoding = "Windows-1252";
+ 	} else if (!g_ascii_strcasecmp(extracted_encoding, "unicode-2-0")) {
+ 		glib_encoding = "UTF-16BE";
++		sanitize_ucs((gchar *)text, textlen);
+ 	} else if (g_ascii_strcasecmp(extracted_encoding, "utf-8")) {
+ 		glib_encoding = extracted_encoding;
+ 	}
+@@ -135,6 +154,7 @@
+ 			utf8 = g_strndup(text, textlen);
+ 	}
+ 
++done:
+ 	g_free(extracted_encoding);
+ 	return utf8;
+ }
+@@ -143,13 +163,13 @@
+ oscar_utf8_try_convert(PurpleAccount *account, OscarData *od, const gchar *msg)
+ {
+ 	const char *charset = NULL;
+-	char *ret = NULL;
++	char *ret = NULL, *ret2 = NULL;
+ 
+ 	if (msg == NULL)
+ 		return NULL;
+ 
+ 	if (g_utf8_validate(msg, -1, NULL))
+-		return g_strdup(msg);
++		return sanitize_utf(msg, -1, NULL);
+ 
+ 	if (od->icq)
+ 		charset = purple_account_get_string(account, "encoding", NULL);
+@@ -160,13 +180,15 @@
+ 	if(!ret)
+ 		ret = purple_utf8_try_convert(msg);
+ 
+-	return ret;
++	ret2 = sanitize_utf(ret, -1, NULL);
++	g_free(ret);
++	return ret2;
+ }
+ 
+ static gchar *
+ oscar_convert_to_utf8(const gchar *data, gsize datalen, const char *charsetstr, gboolean fallback)
+ {
+-	gchar *ret = NULL;
++	gchar *ret = NULL, *ret2 = NULL;
+ 	GError *err = NULL;
+ 
+ 	if ((charsetstr == NULL) || (*charsetstr == '\0'))
+@@ -186,7 +208,9 @@
+ 			purple_debug_warning("oscar", "String is not valid UTF-8.\n");
+ 	}
+ 
+-	return ret;
++	ret2 = sanitize_utf(ret, -1, NULL);
++	g_free(ret);
++	return ret2;
+ }
+ 
+ gchar *
+@@ -211,13 +235,14 @@
+ 	} else if (charset == AIM_CHARSET_ASCII) {
+ 		/* Should just be "ASCII" */
+ 		charsetstr1 = "ASCII";
+-		charsetstr2 = purple_account_get_string(account, "encoding", OSCAR_DEFAULT_CUSTOM_ENCODING);
+-	} else if (charset == 0x000d) {
++		charsetstr2 = "UTF-8";
++        charsetstr3 = purple_account_get_string(account, "encoding", OSCAR_DEFAULT_CUSTOM_ENCODING);
++	} else if (charset == AIM_CHARSET_QUIRKUTF8) {
+ 		/* iChat sending unicode over a Direct IM connection = UTF-8 */
+-		/* Mobile AIM client on multiple devices (including Blackberry Tour, Nokia 3100, and LG VX6000) = ISO-8859-1 */
+-		charsetstr1 = "UTF-8";
+-		charsetstr2 = "ISO-8859-1";
+-		charsetstr3 = purple_account_get_string(account, "encoding", OSCAR_DEFAULT_CUSTOM_ENCODING);
++        /* Mobile AIM client on a Nokia 3100 and an LG VX6000 */
++        charsetstr1 = "UTF-8";
++        charsetstr2 = "ISO-8859-1";
++        charsetstr3 = purple_account_get_string(account, "encoding", OSCAR_DEFAULT_CUSTOM_ENCODING);
+ 	} else {
+ 		/* Unknown, hope for valid UTF-8... */
+ 		charsetstr1 = "UTF-8";
+@@ -281,5 +306,13 @@
+ 	if (charsetstr != NULL) {
+ 		*charsetstr = msg_charset == AIM_CHARSET_ASCII ? "us-ascii" : "unicode-2-0";
+ 	}
+-	return g_convert(msg, -1, msg_charset == AIM_CHARSET_ASCII ? "ASCII" : "UTF-16BE", "UTF-8", NULL, result_len, NULL);
++	if (msg_charset == AIM_CHARSET_ASCII) {
++		return g_convert(msg, -1, "ASCII", "UTF-8", NULL, result_len, NULL);
++	}
++	else {
++		char *ucs = NULL;
++		ucs = g_convert(msg, -1, "UTF-16BE", "UTF-8", NULL, result_len, NULL);
++		botch_ucs(ucs, *result_len);
++		return ucs;
++	}
+ }
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/family_icbm.c pidgin-2.10.9/libpurple/protocols/oscar/family_icbm.c
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/family_icbm.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/family_icbm.c	2014-02-19 15:16:20.807513690 +0900
+@@ -53,6 +53,7 @@
+ #endif
+ 
+ #include "util.h"
++#include "debug.h" /* yaz */
+ 
+ static const char * const errcodereason[] = {
+ 	N_("Invalid error"),
+@@ -413,6 +414,9 @@
+ 	guchar cookie[8];
+ 	GSList *outer_tlvlist = NULL, *inner_tlvlist = NULL;
+ 	ByteStream hdrbs;
++	// yaz
++	char *ucs = NULL;
++	gsize bytes;
+ 
+ 	if (!od || !(conn = flap_connection_findbygroup(od, SNAC_FAMILY_ICBM)))
+ 		return -EINVAL;
+@@ -451,15 +455,51 @@
+ 	 * raw data, followed by a series of TLVs.
+ 	 *
+ 	 */
++#if 0
+ 	byte_stream_new(&hdrbs, 2+8+16+6+4+4+strlen(msg)+4+2+1+strlen(roomname)+2);
+ 
+ 	byte_stream_put16(&hdrbs, 0x0000); /* Unknown! */
+ 	byte_stream_putraw(&hdrbs, cookie, sizeof(cookie)); /* I think... */
+ 	byte_stream_putcaps(&hdrbs, OSCAR_CAPABILITY_CHAT);
++#endif
++	//yaz
++	// convert msg to ascii first. if it succeed, send as plain ascii.
++	// if it fails, convert msg into UTF-16BE, and send it. 
++	ucs = g_convert(msg, strlen(msg), "ASCII", "UTF-8", NULL, &bytes, NULL);
++	if(ucs){
++		byte_stream_new(&hdrbs, 2+8+16+6+4+4+strlen(msg)+4+2+1+strlen(roomname)+2);
++
++		byte_stream_put16(&hdrbs, 0x0000); /* Unknown! */
++		byte_stream_putraw(&hdrbs, cookie, sizeof(cookie)); /* I think... */
++		byte_stream_putcaps(&hdrbs, OSCAR_CAPABILITY_CHAT);
++
++		aim_tlvlist_add_16(&inner_tlvlist, 0x000a, 0x0001);
++		aim_tlvlist_add_noval(&inner_tlvlist, 0x000f);
++		aim_tlvlist_add_raw(&inner_tlvlist, 0x000c, strlen(msg), (guint8 *)msg);
++		free(ucs);
++	} else {
++		byte_stream_new(&hdrbs, 2+8+16+6+4+4+strlen(msg)+4+2+1+strlen(roomname)+2+4+11);
+ 
++		byte_stream_put16(&hdrbs, 0x0000); /* Unknown! */
++		byte_stream_putraw(&hdrbs, cookie, sizeof(cookie)); /* I think... */
++		byte_stream_putcaps(&hdrbs, OSCAR_CAPABILITY_CHAT);
++
++		aim_tlvlist_add_16(&inner_tlvlist, 0x000a, 0x0001);
++		aim_tlvlist_add_raw(&inner_tlvlist, 0x000d, 11, (guint8 *)"unicode-2-0");
++		aim_tlvlist_add_noval(&inner_tlvlist, 0x000f);
++		//yaz
++		ucs = g_convert(msg, strlen(msg), "UTF-16BE", "UTF-8", NULL, &bytes, NULL);
++		if(ucs){
++			botch_ucs(ucs, bytes);
++			aim_tlvlist_add_raw(&inner_tlvlist, 0x000c, bytes, (guint8 *)ucs);
++			free(ucs);
++		}
++	}
++#if 0
+ 	aim_tlvlist_add_16(&inner_tlvlist, 0x000a, 0x0001);
+ 	aim_tlvlist_add_noval(&inner_tlvlist, 0x000f);
+ 	aim_tlvlist_add_str(&inner_tlvlist, 0x000c, msg);
++#endif
+ 	aim_tlvlist_add_chatroom(&inner_tlvlist, 0x2711, exchange, roomname, instance);
+ 	aim_tlvlist_write(&hdrbs, &inner_tlvlist);
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/odc.c pidgin-2.10.9/libpurple/protocols/oscar/odc.c
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/odc.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/odc.c	2014-02-19 15:16:20.807513690 +0900
+@@ -102,18 +102,23 @@
+ 	byte_stream_new(&bs, length + frame->payload.len);
+ 	byte_stream_putraw(&bs, conn->magic, 4);
+ 	byte_stream_put16(&bs, length);
++
+ 	byte_stream_put16(&bs, frame->type);
+ 	byte_stream_put16(&bs, frame->subtype);
+ 	byte_stream_put16(&bs, 0x0000);
++
+ 	byte_stream_putraw(&bs, frame->cookie, 8);
+ 	byte_stream_put16(&bs, 0x0000);
+ 	byte_stream_put16(&bs, 0x0000);
+ 	byte_stream_put16(&bs, 0x0000);
+ 	byte_stream_put16(&bs, 0x0000);
++
+ 	byte_stream_put32(&bs, frame->payload.len);
+ 	byte_stream_put16(&bs, frame->encoding);
+ 	byte_stream_put16(&bs, 0x0000);
+ 	byte_stream_put16(&bs, 0x0000);
++	byte_stream_put16(&bs, 0x0000);
++
+ 	byte_stream_put16(&bs, frame->flags);
+ 	byte_stream_put16(&bs, 0x0000);
+ 	byte_stream_put16(&bs, 0x0000);
+@@ -497,11 +502,14 @@
+ 	frame->type = byte_stream_get16(bs);
+ 	frame->subtype = byte_stream_get16(bs);
+ 	byte_stream_advance(bs, 2);
++
+ 	byte_stream_getrawbuf(bs, frame->cookie, 8);
+ 	byte_stream_advance(bs, 8);
++
+ 	frame->payload.len = byte_stream_get32(bs);
+ 	frame->encoding = byte_stream_get16(bs);
+ 	byte_stream_advance(bs, 4);
++
+ 	frame->flags = byte_stream_get16(bs);
+ 	byte_stream_advance(bs, 4);
+ 	byte_stream_getrawbuf(bs, frame->bn, 32);
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/oft.c pidgin-2.10.9/libpurple/protocols/oscar/oft.c
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/oft.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/oft.c	2014-02-19 15:16:20.807513690 +0900
+@@ -652,6 +652,8 @@
+ {
+ 	PeerConnection *conn;
+ 	size_t size;
++	gchar *f1 = NULL, *f2 = NULL;
++	gsize dummy;
+ 
+ 	conn = xfer->data;
+ 	conn->flags |= PEER_CONNECTION_FLAG_APPROVED;
+@@ -689,7 +691,16 @@
+ 	strncpy((gchar *)conn->xferdata.idstring, "Cool FileXfer", 31);
+ 	conn->xferdata.modtime = 0;
+ 	conn->xferdata.cretime = 0;
+-	xfer->filename = g_path_get_basename(xfer->local_filename);
++
++	/* yaz */
++	f1 = g_filename_display_basename(xfer->local_filename);
++	f2 = botch_utf(f1, strlen(f1), &dummy);
++	if(f2){
++		purple_xfer_set_filename(xfer, (char *)f2);
++	}
++	g_free(f1); f1 = NULL;
++	g_free(f2); f2 = NULL;
++
+ 	conn->xferdata.name_length = MAX(64, strlen(xfer->filename) + 1);
+ 	conn->xferdata.name = (guchar *)g_strndup(xfer->filename, conn->xferdata.name_length - 1);
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/oscar.c pidgin-2.10.9/libpurple/protocols/oscar/oscar.c
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/oscar.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/oscar.c	2014-02-19 15:16:20.810846742 +0900
+@@ -1883,7 +1883,7 @@
+ 	 * for this suck-ass part of the protocol by splitting the string into at
+ 	 * most 1 baby string.
+ 	 */
+-	msg1 = g_strsplit(args->msg, "\376", (args->type == 0x01 ? 1 : 0));
++	msg1 = g_strsplit(args->msg, "\376", (args->type == 0x01 ? 1 : 0)); // \376 is 0xfe
+ 	for (numtoks=0; msg1[numtoks]; numtoks++);
+ 	msg2 = (gchar **)g_malloc((numtoks+1)*sizeof(gchar *));
+ 	for (i=0; msg1[i]; i++) {
+@@ -3181,8 +3181,6 @@
+ {
+ 	GString *msg;
+ 	GString *data;
+-	gchar *tmp;
+-	gsize tmplen;
+ 	guint16 charset;
+ 	GData *attribs;
+ 	const char *start, *end, *last;
+@@ -3243,11 +3241,9 @@
+ 
+ 	g_string_append(msg, "</BODY></HTML>");
+ 
+-	/* Convert the message to a good encoding */
+-	tmp = oscar_encode_im(msg->str, &tmplen, &charset, NULL);
+-	g_string_free(msg, TRUE);
+-	msg = g_string_new_len(tmp, tmplen);
+-	g_free(tmp);
++	/* iChat and AIM6 use 0x000d to send UTF8.
++       moreover, AIM6 persists only to UTF8! --yaz */
++    charset = AIM_CHARSET_QUIRKUTF8;
+ 
+ 	/* Append any binary data that we may have */
+ 	if (oscar_id) {
+@@ -3385,10 +3381,14 @@
+ 			/* Messaging an SMS (mobile) user--strip HTML */
+ 			tmp2 = purple_markup_strip_html(tmp1);
+ 			is_html = FALSE;
+-		} else {
++		} else if (od->icq) {
+ 			/* ICQ 6 wants its HTML wrapped in these tags. Oblige it. */
+ 			tmp2 = g_strdup_printf("<HTML><BODY>%s</BODY></HTML>", tmp1);
+ 			is_html = TRUE;
++		} else {
++			/* otherwise */
++			tmp2 = g_strdup(tmp1);
++			is_html = FALSE;
+ 		}
+ 		g_free(tmp1);
+ 		tmp1 = tmp2;
+@@ -4560,7 +4560,7 @@
+ 				message, buf2);
+ 	}
+ 
+-	aim_chat_send_im(od, c->conn, 0, buf2, len, charsetstr, "en");
++	aim_chat_send_im(od, c->conn, 0, buf2, len, charsetstr, "JA");
+ 	g_free(buf2);
+ 	g_free(buf);
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/oscar/oscar.h pidgin-2.10.9/libpurple/protocols/oscar/oscar.h
+--- pidgin-2.10.9.orig/libpurple/protocols/oscar/oscar.h	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/oscar/oscar.h	2014-02-19 15:16:20.810846742 +0900
+@@ -616,6 +616,7 @@
+ #define AIM_CHARSET_ASCII   0x0000 /* ISO 646 */
+ #define AIM_CHARSET_UNICODE 0x0002 /* ISO 10646 (UTF-16/UCS-2BE) */
+ #define AIM_CHARSET_LATIN_1 0x0003 /* ISO 8859-1 */
++#define AIM_CHARSET_QUIRKUTF8	0x000d /* iChat and AIM6 use this in the meaning of UTF-8 in ODC. --yaz */
+ 
+ /*
+  * Arguments to aim_send_im_ext().
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/libyahoo.c pidgin-2.10.9/libpurple/protocols/yahoo/libyahoo.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/libyahoo.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/libyahoo.c	2014-02-19 15:19:01.364284060 +0900
+@@ -32,6 +32,7 @@
+ #include "yahoo_doodle.h"
+ #include "yahoo_filexfer.h"
+ #include "yahoo_picture.h"
++#include "ycht.h"
+ 
+ static PurplePlugin *my_protocol = NULL;
+ 
+@@ -332,10 +333,14 @@
+ 	option = purple_account_option_bool_new(_("Use account proxy for HTTP and HTTPS connections"), "proxy_ssl", FALSE);
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ 
+-#if 0
+ 	option = purple_account_option_string_new(_("Chat room list URL"), "room_list", YAHOO_ROOMLIST_URL);
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+-#endif
++
++	option = purple_account_option_string_new(_("Yahoo Chat server"), "ycht-server", YAHOO_YCHT_HOST);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
++
++	option = purple_account_option_int_new(_("Yahoo Chat port"), "ycht-port", YAHOO_YCHT_PORT);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ 
+ 	my_protocol = plugin;
+ 	yahoo_register_commands();
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/libyahoojp.c pidgin-2.10.9/libpurple/protocols/yahoo/libyahoojp.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/libyahoojp.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/libyahoojp.c	2014-02-19 15:16:20.810846742 +0900
+@@ -31,6 +31,7 @@
+ #include "yahoo_doodle.h"
+ #include "yahoo_filexfer.h"
+ #include "yahoo_picture.h"
++#include "ycht.h"
+ 
+ static void yahoojp_register_commands(void)
+ {
+@@ -228,8 +229,14 @@
+ 	option = purple_account_option_bool_new(_("Use account proxy for HTTP and HTTPS connections"), "proxy_ssl", FALSE);
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ 
+-#if 0
+-	option = purple_account_option_string_new(_("Chat room list URL"), "room_list", YAHOO_ROOMLIST_URL);
++#if 1
++	option = purple_account_option_string_new(_("Chat room list URL"), "room_list", YAHOOJP_ROOMLIST_URL);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
++
++	option = purple_account_option_string_new(_("Yahoo Chat server"), "ycht-server", YAHOOJP_YCHT_HOST);
++	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
++
++	option = purple_account_option_int_new(_("Yahoo Chat port"), "ycht-port", YAHOOJP_YCHT_PORT);
+ 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+ #endif
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/libymsg.c pidgin-2.10.9/libpurple/protocols/yahoo/libymsg.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/libymsg.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/libymsg.c	2014-02-19 15:16:20.814179803 +0900
+@@ -1695,8 +1695,9 @@
+ 
+ #define OUT_CHARSET "utf-8"
+ 
+-static char *yahoo_decode(const char *text)
++static char *yahoo_decode(PurpleConnection *gc, const char *text)
+ {
++	YahooData *yd = gc->proto_data;
+ 	char *converted = NULL;
+ 	char *n, *new;
+ 	const char *end, *p;
+@@ -1737,11 +1738,16 @@
+ 
+ 	*n = '\0';
+ 
+-	if (strstr(text, "\033$B"))
+-		converted = g_convert(new, n - new, OUT_CHARSET, "iso-2022-jp", NULL, NULL, NULL);
+-	if (!converted)
+-		converted = g_convert(new, n - new, OUT_CHARSET, "iso-8859-1", NULL, NULL, NULL);
+-	g_free(new);
++	if (yd->jp) {
++		converted = g_convert(new, n - new, OUT_CHARSET, "UTF-8", NULL, NULL, NULL);
++	}
++	if (!yd->jp || !converted) {
++		if (strstr(text, "\033$B"))
++			converted = g_convert(new, n - new, OUT_CHARSET, "iso-2022-jp", NULL, NULL, NULL);
++		if (!converted)
++			converted = g_convert(new, n - new, OUT_CHARSET, "iso-8859-1", NULL, NULL, NULL);
++		g_free(new);
++	}
+ 
+ 	return converted;
+ }
+@@ -1790,8 +1796,8 @@
+ 	}
+ 
+ 	if (who && subj && email && *email) {
+-		char *dec_who = yahoo_decode(who);
+-		char *dec_subj = yahoo_decode(subj);
++		char *dec_who = yahoo_decode(gc, who);
++		char *dec_subj = yahoo_decode(gc, subj);
+ 		char *from = g_strdup_printf("%s (%s)", dec_who, email);
+ 
+ 		purple_notify_email(gc, dec_subj, from, purple_account_get_username(account),
+@@ -1883,7 +1889,7 @@
+ 					2, name,
+ 					2, "1",
+ 					59, yd->cookie_b,
+-					98, purple_account_get_string(account, "room_list_locale", yd->jp ? "jp" : "us"),
++					98, yd->jp ? "jp" : purple_account_get_string(account, "room_list_locale", "us"),
+ 					135, yd->jp ? YAHOOJP_CLIENT_VERSION : YAHOO_CLIENT_VERSION);
+ 	} else { /* don't try to send an empty B cookie - the server will be mad */
+ 		yahoo_packet_hash(pkt, "sssssssss",
+@@ -1895,7 +1901,7 @@
+ 					244, yd->jp ? YAHOOJP_CLIENT_VERSION_ID : YAHOO_CLIENT_VERSION_ID,
+ 					2, name,
+ 					2, "1",
+-					98, purple_account_get_string(account, "room_list_locale", yd->jp ? "jp" : "us"),
++					98, yd->jp ? "jp" : purple_account_get_string(account, "room_list_locale", "us"),
+ 					135, yd->jp ? YAHOOJP_CLIENT_VERSION : YAHOO_CLIENT_VERSION);
+ 	}
+ 
+@@ -5037,6 +5043,7 @@
+ 	char *msg = NULL, *msg2 = NULL;
+ 	PurpleStatus *status = NULL;
+ 	gboolean invisible = FALSE;
++	gboolean utf8 = TRUE;
+ 
+ 	if (idle && yd->current_status != YAHOO_STATUS_CUSTOM)
+ 		yd->current_status = YAHOO_STATUS_IDLE;
+@@ -5060,7 +5067,6 @@
+ 			status = purple_presence_get_active_status(purple_account_get_presence(purple_connection_get_account(gc)));
+ 		tmp = purple_status_get_attr_string(status, "message");
+ 		if (tmp != NULL) {
+-			gboolean utf8 = TRUE;
+ 			msg = yahoo_string_encode(gc, tmp, &utf8);
+ 			msg2 = purple_markup_strip_html(msg);
+ 			yahoo_packet_hash_str(pkt, 97, utf8 ? "1" : 0);
+@@ -5068,6 +5074,7 @@
+ 		} else {
+ 			/* get_yahoo_status_from_purple_status() returns YAHOO_STATUS_CUSTOM for
+ 			 * the generic away state (YAHOO_STATUS_TYPE_AWAY) with no message */
++			yahoo_packet_hash_str(pkt, 97, utf8 ? "1" : 0);
+ 			yahoo_packet_hash_str(pkt, 19, _("Away"));
+ 		}
+ 	} else {
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/libymsg.h pidgin-2.10.9/libpurple/protocols/yahoo/libymsg.h
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/libymsg.h	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/libymsg.h	2014-02-19 15:16:20.814179803 +0900
+@@ -48,7 +48,7 @@
+ #define YAHOO_ROOMLIST_LOCALE "us"
+ 
+ /* Yahoo! JAPAN stuff */
+-#define YAHOOJP_PAGER_HOST_REQ_URL "http://cs1.yahoo.co.jp/capacity"
++#define YAHOOJP_PAGER_HOST_REQ_URL "http://cs.yahoo.co.jp/capacity"
+ #define YAHOOJP_TOKEN_URL "https://login.yahoo.co.jp/config/pwtoken_get?src=ymsgr&ts=&login=%s&passwd=%s&chal=%s"
+ #define YAHOOJP_LOGIN_URL "https://login.yahoo.co.jp/config/pwtoken_login?src=ymsgr&ts=&token=%s"
+ #define YAHOOJP_PROFILE_URL "http://profiles.yahoo.co.jp/"
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/util.c pidgin-2.10.9/libpurple/protocols/yahoo/util.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/util.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/util.c	2014-02-19 15:16:20.814179803 +0900
+@@ -29,6 +29,7 @@
+ #include "prpl.h"
+ 
+ #include "libymsg.h"
++#include "util.h"
+ 
+ #include <string.h>
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_filexfer.c pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_filexfer.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_filexfer.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_filexfer.c	2014-02-19 15:16:20.817512906 +0900
+@@ -226,7 +226,7 @@
+ 	PurpleXfer *xfer;
+ 	struct yahoo_xfer_data *xd;
+ 	struct yahoo_packet *pkt;
+-	gchar *size, *filename, *encoded_filename, *header;
++	gchar *size, *filename, *encoded_filename, *header, *tmp = NULL;
+ 	guchar *pkt_buf;
+ 	const char *host;
+ 	int port;
+@@ -234,6 +234,7 @@
+ 	PurpleConnection *gc;
+ 	PurpleAccount *account;
+ 	YahooData *yd;
++	gsize dummy;
+ 
+ 	purple_debug_info("yahoo", "in yahoo_sendfile_connected\n");
+ 
+@@ -260,8 +261,12 @@
+ 		YAHOO_STATUS_AVAILABLE, yd->session_id);
+ 
+ 	size = g_strdup_printf("%" G_GSIZE_FORMAT, purple_xfer_get_size(xfer));
+-	filename = g_path_get_basename(purple_xfer_get_local_filename(xfer));
+-	encoded_filename = yahoo_string_encode(gc, filename, NULL);
++
++	/* yaz */
++	tmp = g_filename_display_basename(purple_xfer_get_local_filename(xfer));
++	filename = botch_utf(tmp, strlen(tmp), &dummy);
++	g_free(tmp);
++	encoded_filename = yahoo_string_encode(gc, filename, NULL); // this takes utf8 as input. --yaz
+ 
+ 	yahoo_packet_hash(pkt, "sssss", 0, purple_connection_get_display_name(gc),
+ 	  5, xfer->who, 14, "", 27, encoded_filename, 28, size);
+@@ -1049,7 +1054,7 @@
+ 	struct sockaddr_in *addr;
+ 	struct yahoo_packet *pkt;
+ 	unsigned long actaddr;
+-	unsigned char a,b,c,d;
++	unsigned long a,b,c,d;
+ 	PurpleConnection *gc;
+ 	PurpleAccount *account;
+ 	YahooData *yd;
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_packet.c pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_packet.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_packet.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_packet.c	2014-02-19 15:16:20.817512906 +0900
+@@ -42,6 +42,7 @@
+ {
+ 	struct yahoo_pair *pair;
+ 
++	g_return_if_fail(pkt != NULL);
+ 	g_return_if_fail(value != NULL);
+ 
+ 	pair = g_new0(struct yahoo_pair, 1);
+@@ -54,6 +55,8 @@
+ {
+ 	struct yahoo_pair *pair;
+ 
++	g_return_if_fail(pkt != NULL);
++
+ 	pair = g_new0(struct yahoo_pair, 1);
+ 	pair->key = key;
+ 	pair->value = g_strdup_printf("%d", value);
+@@ -386,6 +389,9 @@
+ {
+ 	int ret;
+ 
++	g_return_val_if_fail(pkt != NULL, 0);
++	g_return_val_if_fail(yd != NULL, 0);
++
+ 	ret = yahoo_packet_send(pkt, yd);
+ 	yahoo_packet_free(pkt);
+ 	return ret;
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_profile.c pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_profile.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoo_profile.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/yahoo_profile.c	2014-02-19 15:16:20.817512906 +0900
+@@ -22,6 +22,7 @@
+  */
+ 
+ #define PHOTO_SUPPORT 1
++//original is 1 --yaz
+ 
+ #include "internal.h"
+ #include "debug.h"
+@@ -670,6 +671,7 @@
+ 	},
+ };
+ 
++#if 0
+ static char *yahoo_info_date_reformat(const char *field, size_t len)
+ {
+ 	char *tmp = g_strndup(field, len);
+@@ -678,6 +680,7 @@
+ 	g_free(tmp);
+ 	return g_strdup(purple_date_format_short(localtime(&t)));
+ }
++#endif
+ 
+ static char *yahoo_remove_nonbreaking_spaces(char *str)
+ {
+@@ -761,6 +764,7 @@
+ 
+ #endif /* PHOTO_SUPPORT */
+ 
++#define PROF_LEN (1024 * 10)
+ static void yahoo_got_info(PurpleUtilFetchUrlData *url_data, gpointer user_data,
+ 		const gchar *url_text, size_t len, const gchar *error_message)
+ {
+@@ -1009,6 +1013,9 @@
+ 			g_free(stripped);
+ 			stripped = purple_utf8_ncr_decode(p);
+ 			stripped_len = strlen(stripped);
++
++			purple_debug_misc("yahoo", "after utf8 conversion: stripped@1 = (%s)\n",
++                              stripped); //payload --yaz
+ 			g_free(p);
+ 		}
+ 	}
+@@ -1020,7 +1027,7 @@
+ 				strings->charset, NULL, NULL, NULL);
+ 		yahoo_remove_nonbreaking_spaces(last_updated_utf8_string);
+ 
+-		purple_debug_misc("yahoo", "after utf8 conversion: stripped = (%s)\n", stripped);
++		purple_debug_misc("yahoo", "after utf8 conversion: stripped = (%s)\n", stripped); //payload --yaz
+ 	}
+ 
+ 	if (profile_state == PROFILE_STATE_DEFAULT) {
+@@ -1053,16 +1060,17 @@
+ 		}
+ 	}
+ #endif /* PHOTO_SUPPORT */
++	purple_debug_info("yahoo", "email = %s\n", strings->my_email_string);
+ 
+ 	/* extract their Email address and put it in */
+ 	found |= purple_markup_extract_info_field(stripped, stripped_len, user_info,
+ 			strings->my_email_string, (yd->jp ? 4 : 1), " ", 0,
+ 			strings->private_string, _("Email"), 0, NULL, NULL);
+-
++#if 0
+ 	/* extract the Nickname if it exists */
+ 	found |= purple_markup_extract_info_field(stripped, stripped_len, user_info,
+ 			"Nickname:", 1, "\n", '\n',
+-			NULL, _("Nickname"), 0, NULL, NULL);
++			 NULL, _("Nickname"), 0, NULL, NULL);
+ 
+ 	/* extract their RealName and put it in */
+ 	found |= purple_markup_extract_info_field(stripped, stripped_len, user_info,
+@@ -1093,7 +1101,7 @@
+ 	found |= purple_markup_extract_info_field(stripped, stripped_len, user_info,
+ 			strings->occupation_string, 2, "\n", '\n',
+ 			NULL, _("Occupation"), 0, NULL, NULL);
+-
++#endif
+ 	/* Hobbies, Latest News, and Favorite Quote are a bit different, since
+ 	 * the values can contain embedded newlines... but any or all of them
+ 	 * can also not appear.  The way we delimit them is to successively
+@@ -1102,7 +1110,7 @@
+ 	 * next thing to follow this bunch.  (For Yahoo Japan, we check for
+ 	 * the "Description" ("Self PR") heading instead of "Links".)
+ 	 */
+-
++#if 0
+ 	if (!purple_markup_extract_info_field(stripped, stripped_len, user_info,
+ 			strings->hobbies_string, (yd->jp ? 3 : 1), strings->latest_news_string,
+ 			'\n', "\n", _("Hobbies"), 0, NULL, NULL))
+@@ -1188,6 +1196,7 @@
+ 				last_updated_utf8_string, (yd->jp ? 2 : 1), (yd->jp ? "\n" : " "), (yd->jp ? 0 : '\n'), NULL,
+ 				_("Last Update"), 0, NULL, (yd->jp ? NULL : yahoo_info_date_reformat));
+ 	}
++#endif
+ 	} /* if (profile_state == PROFILE_STATE_DEFAULT) */
+ 
+ 	if(!found)
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoochat.c pidgin-2.10.9/libpurple/protocols/yahoo/yahoochat.c
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/yahoochat.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/yahoochat.c	2014-02-19 15:16:20.817512906 +0900
+@@ -1021,7 +1021,7 @@
+ 	g_free(msg1);
+ 	msg1 = yahoo_string_encode(gc, msg2, &utf8);
+ 	g_free(msg2);
+-	room2 = yahoo_string_encode(gc, room, NULL);
++	room2 = yahoo_string_encode(gc, room, &utf8);
+ 
+ 	pkt = yahoo_packet_new(YAHOO_SERVICE_COMMENT, YAHOO_STATUS_AVAILABLE, yd->session_id);
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/protocols/yahoo/ycht.h pidgin-2.10.9/libpurple/protocols/yahoo/ycht.h
+--- pidgin-2.10.9.orig/libpurple/protocols/yahoo/ycht.h	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/protocols/yahoo/ycht.h	2014-02-19 15:16:20.817512906 +0900
+@@ -32,6 +32,10 @@
+ #define YAHOO_YCHT_HOST "jcs3.chat.dcn.yahoo.com"
+ #define YAHOO_YCHT_PORT 8002
+ 
++/* fix these --yaz */
++#define YAHOOJP_YCHT_HOST "chat.yahoo.co.jp"
++#define YAHOOJP_YCHT_PORT 8000
++
+ #define YCHT_VERSION (0xae)
+ #define YCHT_HEADER_LEN (0x10)
+ 
+diff -uNr pidgin-2.10.9.orig/libpurple/server.c pidgin-2.10.9/libpurple/server.c
+--- pidgin-2.10.9.orig/libpurple/server.c	2014-02-03 06:29:19.000000000 +0900
++++ pidgin-2.10.9/libpurple/server.c	2014-02-19 15:16:20.817512906 +0900
+@@ -239,6 +239,8 @@
+ 	GSList *buddies;
+ 	PurpleBuddy *b;
+ 	PurpleConversation *conv;
++	gsize dummy;
++	gchar *alias2 = NULL;
+ 
+ 	account = purple_connection_get_account(gc);
+ 	buddies = purple_find_buddies(account, who);
+@@ -255,13 +257,16 @@
+ 		if (purple_strequal(server_alias, alias))
+ 			continue;
+ 
+-		purple_blist_server_alias_buddy(b, alias);
++		if(alias)
++			alias2 = sanitize_utf(alias, strlen(alias), &dummy);
++
++		purple_blist_server_alias_buddy(b, alias2);
+ 
+ 		conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, purple_buddy_get_name(b), account);
+-		if (conv != NULL && alias != NULL && !purple_strequal(alias, who))
++		if (conv != NULL && alias2 != NULL && !purple_strequal(alias2, who))
+ 		{
+ 			char *escaped = g_markup_escape_text(who, -1);
+-			char *escaped2 = g_markup_escape_text(alias, -1);
++			char *escaped2 = g_markup_escape_text(alias2, -1);
+ 			char *tmp = g_strdup_printf(_("%s is now known as %s.\n"),
+ 										escaped, escaped2);
+ 
+@@ -273,6 +278,8 @@
+ 			g_free(escaped2);
+ 			g_free(escaped);
+ 		}
++		g_free(alias2);
++		alias2 = NULL;
+ 	}
+ }
+ 
+@@ -282,6 +289,8 @@
+ 	PurpleAccount *account = NULL;
+ 	GSList *buddies = NULL;
+ 	PurpleBuddy *b = NULL;
++	gsize dummy;
++	gchar *alias2 = NULL;
+ 
+ 	account = purple_connection_get_account(gc);
+ 	buddies = purple_find_buddies(account, who);
+@@ -296,11 +305,13 @@
+ 		if (purple_strequal(balias, alias))
+ 			continue;
+ 
+-		purple_blist_alias_buddy(b, alias);
++		alias2 = sanitize_utf(alias, strlen(alias), &dummy);
++		purple_blist_alias_buddy(b, alias2);
++		g_free(alias2);
++		alias2 = NULL;
+ 	}
+ }
+ 
+-
+ PurpleAttentionType *purple_get_attention_type_from_code(PurpleAccount *account, guint type_code)
+ {
+ 	PurplePlugin *prpl;
+diff -uNr pidgin-2.10.9.orig/libpurple/util.c pidgin-2.10.9/libpurple/util.c
+--- pidgin-2.10.9.orig/libpurple/util.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/libpurple/util.c	2014-02-19 15:16:20.820846019 +0900
+@@ -1274,6 +1274,8 @@
+ 		return FALSE;
+ 
+ 	q = strstr(p, end_token);
++	if(q == NULL) //yaz
++		return FALSE;
+ 
+ 	/* Trim leading blanks */
+ 	while (*p != '\n' && g_ascii_isspace(*p)) {
+@@ -1286,7 +1288,7 @@
+ 	}
+ 
+ 	/* Don't bother with null strings */
+-	if (p == q)
++	if (p >= q)
+ 		return FALSE;
+ 
+ 	if (q != NULL && (!no_value_token ||
+@@ -2071,6 +2073,20 @@
+ }
+ 
+ static gboolean
++is_zenkaku_space(const char *c)
++{
++    gboolean rv = FALSE;
++    const guchar *u = (guchar *)c;
++
++    if(!c || !strcmp(c, "") || strlen(c) < 3)
++        rv = FALSE;
++    else if(*u == 0xe3 && *(u+1) == 0x80 && *(u+2) == 0x80)
++        rv = TRUE;
++
++    return rv;
++}
++
++static gboolean
+ badchar(char c)
+ {
+ 	switch (c) {
+@@ -2110,7 +2126,7 @@
+ 	const char *t;
+ 
+ 	for (t = c;; t++) {
+-		if (!badchar(*t) && !badentity(t))
++		if (!badchar(*t) && !badentity(t) && !is_zenkaku_space(t))
+ 			continue;
+ 
+ 		if (t - c == matchlen)
+@@ -2146,6 +2162,7 @@
+ 	gunichar g;
+ 	gboolean inside_html = FALSE;
+ 	int inside_paren = 0;
++	int inside_bracket = 0;
+ 	GString *ret;
+ 
+ 	if (text == NULL)
+@@ -2162,6 +2179,12 @@
+ 			c++;
+ 		}
+ 
++		if(*c == '[' && !inside_html) {
++			inside_bracket++;
++			ret = g_string_append_c(ret, *c);
++			c++;
++		}
++
+ 		if(inside_html) {
+ 			if(*c == '>') {
+ 				inside_html = FALSE;
+@@ -2204,7 +2227,7 @@
+ 		} else if (!g_ascii_strncasecmp(c, "mailto:", 7)) {
+ 			t = c;
+ 			while (1) {
+-				if (badchar(*t) || badentity(t)) {
++				if (badchar(*t) || badentity(t) || is_zenkaku_space(t)) {
+ 					char *d;
+ 					if (t - c == 7) {
+ 						break;
+@@ -2305,6 +2328,11 @@
+ 			ret = g_string_append_c(ret, *c);
+ 			c++;
+ 		}
++		if(*c == ']' && !inside_html) {
++			inside_bracket--;
++			ret = g_string_append_c(ret, *c);
++			c++;
++		}
+ 
+ 		if (*c == 0)
+ 			break;
+@@ -5120,3 +5148,296 @@
+ 			b,
+ 			(tmp >> 16) & 0xFFFF, g_random_int());
+ }
++
++#ifdef _WIN32
++void botch_ucs(gchar *ucs_src, gsize len)
++{
++	/* no operation */
++}
++#else
++void botch_ucs(gchar *ucs_src, gsize len)
++{
++	gint i;
++	guchar *ucs = (guchar *)ucs_src;
++
++	g_return_if_fail(ucs_src != NULL);
++	g_return_if_fail(len > 0);
++
++ 	for(i=0;i<len;i+=2){
++ 		switch(*(ucs+i)){
++ 		case 0x00:
++ 			switch(*(ucs+i+1)){
++ 			case 0xa2:	// ¢
++ 				*(ucs+i) = 0xff;
++ 				*(ucs+i+1) = 0xe0;
++ 				break;
++ 			case 0xa3:	// £
++ 				*(ucs+i) = 0xff;
++				*(ucs+i+1) = 0xe1;
++ 				break;
++ 			case 0xac:	// ¬
++ 				*(ucs+i) = 0xff;
++ 				*(ucs+i+1) = 0xe2;
++ 				break;
++ 			}
++ 			break;
++ 		case 0x20:	// ‖
++ 			if(*(ucs+i+1) == 0x16){
++ 				*(ucs+i) = 0x22;
++				*(ucs+i+1) = 0x25;
++ 			}
++ 			break;
++ 		case 0x22:	// −
++ 			if(*(ucs+i+1) == 0x12){
++ 				*(ucs+i) = 0xff;
++ 				*(ucs+i+1) = 0x0d;
++ 			}
++ 			break;
++ 		case 0x30:	// 〜
++ 			if(*(ucs+i+1) == 0x1c){
++ 				*(ucs+i) = 0xff;
++ 				*(ucs+i+1) = 0x5e;
++ 			}
++ 			break;
++ 		}
++ 	}
++
++}
++#endif
++
++#ifdef _WIN32
++void sanitize_ucs(gchar *ucs, gsize len)
++{
++	/* no operation */
++}
++#else
++void sanitize_ucs(gchar *ucs_src, gsize len)
++{
++	gint i;
++	guchar *ucs = (guchar *)ucs_src;
++
++	g_return_if_fail(ucs_src != NULL);
++	g_return_if_fail(len > 0);
++
++	for(i=0;i<len;i+=2){
++		switch(*(ucs+i)){
++		case 0x22:
++			switch(*(ucs+i+1)){
++			case 0x25:	// ‖
++				*(ucs+i) = 0x20;
++				*(ucs+i+1) = 0x16;
++				break;
++			}
++			break;
++		case 0xff:
++			switch(*(ucs+i+1)){
++			case 0x0d:	// −
++				*(ucs+i) = 0x22;
++				*(ucs+i+1) = 0x12;
++				break;
++			case 0x5e:	// 〜
++				*(ucs+i) = 0x30;
++				*(ucs+i+1) = 0x1c;
++				break;
++			case 0xe0:	// ¢
++				*(ucs+i) = 0x00;
++				*(ucs+i+1) = 0xa2;
++				break;
++			case 0xe1:	// £
++				*(ucs+i) = 0x00;
++				*(ucs+i+1) = 0xa3;
++				break;
++			case 0xe2:	// ¬
++				*(ucs+i) = 0x00;
++				*(ucs+i+1) = 0xac;
++				break;
++			}
++			break;
++		}
++	}
++}
++#endif
++
++#ifdef _WIN32
++gchar *sanitize_utf(const gchar *msg, gsize len, gsize *newlen)
++{
++	g_return_val_if_fail(msg != NULL, NULL);
++	if(len == -1)
++		len = strlen(msg);
++	g_return_val_if_fail(len > 0, NULL);
++
++	if(newlen)
++		*newlen = len;
++
++	return g_strndup(msg, len);
++}
++#else
++gchar *sanitize_utf(const gchar *msg, gsize len, gsize *newlen)
++{
++	gint i;
++	size_t bytes;
++	guchar *utf;
++
++	g_return_val_if_fail(msg != NULL, NULL);
++	if(len == -1)
++		len = strlen(msg);
++	g_return_val_if_fail(len > 0, NULL);
++
++	utf = (guchar *)g_strndup(msg, len);
++
++	bytes = len;
++
++	for(i=0;i<len;i++){
++		switch(*(utf+i)){
++		case 0xe2:
++			if(*(utf+i+1) == 0x88) {
++				if(*(utf+i+2) == 0xa5) {	// ‖
++					*(utf+i) = 0xe2;
++					*(utf+i+1) = 0x80;
++					*(utf+i+2) = 0x96;
++				}
++			}
++			break;
++		case 0xef:
++			switch(*(utf+i+1)){
++			case 0xbc:
++				if(*(utf+i+2) == 0x8d) {	// −
++					*(utf+i) = 0xe2;
++					*(utf+i+1) = 0x88;
++					*(utf+i+2) = 0x92;
++				}
++				break;
++			case 0xbd:
++				if(*(utf+i+2) == 0x9e) {	// 〜
++					*(utf+i) = 0xe3;
++					*(utf+i+1) = 0x80;
++					*(utf+i+2) = 0x9c;
++				}
++				break;
++			case 0xbf:
++				switch(*(utf+i+2)){
++			       case 0xa0:	// ¢
++				       *(utf+i) = 0xc2;
++				       *(utf+i+1) = 0xa2;
++				       memmove(utf+i+2, utf+i+3,
++					       len-i-3); //shorten by 1byte
++				       bytes--;
++				       break;
++			       case 0xa1:	// £
++				       *(utf+i) = 0xc2;
++				       *(utf+i+1) = 0xa3;
++				       memmove(utf+i+2, utf+i+3,
++					       len-i-3); //shorten by 1byte
++				       bytes--;
++				       break;
++			       case 0xa2:	// ¬
++				       *(utf+i) = 0xc2;
++				       *(utf+i+1) = 0xac;
++				       memmove(utf+i+2, utf+i+3,
++					       len-i-3); //shorten by 1byte
++				       bytes--;
++				       break;
++			       }
++			       break;
++			}
++			break;
++		}
++	}
++	*(utf+bytes)= 0x00; //terminate
++	if(newlen)
++		*newlen = bytes;
++	return (gchar *)utf;
++}
++#endif
++
++#ifdef _WIN32
++gchar *botch_utf(const gchar *msg, gsize len, gsize *newlen)
++{
++	g_return_val_if_fail(msg != NULL, NULL);
++	if(len == -1)
++		len = strlen(msg);
++	g_return_val_if_fail(len > 0, NULL);
++
++	if(newlen)
++		*newlen = len;
++
++	return g_strndup(msg, len);
++}
++#else
++gchar *botch_utf(const gchar *msg, gsize len, gsize *newlen)
++{
++ 	int i,bytes;
++	unsigned char *utf;
++
++	g_return_val_if_fail(msg != NULL, NULL);
++	if(len == -1)
++		len = strlen(msg);
++	g_return_val_if_fail(len > 0, NULL);
++
++	bytes = len;
++
++	utf = g_malloc0(bytes*3/2+1); /* new length might be 3/2 in the worst case */
++	memcpy(utf, msg, bytes);
++
++ 	for(i=0;i<bytes;i++){
++ 		switch(*(utf+i)){
++ 		case 0xc2:
++ 			switch(*(utf+i+1)){
++ 			case 0xa2:	// ¢
++ 				*(utf+i) = 0xef;
++ 				*(utf+i+1) = 0xbf;
++				memmove(utf+i+3, utf+i+2, bytes-i-2);
++				*(utf+i+2) = 0xa0;
++				bytes++;
++ 				break;
++ 			case 0xa3:	// £
++ 				*(utf+i) = 0xef;
++ 				*(utf+i+1) = 0xbf;
++				memmove(utf+i+3, utf+i+2, bytes-i-2);
++				*(utf+i+2) = 0xa1;
++				bytes++;
++ 				break;
++ 			case 0xac:	// ¬
++ 				*(utf+i) = 0xef;
++ 				*(utf+i+1) = 0xbf;
++				memmove(utf+i+3, utf+i+2, bytes-i-2);
++				*(utf+i+2) = 0xa2;
++				bytes++;
++ 				break;
++ 			}
++ 			break;
++ 		case 0xe2:
++			switch(*(utf+i+1)){
++			case 0x80:	// ‖
++				if(*(utf+i+2) == 0x96){
++					*(utf+i) = 0xe2;
++					*(utf+i+1) = 0x88;
++					*(utf+i+2) = 0xa5;
++				}
++				break;
++			case 0x88:	// −
++				if(*(utf+i+1) == 0x92){
++					*(utf+i) = 0xef;
++					*(utf+i+1) = 0xbc;
++					*(utf+i+2) = 0x8d;
++				}
++				break;
++			}
++			break;
++ 		case 0xe3:	// 〜
++ 			if(*(utf+i+1) == 0x80){
++				if(*(utf+i+2) == 0x9c){
++					*(utf+i) = 0xef;
++					*(utf+i+1) = 0xbd;
++					*(utf+i+2) = 0x9e;
++				}
++ 			}
++ 			break;
++ 		} //switch
++ 	}
++	*(utf+bytes) = 0x00; //terminate
++	if(newlen)
++		*newlen = bytes;
++	return (gchar *)utf;
++}
++#endif
+diff -uNr pidgin-2.10.9.orig/libpurple/util.h pidgin-2.10.9/libpurple/util.h
+--- pidgin-2.10.9.orig/libpurple/util.h	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/libpurple/util.h	2014-02-19 15:16:20.820846019 +0900
+@@ -1487,4 +1487,10 @@
+ }
+ #endif
+ 
++/* to address incompatibility with cp932. */
++void botch_ucs(gchar *ucs, gsize len);
++void sanitize_ucs(gchar *ucs, gsize len);
++gchar *botch_utf(const gchar *utf, gsize len, gsize *newlen);
++gchar *sanitize_utf(const gchar *msg, gsize len, gsize *newlen);
++
+ #endif /* _PURPLE_UTIL_H_ */
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkblist.c pidgin-2.10.9/pidgin/gtkblist.c
+--- pidgin-2.10.9.orig/pidgin/gtkblist.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkblist.c	2014-02-19 15:16:20.824179172 +0900
+@@ -70,6 +70,11 @@
+ #include <gtk/gtk.h>
+ #include <gdk/gdk.h>
+ 
++/* I noticed that some of short cuts are very annoying.
++   If you really want to use them, change this to 1. --yaz
++*/
++#define ENABLE_SHORTCUT 0
++
+ typedef struct
+ {
+ 	PurpleAccount *account;
+@@ -3640,6 +3645,7 @@
+ 	{ N_("/Tools/System _Log"), NULL, gtk_blist_show_systemlog_cb, 3, "<Item>", NULL },
+ 	{ "/Tools/sep3", NULL, NULL, 0, "<Separator>", NULL },
+ 	{ N_("/Tools/Mute _Sounds"), NULL, pidgin_blist_mute_sounds_cb, 0, "<CheckItem>", NULL },
++
+ 	/* Help */
+ 	{ N_("/_Help"), NULL, NULL, 0, "<Branch>", NULL },
+ 	{ N_("/Help/Online _Help"), "F1", gtk_blist_show_onlinehelp_cb, 0, "<StockItem>", GTK_STOCK_HELP },
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkconv.c pidgin-2.10.9/pidgin/gtkconv.c
+--- pidgin-2.10.9.orig/pidgin/gtkconv.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkconv.c	2014-02-19 15:16:20.827512342 +0900
+@@ -1,3 +1,4 @@
++/* -*- coding: utf-8 -*- */
+ /**
+  * @file gtkconv.c GTK+ Conversation API
+  * @ingroup pidgin
+@@ -116,6 +117,10 @@
+ static GdkColor *nick_colors = NULL;
+ static guint nbr_nick_colors;
+ 
++/* yaz. If you want to use shortcut keys that may conflict with
++   inputmethods, change this to 1. */
++#define ENABLE_SHORTCUT 0
++
+ typedef struct {
+ 	GtkWidget *window;
+ 
+@@ -268,6 +273,43 @@
+ 	return FALSE;
+ }
+ 
++static gboolean
++size_allocate_cb(GtkWidget *w, GtkAllocation *allocation, PidginConversation *gtkconv)
++{
++	PurpleConversation *conv = gtkconv->active_conv;
++
++	if (!GTK_WIDGET_VISIBLE(w))
++		return FALSE;
++
++	if (!PIDGIN_IS_PIDGIN_CONVERSATION(conv))
++		return FALSE;
++	if (gtkconv->auto_resize) {
++		return FALSE;
++	}
++
++	if (gdk_window_get_state(gtkconv->win->window->window) & GDK_WINDOW_STATE_MAXIMIZED) {
++		return FALSE;
++	}
++
++	/* I find that I resize the window when it has a bunch of conversations in it, mostly so that the
++	 * tab bar will fit, but then I don't want new windows taking up the entire screen.  I check to see
++	 * if there is only one conversation in the window.  This way we'll be setting new windows to the
++	 * size of the last resized new window. */
++	/* I think that the above justification is not the majority, and that the new tab resizing should
++	 * negate it anyway.  --luke */
++	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
++	{
++		if (w == gtkconv->lower_hbox)
++			purple_prefs_set_int(PIDGIN_PREFS_ROOT "/conversations/im/entry_height", allocation->height);
++	}
++	else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT)
++	{
++		if (w == gtkconv->lower_hbox)
++			purple_prefs_set_int(PIDGIN_PREFS_ROOT "/conversations/chat/entry_height", allocation->height);
++	}
++	return FALSE;
++}
++
+ static void
+ default_formatize(PidginConversation *c)
+ {
+@@ -445,6 +487,20 @@
+ 	gtkconv->send_history = g_list_prepend(first, NULL);
+ }
+ 
++#if 0
++static void
++reset_default_size(PidginConversation *gtkconv)
++{
++	PurpleConversation *conv = gtkconv->active_conv;
++	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT)
++		gtk_widget_set_size_request(gtkconv->lower_hbox, -1,
++					    purple_prefs_get_int(PIDGIN_PREFS_ROOT "/conversations/chat/entry_height"));
++	else
++		gtk_widget_set_size_request(gtkconv->lower_hbox, -1,
++					    purple_prefs_get_int(PIDGIN_PREFS_ROOT "/conversations/im/entry_height"));
++}
++#endif
++
+ static gboolean
+ check_for_and_do_command(PurpleConversation *conv)
+ {
+@@ -3076,13 +3132,21 @@
+ 
+ 	{ "/Conversation/sep0", NULL, NULL, 0, "<Separator>", NULL },
+ 
++#if ENABLE_SHORTCUT
+ 	{ N_("/Conversation/_Find..."), NULL, menu_find_cb, 0,
+ 			"<StockItem>", GTK_STOCK_FIND },
++#else
++	{ N_("/Conversation/_Find..."), NULL, menu_find_cb, 0,
++      "<Item>", NULL },
++#endif
+ 	{ N_("/Conversation/View _Log"), NULL, menu_view_log_cb, 0, "<Item>", NULL },
+ 	{ N_("/Conversation/_Save As..."), NULL, menu_save_as_cb, 0,
+ 			"<StockItem>", GTK_STOCK_SAVE_AS },
++#if ENABLE_SHORTCUT
+ 	{ N_("/Conversation/Clea_r Scrollback"), "<CTL>L", menu_clear_cb, 0, "<StockItem>", GTK_STOCK_CLEAR },
+-
++#else
++	{ N_("/Conversation/Clea_r Scrollback"), NULL, menu_clear_cb, 0, "<Item>", NULL },
++#endif
+ 	{ "/Conversation/sep1", NULL, NULL, 0, "<Separator>", NULL },
+ 
+ #ifdef USE_VV
+@@ -3100,8 +3164,13 @@
+ 	{ N_("/Conversation/Get _Attention"), NULL, menu_get_attention_cb, 0, "<StockItem>", PIDGIN_STOCK_TOOLBAR_SEND_ATTENTION },
+ 	{ N_("/Conversation/Add Buddy _Pounce..."), NULL, menu_add_pounce_cb,
+ 			0, "<Item>", NULL },
++#if ENABLE_SHORTCUT
+ 	{ N_("/Conversation/_Get Info"), "<CTL>O", menu_get_info_cb, 0,
+ 			"<StockItem>", PIDGIN_STOCK_TOOLBAR_USER_INFO },
++#else
++	{ N_("/Conversation/_Get Info"), NULL, menu_get_info_cb, 0,
++			"<StockItem>", PIDGIN_STOCK_TOOLBAR_USER_INFO },
++#endif
+ 	{ N_("/Conversation/In_vite..."), NULL, menu_invite_cb, 0,
+ 			"<Item>", NULL },
+ 	{ N_("/Conversation/M_ore"), NULL, NULL, 0, "<Branch>", NULL },
+@@ -3882,7 +3951,11 @@
+ 		gtk_widget_destroy(win->menu.send_to);
+ 
+ 	/* Build the Send To menu */
++#if ENABLE_SHORTCUT
+ 	win->menu.send_to = gtk_menu_item_new_with_mnemonic(_("S_end To"));
++#else
++	win->menu.send_to = gtk_menu_item_new_with_mnemonic(_("Send To")); //to free Alt-s. intentional. --yaz
++#endif
+ 	gtk_widget_show(win->menu.send_to);
+ 
+ 	menu = gtk_menu_new();
+@@ -4636,12 +4709,10 @@
+ 		height += 2 * focus_width;
+ 
+ 	diff = height - gtkconv->entry->allocation.height;
+-	if (ABS(diff) < oneline.height / 2)
++	if (diff == 0 || (diff < 0 && -diff < oneline.height / 2))
+ 		return FALSE;
+-
+ 	gtk_widget_set_size_request(gtkconv->lower_hbox, -1,
+-		diff + gtkconv->lower_hbox->allocation.height);
+-
++				    diff + gtkconv->lower_hbox->allocation.height);
+ 	return FALSE;
+ }
+ 
+@@ -4870,6 +4941,10 @@
+ 	switch (event->keyval) {
+ 		case GDK_Return:
+ 		case GDK_KP_Enter:
++			if (gtk_im_context_filter_keypress (GTK_ENTRY(entry)->im_context, event)) {
++				GTK_ENTRY(entry)->need_im_reset = TRUE;
++				return TRUE;
++			}
+ 			if (gtk_imhtml_search_find(GTK_IMHTML(gtkconv->imhtml), gtk_entry_get_text(GTK_ENTRY(entry)))) {
+ 				gtk_widget_modify_base(gtkconv->quickfind.entry, GTK_STATE_NORMAL, NULL);
+ 			} else {
+@@ -4923,7 +4998,7 @@
+ static GtkWidget *
+ setup_common_pane(PidginConversation *gtkconv)
+ {
+-	GtkWidget *vbox, *frame, *imhtml_sw, *event_box;
++	GtkWidget *paned, *vbox, *frame, *imhtml_sw, *event_box;
+ 	GtkCellRenderer *rend;
+ 	GtkTreePath *path;
+ 	PurpleConversation *conv = gtkconv->active_conv;
+@@ -4931,8 +5006,12 @@
+ 	gboolean chat = (conv->type == PURPLE_CONV_TYPE_CHAT);
+ 	int buddyicon_size = 0;
+ 
++	paned = gtk_vpaned_new();
++	gtk_widget_show(paned);
++
+ 	/* Setup the top part of the pane */
+ 	vbox = gtk_vbox_new(FALSE, PIDGIN_HIG_BOX_SPACE);
++	gtk_paned_pack1(GTK_PANED(paned), vbox, TRUE, TRUE);
+ 	gtk_widget_show(vbox);
+ 
+ 	/* Setup the info pane */
+@@ -5054,20 +5133,32 @@
+ 	g_signal_connect(G_OBJECT(gtkconv->imhtml), "key_release_event",
+ 	                 G_CALLBACK(refocus_entry_cb), gtkconv);
+ 
++	/* Setup the bottom half of the conversation window */
++	vbox = gtk_vbox_new(FALSE, PIDGIN_HIG_BOX_SPACE);
++	gtk_paned_pack2(GTK_PANED(paned), vbox, FALSE, TRUE);
++	gtk_widget_show(vbox);
++
+ 	pidgin_conv_setup_quickfind(gtkconv, vbox);
+ 
+ 	gtkconv->lower_hbox = gtk_hbox_new(FALSE, PIDGIN_HIG_BOX_SPACE);
+-	gtk_box_pack_start(GTK_BOX(vbox), gtkconv->lower_hbox, FALSE, FALSE, 0);
++	gtk_box_pack_start(GTK_BOX(vbox), gtkconv->lower_hbox, TRUE, TRUE, 0);
+ 	gtk_widget_show(gtkconv->lower_hbox);
+ 
++	vbox = gtk_vbox_new(FALSE, PIDGIN_HIG_BOX_SPACE);
++	gtk_box_pack_end(GTK_BOX(gtkconv->lower_hbox), vbox, TRUE, TRUE, 0);
++	gtk_widget_show(vbox);
++
+ 	/* Setup the toolbar, entry widget and all signals */
+ 	frame = pidgin_create_imhtml(TRUE, &gtkconv->entry, &gtkconv->toolbar, NULL);
+-	gtk_box_pack_start(GTK_BOX(gtkconv->lower_hbox), frame, TRUE, TRUE, 0);
++	gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
+ 	gtk_widget_show(frame);
+ 
+ 	gtk_widget_set_name(gtkconv->entry, "pidgin_conv_entry");
+ 	gtk_imhtml_set_protocol_name(GTK_IMHTML(gtkconv->entry),
+ 			purple_account_get_protocol_name(conv->account));
++	gtk_widget_set_size_request(gtkconv->lower_hbox, -1,
++			chat ? purple_prefs_get_int(PIDGIN_PREFS_ROOT "/conversations/chat/entry_height") :
++			purple_prefs_get_int(PIDGIN_PREFS_ROOT "/conversations/im/entry_height"));
+ 
+ 	g_signal_connect(G_OBJECT(gtkconv->entry), "populate-popup",
+ 	                 G_CALLBACK(entry_popup_menu_cb), gtkconv);
+@@ -5077,6 +5168,8 @@
+ 	                       G_CALLBACK(send_cb), gtkconv);
+ 	g_signal_connect_after(G_OBJECT(gtkconv->entry), "button_press_event",
+ 	                       G_CALLBACK(entry_stop_rclick_cb), NULL);
++	g_signal_connect(G_OBJECT(gtkconv->lower_hbox), "size-allocate",
++	                 G_CALLBACK(size_allocate_cb), gtkconv);
+ 
+ 	gtkconv->entry_buffer =
+ 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(gtkconv->entry));
+@@ -5101,7 +5194,7 @@
+ 	default_formatize(gtkconv);
+ 	g_signal_connect_after(G_OBJECT(gtkconv->entry), "format_function_clear",
+ 	                       G_CALLBACK(clear_formatting_cb), gtkconv);
+-	return vbox;
++	return paned;
+ }
+ 
+ static void
+@@ -6770,6 +6863,9 @@
+ 		AtkObject *accessibility_obj;
+ 		/* I think this is a little longer than it needs to be but I'm lazy. */
+ 		char *style;
++		gboolean ellipsis;
++		int side;
++		char *tab_title = NULL;
+ 
+ 		if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
+ 			im = PURPLE_CONV_IM(conv);
+@@ -6839,8 +6935,26 @@
+ 			style = "tab-label";
+ 		}
+ 
++		// nosuke's tab width patch
++		side = purple_prefs_get_int(PIDGIN_PREFS_ROOT "/conversations/tab_side");
++		side &= ~8; 
++		if ( (side == GTK_POS_LEFT || side == GTK_POS_RIGHT) &&
++		     purple_prefs_get_bool(PIDGIN_PREFS_ROOT "/conversations/trim_vertical_tabs") )
++			ellipsis = TRUE;
++		else
++			ellipsis = FALSE;
++
++		if (ellipsis) {
++			tab_title = pidgin_gtk_ellipsis_text(gtkconv->tab_label, title, 60, "...");
++		}
++		else {
++			tab_title = g_strdup(title);
++		}
++
+ 		gtk_widget_set_name(gtkconv->tab_label, style);
+-		gtk_label_set_text(GTK_LABEL(gtkconv->tab_label), title);
++		gtk_label_set_text(GTK_LABEL(gtkconv->tab_label), tab_title);
++		g_free(tab_title); tab_title = NULL;
++
+ 		gtk_widget_set_state(gtkconv->tab_label, GTK_STATE_ACTIVE);
+ 
+ 		if (gtkconv->unseen_state == PIDGIN_UNSEEN_TEXT ||
+@@ -7239,6 +7353,24 @@
+ 	return page_num;
+ }
+ 
++//nosuke
++static void
++trim_vertical_tabs_pref_cb(const char *name, PurplePrefType type,
++						   gconstpointer value, gpointer data)
++{
++	GList *l;
++	PurpleConversation *conv;
++
++	for (l = purple_get_conversations(); l != NULL; l = l->next) {
++		conv = (PurpleConversation *)l->data;
++
++		if (!PIDGIN_IS_PIDGIN_CONVERSATION(conv))
++			continue;
++
++		pidgin_conv_update_fields(conv, PIDGIN_CONV_SET_TITLE);
++	}
++}
++
+ static void
+ close_on_tabs_pref_cb(const char *name, PurplePrefType type,
+ 					  gconstpointer value, gpointer data)
+@@ -7309,6 +7441,7 @@
+ 			pidgin_conv_tab_pack(gtkwin, gtkconvs->data);
+ 		}
+ 	}
++	trim_vertical_tabs_pref_cb(name, type, value, data);
+ }
+ 
+ static void
+@@ -7367,7 +7500,7 @@
+ 		else
+ 			gtk_widget_hide(gtkconv->toolbar);
+ 
+-		g_idle_add((GSourceFunc)resize_imhtml_cb,gtkconv);
++//		g_idle_add((GSourceFunc)resize_imhtml_cb,gtkconv);
+ 	}
+ }
+ 
+@@ -7880,6 +8013,7 @@
+ 	purple_prefs_add_none(PIDGIN_PREFS_ROOT "/conversations");
+ 	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/use_smooth_scrolling", TRUE);
+ 	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/close_on_tabs", TRUE);
++	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/trim_vertical_tabs", FALSE);
+ 	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/send_bold", FALSE);
+ 	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/send_italic", FALSE);
+ 	purple_prefs_add_bool(PIDGIN_PREFS_ROOT "/conversations/send_underline", FALSE);
+@@ -7938,6 +8072,8 @@
+ 	/* Connect callbacks. */
+ 	purple_prefs_connect_callback(handle, PIDGIN_PREFS_ROOT "/conversations/close_on_tabs",
+ 								close_on_tabs_pref_cb, NULL);
++	purple_prefs_connect_callback(handle, PIDGIN_PREFS_ROOT "/conversations/trim_vertical_tabs",
++								  trim_vertical_tabs_pref_cb, NULL);
+ 	purple_prefs_connect_callback(handle, PIDGIN_PREFS_ROOT "/conversations/show_timestamps",
+ 								show_timestamps_pref_cb, NULL);
+ 	purple_prefs_connect_callback(handle, PIDGIN_PREFS_ROOT "/conversations/show_formatting_toolbar",
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkdocklet-gtk.c pidgin-2.10.9/pidgin/gtkdocklet-gtk.c
+--- pidgin-2.10.9.orig/pidgin/gtkdocklet-gtk.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkdocklet-gtk.c	2014-02-19 15:16:20.827512342 +0900
+@@ -165,7 +165,7 @@
+ 		icon_name = PIDGIN_STOCK_TRAY_CONNECT;
+ 
+ 	if (icon_name) {
+-		gtk_status_icon_set_from_icon_name(docklet, icon_name);
++		gtk_status_icon_set_from_stock(docklet, icon_name);
+ 	}
+ 
+ 	if (purple_prefs_get_bool(PIDGIN_PREFS_ROOT "/docklet/blink")) {
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkimhtml.c pidgin-2.10.9/pidgin/gtkimhtml.c
+--- pidgin-2.10.9.orig/pidgin/gtkimhtml.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkimhtml.c	2014-02-19 15:16:20.830845594 +0900
+@@ -118,6 +118,10 @@
+                            gint              y,
+                            guint             time);
+ 
++/* yaz. If you want to use shortcut keys that may conflict with
++   inputmethods, change this to 1. */
++#define ENABLE_SHORTCUT 0
++
+ static void preinsert_cb(GtkTextBuffer *buffer, GtkTextIter *iter, gchar *text, gint len, GtkIMHtml *imhtml);
+ static void insert_cb(GtkTextBuffer *buffer, GtkTextIter *iter, gchar *text, gint len, GtkIMHtml *imhtml);
+ static void delete_cb(GtkTextBuffer *buffer, GtkTextIter *iter, GtkTextIter *end, GtkIMHtml *imhtml);
+@@ -536,10 +540,11 @@
+ static gint
+ gtk_imhtml_tip (gpointer data)
+ {
+-	GtkIMHtml *imhtml = data;
++	GtkIMHtml *imhtml = (GtkIMHtml *)data;
+ 	PangoFontMetrics *font_metrics;
+ 	PangoLayout *layout;
+ 	PangoFont *font;
++	PangoLanguage *lang;
+ 
+ 	gint gap, x, y, h, w, scr_w, baseline_skip;
+ 
+@@ -592,7 +597,9 @@
+ 		return FALSE;
+ 	}
+ 
+-	font_metrics = pango_font_get_metrics(font, NULL);
++	lang = pango_context_get_language (pango_layout_get_context(layout));
++	font_metrics = pango_font_get_metrics(font, lang); //it's ok.
++//	font_metrics = pango_font_get_metrics(font, NULL); //crash!
+ 
+ 	pango_layout_get_pixel_size(layout, &scr_w, NULL);
+ 	gap = PANGO_PIXELS((pango_font_metrics_get_ascent(font_metrics) +
+@@ -706,7 +713,6 @@
+ 		tip = g_object_get_data(G_OBJECT(anchor), "gtkimhtml_tiptext");
+ 		hand = FALSE;
+ 	}
+-
+ 	if (tip && *tip) {
+ 		GTK_IMHTML(imhtml)->tip_timer = g_timeout_add (TOOLTIP_TIMEOUT,
+ 							       gtk_imhtml_tip, imhtml);
+@@ -1056,18 +1062,25 @@
+ 	if (info == TARGET_HTML) {
+ 		char *selection;
+ #ifndef _WIN32
+-		gsize len;
+ 		if (primary) {
+ 			text = gtk_imhtml_get_markup_range(imhtml, &start, &end);
+ 		} else
+ 			text = html_clipboard;
+ 
+-		/* Mozilla asks that we start our text/html with the Unicode byte order mark */
+-		selection = g_convert(text, -1, "UTF-16", "UTF-8", NULL, &len, NULL);
+-		gtk_selection_data_set(selection_data, gdk_atom_intern("text/html", FALSE), 16, (const guchar *)selection, len);
+-#else
++		selection = NULL;
++		if (primary) {
++			text = gtk_imhtml_get_markup_range(imhtml, &start, &end);
++		} else {
++			text = html_clipboard;
++		}
++		/* xxx should remove following line --yaz */
++		purple_debug_info("imhtml clipboard", "html_clipboard: %s len = %d\n", text, strlen(text));
++		gtk_selection_data_set(selection_data, gdk_atom_intern("text/html", FALSE),
++				       8, (const guchar *)text, strlen(text)+1); // include trailing '\0' --yaz
++#else /*_WIN32 */
+ 		selection = clipboard_html_to_win32(html_clipboard);
+-		gtk_selection_data_set(selection_data, gdk_atom_intern("HTML Format", FALSE), 8, (const guchar *)selection, strlen(selection));
++		gtk_selection_data_set(selection_data, gdk_atom_intern("HTML Format", FALSE),
++				       8, (const guchar *)selection, strlen(selection));
+ #endif
+ 		g_free(selection);
+ 	} else {
+@@ -1232,7 +1245,8 @@
+ 	if (selection_data->length >= 2 &&
+ 		(*(guint16 *)text == 0xfeff || *(guint16 *)text == 0xfffe)) {
+ 		/* This is UTF-16 */
+-		char *utf8 = utf16_to_utf8_with_bom_check(text, selection_data->length);
++//		char *utf8 = utf16_to_utf8_with_bom_check(text, selection_data->length);
++		char *utf8 = g_convert(text, selection_data->length, "UTF-8", "UTF-16", NULL, NULL, NULL);
+ 		g_free(text);
+ 		text = utf8;
+ 		if (!text) {
+@@ -1986,7 +2000,8 @@
+ 			 * http://mail.gnome.org/archives/gtk-devel-list/2001-September/msg00114.html
+ 			 */
+ 			if (sd->length >= 2 && !g_utf8_validate(text, sd->length - 1, NULL)) {
+-				utf8 = utf16_to_utf8_with_bom_check(text, sd->length);
++//				utf8 = utf16_to_utf8_with_bom_check(text, sd->length);
++				utf8 = g_convert(text, sd->length, "UTF-8", "UTF-16", NULL, NULL, NULL);
+ 
+ 				if (!utf8) {
+ 					purple_debug_warning("gtkimhtml", "g_convert from UTF-16 failed in drag_rcv_cb\n");
+@@ -3448,6 +3463,7 @@
+ 			break;
+ 		}
+ 	}
++	ws[wpos] = '\0'; // chop ws at wpos. due to bug of gtk_text_buffer_insert() --yaz
+ 	gtk_text_buffer_insert(imhtml->text_buffer, iter, ws, wpos);
+ 	ws[0] = '\0'; wpos = 0;
+ 
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkimhtmltoolbar.c pidgin-2.10.9/pidgin/gtkimhtmltoolbar.c
+--- pidgin-2.10.9.orig/pidgin/gtkimhtmltoolbar.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkimhtmltoolbar.c	2014-02-19 15:16:20.830845594 +0900
+@@ -1465,7 +1465,7 @@
+ 	gtk_container_add(GTK_CONTAINER(smiley_button), bbox);
+ 	image = gtk_image_new_from_stock(PIDGIN_STOCK_TOOLBAR_SMILEY, gtk_icon_size_from_name(PIDGIN_ICON_SIZE_TANGO_EXTRA_SMALL));
+ 	gtk_box_pack_start(GTK_BOX(bbox), image, FALSE, FALSE, 0);
+-	label = gtk_label_new_with_mnemonic(_("_Smile!"));
++	label = gtk_label_new_with_mnemonic(_("Smile!"));
+ 	gtk_box_pack_start(GTK_BOX(bbox), label, FALSE, FALSE, 0);
+ 	gtk_box_pack_start(GTK_BOX(box), smiley_button, FALSE, FALSE, 0);
+ 	g_signal_connect(G_OBJECT(smiley_button), "button-press-event", G_CALLBACK(gtk_imhtmltoolbar_popup_menu), toolbar);
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkimhtmltoolbar.h pidgin-2.10.9/pidgin/gtkimhtmltoolbar.h
+--- pidgin-2.10.9.orig/pidgin/gtkimhtmltoolbar.h	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkimhtmltoolbar.h	2014-02-19 15:16:20.830845594 +0900
+@@ -30,7 +30,7 @@
+ extern "C" {
+ #endif
+ 
+-#define DEFAULT_FONT_FACE "Helvetica 12"
++#define DEFAULT_FONT_FACE "Sans 12"
+ 
+ #define GTK_TYPE_IMHTMLTOOLBAR            (gtk_imhtmltoolbar_get_type())
+ #define GTK_IMHTMLTOOLBAR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GTK_TYPE_IMHTMLTOOLBAR, GtkIMHtmlToolbar))
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkprefs.c pidgin-2.10.9/pidgin/gtkprefs.c
+--- pidgin-2.10.9.orig/pidgin/gtkprefs.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkprefs.c	2014-02-19 15:16:20.830845594 +0900
+@@ -1384,6 +1384,9 @@
+ 	pidgin_prefs_checkbox(_("Show close b_utton on tabs"),
+ 				PIDGIN_PREFS_ROOT "/conversations/close_on_tabs", vbox2);
+ 
++	pidgin_prefs_checkbox(_("Trim names on vertical tabs"),
++				PIDGIN_PREFS_ROOT "/conversations/trim_vertical_tabs", vbox2);
++
+ 	label = pidgin_prefs_dropdown(vbox2, _("_Placement:"), PURPLE_PREF_INT,
+ 					PIDGIN_PREFS_ROOT "/conversations/tab_side",
+ 					_("Top"), GTK_POS_TOP,
+@@ -1479,7 +1482,7 @@
+ #endif
+ 
+ 	pidgin_prefs_checkbox(_("Use smooth-scrolling"), PIDGIN_PREFS_ROOT "/conversations/use_smooth_scrolling", vbox);
+-
++	pidgin_prefs_checkbox(_("Use msn messenger style"), "/purple/conversations/msnstyle", vbox);//yaz
+ #ifdef _WIN32
+ 	pidgin_prefs_checkbox(_("F_lash window when IMs are received"), PIDGIN_PREFS_ROOT "/win32/blink_im", vbox);
+ #endif
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkutils.c pidgin-2.10.9/pidgin/gtkutils.c
+--- pidgin-2.10.9.orig/pidgin/gtkutils.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkutils.c	2014-02-19 15:16:20.834178668 +0900
+@@ -3697,3 +3697,61 @@
+ 	gtk_imhtml_class_register_protocol("gopher://", NULL, NULL);
+ }
+ 
++gchar *
++pidgin_gtk_ellipsis_text(GtkWidget *widget, const char *text, gint min_width, gchar *ellipsis)
++{
++	PangoLayout *layout;
++	gint width, height;
++	gint ewidth;
++	glong len0, len1, len2;
++	gchar *buf, *buf_tmp;
++	gboolean with_ellipsis = FALSE;
++	const gchar default_ellipsis[] = "...";
++
++	if(!ellipsis)
++		ellipsis = default_ellipsis;
++
++	/* allocate buf */
++	buf = g_malloc0(strlen(text) * 2);
++
++	/* create layout */
++	layout = gtk_widget_create_pango_layout(widget, ellipsis);
++	pango_layout_get_pixel_size(layout, &width, &height);
++	ewidth = width; /* length of ellipsis text. */
++
++	len0 = 0;
++	len1 = g_utf8_strlen(text, -1);
++	len2 = len1;
++
++	while (1) {
++
++		if (len2 == len0)
++			break;
++
++		g_utf8_strncpy(buf, text, len2);
++		pango_layout_set_text(layout, buf, -1);
++		pango_layout_get_pixel_size(layout, &width, &height);
++
++		if(!with_ellipsis && width <= min_width)
++			break;
++		else
++			with_ellipsis = TRUE;
++
++		if (width + ewidth > min_width)
++			len1 = len2;
++		else
++			len0 = len2;
++
++		len2 = (len0 + len1) / 2;
++	}
++
++	g_object_unref(layout);
++
++	if (with_ellipsis) {
++		buf_tmp = buf;
++		buf = g_strdup_printf("%s%s", buf_tmp, ellipsis);
++		g_free(buf_tmp);
++	}
++
++	return buf;
++}
+diff -uNr pidgin-2.10.9.orig/pidgin/gtkutils.h pidgin-2.10.9/pidgin/gtkutils.h
+--- pidgin-2.10.9.orig/pidgin/gtkutils.h	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/gtkutils.h	2014-02-19 15:16:20.834178668 +0900
+@@ -977,5 +977,7 @@
+  */
+ void pidgin_utils_uninit(void);
+ 
++gchar *pidgin_gtk_ellipsis_text(GtkWidget *widget, const char *text, gint min_width, gchar *ellipsis);
++
+ #endif /* _PIDGINUTILS_H_ */
+ 
+diff -uNr pidgin-2.10.9.orig/pidgin/pidginstock.c pidgin-2.10.9/pidgin/pidginstock.c
+--- pidgin-2.10.9.orig/pidgin/pidginstock.c	2014-02-03 06:29:20.000000000 +0900
++++ pidgin-2.10.9/pidgin/pidginstock.c	2014-02-19 15:16:20.834178668 +0900
+@@ -331,7 +331,8 @@
+ 
+ static void
+ add_sized_icon(GtkIconSet *iconset, GtkIconSize sizeid, PidginIconTheme *theme,
+-		const char *size, SizedStockIcon sized_icon, gboolean translucent)
++		const char *size, SizedStockIcon sized_icon, gboolean translucent,
++		gboolean size_wildcarded)
+ {
+ 	char *filename;
+ 	GtkIconSource *source;
+@@ -348,7 +349,7 @@
+ 	gtk_icon_source_set_direction(source, GTK_TEXT_DIR_LTR);
+ 	gtk_icon_source_set_direction_wildcarded(source, !sized_icon.rtl);
+ 	gtk_icon_source_set_size(source, sizeid);
+-	gtk_icon_source_set_size_wildcarded(source, FALSE);
++	gtk_icon_source_set_size_wildcarded(source, size_wildcarded);
+ 	gtk_icon_source_set_state_wildcarded(source, TRUE);
+ 	gtk_icon_set_add_source(iconset, source);
+ 	gtk_icon_source_free(source);
+@@ -358,7 +359,7 @@
+ 		gtk_icon_source_set_pixbuf(source, pixbuf);
+ 		gtk_icon_source_set_direction_wildcarded(source, TRUE);
+ 		gtk_icon_source_set_size(source, GTK_ICON_SIZE_MENU);
+-		gtk_icon_source_set_size_wildcarded(source, FALSE);
++		gtk_icon_source_set_size_wildcarded(source, size_wildcarded);
+ 		gtk_icon_source_set_state_wildcarded(source, TRUE);
+ 		gtk_icon_set_add_source(iconset, source);
+ 		gtk_icon_source_free(source);
+@@ -378,7 +379,7 @@
+ 		gtk_icon_source_set_filename(source, filename);
+ 		gtk_icon_source_set_direction(source, GTK_TEXT_DIR_RTL);
+ 		gtk_icon_source_set_size(source, sizeid);
+-		gtk_icon_source_set_size_wildcarded(source, FALSE);
++		gtk_icon_source_set_size_wildcarded(source, size_wildcarded);
+ 		gtk_icon_source_set_state_wildcarded(source, TRUE);
+ 		gtk_icon_set_add_source(iconset, source);
+ 		g_free(filename);
+@@ -434,9 +435,9 @@
+ 
+ #define ADD_SIZED_ICON(name, size) \
+ 		if (sized_status_icons[i].name) { \
+-			add_sized_icon(normal, name, PIDGIN_ICON_THEME(theme), size, sized_status_icons[i], FALSE); \
++			add_sized_icon(normal, name, PIDGIN_ICON_THEME(theme), size, sized_status_icons[i], FALSE, FALSE); \
+ 			if (sized_status_icons[i].translucent_name) \
+-				add_sized_icon(translucent, name, PIDGIN_ICON_THEME(theme), size, sized_status_icons[i], TRUE); \
++				add_sized_icon(translucent, name, PIDGIN_ICON_THEME(theme), size, sized_status_icons[i], TRUE, FALSE); \
+ 		}
+ 		ADD_SIZED_ICON(microscopic, "11");
+ 		ADD_SIZED_ICON(extra_small, "16");
+@@ -463,9 +464,9 @@
+ 
+ #define ADD_SIZED_ICON(name, size) \
+ 		if (sized_tray_icons[i].name) { \
+-			add_sized_icon(normal, name, PIDGIN_ICON_THEME(theme), size, sized_tray_icons[i], FALSE); \
++			add_sized_icon(normal, name, PIDGIN_ICON_THEME(theme), size, sized_tray_icons[i], FALSE, TRUE); \
+ 			if (sized_tray_icons[i].translucent_name) \
+-				add_sized_icon(translucent, name, PIDGIN_ICON_THEME(theme), size, sized_tray_icons[i], TRUE); \
++				add_sized_icon(translucent, name, PIDGIN_ICON_THEME(theme), size, sized_tray_icons[i], TRUE, TRUE); \
+ 		}
+ 		ADD_SIZED_ICON(extra_small, "16x16");
+ 		ADD_SIZED_ICON(small, "22x22");
+@@ -553,7 +554,7 @@
+ 
+ #define ADD_SIZED_ICON(name, size) \
+ 		if (sized_stock_icons[i].name) \
+-			add_sized_icon(iconset, name, PIDGIN_ICON_THEME(theme), size, sized_stock_icons[i], FALSE);
++			add_sized_icon(iconset, name, PIDGIN_ICON_THEME(theme), size, sized_stock_icons[i], FALSE, FALSE);
+ 		ADD_SIZED_ICON(microscopic, "11");
+ 		ADD_SIZED_ICON(extra_small, "16");
+ 		ADD_SIZED_ICON(small, "22");
