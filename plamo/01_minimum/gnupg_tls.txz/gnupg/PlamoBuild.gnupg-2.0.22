@@ -5,7 +5,7 @@ verify=$url.sig
 pkgbase=gnupg
 vers=2.0.22
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 OPT_CONFIG="--enable-gpgtar --docdir=/usr/share/doc/${src}"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README README.SVN THANKS TODO'
@@ -284,6 +284,9 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  pushd $P/usr/bin
+  ln -s gpg2 gpg
+  popd
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
