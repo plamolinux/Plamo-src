@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/grep/grep-2.16.tar.xz'
+url='http://ftp.gnu.org/gnu/grep/grep-2.18.tar.xz'
 verify=$url.sig
 pkgbase=grep
-vers=2.16
+vers=2.18
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
