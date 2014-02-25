@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.astron.com/pub/file/file-5.12.tar.gz'
+url='ftp://ftp.astron.com/pub/file/file-5.17.tar.gz'
 pkgbase=file
-vers=5.12
-arch=x86_64
-#arch=i586
+vers=5.17
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=file-5.12
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
