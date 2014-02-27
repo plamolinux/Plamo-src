@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://git-core.googlecode.com/files/git-1.8.1.4.tar.gz'
-mandoc='http://git-core.googlecode.com/files/git-manpages-1.8.1.4.tar.gz'
+url='http://git-core.googlecode.com/files/git-1.9.0.tar.gz'
+mandoc='http://git-core.googlecode.com/files/git-manpages-1.9.0.tar.gz'
 pkgbase=git
-vers=1.8.1.4
-arch=x86_64
-# arch=i586
+vers=1.9.0
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=git-1.8.1.4
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='COPYING INSTALL README command-list.txt'
 patchfiles=''
@@ -192,7 +191,7 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $mandir
-  tar xf $W/${mandoc##*/} -C $mandir --no-same-owner
+  tar xf $W/${mandoc##*/} -C $mandir --no-same-owner -k
 
   mkdir -p $docdir/$src
 
