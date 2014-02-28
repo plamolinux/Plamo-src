@@ -30,7 +30,7 @@ diff -uNr cyrus-sasl-2.1.23.orig/plugins/Makefile.am cyrus-sasl-2.1.23/plugins/M
  common_sources = plugin_common.c plugin_common.h
  
 -sasldir = $(prefix)/lib/sasl2
-+sasldir = $(plugindir)/sasl2
++sasldir = $(plugindir)
  sasl_LTLIBRARIES = @SASL_MECHS@
  EXTRA_LTLIBRARIES = libplain.la libanonymous.la libkerberos4.la libcrammd5.la \
  	libgssapiv2.la libdigestmd5.la liblogin.la libsrp.la libotp.la \
@@ -42,7 +42,7 @@ diff -uNr cyrus-sasl-2.1.23.orig/plugins/Makefile.in cyrus-sasl-2.1.23/plugins/M
  common_sources = plugin_common.c plugin_common.h
  
 -sasldir = $(prefix)/lib/sasl2
-+sasldir = $(plugindir)/sasl2
++sasldir = $(plugindir)
  sasl_LTLIBRARIES = @SASL_MECHS@
  EXTRA_LTLIBRARIES = libplain.la libanonymous.la libkerberos4.la libcrammd5.la \
  	libgssapiv2.la libdigestmd5.la liblogin.la libsrp.la libotp.la \
