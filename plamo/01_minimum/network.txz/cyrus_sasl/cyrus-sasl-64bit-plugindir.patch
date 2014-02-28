@@ -1,12 +1,36 @@
-diff -uNr cyrus-sasl-2.1.23.old//plugins/Makefile.in cyrus-sasl-2.1.23//plugins/Makefile.in
---- cyrus-sasl-2.1.23.old//plugins/Makefile.in	2010-11-25 17:15:58.000000000 +0900
-+++ cyrus-sasl-2.1.23//plugins/Makefile.in	2010-11-25 17:19:28.000000000 +0900
-@@ -263,7 +263,7 @@
+diff -uNr cyrus-sasl-2.1.26.orig/Makefile.am cyrus-sasl-2.1.26/Makefile.am
+--- cyrus-sasl-2.1.26.orig/Makefile.am	2012-10-12 23:05:48.000000000 +0900
++++ cyrus-sasl-2.1.26/Makefile.am	2014-02-28 15:49:46.010687378 +0900
+@@ -83,7 +83,7 @@
+ 
+ framedir = /Library/Frameworks/SASL2.framework
+ install-exec-local: $(INSTALLOSX)
+-	@if test "$(plugindir)" != "$(prefix)/lib/sasl2"; then \
++	@if test "$(plugindir)" != "$(libdir)/sasl2"; then \
+ 	  echo "********************************************************"; \
+ 	  echo "* WARNING:"; \
+ 	  echo "* Plugins are being installed into $(prefix)/lib/sasl2,"; \
+diff -uNr cyrus-sasl-2.1.26.orig/plugins/Makefile.am cyrus-sasl-2.1.26/plugins/Makefile.am
+--- cyrus-sasl-2.1.26.orig/plugins/Makefile.am	2012-10-12 23:05:48.000000000 +0900
++++ cyrus-sasl-2.1.26/plugins/Makefile.am	2014-02-28 15:49:25.473112885 +0900
+@@ -63,7 +63,7 @@
  
  common_sources = plugin_common.c plugin_common.h
  
 -sasldir = $(prefix)/lib/sasl2
++sasldir = $(libdir)/sasl2
+ sasl_LTLIBRARIES = @SASL_MECHS@
+ EXTRA_LTLIBRARIES = libplain.la libanonymous.la libkerberos4.la libcrammd5.la \
+ 	libgs2.la libgssapiv2.la libdigestmd5.la liblogin.la libsrp.la libotp.la \
+diff -uNr cyrus-sasl-2.1.26.orig/plugins/Makefile.in cyrus-sasl-2.1.26/plugins/Makefile.in
+--- cyrus-sasl-2.1.26.orig/plugins/Makefile.in	2012-11-07 04:21:39.000000000 +0900
++++ cyrus-sasl-2.1.26/plugins/Makefile.in	2014-02-28 15:49:25.473112885 +0900
+@@ -369,7 +369,7 @@
+ EXTRA_DIST = makeinit.sh NTMakefile
+ noinst_SCRIPTS = makeinit.sh
+ common_sources = plugin_common.c plugin_common.h
+-sasldir = $(prefix)/lib/sasl2
 +sasldir = $(plugindir)
  sasl_LTLIBRARIES = @SASL_MECHS@
  EXTRA_LTLIBRARIES = libplain.la libanonymous.la libkerberos4.la libcrammd5.la \
- 	libgssapiv2.la libdigestmd5.la liblogin.la libsrp.la libotp.la \
+ 	libgs2.la libgssapiv2.la libdigestmd5.la liblogin.la libsrp.la libotp.la \
