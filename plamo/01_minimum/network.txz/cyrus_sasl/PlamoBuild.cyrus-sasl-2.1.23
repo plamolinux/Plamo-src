@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.andrew.cmu.edu/pub/cyrus-mail/cyrus-sasl-2.1.23.tar.gz'
+url='ftp://ftp.cyrusimap.org/cyrus-sasl/cyrus-sasl-2.1.23.tar.gz'
 pkgbase=cyrus_sasl
 vers=2.1.23
-arch=x86_64
-# arch=i586
-build=P2
-src=cyrus-sasl-2.1.23
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P3
+src=cyrus-sasl-${vers}
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
@@ -16,7 +15,6 @@ else
 fi
 OPT_CONFIG="--with-plugindir=/usr/${libdir}/sasl2 --with-dbpath=/var/lib/sasl/sasldb2 --with-saslauthd=/var/run/saslauthd"
 DOCS='AUTHORS COPYING ChangeLog INSTALL INSTALL.TXT NEWS README'
-# http://cblfs.cross-lfs.org/index.php/CyrusSASL
 patchfiles='cyrus-sasl-blfs.patch cyrus-sasl-64bit-plugindir.patch'
 compress=txz
 ##############################################################
@@ -200,15 +198,16 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    #autoreconf -i
+
     #if [ -f autogen.sh ] ; then
     #  sh ./autogen.sh
     #fi
 
     if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      export CFLAGS="-isystem /usr/include $target -fPIC"
+      export LDFLAGS='-Wl,--as-needed' 
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -220,6 +219,7 @@ if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
+      export CFLAGS="-isystem /usr/include $target -fPIC"
       export LDFLAGS='-Wl,--as-needed'
       make -j2
     fi
@@ -253,15 +253,6 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $P/install
-  cat >> $P/install/initpkg <<EOF
-/usr/bin/grep sasl2 /etc/ld.so.conf > /dev/null 2>&1
-if [ \$? -ne 0 ]; then
-  cat >> /etc/ld.so.conf <<EOF2
-/usr/lib/sasl2 
-/usr/lib64/sasl2
-EOF2
-fi
-EOF
 
   mkdir -p $P/var/run/saslauthd
   chgrp postfix $P/var/run/saslauthd
