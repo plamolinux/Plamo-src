@@ -5,11 +5,11 @@ verify=$url.sig
 pkgbase=gnutls
 vers=2.12.23
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P2
+build=P3
 src=gnutls-2.12.23
 OPT_CONFIG='--with-libgcrypt --without-p11-kit --disable-static'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
-patchfiles='cve-2014-1959.patch'
+patchfiles='cve-2014-1959.patch cve-2014-0092.patch'
 compress=txz
 ##############################################################
 
