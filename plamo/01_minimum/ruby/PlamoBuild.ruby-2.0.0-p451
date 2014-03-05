@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p353.tar.bz2'
+url='ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p451.tar.bz2'
 pkgbase=ruby
-vers=2.0.0_p353
+vers=2.0.0_p451
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=ruby-2.0.0-p353
+src=ruby-2.0.0-p451
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README README.EXT README.EXT.ja README.ja ToDo'
 patchfiles=''
