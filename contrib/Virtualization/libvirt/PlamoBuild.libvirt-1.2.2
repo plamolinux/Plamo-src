@@ -1,17 +1,21 @@
 #!/bin/sh
 
 ######################################################################
-url="http://libvirt.org/sources/libvirt-1.2.2.tar.gz"
+url="http://libvirt.org/sources/libvirt-1.2.2.tar.gz
+    http://libvirt.org/sources/python/libvirt-python-1.2.2.tar.gz"
 pkgbase=libvirt
 vers=1.2.2
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
-src=$pkgbase-$vers
-OPT_CONFIG="--with-capng --without-hal --with-udev
+build=P2
+src[0]=$pkgbase-$vers
+src[1]=libvirt-python-1.2.2
+OPT_CONFIG[0]="--with-capng --without-hal --with-udev
     --with-html-subdir=libvirt/html --with-lxc --with-init-script=redhat
     --with-qemu-user=libvirt-qemu --with-qemu-group=kvm --with-macvtap"
-DOCS="INSTALL COPYING.LESSER AUTHORS ChangeLog COPYING ABOUT-NLS
+OPT_CONFIG[1]=""
+DOCS[0]="INSTALL COPYING.LESSER AUTHORS ChangeLog COPYING ABOUT-NLS
     ChangeLog-old NEWS README TODO"
+DOCS[1]="COPYING.LESSER AUTHORS ChangeLog COPYING NEWS README"
 ######################################################################
 
 fscheck() {
@@ -202,7 +206,7 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-  cd $B
+  cd ${B[0]}
   cp -p daemon/libvirtd.conf{,.orig}
   cat <<- "EOF" | patch daemon/libvirtd.conf
 	81c81
@@ -224,51 +228,51 @@ if [ $opt_config -eq 1 ] ; then
 	EOF
   cp -p daemon/libvirtd.init.in{,.orig}
   cat <<- "EOF" | patch daemon/libvirtd.init.in
-	35c35
+	37c37
 	< . @sysconfdir@/rc.d/init.d/functions
 	---
 	> #. @sysconfdir@/rc.d/init.d/functions
-	69c69
+	71c71
 	<     KRB5_KTNAME=$KRB5_KTNAME daemon --pidfile $PIDFILE --check $SERVICE $PROCESS --daemon $LIBVIRTD_CONFIG_ARGS $LIBVIRTD_ARGS
 	---
 	>     LANG=C KRB5_KTNAME=$KRB5_KTNAME $SERVICE --daemon $LIBVIRTD_CONFIG_ARGS $LIBVIRTD_ARGS
-	78c78
+	80c80
 	<     killproc -p $PIDFILE $PROCESS
 	---
 	>     kill `cat $PIDFILE`
-	83a84
+	85a86
 	>         rm -f $PIDFILE
-	97c98
+	99c100
 	<     killproc -p $PIDFILE $PROCESS -HUP
 	---
 	>     kill -HUP `cat $PIDFILE`
-	109c110
+	111c112
 	<         status -p $PIDFILE $PROCESS
 	---
 	>         pgrep $SERVICE
 	EOF
   cp -p src/locking/virtlockd.init.in{,.orig}
   cat <<- "EOF" | patch src/locking/virtlockd.init.in
-	27c27
+	28c28
 	< . @sysconfdir@/rc.d/init.d/functions
 	---
 	> #. @sysconfdir@/rc.d/init.d/functions
-	31c31
-	< PIDFILE=@localstatedir@/run/libvirt/lockd/$SERVICE.pid
+	32c32
+	< PIDFILE=@localstatedir@/run/$SERVICE.pid
 	---
-	> PIDFILE=@localstatedir@/run/libvirt/lockd/$PROCESS.pid
-	41c41
+	> PIDFILE=@localstatedir@/run/$PROCESS.pid
+	42c42
 	<     daemon --pidfile $PIDFILE --check $SERVICE $PROCESS --daemon $VIRTLOCKD_ARGS
 	---
 	>     $SERVICE --pid-file $PIDFILE --daemon $VIRTLOCKED_ARGS
-	50c50
+	51c51
 	<     killproc -p $PIDFILE $PROCESS
 	---
 	>     kill `cat $PIDFILE`
-	67c67
-	<     killproc -p $PIDFILE $PROCESS -HUP
+	68c68
+	<     killproc -p $PIDFILE $PROCESS -USR1
 	---
-	>     kill -HUP `cat $PIDFILE`
+	>     kill -USR1 `cat $PIDFILE`
 	EOF
   cp -p src/qemu/qemu.conf{,.orig}
   sed 's@#group = "root"@group = "kvm"@g' src/qemu/qemu.conf.orig \
@@ -295,6 +299,8 @@ if [ $opt_build -eq 1 ] ; then
       make
     fi
   done
+  cd ${B[1]}
+  python setup.py build
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -312,6 +318,8 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
+  cd ${B[1]}
+  python setup.py install --root=$P
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
