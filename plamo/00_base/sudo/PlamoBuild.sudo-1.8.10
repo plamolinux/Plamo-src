@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://www.sudo.ws/sudo/dist/sudo-1.8.9p4.tar.gz'
+url='http://www.sudo.ws/sudo/dist/sudo-1.8.10.tar.gz'
 verify=$url.sig
 pkgbase=sudo
-vers=1.8.9p4
+vers=1.8.10
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
@@ -232,9 +232,9 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
 
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
