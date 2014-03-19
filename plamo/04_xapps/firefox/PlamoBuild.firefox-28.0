@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/27.0.1/source/firefox-27.0.1.source.tar.bz2'
+url='http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/source/firefox-28.0.source.tar.bz2'
 verify=$url.asc
 pkgbase=firefox
-vers=27.0.1
+vers=28.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=mozilla-release
-firefox_tag=FIREFOX_27_0_1_RELEASE
+firefox_tag=FIREFOX_28_0_RELEASE
 # after firefox 12.0, to use system cairo is broken.
 #	--enable-system-cairo \
 # after firefox 13.0, libpng 1.5 is required.
