@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://webm.googlecode.com/files/libvpx-v1.1.0.tar.bz2'
+url='https://webm.googlecode.com/files/libvpx-v1.3.0.tar.bz2'
 pkgbase=libvpx
-vers=1.1.0
-arch=x86_64
-# arch=i586
+vers=1.3.0
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=libvpx-v1.1.0
-OPT_CONFIG='--enable-runtime-cpu-detect --disable-static --enable-shared --enable-vp8 --enable-postproc'
+src=libvpx-v1.3.0
+OPT_CONFIG='--enable-runtime-cpu-detect --enable-shared --disable-static'
 DOCS='AUTHORS CHANGELOG LICENSE PATENTS README'
 patchfiles=''
 compress=txz
