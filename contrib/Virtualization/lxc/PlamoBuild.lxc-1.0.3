@@ -1,19 +1,18 @@
 #!/bin/sh
 
 ######################################################################
-url="https://github.com/lxc/lxc.git
+url="https://linuxcontainers.org/downloads/lxc-1.0.3.tar.gz
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=git_20131226
+vers=1.0.3
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P2
-src=$pkgbase
-OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var
-    --docdir=/usr/share/doc/lxc~ --enable-python --enable-lua"
-DOCS="AUTHORS CONTRIBUTING COPYING INSTALL MAINTAINERS NEWS README
-    TODO"
+src=$pkgbase-$vers
+OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var"
+DOCS="MAINTAINERS ChangeLog AUTHORS COPYING TODO INSTALL README NEWS
+    CONTRIBUTING"
 ######################################################################
 
 fscheck() {
@@ -190,20 +189,13 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    case ${i##*.} in
-    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; else
-        ( cd `basename ${i##*/} .git` ; git pull origin master ) ; fi ;;
-    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
-    esac
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master ; git reset --hard 23b9d42
-        git set-file-times ) ;;
     esac
   done
 fi
@@ -221,7 +213,6 @@ if [ $opt_config -eq 1 ] ; then
 	> # else if you make configure yourself, make appropriate changes for
 	> # following lines.
 	EOF
-  ./autogen.sh
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -265,7 +256,8 @@ if [ $opt_package -eq 1 ] ; then
   install -d $P/etc/rc.d/init.d
   install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
   install -m 644 $W/lxc-net $P/etc/rc.d/init.d
-  sed -i "s@\(/usr/share/doc/\)lxc~@\1$src@g" $mandir/{,ja/}man5/lxc.conf.5
+  sed -i "s@\(/usr/share/doc/\)lxc@\1$src@g" \
+      $mandir/{,ja/}man5/lxc.container.conf.5 $mandir/{,ja/}man7/lxc.7
   re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
   dt=`echo $(LANG=C date '+%a %b %e 09:00:00 %Z %G')`
   find $mandir -type f -exec sed -i "/^\.TH/s@$re@$dt@g" {} \;
@@ -274,8 +266,8 @@ if [ $opt_package -eq 1 ] ; then
     nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
   done
   find $mandir/ja_JP.eucJP -type f -exec sed -i "s@UTF-8@EUC-JP@g" {} \;
-  install -d $docdir/lxc~/api
-  cp -R doc/api/html $docdir/lxc~/api
+  install -d $docdir/lxc/api
+  cp -R doc/api/html $docdir/lxc/api
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
@@ -305,22 +297,17 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-  mv $docdir/lxc~/examples $docdir/$src
-  mv $docdir/lxc~/api $docdir/$src
-  ( cd $S ; git log | nkf -We > $docdir/$src/ChangeLog )
+  mv $docdir/lxc/examples $docdir/$src
+  mv $docdir/lxc/api $docdir/$src
   install -m 644 $W/README.plamo $docdir/$src
-  touch -t `date '+%m%d0900'` $docdir/$src/{ChangeLog,README.plamo}
-  gzip_one $docdir/$src/ChangeLog
+  touch -t `date '+%m%d0900'` $docdir/$src/README.plamo
   gzip_one $docdir/$src/README.plamo
-  mv $docdir/$src/{examples,{AUTHORS,CONTRIBUTING,COPYING,INSTALL}.gz} $C
-  mv $docdir/$src/{{MAINTAINERS,NEWS,README,TODO}.gz,api} $C
-  mv $docdir/$src/{ChangeLog,README.plamo,$myname}.gz $C
-  mv $C/{examples,{AUTHORS,CONTRIBUTING,COPYING,INSTALL}.gz} $docdir/$src
-  mv $C/{{MAINTAINERS,NEWS,README,TODO}.gz,api} $docdir/$src
-  mv $C/{ChangeLog,README.plamo,$myname}.gz $docdir/$src
+  mv $docdir/$src/{examples,api,{README.plamo,$myname}.gz} $C
+  mv $C/{examples,api,{README.plamo,$myname}.gz} $docdir/$src
   touch -t `date '+%m%d0900'` $docdir/$src
   convert
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/libexec/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -name liblxc.*`
   tar rvpf $pkg.tar -C $P \
@@ -331,6 +318,7 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P usr/include/lxc
   tar rvpf $pkg.tar -C $P usr/share/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/lua | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc/bash_completion.d | tail -n+2`
   tar rvpf $pkg.tar -C $P etc/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/rc.d/init.d | tail -n+2`
   tar rvpf $pkg.tar -C $P var/lib/lxc
