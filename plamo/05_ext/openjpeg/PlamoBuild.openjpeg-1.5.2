@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://openjpeg.googlecode.com/files/openjpeg-1.5.1.tar.gz'
+url='http://jaist.dl.sourceforge.net/project/openjpeg.mirror/openjpeg-1.5.2.tar.gz'
 pkgbase=openjpeg
-vers=1.5.1
-arch=x86_64
-# arch=i586
+vers=1.5.2
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=openjpeg-1.5.1
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS INSTALL LICENSE NEWS README THANKS'
 patchfiles='openjpeg-docdir.patch'
