@@ -3,7 +3,7 @@
 ######################################################################
 url="git://git.code.sf.net/p/lxcfacility/code.git"
 pkgbase=lxcf
-vers=git_20140425
+vers=git_20140502
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -198,7 +198,7 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
         git checkout origin/master ; git reset --hard HEAD
-        git set-file-times )
+        git set-file-times ; cd lxcf ; TZ=UTC script/gitlog2changelog.py)
         cp -a `basename ${i##*/} .git`/$src $W ;;
     esac
   done
