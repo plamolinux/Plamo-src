@@ -1,0 +1,114 @@
+#!/bin/sh
+
+LXCNAME=$1
+rootfs=/opt/lxcf/$LXCNAME
+
+# create /dev
+#mknod -m 666 $rootfs/dev/zero c 1 5
+#chmod    666 $rootfs/dev/random
+#mknod -m 666 $rootfs/dev/urandom c 1 9
+#mkdir -m 755 $rootfs/dev/pts
+#chmod    666 $rootfs/dev/tty
+#chmod    600 $rootfs/dev/console
+#mknod -m 666 $rootfs/dev/tty0 c 4 0
+#mknod -m 666 $rootfs/dev/tty1 c 4 1
+#mknod -m 666 $rootfs/dev/tty2 c 4 2
+#mknod -m 666 $rootfs/dev/tty3 c 4 3
+#mknod -m 666 $rootfs/dev/tty4 c 4 4
+#mknod -m 666 $rootfs/dev/full c 1 7
+#mknod -m 600 $rootfs/dev/initctl p
+#mknod -m 666 $rootfs/dev/ptmx c 5 2
+
+# suppress log level output for udev
+sed -i 's/="err"/=0/' $rootfs/etc/udev/udev.conf
+
+# /etc/fstab
+cat <<- "EOF" > $rootfs/etc/fstab
+	none             /proc    proc        defaults   0   0
+	none             /sys     sysfs       defaults   0   0
+	none             /dev     tmpfs       defaults   0   0
+	none		    /tmp     tmpfs       defaults   0   0
+	none            /dev/pts        devpts  gid=5,mode=620    0 0
+	none            /proc/bus/usb             usbfs        noauto   0   0
+	none             /var/lib/nfs/rpc_pipefs rpc_pipefs  defaults   0   0
+	EOF
+
+# /etc/inittab
+#cat <<- "EOF" | patch $rootfs/etc/inittab
+#	32,33c32,33
+#	< # What to do when power fails (shutdown to single user).
+#	< pf::powerfail:/sbin/shutdown -f +5 "THE POWER IS FAILING"
+#	---
+#	> # What to do when power fails (shutdown).
+#	> pf::powerfail:/sbin/shutdown -h +0 "THE POWER IS FAILING"
+#	47a48
+#	> 1:1235:respawn:/sbin/agetty 38400 console
+#	52,53d52
+#	< c5:1235:respawn:/sbin/agetty 38400 tty5 linux
+#	< c6:12345:respawn:/sbin/agetty 38400 tty6 linux
+#	EOF
+
+# set the hostname
+echo "$LXCNAME" > $rootfs/etc/HOSTNAME
+
+# set minimal hosts
+#echo "127.0.0.1 localhost $LXCNAME" > $rootfs/etc/hosts
+
+# configure the network using the dhcp
+echo "DHCP" > $rootfs/var/run/inet1-scheme
+
+# localtime (JST)
+#ln -s ../usr/share/zoneinfo/Asia/Tokyo $rootfs/etc/localtime
+
+# disable pam_loginuid.so in /etc/pam.d/login (for libvirt's lxc driver)
+sed -i '/pam_loginuid/s/^/#/' $rootfs/etc/pam.d/login
+
+# glibc configure
+#mv $rootfs/etc/ld.so.conf{.new,}
+#chroot $rootfs ldconfig
+
+# root password
+#echo "Setting root password to 'root'..."
+#echo "root:root" | chroot $rootfs chpasswd
+#echo "Please change root password!"
+
+# /etc/rc.d/rc.S
+ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+	/^mount -w -n -t proc/;/^# ln -s \/bin\/true/-1d
+	/^mknod \/dev\/unikey/;/^# Clean \/etc\/mtab/-2d
+	/^# copy the rules/;/^# Set the hostname/-1d
+	/^# Check the integrity/;/^# Clean up temporary/-1d
+	/^# Set VGA framebuffer/-4;/^# Load a custom screen/-1d
+	w
+	EOF
+
+# /etc/rc.d/rc.M
+ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
+	/^# Screen blanks/;/^# Initialize ip6tables/-1d
+	/^# Initialize sysctl/;/^echo "Starting services/-1d
+	/^sync/;/^# All done/-1d
+	w
+	EOF
+
+# /etc/rc.d/rc.inet1.tradnet
+head -n-93 $rootfs/sbin/netconfig.tradnet > /tmp/netconfig.rconly
+cat <<- EOF >> /tmp/netconfig.rconly
+	PCMCIA=n
+	RC=$rootfs/etc/rc.d/rc.inet1.tradnet
+	IFCONFIG=sbin/ifconfig
+	ROUTE=sbin/route
+	INET1SCHEME=var/run/inet1-scheme
+	IPADDR=127.0.0.1
+	NETWORK=127.0.0.0
+	DHCPCD=usr/sbin/dhclient
+	LOOPBACK=y
+	make_config_file
+	EOF
+rm -f $rootfs/etc/rc.d/rc.inet1.tradnet
+sh /tmp/netconfig.rconly
+rm -f /tmp/netconfig.rconly
+
+# add /root/.dir_colors
+cp -p /root/.dir_colors $rootfs/root
+
+exit 0

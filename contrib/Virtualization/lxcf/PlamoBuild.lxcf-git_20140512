@@ -1,9 +1,11 @@
 #!/bin/sh
 
 ######################################################################
-url="git://git.code.sf.net/p/lxcfacility/code.git"
+url="git://git.code.sf.net/p/lxcfacility/code.git
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxcf/lxcf-sysgen_hook.patch
+    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxcf/lxcf-sysgen_opt"
 pkgbase=lxcf
-vers=git_20140502
+vers=git_20140512
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -198,7 +200,7 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
         git checkout origin/master ; git reset --hard HEAD
-        git set-file-times ; cd lxcf ; TZ=UTC script/gitlog2changelog.py)
+        git set-file-times ; cd lxcf ; TZ=UTC ../script/gitlog2changelog.py)
         cp -a `basename ${i##*/} .git`/$src $W ;;
     esac
   done
@@ -207,6 +209,8 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
+  cd $B
+  patch -Np2 -i $W/lxcf-sysgen_hook.patch
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -246,6 +250,8 @@ if [ $opt_package -eq 1 ] ; then
       make install libdir=/usr/$libdir DESTDIR=$P
     fi
   done
+  install -d $P/etc/lxcf/hooks
+  install $W/lxcf-sysgen_opt $P/etc/lxcf/hooks
   install -d $P/etc/rc.d/init.d
   cat <<- EOF > $P/etc/rc.d/init.d/lxcf
 	#!/bin/sh

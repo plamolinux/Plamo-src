@@ -1,0 +1,34 @@
+From 4c81aaf4259a3d80e20e6c6dd07e17fdbb7fc946 Mon Sep 17 00:00:00 2001
+From: TAMUKI Shoichi <tamuki@linet.gr.jp>
+Date: Sat, 3 May 2014 10:59:57 +0900
+Subject: [PATCH] Improve lxcf sysgen
+
+Add a hook point for system-dependent configuration during creating
+containers.  /etc/lxcf/hooks/lxcf-sysgen_opt, which the optional
+configuration is described in, does not exist by default.  This will
+be provided by individual packagers as needed.
+
+Signed-off-by: TAMUKI Shoichi <tamuki@linet.gr.jp>
+---
+ lxcf/lib/lxcf-sysgen | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/lxcf/lib/lxcf-sysgen b/lxcf/lib/lxcf-sysgen
+index 40ab1fc..3325a85 100755
+--- a/lxcf/lib/lxcf-sysgen
++++ b/lxcf/lib/lxcf-sysgen
+@@ -145,6 +145,11 @@ lxcf_sysgen1() {
+     rm $rootfs/etc/systemd/system/multi-user.target.wants/lxcf.service
+   fi
+ 
++  # apply system-dependent configuration (optional)
++  if [ -x /etc/lxcf/hooks/lxcf-sysgen_opt ] ; then
++    /etc/lxcf/hooks/lxcf-sysgen_opt $LXCNAME
++  fi
++
+   # create an initial rsc file
+   /usr/lib64/lxcf/lxcf-resource1 initrsc $LXCNAME > /etc/lxcf/rsc/$LXCNAME/resource.val
+ 
+-- 
+1.9.0
+
