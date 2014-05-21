@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://www.sudo.ws/sudo/dist/sudo-1.8.10p1.tar.gz'
+url='http://www.sudo.ws/sudo/dist/sudo-1.8.10p3.tar.gz'
 verify=$url.sig
 pkgbase=sudo
-vers=1.8.10p1
+vers=1.8.10p3
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
