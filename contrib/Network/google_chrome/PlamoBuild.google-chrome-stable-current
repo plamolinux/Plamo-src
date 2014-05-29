@@ -2,7 +2,7 @@
 ##############################################################
 url='https://dl-ssl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm'
 pkgbase=google_chrome
-vers=26.0.1410.63
+vers=35.0.1916.114
 arch=x86_64
 build=P1
 src=google-chrome-stable
@@ -12,6 +12,10 @@ compatlibs=''
 patchfiles=''
 installdir='opt/google/chrome'
 ##############################################################
+
+if [ ! -f ${url##*/} ]; then
+  wget $url
+fi
 
 if [ "$arch" = "x86_64" ]; then
     libdir=lib64
@@ -27,6 +31,8 @@ cd $src
 rpm2cpio ../"$src"_current_$arch.rpm | cpio -ivd
 
 rm -rf etc
+
+sed -i 's|/usr/bin/google-chrome-stable|/usr/bin/google-chrome|' ./usr/share/applications/google-chrome.desktop
 
 rm -f ./usr/bin/google-chrome
 cat <<EOF > ./usr/bin/google-chrome
