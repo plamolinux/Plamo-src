@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.st.ryukoku.ac.jp/pub/network/ftp/lftp/lftp-4.4.9.tar.xz'
+url='ftp://ftp.st.ryukoku.ac.jp/pub/network/ftp/lftp/lftp-4.4.16.tar.xz'
 verify=$url
 pkgbase=lftp
-vers=4.4.9
+vers=4.4.16
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=lftp-4.4.9
+src=${pkgbase}-${vers}
 OPT_CONFIG='--with-gnutls --without-openssl --disable-static'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README.debug-levels README.dnssec README.modules THANKS TODO lftp.lsm'
 patchfiles=''
