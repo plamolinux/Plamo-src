@@ -5,7 +5,7 @@ url="git://git.code.sf.net/p/lxcfacility/code.git
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxcf/lxcf-sysgen_hook.patch
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxcf/lxcf-sysgen_opt"
 pkgbase=lxcf
-vers=git_20140512
+vers=git_20140529
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase
@@ -256,8 +256,7 @@ if [ $opt_package -eq 1 ] ; then
   cat <<- EOF > $P/etc/rc.d/init.d/lxcf
 	#!/bin/sh
 	
-	start()
-	{
+	start() {
 	  /usr/$libdir/lxcf/lxcf-rc
 	}
 	
@@ -278,6 +277,30 @@ if [ $opt_package -eq 1 ] ; then
 	exit 0
 	EOF
   chmod 755 $P/etc/rc.d/init.d/lxcf
+  cat <<- EOF > $P/etc/rc.d/init.d/lxcf-sched
+	#!/bin/sh
+	
+	start() {
+	  /usr/$libdir/lxcf/lxcf-sched &
+	}
+	
+	case "\$1" in
+	start)
+	  start
+	  ;;
+	stop)
+	  ;;
+	restart)
+	  start
+	  ;;
+	*)
+	  echo \$"Usage: \$0 {start|stop|restart}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 755 $P/etc/rc.d/init.d/lxcf-sched
   install -d $P/opt/lxcf $P/etc/lxcf/rsc
   touch $W/i.et
   cd $W
@@ -303,7 +326,7 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-  mv $docdir/lxcf-0.5/example $docdir/$src
+  mv $docdir/lxcf-*/example $docdir/$src
   mv $docdir/$src/{example,$myname.gz} $C
   mv $C/{example,$myname.gz} $docdir/$src
   touch -t `date '+%m%d0900'` $docdir/$src
@@ -321,10 +344,9 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/libvirt/hooks | tail -n+2`
   tar rvpf $pkg.tar -C $P etc/libvirt/qemu/networks/lxcfnet1.xml
   tar rvpf $pkg.tar -C $P etc/libvirt/qemu/networks/autostart/lxcfnet1.xml
-  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/lxcf
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc/rc.d/init.d | tail -n+2`
   tar rvpf $pkg.tar -C $P var/lib/libvirt/network/lxcfnet1.xml
   tar rvpf $pkg.tar -C $P var/log/lxcf
-  tar rvpf $pkg.tar -C $P var/tmp/lxcf
   tar rvpf $pkg.tar -C $P opt/lxcf
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
