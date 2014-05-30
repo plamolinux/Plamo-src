@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://curl.haxx.se/download/curl-7.36.0.tar.bz2'
+url='http://curl.haxx.se/download/curl-7.37.0.tar.bz2'
 verify=$url.asc
 pkgbase=curl
-vers=7.36.0
+vers=7.37.0
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
