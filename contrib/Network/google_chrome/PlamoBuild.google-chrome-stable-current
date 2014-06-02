@@ -1,9 +1,10 @@
 #!/bin/sh
 ##############################################################
-url='https://dl-ssl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm'
 pkgbase=google_chrome
 vers=35.0.1916.114
-arch=x86_64
+verbld=1
+arch=`uname -m | sed -e 's/i.86/i386/'`
+url="https://dl.google.com/linux/chrome/rpm/stable/${arch}/google-chrome-stable-${vers}-${verbld}.${arch}.rpm"
 build=P1
 src=google-chrome-stable
 OPT_CONFIG=''
