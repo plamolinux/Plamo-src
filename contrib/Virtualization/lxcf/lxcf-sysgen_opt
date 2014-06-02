@@ -73,22 +73,49 @@ sed -i '/pam_loginuid/s/^/#/' $rootfs/etc/pam.d/login
 #echo "Please change root password!"
 
 # /etc/rc.d/rc.S
-ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+if [ -f /loop/cdrom/isolinux/rootimg.squash ] ; then
+  ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+	/^mkdir \/dev\/pts/;/^# ln -s \/bin\/true/-1d
+	/^mknod \/dev\/unikey/;/^# Clean \/etc\/mtab/-2d
+	/^ln -sf \/proc\/mounts/d
+	/^# copy the rules/;/^# Set the hostname/-1d
+	/^# Suppless system logs/;/^# Set CPU frequency/s/tmp\/*//g
+	g/^\/sbin\/mount -v -o/a\
+	/sbin/mount -v -t tmpfs /tmp /tmp
+	/^# Mount local filesystems/;/^# Clean up temporary/-1d
+	/^\/bin\/rm -f \/etc\/nologin/s/$/ \/fastboot/
+	/^# Set VGA framebuffer/-3;/^# Load a custom screen/-1d
+	w
+	EOF
+else
+  ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
 	/^mount -w -n -t proc/;/^# ln -s \/bin\/true/-1d
 	/^mknod \/dev\/unikey/;/^# Clean \/etc\/mtab/-2d
 	/^# copy the rules/;/^# Set the hostname/-1d
 	/^# Check the integrity/;/^# Clean up temporary/-1d
-	/^# Set VGA framebuffer/-4;/^# Load a custom screen/-1d
+	/^# Set VGA framebuffer/-3;/^# Load a custom screen/-1d
 	w
 	EOF
+fi
 
 # /etc/rc.d/rc.M
-ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
+if [ -f /loop/cdrom/isolinux/rootimg.squash ] ; then
+  ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
+	/^# Screen blanks/;/^# Initialize ip6tables/-1d
+	/^# Initialize sysctl/;/^echo "Starting services/-1d
+	/^# Start the rsyslogd/;/^# Initialize the NET/s/tmp\///g
+	/^if \[ -f \/loop\/cdrom/;/^# Start the local setup/-1d
+	/^sync/;/^# All done/-1d
+	w
+	EOF
+else
+  ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
 	/^# Screen blanks/;/^# Initialize ip6tables/-1d
 	/^# Initialize sysctl/;/^echo "Starting services/-1d
 	/^sync/;/^# All done/-1d
 	w
 	EOF
+fi
 
 # /etc/rc.d/rc.inet1.tradnet
 head -n-93 $rootfs/sbin/netconfig.tradnet > /tmp/netconfig.rconly
@@ -107,6 +134,33 @@ cat <<- EOF >> /tmp/netconfig.rconly
 rm -f $rootfs/etc/rc.d/rc.inet1.tradnet
 sh /tmp/netconfig.rconly
 rm -f /tmp/netconfig.rconly
+ed - $rootfs/etc/rc.d/rc.inet1.tradnet <<- "EOF"
+	g/cmdline/s/if/& false \&\&/
+	w
+	EOF
+
+# /etc/rc.d/rc.4
+if [ -f /loop/cdrom/isolinux/rootimg.squash ] ; then
+  ed - $rootfs/etc/rc.d/rc.4 <<- "EOF"
+	/^if \[ ! -f \/etc\/X11\/xorg\.conf/;/^echo "Starting X/-1d
+	w
+	EOF
+fi
+
+# /etc/rc.d/rc.6
+if [ -f /loop/cdrom/isolinux/rootimg.squash ] ; then
+  ed - $rootfs/etc/rc.d/rc.6 <<- "EOF"
+	/^touch \/loop\/cdrom\/rw_test/;/^# Kill all processes/-1d
+	g/^  rpc\.nfsd 0/d
+	g/^  sleep [35]/d
+	/^  hwclock/s/localtime/utc/
+	/^  echo "unmounting aufs/;/^  echo "unmounting other fs's/d
+	g/^cd \/loop/-1a\
+	$command -f
+	/^cd \/loop/;/^exec chroot/d
+	w
+	EOF
+fi
 
 # add /root/.dir_colors
 cp -p /root/.dir_colors $rootfs/root
