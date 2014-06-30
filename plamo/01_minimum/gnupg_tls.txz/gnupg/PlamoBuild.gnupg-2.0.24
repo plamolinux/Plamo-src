@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.22.tar.bz2'
+url='ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.24.tar.bz2'
 verify=$url.sig
 pkgbase=gnupg
-vers=2.0.22
+vers=2.0.24
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P2
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG="--enable-gpgtar --docdir=/usr/share/doc/${src}"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README README.SVN THANKS TODO'
