@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.24.tar.bz2'
+url='ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.25.tar.bz2'
 verify=$url.sig
 pkgbase=gnupg
-vers=2.0.24
+vers=2.0.25
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
