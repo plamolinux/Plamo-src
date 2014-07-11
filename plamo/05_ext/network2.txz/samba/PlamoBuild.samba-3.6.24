@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://www.samba.org/samba/ftp/stable/samba-3.6.22.tar.gz'
-verify='http://ftp.samba.org/pub/samba/stable/samba-3.6.22.tar.asc'
+url='http://www.samba.org/samba/ftp/stable/samba-3.6.24.tar.gz'
+verify='http://ftp.samba.org/pub/samba/stable/samba-3.6.24.tar.asc'
 pkgbase=samba
-vers=3.6.22
+vers=3.6.24
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
