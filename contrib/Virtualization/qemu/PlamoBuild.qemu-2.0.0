@@ -1,16 +1,16 @@
 #!/bin/sh
 
 ######################################################################
-url="http://wiki.qemu-project.org/download/qemu-1.5.1.tar.bz2"
+url="http://wiki.qemu-project.org/download/qemu-2.0.0.tar.bz2"
 pkgbase=qemu
-vers=1.5.1
-arch=x86_64
+vers=2.0.0
+arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase-$vers
-OPT_CONFIG="--sysconfdir=/etc --audio-drv-list=pa,esd,sdl,alsa,oss
-    --enable-mixemu --enable-vnc-sasl"
-DOCS="MAINTAINERS CODING_STYLE LICENSE HACKING COPYING README
-    Changelog VERSION COPYING.LIB"
+OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var --disable-gtk
+    --audio-drv-list=pa,esd,sdl,alsa,oss --enable-vnc-sasl"
+DOCS="LICENSE HACKING MAINTAINERS README COPYING VERSION
+    CODING_STYLE COPYING.LIB Changelog"
 ######################################################################
 
 fscheck() {
@@ -117,7 +117,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -155,7 +155,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -171,6 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -209,7 +210,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+      ./configure --prefix=/usr --libdir='${prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
@@ -239,8 +240,8 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  ln -s qemu-system-x86_64 $P/usr/bin/qemu-kvm
-  ln -s qemu-system-x86_64 $P/usr/bin/kvm
+  ln -s qemu-system-`echo $arch | tr 5 3` $P/usr/bin/qemu-kvm
+  ln -s qemu-system-`echo $arch | tr 5 3` $P/usr/bin/kvm
   install -d $P/lib/udev/rules.d
   cat <<- "EOF" > $P/lib/udev/rules.d/45-qemu-kvm.rules
 	KERNEL=="kvm", GROUP="kvm", MODE="0660"
@@ -269,20 +270,20 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   mv $docdir/qemu/{qemu-{doc,tech}.html,qmp-commands.txt} $docdir/$src
-  mv $docdir/$src/{qmp-commands.txt,{MAINTAINERS,CODING_STYLE,LICENSE}.gz} $C
-  mv $docdir/$src/{qemu-tech.html,{HACKING,COPYING,README}.gz} $C
-  mv $docdir/$src/{qemu-doc.html,{Changelog,VERSION,COPYING.LIB,$myname}.gz} $C
-  mv $C/{qmp-commands.txt,{MAINTAINERS,CODING_STYLE,LICENSE}.gz} $docdir/$src
-  mv $C/{qemu-tech.html,{HACKING,COPYING,README}.gz} $docdir/$src
-  mv $C/{qemu-doc.html,{Changelog,VERSION,COPYING.LIB,$myname}.gz} $docdir/$src
+  mv $docdir/$src/{qemu-tech.html,{LICENSE,HACKING}.gz,qmp-commands.txt} $C
+  mv $docdir/$src/{MAINTAINERS.gz,qemu-doc.html,{README,COPYING,VERSION}.gz} $C
+  mv $docdir/$src/{CODING_STYLE,COPYING.LIB,Changelog,$myname}.gz $C
+  mv $C/{qemu-tech.html,{LICENSE,HACKING}.gz,qmp-commands.txt} $docdir/$src
+  mv $C/{MAINTAINERS.gz,qemu-doc.html,{README,COPYING,VERSION}.gz} $docdir/$src
+  mv $C/{CODING_STYLE,COPYING.LIB,Changelog,$myname}.gz $docdir/$src
   touch -r $S $docdir/$src
   convert
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64 ! -name pkgconfig | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/include/cacard
   tar rvpf $pkg.tar -C $P usr/share/qemu
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name qemu.mo`
   tar rvpf $pkg.tar -C $P etc/qemu
   tar rvpf $pkg.tar -C $P `cd $P ; find lib/udev/rules.d | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
