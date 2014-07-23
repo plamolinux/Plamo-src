@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_16_RTM/src/nss-3.16.tar.gz'
+url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_16_3_RTM/src/nss-3.16.3.tar.gz"
 pkgbase=nss
-vers=3.16
+vers=3.16.3
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS=''
-# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.15.5-standalone-1.patch
-patchfiles='nss-3.15.5-standalone-1.patch'
+# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.16.3-standalone-1.patch
+patchfiles='nss-3.16.3-standalone-1.patch'
 compress=txz
 ##############################################################
 
