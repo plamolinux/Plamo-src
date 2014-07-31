@@ -275,8 +275,8 @@ if [ $opt_package -eq 1 ] ; then
   compress
   strip_bindir $P/usr/libexec/lxc
   strip_libdir $P/usr/$libdir/python*/site-packages
-  strip_libdir $P/usr/$libdir/lua/lxc
-  touch -t `date '+%m%d0900'` $P/usr/libexec/lxc $P/usr/$libdir/lua/lxc
+  strip_libdir $P/usr/$libdir/lua/5.1/lxc
+  touch -t `date '+%m%d0900'` $P/usr/libexec/lxc $P/usr/$libdir/lua/5.1/lxc
   gzip_dir $mandir/ja_JP.eucJP/man1
   gzip_dir $mandir/ja_JP.eucJP/man5
   gzip_dir $mandir/ja_JP.eucJP/man7
@@ -312,12 +312,12 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -name liblxc.*`
   tar rvpf $pkg.tar -C $P \
       `cd $P ; find usr/$libdir/python*/site-packages -maxdepth 1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/$libdir/lua/lxc
+  tar rvpf $pkg.tar -C $P usr/$libdir/lua/5.1/lxc
   tar rvpf $pkg.tar -C $P usr/$libdir/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/include/lxc
   tar rvpf $pkg.tar -C $P usr/share/lxc
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/lua | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/lua/5.1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/bash_completion.d | tail -n+2`
   tar rvpf $pkg.tar -C $P etc/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/rc.d/init.d | tail -n+2`
