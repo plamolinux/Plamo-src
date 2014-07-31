@@ -6,7 +6,7 @@ LXC_NETMASK="255.255.255.0"
 LXC_NETWORK="10.0.100.0/24"
 LXC_BROADCAST="10.0.100.255"
 LXC_DHCP_PID=/var/run/lxc/dnsmasq.pid
-LXC_DHCP_RANGE="10.0.100.3,10.0.100.254"
+LXC_DHCP_RANGE="10.0.100.2,10.0.100.254"
 LXC_DHCP_MAX="253"
 LXC_DHCP_LEASE=/var/run/lxc/lxc.leases
 LXC_NETWORK_UP=/var/run/lxc/network_up
@@ -29,8 +29,7 @@ start() {
   mkdir -p /var/run/lxc
   echo 1 > /proc/sys/net/ipv4/ip_forward
   brctl addbr $LXC_BRIDGE
-  ip -4 addr add $LXC_ADDR/$LXC_NETMASK broadcast $LXC_BROADCAST \
-      dev $LXC_BRIDGE
+  ip addr add $LXC_ADDR/$LXC_NETMASK broadcast $LXC_BROADCAST dev $LXC_BRIDGE
   ip link set $LXC_BRIDGE up
   iptables -t nat -A POSTROUTING -s $LXC_NETWORK ! -d $LXC_NETWORK \
       -j MASQUERADE
