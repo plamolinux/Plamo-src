@@ -247,7 +247,8 @@ if [ $opt_config -eq 1 ] ; then
   cp -p src/luaconf.h{,.orig}
   sed -i -e 's@local/@@g' -e "s@lib/@$libdir/@g" src/luaconf.h
   cp -p etc/lua.pc{,.orig}
-  sed -i "s@\<lib\>@$libdir@g" etc/lua.pc
+  sed -i -e 's@/local@@g' -e "s@\<lib\>@$libdir@g" \
+      -e 's@-lm@-ldl &@g' etc/lua.pc
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
