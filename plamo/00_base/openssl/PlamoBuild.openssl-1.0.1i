@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://www.openssl.org/source/openssl-1.0.1h.tar.gz'
+url='http://www.openssl.org/source/openssl-1.0.1i.tar.gz'
 pkgbase=openssl
-vers=1.0.1h
+vers=1.0.1i
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
-patchfiles='openssl-1.0.1f-fix_parallel_build-1.patch openssl-1.0.1f-fix_pod_syntax-1.patch'
+patchfiles='openssl-1.0.1i-fix_parallel_build-1.patch openssl-1.0.1f-fix_pod_syntax-1.patch'
 compress=txz
 ##############################################################
 
