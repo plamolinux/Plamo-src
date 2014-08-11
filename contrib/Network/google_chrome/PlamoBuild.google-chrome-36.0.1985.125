@@ -52,7 +52,7 @@ cat <<EOF > ./etc/default/google-chrome
 # Disable Seccomp-BPF Sandbox because of crash on Plamo-5.0 (x86_64)
 # --disable-seccomp-filter-sandbox option is refer to 
 #   http://code.google.com/p/chromium/wiki/LinuxSandboxing
-CHROMIUM_FLAGS="--disable-seccomp-filter-sandbox"
+#CHROMIUM_FLAGS="--disable-seccomp-filter-sandbox"
 EOF
 
 
