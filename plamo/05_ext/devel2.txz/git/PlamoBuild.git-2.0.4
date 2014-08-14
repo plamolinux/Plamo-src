@@ -1,13 +1,13 @@
 #!/bin/sh
 
 ######################################################################
-url="https://git-core.googlecode.com/files/git-1.9.0.tar.gz
-    https://git-core.googlecode.com/files/git-manpages-1.9.0.tar.gz
+url="https://www.kernel.org/pub/software/scm/git/git-2.0.4.tar.gz
+    https://www.kernel.org/pub/software/scm/git/git-manpages-2.0.4.tar.gz
     http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times"
 pkgbase=git
-vers=1.9.0
+vers=2.0.4
 arch=`uname -m | sed 's/i.86/i586/'`
-build=P2
+build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc"
 DOCS="COPYING INSTALL LGPL-2.1 README RelNotes command-list.txt"
