@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=google_chrome
-vers=36.0.1985.125
+vers=37.0.2062.94
 verbld=1
 arch=`uname -m | sed -e 's/i.86/i386/'`
 url="https://dl.google.com/linux/chrome/rpm/stable/${arch}/google-chrome-stable-${vers}-${verbld}.${arch}.rpm"
