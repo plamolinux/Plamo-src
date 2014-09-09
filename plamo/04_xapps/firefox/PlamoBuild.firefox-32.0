@@ -303,6 +303,9 @@ if [ $opt_config -eq 1 ] ; then
 #      sh ./autogen.sh
 #    fi
 
+    # bug on firefox 32 (?)
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
+
     cat > mozconfig <<EOF
 ## Project
 . ${B[$i]}/browser/config/mozconfig
@@ -360,6 +363,13 @@ ac_add_options --with-l10n-base=${B[$i]}/../l10n
 ac_add_options --enable-ui-locale=ja
 
 EOF
+
+    # workaround on firefox-32
+    if [ $arch = "i586" ]; then
+      cat << EOF >> mozconfig 
+ac_add_options --disable-optimize
+EOF
+    fi
 
     cat << EOF >> layout/build/Makefile.in
 
