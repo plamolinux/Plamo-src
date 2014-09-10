@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='input sourcecode url here'
 pkgbase=procmail
 vers=3.22
-arch=x86_64
-# arch=i586
-build=P1
-src=procmail-3.22
+url="http://www.procmail.org/${pkgbase}-${vers}.tar.gz"
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='COPYING HISTORY INSTALL README'
-patchfiles='procmail-3.22-glibc-2.10.patch'
+patchfiles='procmail-3.22-glibc-2.10.patch CVE-2014-3618.patch'
 compress=txz
 ##############################################################
 
