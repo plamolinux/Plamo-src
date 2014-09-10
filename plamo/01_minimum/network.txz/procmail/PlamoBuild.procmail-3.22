@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase=procmail
 vers=3.22
-url="http://www.procmail.org/${pkgbase}-${vers}.tar.gz"
+url="http://www.ring.gr.jp/archives/net/mail/procmail/${pkgbase}-${vers}.tar.gz"
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P2
 src=${pkgbase}-${vers}
