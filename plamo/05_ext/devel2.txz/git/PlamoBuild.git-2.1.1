@@ -1,11 +1,11 @@
 #!/bin/sh
 
 ######################################################################
-url="https://www.kernel.org/pub/software/scm/git/git-2.0.4.tar.gz
-    https://www.kernel.org/pub/software/scm/git/git-manpages-2.0.4.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times"
 pkgbase=git
-vers=2.0.4
+vers=2.1.1
+url="https://www.kernel.org/pub/software/scm/git/git-${vers}.tar.gz
+    https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.gz
+    http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times"
 arch=`uname -m | sed 's/i.86/i586/'`
 build=P1
 src=$pkgbase-$vers
