@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.6p1.tar.gz'
-verify=$url.asc
 pkgbase=openssh
-vers=6.6p1
+vers=6.7p1
+url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
+verify=$url.asc
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
