@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
-url='http://www.openssl.org/source/openssl-1.0.1i.tar.gz'
 pkgbase=openssl
-vers=1.0.1i
+vers=1.0.1j
+url="http://www.openssl.org/source/openssl-${vers}.tar.gz"
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
