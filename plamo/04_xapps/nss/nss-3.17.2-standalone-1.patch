@@ -1,6 +1,7 @@
 Submitted By:            Armin K. <krejzi at email dot com>
-Date:                    2013-07-02
+Date:                    2014-09-26
 Initial Package Version: 3.15
+Comment:                 Modified manifest.mn diff (Fernando)
 Upstream Status:         Not applicable
 Origin:                  Based on dj's original patch, rediffed and modified for 3.15
 Description:             Adds auto-generated nss.pc and nss-config script, and allows
@@ -231,11 +232,14 @@ Description:             Adds auto-generated nss.pc and nss-config script, and a
  
  nss_clean_all: clobber_nspr clobber
  
---- a/nss/manifest.mn	2013-05-28 23:43:24.000000000 +0200
-+++ b/nss/manifest.mn	2013-07-02 14:52:58.331417666 +0200
-@@ -10,4 +10,4 @@
+--- a/nss/manifest.mn.orig	2014-09-26 16:46:44.201965538 -0300
++++ b/nss/manifest.mn	2014-09-26 16:51:11.386336520 -0300
+@@ -10,7 +10,7 @@
  
  RELEASE = nss
  
 -DIRS = coreconf lib cmd
 +DIRS = coreconf lib cmd config
+ 
+ ifdef NSS_BUILD_GTESTS
+ DIRS += external_tests
