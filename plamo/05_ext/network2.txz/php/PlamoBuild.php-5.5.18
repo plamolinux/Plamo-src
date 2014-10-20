@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=5.5.17
+vers=5.5.18
 url="http://jp.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
