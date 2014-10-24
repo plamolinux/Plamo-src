@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://mirror.postfix.jp/postfix-release/official/postfix-2.11.1.tar.gz'
-verify=$url.sig
 pkgbase=postfix
-vers=2.11.1
+vers=2.11.2
+url="http://mirror.postfix.jp/postfix-release/official/postfix-${vers}.tar.gz"
+verify=$url.sig
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
@@ -140,7 +140,7 @@ if [ $opt_download -eq 1 ] ; then
   for i in $verify ; do
     case ${i##*.} in
     asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --allow-weak-digest-algos --verify ${i##*/} ;;
     sha256sum) verify_checksum "sha256sum" ;;
     esac
     if [ $? -ne 0 ]; then
