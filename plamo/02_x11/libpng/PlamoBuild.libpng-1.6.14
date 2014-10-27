@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libpng/libpng-1.6.12.tar.xz' 
-apngpatchurl='http://jaist.dl.sourceforge.net/project/libpng-apng/libpng16/1.6.12/libpng-1.6.12-apng.patch.gz'
 pkgbase=libpng
-vers=1.6.12
+vers=1.6.14
+url="http://downloads.sourceforge.net/libpng/libpng-${vers}.tar.xz"
+apngpatchurl="http://jaist.dl.sourceforge.net/project/libpng-apng/libpng16/${vers}/libpng-${vers}-apng.patch.gz"
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
