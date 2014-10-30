@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/wget/wget-1.15.tar.xz'
-verify=$url.sig
 pkgbase=wget
-vers=1.15
+vers=1.16
+url="http://ftp.gnu.org/gnu/wget/wget-${vers}.tar.xz"
+verify=$url.sig
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
