@@ -4,7 +4,7 @@ pkgbase=php
 vers=5.5.18
 url="http://jp.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
 OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared"
@@ -179,6 +179,9 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    # not for creating ZTS PHP
+    sed '/APACHE_THREADED_MPM=/d' -i sapi/apache2handler/config.m4 -i configure
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
