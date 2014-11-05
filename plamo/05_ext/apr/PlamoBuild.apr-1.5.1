@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.kddilabs.jp/infosystems/apache//apr/apr-1.4.6.tar.gz'
 pkgbase=apr
-vers=1.4.6
-arch=x86_64
-# arch=i586
+vers=1.5.1
+url="http://archive.apache.org/dist/apr/apr-${vers}.tar.bz2"
+verify=${url}.asc
+arch=`uname -m | sed -e 's/i.86/i586/'`
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
@@ -15,7 +15,7 @@ else
     usearch="32"
 fi
 build=P1
-src=apr-1.4.6
+src=${pkgbase}-${vers}
 OPT_CONFIG="--with-installbuilddir=/usr/${libdir}/apr-1"
 DOCS='LICENSE README'
 patchfiles=''
@@ -145,6 +145,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -179,6 +193,24 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
