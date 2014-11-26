@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/xfce4-session/4.10/xfce4-session-4.10.0.tar.bz2'
 pkgbase=xfce4_session
-vers=4.10.0
-arch=x86_64
-# arch=i586
-build=P3
-src=xfce4-session-4.10.0
-OPT_CONFIG="--docdir=/usr/share/doc/${src} --disable-static"
+vers=4.10.1
+url="http://archive.xfce.org/src/xfce/xfce4-session/4.10/xfce4-session-${vers}.tar.bz2"
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=xfce4-session-${vers}
+OPT_CONFIG="--docdir=/usr/share/doc/${src} --disable-static --disable-debug"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
