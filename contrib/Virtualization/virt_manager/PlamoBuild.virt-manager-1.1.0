@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://virt-manager.org/download/sources/virt-manager/virt-manager-0.10.0.tar.gz'
-verify=
 pkgbase=virt_manager
-vers=0.10.0
-arch=x86_64
-# arch=i586
+vers=1.1.0
+url="http://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
+verify=
+arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=virt-manager-0.10.0
+src=virt-manager-${vers}
 OPT_CONFIG='--qemu-user=libvirt-qemu'
 DOCS='COPYING HACKING INSTALL NEWS README virt-install'
 patchfiles='virt-manager-utf8.patch'
