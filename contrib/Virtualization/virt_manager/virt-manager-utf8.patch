@@ -1,17 +1,17 @@
-diff -uNr virt-manager-0.10.0.orig/virtManager/baseclass.py virt-manager-0.10.0/virtManager/baseclass.py
---- virt-manager-0.10.0.orig/virtManager/baseclass.py	2013-06-18 21:49:34.000000000 +0900
-+++ virt-manager-0.10.0/virtManager/baseclass.py	2013-07-19 16:50:33.224773527 +0900
+diff -uNr virt-manager-1.1.0.orig/virtManager/baseclass.py virt-manager-1.1.0/virtManager/baseclass.py
+--- virt-manager-1.1.0.orig/virtManager/baseclass.py	2014-07-29 00:11:32.000000000 +0900
++++ virt-manager-1.1.0/virtManager/baseclass.py	2014-11-28 18:52:00.654987108 +0900
 @@ -22,6 +22,7 @@
  import os
  import sys
  import traceback
 +import locale
  
- import virtManager
+ from virtManager import config
  
-@@ -182,9 +183,18 @@
-     def __init__(self, filename, windowname, builder=None, topwin=None):
+@@ -193,9 +194,18 @@
          vmmGObject.__init__(self)
+         self._external_topwin = bool(topwin)
  
 +        DOMAINNAME = "virt-manager"
 +
