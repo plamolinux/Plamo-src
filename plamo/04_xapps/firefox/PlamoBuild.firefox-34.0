@@ -286,18 +286,12 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
-    #
-    #sed -i '/^PRE_RELEASE_SUFFIX := ""/s/ ""//' \
-    #  browser/base/Makefile.in
-
-#    echo "hg clone"
-#    if [ -d ../l10n ]; then
-#      rm -rf ../l10n
-#    fi
 
     hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
+    else
+      rm -rf ../l10n/*
     fi
     mv ja ../l10n/
 
