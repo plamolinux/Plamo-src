@@ -1,16 +1,60 @@
 #!/bin/sh
+unset LS_BLOCK_SIZE
 ##############################################################
-url='http://sqlite.org/2014/sqlite-autoconf-3080500.tar.gz'
-pkgbase=sqlite
-vers=3.8.5
+pkgbase=firefox
+vers=34.0
+url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
+verify=$url.asc
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
-src=sqlite-autoconf-3080500
-# SQLITE_SECURE_DELETE を定義する必要あり (firefox/thunderbird)．
-# --enable-threadsafe で有効になるのかな?
-OPT_CONFIG='--disable-static --enable-threadsafe --enable-readline --enable-dynamic-extensions'
-DOCS='INSTALL README'
-patchfiles=''
+src=mozilla-release
+firefox_tag=FIREFOX_34_0_RELEASE
+# after firefox 12.0, to use system cairo is broken.
+#	--enable-system-cairo \
+# after firefox 13.0, libpng 1.5 is required.
+#	--with-system-png \
+# after firefox 18.0, libjpeg-turbo is required.
+# (libjpeg-turbo: http://libjpeg-turbo.virtualgl.org/)
+#	--with-system-jpeg \
+OPT_CONFIG_OLD=" \
+	--with-branding=browser/branding/unofficial \
+	--with-system-zlib \
+	--enable-startup-notification \
+	--enable-svg \
+	--enable-webm \
+	--enable-strip \
+	--enable-single-profile \
+	--disable-crashreporter \
+	--disable-tests \
+	--disable-installer \
+	--disable-profilesharing \
+	--enable-extensions=default \
+	--disable-updater \
+	--disable-elf-dynstr-gc \
+	--disable-necko-wifi \
+	--enable-system-lcms \
+	--enable-system-sqlite \
+	--with-system-nspr \
+	--with-system-nss \
+	--with-system-bz2 \
+	--with-system-libevent \
+	--with-system-hunspell \
+        --with-pthreads \
+	--enable-system-ffi \
+	--enable-safe-browsing \
+	--enable-ui-locale=ja \
+	--disable-gnomevfs \
+	--disable-gnomeui \
+	--disable-static \
+	--enable-shared \
+	--with-l10n-base=$PWD/l10n \
+	--disable-install-strip \
+	--enable-chrome-format=jar \
+"
+# Drop (build with external xulrunner)
+#OPT_CONFIG="$OPT_CONFIG --with-system-libxul --with-libxul-sdk=`pkg-config --variable=sdkdir libxul`"
+DOCS='LICENSE README.txt other-licenses xpinstall'
+patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
 
@@ -137,6 +181,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      exit 1
+    fi
+  done
+  exit 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -179,6 +237,24 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -186,6 +262,13 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     esac
   done
+fi
+if [ -x /usr/bin/ccache ]; then
+  GCC="ccache gcc"
+  GPP="ccache g++"
+else
+  GCC="gcc"
+  GPP="g++"
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -196,35 +279,126 @@ if [ $opt_config -eq 1 ] ; then
 #   記述します。
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
+    #mkdir $W/obj
     cd ${B[$i]}
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
+
+    hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    if [ ! -d ../l10n ]; then
+      mkdir ../l10n
+    else
+      rm -rf ../l10n/*
+    fi
+    mv ja ../l10n/
+
+#    if [ -f autogen.sh ] ; then
+#      sh ./autogen.sh
+#    fi
+
+    # bug on firefox 32 (?)
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
+
+    cat > mozconfig <<EOF
+## Project
+. ${B[$i]}/browser/config/mozconfig
+export MOZILLA_OFFICIAL=0
+
+mk_add_options MOZ_MAKE_FLAGS="-j3"
+ac_add_options --enable-strip
+ac_add_options --disable-install-strip
+ac_add_options --disable-static 
+ac_add_options --enable-shared
+
+## Directory
+ac_add_options --prefix=/usr
+ac_add_options --libdir=/usr/${libdir}
+ac_add_options --localstatedir=/var
+
+## System Library
+ac_add_options --with-system-nspr
+ac_add_options --with-system-nss
+# jpeg-turbo
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-zlib
+ac_add_options --with-system-bz2
+# libpng-1.6
+ac_add_options --with-system-png
+ac_add_options --with-system-libevent
+ac_add_options --with-system-libvpx
+#ac_add_options --enable-system-hunspell
+ac_add_options --enable-system-sqlite
+ac_add_options --enable-system-ffi
+ac_add_options --enable-system-pixman
+ac_add_options --with-pthreads
+
+## Features
+ac_add_options --enable-safe-browsing
+ac_add_options --enable-startup-notification
+ac_add_options --enable-gio
+ac_add_options --enable-webm
+ac_add_options --disable-dbus
+ac_add_options --disable-necko-wifi
+ac_add_options --enable-canvas
+# disable feature
+ac_add_options --disable-gnomevfs
+ac_add_options --disable-gnomeui
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-tests
+ac_add_options --disable-installer
+
+## Branding
+ac_add_options --with-branding=browser/branding/unofficial
+
+## Japanese
+ac_add_options --with-l10n-base=${B[$i]}/../l10n
+ac_add_options --enable-ui-locale=ja
+
+EOF
+
+    # workaround on firefox-32
+    if [ $arch = "i586" ]; then
+      cat << EOF >> mozconfig 
+ac_add_options --disable-optimize
+EOF
     fi
 
-    if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1"
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
-    fi
+    cat << EOF >> layout/build/Makefile.in
+
+ifdef MOZ_ENABLE_CANVAS
+EXTRA_DSO_LDOPTS += \$(XLDFLAGS) -lX11 -lXrender
+endif
+
+EOF
+
+#    if [ -x configure ] ; then
+#       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+#       export LDFLAGS='-Wl,--as-needed' 
+#       export CFLAGS="-isystem /usr/include $target"
+#       export CXXFLAGS="-isystem /usr/include $target"
+#       ${B[$i]}/configure --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG[$i]}
+#      if [ $? != 0 ]; then
+#	  echo "configure error. $0 script stop"
+#	  exit 255
+#      fi
+#    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
+    #cd $W/obj
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1" make -j3
-    fi
+    export LDFLAGS='-Wl,--as-needed'
+    export CFLAGS="-isystem /usr/include ${target}"
+    export CPPFLAGS="-isystem /usr/include ${target}"
+    export MOZ_MAKE_FLAGS="-j3"
+    #export MOZ_OBJDIR="$W/obj"
+    make -f client.mk -j3
+    #make -j3
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -238,14 +412,16 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
+    #cd $W/obj
     cd ${B[$i]}
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+    export LDFLAGS='-Wl,--as-needed'
+    #export MOZ_OBJDIR=$W/obj
+    make -f client.mk install DESTDIR=$P
+    #make install DESTDIR=$P
+    install -v -m755 -d $P/usr/${libdir}/mozilla/plugins
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
@@ -316,11 +492,25 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-  mv $docdir/$src $docdir/$pkgbase-$vers
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
+  mv $docdir/$src $docdir/$pkgbase-$vers
+  install2 $W/build/firefox.desktop $P/usr/share/applications/
+#  ln -s $P/usr/${libdir}/$pkgbase-$vers $P/usr/${libdir}/$pkgbase
+mkdir -p $P/install
+cat << EOF >> $P/install/initpkg
+ln -sf /usr/${libdir}/$pkgbase-$vers /usr/${libdir}/$pkgbase
+EOF
   convert
+############################################################
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
+############################################################
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share $P/usr/include $P/usr/${libdir}
+  fi
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
