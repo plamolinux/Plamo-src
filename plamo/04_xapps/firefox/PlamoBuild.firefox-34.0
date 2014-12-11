@@ -285,9 +285,10 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
     #
-    sed -i '/^PRE_RELEASE_SUFFIX := ""/s/ ""//' \
-      browser/base/Makefile.in
+    #sed -i '/^PRE_RELEASE_SUFFIX := ""/s/ ""//' \
+    #  browser/base/Makefile.in
 
 #    echo "hg clone"
 #    if [ -d ../l10n ]; then
