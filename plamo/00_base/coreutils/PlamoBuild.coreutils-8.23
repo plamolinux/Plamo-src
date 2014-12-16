@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/coreutils/coreutils-8.22.tar.xz'
-verify=$url.sig
 pkgbase=coreutils
-vers=8.22
+vers=8.23
+url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify=$url.sig
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
