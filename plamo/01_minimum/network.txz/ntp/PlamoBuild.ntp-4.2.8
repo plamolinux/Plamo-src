@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.ntp.org/ntp4/ntp-4.2/ntp-4.2.6p5.tar.gz'
+url='http://archive.ntp.org/ntp4/ntp-4.2/ntp-4.2.8.tar.gz'
 pkgbase=ntp
-vers=4.2.6p5
-arch=x86_64
-# arch=i586
-build=P2
-src=ntp-4.2.6p5
+vers=4.2.8
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=ntp-4.2.8
 OPT_CONFIG=''
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.patches README.refclocks README.versions TODO readme.y2kfixes'
-patchfiles='ntp-initscript.patch ntp-stable-linux-nano.patch'
+#patchfiles='ntp-initscript.patch ntp-stable-linux-nano.patch'
+patchfiles='ntp-initscript.patch'
 compress=txz
 ##############################################################
 
@@ -259,14 +259,19 @@ driftfile /etc/ntp.drift
 EOF
   mkdir -p $P/etc/rc.d/init.d
   mkdir -p $P/etc/rc.d/init.d
-  cp -a $W/build/$pkgbase $P/etc/rc.d/init.d
+  if [ $arch = "x86_64" ]; then
+    cp -a $W/build/$pkgbase $P/etc/rc.d/init.d
+  else
+    cp -a $W/build32/$pkgbase $P/etc/rc.d/init.d
+  fi
   chmod +x $P/etc/rc.d/init.d/$pkgbase
   chown root:root $P/etc/rc.d/init.d/$pkgbase
   mkdir -p $docdir/$src
   cp -a html $docdir/$src
   chown -R root:root $docdir/$src/html
 
-  rmdir $P/usr/{lib64,sbin}
+  rmdir $P/usr/sbin
+  rmdir $P/usr/${libdir}
 
 # remove locales except ja
 # 
