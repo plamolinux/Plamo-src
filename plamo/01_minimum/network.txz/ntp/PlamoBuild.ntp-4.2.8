@@ -259,14 +259,19 @@ driftfile /etc/ntp.drift
 EOF
   mkdir -p $P/etc/rc.d/init.d
   mkdir -p $P/etc/rc.d/init.d
-  cp -a $W/build/$pkgbase $P/etc/rc.d/init.d
+  if [ $arch = "x86_64" ]; then
+    cp -a $W/build/$pkgbase $P/etc/rc.d/init.d
+  else
+    cp -a $W/build32/$pkgbase $P/etc/rc.d/init.d
+  fi
   chmod +x $P/etc/rc.d/init.d/$pkgbase
   chown root:root $P/etc/rc.d/init.d/$pkgbase
   mkdir -p $docdir/$src
   cp -a html $docdir/$src
   chown -R root:root $docdir/$src/html
 
-  rmdir $P/usr/{lib64,sbin}
+  rmdir $P/usr/sbin
+  rmdir $P/usr/${libdir}
 
 # remove locales except ja
 # 
