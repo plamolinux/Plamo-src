@@ -2,11 +2,11 @@
 
 ######################################################################
 pkgbase=git
-vers=2.1.1
+vers=2.2.1
 url="https://www.kernel.org/pub/software/scm/git/git-${vers}.tar.gz
     https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.gz
     http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times"
-arch=`uname -m | sed 's/i.86/i586/'`
+arch=`uname -m | sed 's/i.86/i686/'`
 build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc"
@@ -171,7 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
