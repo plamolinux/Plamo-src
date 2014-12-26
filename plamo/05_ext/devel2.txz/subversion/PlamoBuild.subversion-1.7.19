@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.kddilabs.jp/infosystems/apache/subversion/subversion-1.7.6.tar.bz2'
 pkgbase=subversion
-vers=1.7.6
-arch=x86_64
-# arch=i586
+vers=1.7.19
+url="http://ftp.kddilabs.jp/infosystems/apache/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P1
-src=subversion-1.7.6
+src=${pkgbase}-${vers}
 # OPT_CONFIG='--disable-static --with-gssapi=/usr/heimdal'
 OPT_CONFIG='--disable-static'
 DOCS='INSTALL LICENSE README'
