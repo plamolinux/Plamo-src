@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.astron.com/pub/file/file-5.19.tar.gz'
 pkgbase=file
-vers=5.19
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=5.21
+url="ftp://ftp.astron.com/pub/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
