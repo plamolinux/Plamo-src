@@ -3,13 +3,12 @@
 url='ftp://ftp.info-zip.org/pub/infozip/src/unzip60.tgz'
 pkgbase=unzip
 vers=6.0sj
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m | sed -e 's/i.86/i686/'`
+build=P2
 src=unzip60
 OPT_CONFIG=''
 DOCS='COPYING.OLD History.600 INSTALL LICENSE README ToDo funzip.txt unzip.txt unzipsfx.txt zipgrep.txt zipinfo.txt'
-patchfiles='unzip60-nls_sjis.patch'
+patchfiles='unzip60-nls_sjis.patch CVE-2014-8139.patch CVE-2014-8140.patch CVE-2014-8141.patch'
 compress=txz
 ##############################################################
 
@@ -183,6 +182,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvf ${i##*/} ;;
     esac
   done
 fi
