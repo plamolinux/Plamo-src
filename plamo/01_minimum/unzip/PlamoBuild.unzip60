@@ -3,7 +3,7 @@
 url='ftp://ftp.info-zip.org/pub/infozip/src/unzip60.tgz'
 pkgbase=unzip
 vers=6.0sj
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P2
 src=unzip60
 OPT_CONFIG=''
