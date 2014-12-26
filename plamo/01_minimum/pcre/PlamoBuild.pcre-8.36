@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.36.tar.bz2'
 pkgbase=pcre
 vers=8.36
-arch=x86_64
-# arch=i686
-build=P1
-src=pcre-8.36
+url="ftp://ftp.csx.cam.ac.uk/pub/software/programming/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+arch=`uname -m | sed -e 's/i.86/i686/'`
+build=P2
+src=${pkgbase}-${vers}
 OPT_CONFIG="--docdir=/usr/share/doc/$src --disable-static --enable-utf8 --enable-unicode-properties --enable-pcre16 --enable-pcre32 --enable-pcregrep-libz --enable-pcregrep-libbz2  --enable-pcretest-libreadline"
 DOCS='AUTHORS COPYING ChangeLog CleanTxt HACKING INSTALL NEWS PrepareRelease README makevp_c.txt makevp_l.txt'
-patchfiles=''
+patchfiles='CVE-2014-8964.patch'
 compress=txz
 ##############################################################
 
