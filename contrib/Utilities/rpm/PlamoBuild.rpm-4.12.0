@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://rpm.org/releases/rpm-4.9.x/rpm-4.9.1.3.tar.bz2'
 pkgbase=rpm
-vers=4.9.1.3
-arch=x86_64
-# arch=i586
+vers=4.12.0
+url="http://rpm.org/releases/rpm-4.12.x/rpm-${vers}.tar.bz2"
+arch=`uname -m`
 build=P1
-src=rpm-4.9.1.3
+src=${pkgbase}-${vers}
 OPT_CONFIG='--without-selinux --with-external-db --without-lua'
 DOCS='ABOUT-NLS COPYING ChangeLog INSTALL README installplatform preinstall.am'
-patchfiles=''
+patchfiles='CVE-2014-8118.patch'
 compress=txz
 ##############################################################
 
