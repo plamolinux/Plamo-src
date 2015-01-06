@@ -1,15 +1,24 @@
 #!/bin/sh
 ##############################################################
-url='From Fedora 14 SRPM'
+url='http://ftp.jaist.ac.jp/pub/Linux/Fedora/releases/21/Everything/source/SRPMS/m/mailx-12.5-13.fc21.src.rpm'
 pkgbase=mailx
-vers=12.4
-arch=x86_64
-# arch=i586
+vers=12.5
+arch=`uname -m`
 build=P1
-src=mailx-12.4
+src=mailx-12.5
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL README TODO'
-patchfiles='mailx-12.3-pager.patch mailx-12.4-openssl.patch nail-11.25-config.patch'
+patchfiles="nail-11.25-config.patch \
+	mailx-12.3-pager.patch \
+	mailx-12.5-collect.patch \
+	mailx-12.5-fname-null.patch \
+	mailx-12.5-lzw.patch \
+	mailx-12.5-man-page-fixes.patch \
+	mailx-12.5-usage.patch \
+	0001-outof-Introduce-expandaddr-flag.patch \
+	0002-unpack-Disable-option-processing-for-email-addresses.patch \
+	0003-fio.c-Unconditionally-require-wordexp-support.patch \
+	0004-globname-Invoke-wordexp-with-WRDE_NOCMD-CVE-2004-277.patch"
 compress=txz
 ##############################################################
 
@@ -183,6 +192,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    rpm) rpm2cpio ${i##*/} | cpio -id ; tar xvf ${pkgbase}-${vers}.tar.xz ;;
     esac
   done
 fi
