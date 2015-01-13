@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-1.3.0.tar.gz'
 pkgbase=libjpeg_turbo
-vers=1.3.0
-# arch=x86_64
-arch=i586
-build=P2
-src=libjpeg-turbo-1.3.0
+vers=1.3.1
+url="http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${vers}.tar.gz"
+arch=`uname -m`
+build=P1
+src=libjpeg-turbo-${vers}
 OPT_CONFIG='--disable-static -with-jpeg8'
 DOCS='BUILDING.txt ChangeLog.txt README README-turbo.txt coderules.txt jconfig.txt libjpeg.txt release structure.txt usage.txt wizard.txt'
-patchfiles=''
+patchfiles='CVE-2014-9092.patch'
 compress=txz
 ##############################################################
 
