@@ -5,9 +5,8 @@ url_texlive='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-source
 url_texmf='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-texmf.tar.xz'
 pkgbase=ptexlive
 vers=20100711
-arch=x86_64
-# arch=i586
-build=P7
+arch=`uname -m`
+build=P8
 src=ptexlive-20100711
 texlivesrc=texlive-20091107-source
 prefix=/opt/texlive/2009
@@ -18,7 +17,7 @@ else
     target="-m32"
     libdir="lib"
 fi
-OPT_CONFIG="--disable-native-texlive-build --enable-mktextex-default --with-banner-add='PlamoLinux' --with-system-icu --with-fontconfig-libdir=/usr/${libdir} --with-system-libgs --with-system-libpng --with-system-zlib --with-x --with-system-xpdf --enable-multiplatform --build=x86_64-gnu-linux --with-system-freetype2 --with-freetype-includes=/usr/include/freetype2"
+OPT_CONFIG="--disable-native-texlive-build --enable-mktextex-default --with-banner-add='PlamoLinux' --with-system-icu --with-fontconfig-libdir=/usr/${libdir} --with-system-libgs --with-system-zlib --with-x --with-system-xpdf --enable-multiplatform --build=${arch}-gnu-linux --with-system-libpng --with-libpng-includes=/usr/include/libping14"
 DOCS='ChangeLog ChangeLog.2007 ChangeLog.2008 LICENSE README README.en'
 patchfiles='pdftoepdf.patch xdvi.patch poppler-0.20.patch'
 ptexlivepatch='ptexlive-makescript.patch font-search.patch'
@@ -225,8 +224,8 @@ TEXLIVE_DIR=$W/${texmf%%.*}
 ISO_DIR=/mnt
 TMP_PREFIX=`pwd`/build
 make_option -j 3
-export CXXFLAGS="-isystem /usr/include ${target} -I/usr/include/freetype2"
-export CFLAGS="-isystem /usr/include ${target} -I/usr/include/freetype2"
+export CXXFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
+export CFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
 export LDFLAGS="-Wl,--as-needed -L/usr/lib64"
 export PKG_CONFIG_PATH="/usr/${libdir}/pkgconfig:/usr/share/pkgconfig"
 TEXSRC_EXTRACTED=$W/$texlivesrc
