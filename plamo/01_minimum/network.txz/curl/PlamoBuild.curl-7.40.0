@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=curl
-vers=7.39.0
-url="http://curl.haxx.se/download/curl-7.39.0.tar.bz2"
+vers=7.40.0
+url="http://curl.haxx.se/download/curl-${vers}.tar.bz2"
 verify=$url.asc
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt'
@@ -14,7 +14,9 @@ else
     OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
 fi
 DOCS='COPYING README RELEASE-NOTES'
-patchfiles=''
+# the following patch only need 7.40.0, on upstream this has already fixed.
+# http://sourceforge.net/p/curl/bugs/1469/
+patchfiles='patch-lib_curl__sasl__gssapi.c'
 compress=txz
 ##############################################################
 
