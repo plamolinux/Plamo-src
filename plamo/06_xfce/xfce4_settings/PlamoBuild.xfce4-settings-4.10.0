@@ -3,9 +3,8 @@
 url='http://archive.xfce.org/src/xfce/xfce4-settings/4.10/xfce4-settings-4.10.0.tar.bz2'
 pkgbase=xfce4_settings
 vers=4.10.0
-arch=x86_64
-# arch=i586
-build=P5
+arch=`uname -m`
+build=P6
 src=xfce4-settings-4.10.0
 OPT_CONFIG='--disable-static --enable-sound-settings --enable-libnotify --enable-pluggable-dialogs'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
