@@ -226,7 +226,7 @@ TMP_PREFIX=`pwd`/build
 make_option -j 3
 export CXXFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
 export CFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
-export LDFLAGS="-Wl,--as-needed -L/usr/lib64"
+export LDFLAGS="-Wl,--as-needed -L/usr/lib64 -lpng14"
 export PKG_CONFIG_PATH="/usr/${libdir}/pkgconfig:/usr/share/pkgconfig"
 TEXSRC_EXTRACTED=$W/$texlivesrc
 SRC_TAR=$W/$texlivesrc.tar.xz
