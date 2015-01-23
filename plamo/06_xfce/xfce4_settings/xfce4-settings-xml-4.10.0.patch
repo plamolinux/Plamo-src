@@ -8,7 +8,7 @@ diff -uNr xfce4-settings-4.10.0.orig/xfsettingsd/xsettings.xml xfce4-settings-4.
 -    <property name="ThemeName" type="empty"/>
 -    <property name="IconThemeName" type="empty"/>
 +    <property name="ThemeName" type="string" value="xfce_theme_greybird"/>
-+    <property name="IconThemeName" type="string" value="elementary Xfce"/>
++    <property name="IconThemeName" type="string" value="elementary-xfce"/>
      <property name="DoubleClickTime" type="int" value="250"/>
      <property name="DoubleClickDistance" type="int" value="5"/>
      <property name="DndDragThreshold" type="int" value="8"/>
