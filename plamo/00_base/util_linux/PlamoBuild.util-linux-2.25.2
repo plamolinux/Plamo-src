@@ -7,7 +7,7 @@ verify="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linu
 arch=`uname -m`
 build=P1
 src=util-linux-${vers}
-OPT_CONFIG='--disable-su --disable-login --disable-sulogin --enable-partx --enable-write --without-python --disable-pylibmount --without-user --without-systemd --without-systemdsystemunitdir'
+OPT_CONFIG='--disable-su --disable-login --disable-sulogin --enable-partx --enable-write --without-python --disable-pylibmount --without-user --without-systemd --without-systemdsystemunitdir --disable-chfn-chsh --disable-mesg --disable-last --disable-nologin'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
 patchfiles='CVE-2014-9114.patch'
 compress=txz
@@ -187,7 +187,6 @@ if [ $opt_config -eq 1 ] ; then
          export CC="gcc -isystem /usr/include $target" 
          export CXX="g++ -isystem /usr/include $target "
          #export PKG_CONFIG="/bin/true"
-         #export PKG_CONFIG=""
          ./configure --prefix=/usr --libdir=/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
