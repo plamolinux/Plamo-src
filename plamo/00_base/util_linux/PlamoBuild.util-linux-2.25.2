@@ -178,8 +178,8 @@ if [ $opt_config -eq 1 ] ; then
     # fi
 
     # The FHS recommends using the /var/lib/hwclock directory
-    sed -e 's@var/lib/hwclock/adjtime@var/lib/hwclock/adjtime@g' \
-	-i $(grep -rl '/var/lib/hwclock/adjtime' .)
+    #sed -e 's@etc/adjtime@var/lib/hwclock/adjtime@g' \
+    #    -i $(grep -rl '/etc/adjtime' .)
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
