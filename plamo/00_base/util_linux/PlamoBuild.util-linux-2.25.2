@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://www.kernel.org/pub/linux/utils/util-linux/v2.23/util-linux-2.23.tar.bz2'
-verify='https://www.kernel.org/pub/linux/utils/util-linux/v2.23/util-linux-2.23.tar.sign'
 pkgbase=util_linux
-vers=2.23
-arch=x86_64
-# arch=i586
-build=P2
-src=util-linux-2.23
-OPT_CONFIG='--disable-su --disable-login --disable-sulogin --enable-partx --enable-write'
+vers=2.25.2
+url="http://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
+arch=`uname -m`
+build=P1
+src=util-linux-${vers}
+OPT_CONFIG='--disable-su --disable-login --disable-sulogin --enable-partx --enable-write --without-python --disable-pylibmount --without-user --without-systemd --without-systemdsystemunitdir'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
-patchfiles=''
+patchfiles='CVE-2014-9114.patch'
 compress=txz
 ##############################################################
 
@@ -129,9 +128,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
+    if [ ! -f `basename ${i##*/} .xz` ] ; then
       wget --no-check-certificate $i
-      bunzip2 -c ${i##*/} > `basename ${i##*/} .bz2`
+      xz -d ${i##*/}
     fi
   done
   for i in $verify ; do
@@ -155,9 +154,7 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf `basename ${i##*/} .xz` ;;
     esac
   done
 fi
@@ -181,15 +178,16 @@ if [ $opt_config -eq 1 ] ; then
     # fi
 
     # The FHS recommends using the /var/lib/hwclock directory
-    sed -e 's@etc/adjtime@var/lib/hwclock/adjtime@g' \
-	-i $(grep -rl '/etc/adjtime' .)
+    sed -e 's@var/lib/hwclock/adjtime@var/lib/hwclock/adjtime@g' \
+	-i $(grep -rl '/var/lib/hwclock/adjtime' .)
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
          export CC="gcc -isystem /usr/include $target" 
          export CXX="g++ -isystem /usr/include $target "
-         export PKG_CONFIG="/bin/true"
+         #export PKG_CONFIG="/bin/true"
+         #export PKG_CONFIG=""
          ./configure --prefix=/usr --libdir=/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -203,7 +201,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make V=1 -j3
     fi
   done
 fi
