@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=5.6.4
+vers=5.6.5
 url="http://jp.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
-arch=`uname -m | sed -e 's/i.86/i686/'`
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
