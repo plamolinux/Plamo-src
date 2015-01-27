@@ -3,14 +3,13 @@
 url='http://www.ece.uvic.ca/~mdadams/jasper/software/jasper-1.900.1.zip'
 pkgbase=jasper
 vers=1.900.1
-arch=x86_64
-# arch=i586
-build=P3
+arch=`uname -m`
+build=P4
 src=jasper-1.900.1
 OPT_CONFIG='--enable-shared --disable-static'
 DOCS='ChangeLog INSTALL LICENSE NEWS README'
 # http://www.linuxfromscratch.org/patches/blfs/svn/jasper-1.900.1-security_fixes-1.patch
-patchfiles='jasper-1.900.1-security_fixes-1.patch'
+patchfiles='01-misc-fixes.patch 02-fix-filename-buffer-overflow.patch 03-CVE-2011-4516-and-CVE-2011-4517.patch 04-CVE-2014-9029.patch 05-CVE-2014-8137.patch 06-CVE-2014-8138.patch 07-CVE-2014-8157.patch 08-CVE-2014-8158.patch'
 compress=txz
 ##############################################################
 
@@ -186,6 +185,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    zip) unzip ${i##*/} ;;
     esac
   done
 fi
