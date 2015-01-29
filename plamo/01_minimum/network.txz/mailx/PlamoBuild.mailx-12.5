@@ -231,7 +231,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3 SENDMAIL=/usr/sbin/sendmail
+      make SENDMAIL=/usr/sbin/sendmail
     fi
   done
 fi
