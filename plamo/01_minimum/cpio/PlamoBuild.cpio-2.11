@@ -3,13 +3,12 @@
 url='http://ftp.gnu.org/gnu/cpio/cpio-2.11.tar.bz2'
 pkgbase=cpio
 vers=2.11
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m`
+build=P2
 src=cpio-2.11
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
-patchfiles=''
+patchfiles='cpio-2.11-stdio.in.patch CVE-2014-9112.patch'
 compress=txz
 ##############################################################
 
