@@ -346,6 +346,10 @@ if [ $opt_build -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
+    if [ $? != 0 ]; then
+      echo "make error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -366,6 +370,10 @@ if [ $opt_package -eq 1 ] ; then
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
+    fi
+    if [ $? != 0 ]; then
+      echo "make install error. $0 script stop"
+      exit 255
     fi
   done
 ######################################################################
