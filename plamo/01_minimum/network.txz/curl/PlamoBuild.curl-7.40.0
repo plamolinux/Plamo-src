@@ -1,26 +1,22 @@
 #!/bin/sh
 ##############################################################
-url='http://tutimura.ath.cx/~nob/tex/ptexlive/ptexlive-20100711.tar.gz'
-url_texlive='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-source.tar.xz'
-url_texmf='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-texmf.tar.xz'
-pkgbase=ptexlive
-vers=20100711
+pkgbase=curl
+vers=7.40.0
+url="http://curl.haxx.se/download/curl-${vers}.tar.bz2"
+verify=$url.asc
 arch=`uname -m`
-build=P9
-src=ptexlive-20100711
-texlivesrc=texlive-20091107-source
-prefix=/opt/texlive/2009
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
+build=P1
+src=${pkgbase}-${vers}
+OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt'
+if [ "$arch" = "x86_64" ]; then
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib64"
 else
-    target="-m32"
-    libdir="lib"
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
 fi
-OPT_CONFIG="--disable-native-texlive-build --enable-mktextex-default --with-banner-add='PlamoLinux' --with-system-icu --with-fontconfig-libdir=/usr/${libdir} --with-system-libgs --with-system-zlib --with-x --with-system-xpdf --enable-multiplatform --build=${arch}-gnu-linux --with-system-libpng --with-libpng-includes=/usr/include/libping14"
-DOCS='ChangeLog ChangeLog.2007 ChangeLog.2008 LICENSE README README.en'
-patchfiles='pdftoepdf.patch xdvi.patch poppler-0.20.patch'
-ptexlivepatch='ptexlive-makescript.patch font-search.patch'
+DOCS='COPYING README RELEASE-NOTES'
+# the following patch only need 7.40.0, on upstream this has already fixed.
+# http://sourceforge.net/p/curl/bugs/1469/
+patchfiles='patch-lib_curl__sasl__gssapi.c'
 compress=txz
 ##############################################################
 
@@ -186,67 +182,72 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  for i in $url $url_texmf $url_texlive ; do
+  for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $url $url_texlive ; do
-    tar xvpf ${i##*/}
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
   done
-  texmf=${url_texmf##*/}
-  if [ ! -d ${texmf%%.*} ] ; then
-    tar xvpf ${texmf}
-  fi
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-  rm -rf $texlivesrc ; tar xvf ${url_texlive##*/}
 ######################################################################
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  cd $W/${texlivesrc}
-  echo $PWD
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
-  done
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $ptexlivepatch ; do
-      patch -p1 < $W/$patch
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
     done
-    texmf=${url_texmf##*/}
-    sed -i 's/20091011/20091107/' common.sh
-    cat <<EOF > ptexlive.cfg
-TEXLIVE_VERSION=2009
-TEXLIVE_DIR=$W/${texmf%%.*}
-ISO_DIR=/mnt
-TMP_PREFIX=`pwd`/build
-make_option -j 3
-export CXXFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
-export CFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
-export LDFLAGS="-Wl,--as-needed -L/usr/lib64 -lpng14"
-export PKG_CONFIG_PATH="/usr/${libdir}/pkgconfig:/usr/share/pkgconfig"
-TEXSRC_EXTRACTED=$W/$texlivesrc
-SRC_TAR=$W/$texlivesrc.tar.xz
-STRIP=yes
-EOF
-    for c in $OPT_CONFIG ; do
-      echo "conf_option $c" >> ptexlive.cfg
-    done
+
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
+
+    if [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    make stage1
-    make stage2
-    make stage3
-    make stage4
-    make stage5
-    make stage5o
-    make stage7y
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
+    fi
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -256,68 +257,20 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
+
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    mkdir -p $P/$prefix
-    ( cd $W/${texlivesrc}/inst && tar cf - bin lib include texmf ) \
-        | ( cd $P/$prefix && tar xf - )
+    cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
   done
-
-  chown -R root:root $P/*
-  arch=`ls ${texlivesrc}/inst/bin/`
-  echo "ARCH is $arch"
-
-  # xbb コマンド生成
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-ln -sf $prefix/bin/$arch/dvipdfmx $prefix/bin/$arch/xbb
-
-if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive_texmf4 ]; then
-  $prefix/texinit.sh
-else
-  echo "必要なパッケージが揃っていません．texlive_texmf[1234] をインストールした後に $prefix/texinit.sh を実行してください．"
-fi
-EOF
-
-  # texlive 環境初期化スクリプト
-  cat <<EOF >> $P/$prefix/texinit.sh
-SAVEPATH=\$PATH
-PATH=${prefix}/bin/${arch}:\$PATH
-TEXMFMAIN=${prefix}/texmf
-export PATH TEXMFMAIN
-
-${prefix}/bin/${arch}/mktexlsr
-${prefix}/bin/${arch}/updmap-sys
-${prefix}/bin/${arch}/mktexlsr $prefix/texmf-var
-${prefix}/bin/${arch}/fmtutil-sys --all
-sed -i -e 's|^OSFONTDIR.*$|OSFONTDIR = /usr/share/fonts|' ${prefix}/texmf/web2c/texmf.cnf
-
-PATH=\$SAVEPATH
-unset TEXMFMAIN
-EOF
-  chmod 755 $P/$prefix/texinit.sh
-
-  mkdir -p $P/etc/profile.d
-  cat <<EOF > $P/etc/profile.d/texlive.sh
-# PATH
-PATH=\$PATH:$prefix/bin/$arch
-## tex文書読み込み時のフィルタ
-#export PTEX_IN_FILTER="nkf -e"
-## tex文書のコード (実行時の--kanjiオプションと同じ)
-#export PTEX_KANJI_ENC=euc 
-EOF
-  cat <<EOF > $P/etc/profile.d/texlive.csh
-## texlive のパス設定
-set path = ( \$path $prefix/bin/$arch )
-## /usr/share/fonts/ 以外に OS フォントがある場合設定
-#setenv OSFONTDIR /usr/share/fonts
-## tex文書読み込み時のフィルタ
-#setenv PTEX_IN_FILTER "nkf -e"
-## tex文書のコード (実行時の--kanjiオプションと同じ)
-#setenv PTEX_KANJI_ENC euc
-EOF
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
@@ -383,7 +336,7 @@ EOF
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
-  for patch in $patchfiles $ptexlivepatch ; do
+  for patch in $patchfiles ; do
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done

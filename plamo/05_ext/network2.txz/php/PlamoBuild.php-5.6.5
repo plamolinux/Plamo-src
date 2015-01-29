@@ -1,17 +1,18 @@
 #!/bin/sh
-unset LS_BLOCK_SIZE
 ##############################################################
-pkgbase=thunderbird
-vers=31.3.0
-url="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
-verify=$url.asc
-arch=`uname -m | sed -e 's/i.86/i586/'`
+pkgbase=php
+vers=5.6.5
+url="http://jp.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
+arch=`uname -m`
 build=P1
-src=comm-esr31
-thunderbird_tag=THUNDERBIRD_31_3_0_RELEASE
-OPT_CONFIG=''
-DOCS='mail/README.html'
-patchfiles='thunderbird.desktop.patch'
+src=${pkgbase}-${vers}
+CONFDIR="/etc/httpd/"
+OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared"
+if [ $arch == 'x86_64' ]; then
+  OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
+fi
+DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.namespaces'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -19,41 +20,22 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_bindir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in * ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
-         echo "stripping -p $i"
-         strip -p $i
+strip_all() {
+  for chk in `find . ` ; do
+    chk_elf=`file $chk | grep ELF`
+    if [ "$chk_elf.x" != ".x" ]; then
+      chk_lib=`echo $chk | grep lib`
+      if [ "$chk_lib.x" != ".x" ]; then
+         echo "stripping $chk with -g "
+         strip -g $chk
+      else
+         echo "stripping $chk"
+         strip $chk
       fi
-    done
-  ) fi
+    fi
+  done
 }
 
-strip_libdir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in *.so *.so.* *.a ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
-        if [ $i != ${i%.a} ] ; then
-          echo -n "ranlib and "
-          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
-        fi
-        echo "stripping -gp $i"
-        strip -gp $i
-      fi
-    done
-  ) fi
-}
 
 gzip_dir() {
   echo "compressing in $1"
@@ -89,15 +71,10 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
-  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
-  gzip_dir $infodir
-  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
-}
+compress_all() {
+  cd $P
+  strip_all
+}  
 
 prune_symlink() {
   echo "pruning symlink in $1"
@@ -158,9 +135,11 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
+    suffix="64"
 else
     target="-m32"
     libdir="lib"
+    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -178,37 +157,11 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-      wget $verify
-    fi
+    if [ ! -f ${i##*/} ] ; then wget -O $src.tar.bz2 $i ; fi
   done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
-  done
-  for i in $url ; do
-    case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    esac
-  done
+  tar xvpf  $src.tar.bz2
 fi
-if [ -x /usr/bin/ccache ]; then
-  GCC="ccache gcc"
-  GPP="ccache g++"
-else
-  GCC="gcc"
-  GPP="g++"
-fi
+
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -223,98 +176,33 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    echo "hg clone start"
-    if [ -d ../l10n ]; then
-      rm -rf ../l10n
-    fi
-    hg -v clone -r $thunderbird_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    echo " done."
-    if [ ! -d ../l10n ]; then
-      mkdir ../l10n
-    fi
-    mv ja ../l10n/
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
 
-    # configure options setting
-    cat > mozconfig << EOF
-## Project
-export MOZILLA_OFFICIAL=0
-mk_add_options MOZ_CO_PROJECT=mail
-ac_add_options --enable-application=mail
+    # not for creating ZTS PHP
+    sed '/APACHE_THREADED_MPM=/d' -i sapi/apache2handler/config.m4 -i configure
 
-## Directory
-ac_add_options --prefix=/usr
-ac_add_options --libdir=/usr/${libdir}
-
-# System Library
-ac_add_options --with-system-nspr
-ac_add_options --with-system-nss
-# jpeg-turbo
-ac_add_options --with-system-jpeg
-ac_add_options --with-system-zlib
-ac_add_options --with-system-bz2
-ac_add_options --with-system-zlib
-# libpng 1.6
-ac_add_options --with-system-png
-ac_add_options --with-system-libevent
-ac_add_options --with-system-libvpx
-ac_add_options --with-system-hunspell
-ac_add_options --enable-system-sqlite
-ac_add_options --enable-system-ffi
-ac_add_options --enable-system-pixman
-ac_add_options --with-pthreads
-
-## Features
-ac_add_options --enable-safe-browsing
-ac_add_options --enable-startup-notification
-ac_add_options --enable-gio
-# disable feature
-ac_add_options --disable-gstreamer
-ac_add_options --disable-gnomevfs
-ac_add_options --disable-gnomeui
-ac_add_options --disable-crashreporter
-ac_add_options --disable-updater
-ac_add_options --disable-tests
-ac_add_options --disable-mochitest
-ac_add_options --disable-installer
-
-## Branding
-ac_add_options --with-branding=mail/branding/aurora
-
-## Japanese
-ac_add_options --with-l10n-base=../../l10n
-ac_add_options --enable-ui-locale=ja
-
-# Building
-mk_add_options MOZ_MAKE_FLAGS="-j3"
-ac_add_options --enable-strip
-ac_add_options --disable-install-strip
-ac_add_options --disable-static 
-ac_add_options --enable-shared 
-
-EOF
-
-    if [ $arch = "x86_64" ]; then
-      cat >> mozconfig << EOF
-export USE_ARCH=64
-EOF
-    else
-      cat >> mozconfig << EOF
-ac_add_options --host=i686-pc-linux-gnu
-ac_add_options --build=i686-pc-linux-gnu
-mk_add_options CONFIG_GUESS=i686-pc-linux-gnu
-export USE_ARCH=32
-EOF
-    fi
-
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    export CFLAGS="-isystem /usr/include $target"
-    export CPPFLAGS="-isystem /usr/include $target"
-    export LDFLAGS='-Wl,--as-needed'
-    make -f client.mk build
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
+    fi
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -329,32 +217,50 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    make -f client.mk install DESTDIR=$P
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      # copy dummy httpd.conf
+      mkdir -p $P/$CONFDIR
+      cp $CONFDIR/original/httpd.conf $P/$CONFDIR
+      make install INSTALL_ROOT=$P
+      # delete unused files
+      rm -rf $P/$CONFDIR/httpd.conf*
+      ( cd $P ; rm -rf .channels .depdb .filemap .lock .registry .depdblock )
+      # /usr/${libdir}/build 以下を使用するソフトがある模様．
+      #( cd $P/usr/lib64/ ; rm -rf build )
+    fi
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  install2 thunderbird.desktop $P/usr/share/applications/
-  ( cd $P/usr/$libdir ; ln -sf thunderbird-$vers thunderbird )
+  # Install php.ini
+  install -m 644 ${B[$i]}/php.ini-production $P/$CONFDIR/php.ini.dist
+  # Install Apache Configuration File
+  mkdir -p $P/$CONFDIR/extra.dist/
+  cat <<EOF > $P/$CONFDIR/extra.dist/php5.conf
+# 2.2
+#LoadModule php5_module        ${libdir}/apache/modules/libphp5.so
+# 2.4
+LoadModule php5_module        ${libdir}/httpd/modules/libphp5.so
 
-#  mkdir -p $P/install
-#  cat <<EOF > $P/install/initpkg
-#lib_chk=\`grep thunderbird /etc/ld.so.conf\`
-#if [ "\$lib_chk.x" = ".x" ]; then
-#echo "adding /usr/$libdir/thunderbird to /etc/ld.so.conf"
-#echo "/usr/$libdir/thunderbird" >> /etc/ld.so.conf
-#ldconfig 2>/dev/null 1>/dev/null
-#fi
-#EOF
+<FilesMatch \.php$>
+  SetHandler application/x-httpd-php
+</FilesMatch>
+EOF
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+if [ ! -f $CONFDIR/extra/php5.conf ]; then
+  ( cd $CONFDIR ; cp extra.dist/php5.conf extra/php5.conf )
+fi
+if [ ! -f $CONFDIR/php.ini ]; then
+  ( cd $CONFDIR ; cp php.ini.dist php.ini )
+fi
+EOF
 
-
-# locale dataはソースコードには同梱されず，別途Mercurial経由で取り出す必要がある
-# ようなので，ズルして本家の日本語版バイナリから借用 :-P
-
-#  rm $P/usr/${libdir}/thunderbird-$vers/chrome/en-US.{jar,manifest}
-#  for i in $localefiles ; do
-#      cp $W/$i $P/usr/${libdir}/thunderbird-$vers/chrome
-#  done
+  mkdir -p $docdir/$src
 
 # remove locales except ja
 # 
@@ -368,15 +274,27 @@ if [ $opt_package -eq 1 ] ; then
     popd
   fi
 
-  touch $W/i.et
-  cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
-  compress
+######################################################################
+# path に lib があるバイナリは strip -g, ないバイナリは strip する
+######################################################################
+  cd $P
+  compress_all
+  for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+     gzip_dir mdir
+  done
+
+  if [ -d $P/usr/share/man ] ; then
+      for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d` ; do
+	  gzip_dir $mdir
+      done
+  fi
+
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
+  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -399,18 +317,13 @@ if [ $opt_package -eq 1 ] ; then
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
-  mv $docdir/$src $docdir/$pkgbase-$vers
-  convert
 ############################################################
-# /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-# 紛れこみがちなので
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
 ############################################################
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share $P/usr/include $P/usr/${libdir}
+      chown -R root.root $P/usr/share/doc
   fi
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに

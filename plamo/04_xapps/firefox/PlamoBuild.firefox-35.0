@@ -2,13 +2,13 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=34.0
+vers=35.0
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
 verify=$url.asc
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
 src=mozilla-release
-firefox_tag=FIREFOX_34_0_RELEASE
+firefox_tag=FIREFOX_35_0_RELEASE
 # after firefox 12.0, to use system cairo is broken.
 #	--enable-system-cairo \
 # after firefox 13.0, libpng 1.5 is required.
@@ -361,11 +361,11 @@ ac_add_options --enable-ui-locale=ja
 EOF
 
     # workaround on firefox-32
-    if [ $arch = "i586" ]; then
-      cat << EOF >> mozconfig 
-ac_add_options --disable-optimize
-EOF
-    fi
+#    if [ $arch != "x86_64" ]; then
+#      cat << EOF >> mozconfig 
+#ac_add_options --disable-optimize
+#EOF
+#    fi
 
     cat << EOF >> layout/build/Makefile.in
 
