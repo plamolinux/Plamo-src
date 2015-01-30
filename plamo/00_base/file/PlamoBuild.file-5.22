@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=file
-vers=5.21
+vers=5.22
 url="ftp://ftp.astron.com/pub/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P1
