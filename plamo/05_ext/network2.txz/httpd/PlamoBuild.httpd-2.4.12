@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://www.apache.org/dist/httpd/httpd-2.4.10.tar.gz'
-verify='http://www.apache.org/dist/httpd/httpd-2.4.10.tar.gz.asc'
 pkgbase=httpd
-vers=2.4.10
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P2
+vers=2.4.12
+url="http://www.apache.org/dist/httpd/httpd-${vers}.tar.gz"
+verify=$url.asc
+arch=`uname -m`
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --mandir=/usr/share/man"
 DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
