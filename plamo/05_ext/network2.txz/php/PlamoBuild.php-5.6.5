@@ -4,7 +4,7 @@ pkgbase=php
 vers=5.6.5
 url="http://jp.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
 OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared"
@@ -231,6 +231,7 @@ if [ $opt_package -eq 1 ] ; then
       ( cd $P ; rm -rf .channels .depdb .filemap .lock .registry .depdblock )
       # /usr/${libdir}/build 以下を使用するソフトがある模様．
       #( cd $P/usr/lib64/ ; rm -rf build )
+      ln -sf phar.phar $P/usr/bin/phar
     fi
   done
 ######################################################################
