@@ -89,22 +89,20 @@ def make_headers(url, filename, vers, readme, patchfiles):
     patchs = " ".join(patchfiles)
     header = '''#!/bin/sh
 ##############################################################
-url=%s
-verify=
 pkgbase=%s
 vers=%s
+url=%s
+verify=
 commitid=
-# arch=x86_64
-# arch=i586
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
-src=%s-%s
+src=%s-${vers}
 OPT_CONFIG=''
 DOCS='%s'
 patchfiles='%s'
 compress=txz
 ##############################################################
-''' % (url, pkgname, vers, filename, vers, docs, patchs)
+''' % (pkgname, vers, url, filename, docs, patchs)
     return header
 
 
@@ -348,6 +346,10 @@ if [ $opt_build -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
+    if [ $? != 0 ]; then
+      echo "make error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -368,6 +370,10 @@ if [ $opt_package -eq 1 ] ; then
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
+    fi
+    if [ $? != 0 ]; then
+      echo "make install error. $0 script stop"
+      exit 255
     fi
   done
 ######################################################################
