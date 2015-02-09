@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.ntp.org/ntp4/ntp-4.2/ntp-4.2.8.tar.gz'
 pkgbase=ntp
-vers=4.2.8
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=4.2.8p1
+url="http://archive.ntp.org/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=ntp-4.2.8
+src=ntp-${vers}
 OPT_CONFIG=''
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.patches README.refclocks README.versions TODO readme.y2kfixes'
 #patchfiles='ntp-initscript.patch ntp-stable-linux-nano.patch'
