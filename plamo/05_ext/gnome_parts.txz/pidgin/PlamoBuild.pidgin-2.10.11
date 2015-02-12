@@ -7,7 +7,14 @@ verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG='--disable-nm --disable-vv --disable-farsight --enable-cyrus-sasl --disable-tk'
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+else
+    target="-m32"
+    libdir="lib"
+fi
+OPT_CONFIG="--disable-nm --disable-vv --disable-farsight --enable-cyrus-sasl --disable-tk --disable-gnutls --enable-nss --with-nss-includes=/usr/include/nss --with-nspr-includes=/usr/include/nspr --with-nss-libs=/usr/${libdir} --with-nspr-libs=/usr/${libdir} --with-system-ssl-certs=/etc/ssl/certs"
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.API ChangeLog.win32 HACKING INSTALL NEWS README README.MTN README.mingw'
 patchfile='pidgin-2.10.11_jp.diff'
 compress=txz
@@ -239,15 +246,12 @@ if [ $opt_config -eq 1 ] ; then
     /usr/bin/autoreconf -i
 
     if [ -x configure ] ; then
-       if [ $arch = "x86_64" ]; then
-         export USE_ARCH=64
-         OPT_CONFIG="${OPT_CONFIG} --with-nss-libs=/usr/lib64"
-         sed -i "/-L/s@/lib@&64@g" configure
-       fi
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $arch = "x86_64" ]; then
+        sed -i "/-L/s@/lib@&64@g" configure
+      fi
+      CFLAGS="-isystem /usr/include $target" \
+      CPPFLAGS="-isystem /usr/include $target " \
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -258,13 +262,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    sed -i -e 's/^VERSION="2.2.6b Debian-2.2.6b-2"/VERSION="2.2.10"/' \
-	-e 's/^package_revision=1.3017/package_revision=1.3175/' ltmain.sh
     if [ -f Makefile ] ; then
-      #export LDFLAGS='-Wl,--as-needed'
-      if [ $arch = "x86_64" ]; then
-        export LDFLAGS="$LD_FLAGS -L/usr/lib64"
-      fi
       make -j3
     fi
   done
