@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/grep/grep-2.20.tar.xz'
-verify=$url.sig
 pkgbase=grep
 vers=2.20
-arch=`uname -m | sed -e 's/i.86/i586/'`
+url="http://ftp.gnu.org/gnu/grep/grep-${vers}.tar.xz"
+verify=$url.sig
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-perl-regexp'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-alpha README-release THANKS TODO'
-patchfiles=''
+patchfiles='CVE-2015-1345.patch'
 compress=txz
 ##############################################################
 
