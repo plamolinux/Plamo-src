@@ -1,6 +1,6 @@
-diff -uNr freetype-2.5.3.orig/modules.cfg freetype-2.5.3/modules.cfg
---- freetype-2.5.3.orig/modules.cfg	2014-03-13 15:14:38.324616309 +0900
-+++ freetype-2.5.3/modules.cfg	2014-03-13 15:15:42.057285153 +0900
+diff -uNr freetype-2.5.5.orig/modules.cfg freetype-2.5.5/modules.cfg
+--- freetype-2.5.5.orig/modules.cfg	2015-02-16 18:46:46.542061576 +0900
++++ freetype-2.5.5/modules.cfg	2015-02-16 18:48:34.810625415 +0900
 @@ -110,7 +110,7 @@
  AUX_MODULES += cache
  

@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/freetype/freetype-2.5.3.tar.bz2'
-verify=$url.sig
 pkgbase=freetype
-vers=2.5.3
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=2.5.5
+url="http://downloads.sourceforge.net/freetype/freetype-${vers}.tar.bz2"
+verify=$url.sig
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='ChangeLog ChangeLog.20 ChangeLog.21 ChangeLog.22 ChangeLog.23 README README.git'
-patchfiles='freetype-2.2.1-enable-valid.patch'
-no_apply_patchfiles='freetype-2.3.0-enable-spr.patch'
+patchfiles='freetype-2.5.5-enable-valid.patch '
+no_apply_patchfiles='freetype-2.5.5-enable-spr.patch'
 compress=txz
 ##############################################################
 
