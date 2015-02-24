@@ -4,10 +4,10 @@ pkgbase=libxml2
 vers=2.9.2
 url="ftp://xmlsoft.org/libxml2/libxml2-${vers}.tar.gz"
 verify=$url.asc
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
+arch=`uname -m`
+build=P2
 src=${pkgbase}-${vers}
-OPT_CONFIG=''
+OPT_CONFIG='--disable-static --with-history'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
 patchfiles=''
 compress=txz
@@ -232,6 +232,12 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    # http://www.linuxfromscratch.org/blfs/view/svn/general/libxml2.html
+    sed -e /xmlInitializeCatalog/d \
+	-e 's/((ent->checked =.*&&/(((ent->checked == 0) ||\
+          ((ent->children == NULL) \&\& (ctxt->options \& XML_PARSE_NOENT))) \&\&/' \
+	-i parser.c
+
     if [ -f autogen.sh ] ; then
       sh ./autogen.sh
     fi
@@ -273,9 +279,6 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
@@ -286,25 +289,6 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
   fi
 
 # remove locales except ja
