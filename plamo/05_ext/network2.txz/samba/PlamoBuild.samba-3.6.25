@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
-url='http://www.samba.org/samba/ftp/stable/samba-3.6.24.tar.gz'
-verify='http://ftp.samba.org/pub/samba/stable/samba-3.6.24.tar.asc'
 pkgbase=samba
-vers=3.6.24
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=3.6.25
+url="http://www.samba.org/samba/ftp/stable/samba-${vers}.tar.gz"
+verify=${url/gz/asc}
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--with-lockdir=/var/samba/locks  --with-statedir=/var/samba/locks --with-cachedir=/var/samba/locks --with-piddir=/var/samba/locks --with-swatdir=/usr/share/swat --with-krb5=/usr/heimdal -with-logfilebase=/var/log/samba --with-fhs --enable-nss-wrapper  --enable-socket-wrapper'
