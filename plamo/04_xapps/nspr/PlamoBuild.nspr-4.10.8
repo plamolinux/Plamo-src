@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v4.10.6/src/nspr-4.10.6.tar.gz'
 pkgbase=nspr
-vers=4.10.6
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=4.10.8
+url="http://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v${vers}/src/nspr-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG='--disable-static --enable-system-sqlite --with-mozilla --with-pthreads'
+OPT_CONFIG='--with-mozilla --with-pthreads'
 if [ $arch = "x86_64" ]; then
   OPT_CONFIG="$OPT_CONFIG --enable-64bit"
 fi 
