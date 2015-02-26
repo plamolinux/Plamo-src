@@ -19,7 +19,7 @@ firefox_tag=FIREFOX_${vers//./_}_RELEASE
 OPT_CONFIG_OLD=" \
 	--with-branding=browser/branding/unofficial \
 	--with-system-zlib \
-	--enable-startup-notification \
+	--disable-startup-notification \
 	--enable-svg \
 	--enable-webm \
 	--enable-strip \
