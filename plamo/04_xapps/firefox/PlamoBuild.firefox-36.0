@@ -337,7 +337,7 @@ ac_add_options --with-pthreads
 
 ## Features
 ac_add_options --enable-safe-browsing
-ac_add_options --enable-startup-notification
+ac_add_options --disable-startup-notification
 ac_add_options --enable-gio
 ac_add_options --enable-webm
 ac_add_options --disable-dbus
