@@ -9,50 +9,6 @@ arch=`uname -m`
 build=P1
 src=mozilla-release
 firefox_tag=FIREFOX_${vers//./_}_RELEASE
-# after firefox 12.0, to use system cairo is broken.
-#	--enable-system-cairo \
-# after firefox 13.0, libpng 1.5 is required.
-#	--with-system-png \
-# after firefox 18.0, libjpeg-turbo is required.
-# (libjpeg-turbo: http://libjpeg-turbo.virtualgl.org/)
-#	--with-system-jpeg \
-OPT_CONFIG_OLD=" \
-	--with-branding=browser/branding/unofficial \
-	--with-system-zlib \
-	--disable-startup-notification \
-	--enable-svg \
-	--enable-webm \
-	--enable-strip \
-	--enable-single-profile \
-	--disable-crashreporter \
-	--disable-tests \
-	--disable-installer \
-	--disable-profilesharing \
-	--enable-extensions=default \
-	--disable-updater \
-	--disable-elf-dynstr-gc \
-	--disable-necko-wifi \
-	--enable-system-lcms \
-	--enable-system-sqlite \
-	--with-system-nspr \
-	--with-system-nss \
-	--with-system-bz2 \
-	--with-system-libevent \
-	--with-system-hunspell \
-        --with-pthreads \
-	--enable-system-ffi \
-	--enable-safe-browsing \
-	--enable-ui-locale=ja \
-	--disable-gnomevfs \
-	--disable-gnomeui \
-	--disable-static \
-	--enable-shared \
-	--with-l10n-base=$PWD/l10n \
-	--disable-install-strip \
-	--enable-chrome-format=jar \
-"
-# Drop (build with external xulrunner)
-#OPT_CONFIG="$OPT_CONFIG --with-system-libxul --with-libxul-sdk=`pkg-config --variable=sdkdir libxul`"
 DOCS='LICENSE README.txt other-licenses xpinstall'
 patchfiles='firefox.desktop.patch'
 compress=txz
@@ -310,7 +266,7 @@ export MOZILLA_OFFICIAL=0
 mk_add_options MOZ_MAKE_FLAGS="-j3"
 ac_add_options --enable-strip
 ac_add_options --disable-install-strip
-ac_add_options --disable-static 
+ac_add_options --disable-static
 ac_add_options --enable-shared
 
 ## Directory
@@ -337,7 +293,7 @@ ac_add_options --with-pthreads
 
 ## Features
 ac_add_options --enable-safe-browsing
-ac_add_options --disable-startup-notification
+ac_add_options --enable-startup-notification
 ac_add_options --enable-gio
 ac_add_options --enable-webm
 ac_add_options --disable-dbus
@@ -375,30 +331,16 @@ endif
 
 EOF
 
-#    if [ -x configure ] ; then
-#       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-#       export LDFLAGS='-Wl,--as-needed' 
-#       export CFLAGS="-isystem /usr/include $target"
-#       export CXXFLAGS="-isystem /usr/include $target"
-#       ${B[$i]}/configure --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG[$i]}
-#      if [ $? != 0 ]; then
-#	  echo "configure error. $0 script stop"
-#	  exit 255
-#      fi
-#    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    #cd $W/obj
     cd ${B[$i]}
     export LDFLAGS='-Wl,--as-needed'
     export CFLAGS="-isystem /usr/include ${target}"
     export CPPFLAGS="-isystem /usr/include ${target}"
     export MOZ_MAKE_FLAGS="-j3"
-    #export MOZ_OBJDIR="$W/obj"
     make -f client.mk -j3
-    #make -j3
   done
 fi
 if [ $opt_package -eq 1 ] ; then
