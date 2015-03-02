@@ -5,11 +5,11 @@ vers=git_20150301
 url='git://github.com/wanderlust/wanderlust.git'
 commitid=13fb4f6519490d4ac7138f3bcf76707654348071
 sample='https://raw.github.com/tenforward/PlamoTemplate/master/.emacs.d/site-start.d/wl.el'
-arch=`uname -m`
+arch=noarch
 build=P1
 src=wanderlust
 OPT_CONFIG=''
-DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README README.ja'
+DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README.md README.ja'
 patchfiles=''
 compress=txz
 ##############################################################
