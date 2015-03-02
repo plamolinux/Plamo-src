@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/comp/emacsen/lisp/flim/flim-1.14/flim-1.14.9.tar.gz'
-pkgbase=flim
-vers=1.14.9
-arch=x86_64
-# arch=i586
+pkgbase=wanderlust
+vers=git_20150301
+url='git://github.com/wanderlust/wanderlust.git'
+commitid=13fb4f6519490d4ac7138f3bcf76707654348071
+sample='https://raw.github.com/tenforward/PlamoTemplate/master/.emacs.d/site-start.d/wl.el'
+arch=noarch
 build=P1
-src=flim-1.14.9
+src=wanderlust
 OPT_CONFIG=''
-DOCS='ChangeLog NEWS README.en README.ja'
+DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README.md README.ja'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -176,15 +177,26 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -d ${src} ] ; then
+        git clone ${url}
+    else
+        ( cd ${src} ; git pull origin master )
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd ${src}
+        git checkout origin/master
+        if [ -n "$commitid" ] ; then
+          git reset --hard $commitid
+        fi
+        git set-file-times ) ;;
     esac
   done
+  wget --no-check-certificate $sample
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -204,6 +216,9 @@ if [ $opt_config -eq 1 ] ; then
       sh ./autogen.sh
     fi
 
+    # Install utils
+    sed -i -e 's/^;(setq wl-install-utils t)/(setq wl-install-utils t)/' WL-CFG
+
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
@@ -221,7 +236,8 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make PIXMAPDIR=/usr/share/emacs/icons/wl
+      make INFODIR=/usr/share/info info
     fi
   done
 fi
@@ -242,9 +258,15 @@ if [ $opt_package -eq 1 ] ; then
     done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install PREFIX=$P/usr
+      make install PIXMAPDIR=$P/usr/share/emacs/icons/wl LISPDIR=$P/usr/share/emacs/site-lisp INFODIR=$P/usr/share/info
+      mkdir -p $P/usr/share/info
+      make install-info INFODIR=$P/usr/share/info
     fi
   done
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+( cd /usr/share/info ; /usr/bin/install-info wl-ja.info dir ; /usr/bin/install-info wl.info dir )
+EOF
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
@@ -314,6 +336,10 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+
+  samplefile=${sample##*/}
+  cp $W/$samplefile $docdir/$src/$samplefile.sample
+
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
