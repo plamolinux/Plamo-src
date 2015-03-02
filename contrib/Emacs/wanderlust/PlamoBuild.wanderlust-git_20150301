@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='git://github.com/wanderlust/wanderlust.git'
-sample='https://raw.github.com/tenforward/PlamoTemplate/master/.emacs.d/site-start.d/wl.el'
 pkgbase=wanderlust
-vers=`date +%Y%m%d`
-arch=x86_64
-# arch=i586
+vers=git_20150301
+url='git://github.com/wanderlust/wanderlust.git'
+commitid=13fb4f6519490d4ac7138f3bcf76707654348071
+sample='https://raw.github.com/tenforward/PlamoTemplate/master/.emacs.d/site-start.d/wl.el'
+arch=`uname -m`
 build=P1
 src=wanderlust
 OPT_CONFIG=''
@@ -179,6 +179,8 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -d ${src} ] ; then
         git clone ${url}
+    else
+        ( cd ${src} ; git pull origin master )
     fi
   done
   for i in $url ; do
@@ -186,6 +188,12 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd ${src}
+        git checkout origin/master
+        if [ -n "$commitid" ] ; then
+          git reset --hard $commitid
+        fi
+        git set-file-times ) ;;
     esac
   done
   wget --no-check-certificate $sample
