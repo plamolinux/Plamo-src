@@ -167,7 +167,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master
+        git checkout semi-1_14-wl
         if [ -n "$commitid" ] ; then
           git reset --hard $commitid
         fi
