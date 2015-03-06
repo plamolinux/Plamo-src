@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://prdownloads.sourceforge.net/rdesktop/rdesktop-1.7.0.tar.gz?download'
 pkgbase=rdesktop
 vers=1.7.0
-arch=x86_64
-# arch=i586
+url="http://jaist.dl.sourceforge.net/project/rdesktop/rdesktop/${vers}/rdesktop-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=rdesktop-1.7.0
+src=rdesktop-${vers}
 OPT_CONFIG=''
 DOCS='COPYING README'
 patchfiles=''
