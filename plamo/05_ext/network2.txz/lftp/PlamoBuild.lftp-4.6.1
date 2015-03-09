@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.st.ryukoku.ac.jp/pub/network/ftp/lftp/lftp-4.4.16.tar.xz'
-verify=$url
 pkgbase=lftp
-vers=4.4.16
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=4.6.1
+url="ftp://ftp.st.ryukoku.ac.jp/pub/network/ftp/lftp/lftp-${vers}.tar.xz"
+verify=$url
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--with-gnutls --without-openssl --disable-static'
