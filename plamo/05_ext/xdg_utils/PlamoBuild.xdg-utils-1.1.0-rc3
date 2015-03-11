@@ -3,7 +3,7 @@
 pkgbase=xdg_utils
 vers=1.1.0_rc3
 url="http://people.freedesktop.org/~rdieter/xdg-utils/xdg-utils-${vers/_/-}.tar.gz"
-arch=`uname -m`
+arch=noarch
 build=P1
 src=xdg-utils-${vers/_/-}
 OPT_CONFIG=''
