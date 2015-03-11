@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://portland.freedesktop.org/download/xdg-utils-1.1.0-rc1.tar.gz'
 pkgbase=xdg_utils
-vers=1.1.0_rc1
-arch=x86_64
-# arch=i586
+vers=1.1.0_rc3
+url="http://people.freedesktop.org/~rdieter/xdg-utils/xdg-utils-${vers/_/-}.tar.gz"
+arch=noarch
 build=P1
-src=xdg-utils-1.1.0-rc1
-OPT_CONFIG='--disable-static'
+src=xdg-utils-${vers/_/-}
+OPT_CONFIG=''
 DOCS='ChangeLog LICENSE README RELEASE_NOTES TODO'
-patchfiles=''
+patchfiles='CVE-2014-9622.patch'
 compress=txz
 ##############################################################
 
