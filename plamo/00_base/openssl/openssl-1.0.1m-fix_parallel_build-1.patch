@@ -1,87 +1,6 @@
-Submitted By:            Armin K. <krejzi at email dot com>
-Date:                    2013-05-05
-Initial Package Version: 1.0.1e
-Upstream Status:         Unknown
-Origin:                  https://github.com/Alexpux/Qt-builds/tree/master/patches/openssl
-Description:             Fixes build with make -jx, where x is greater than 1.
-
-diff -Naur openssl-1.0.1i.orig/crypto/Makefile openssl-1.0.1i/crypto/Makefile
---- openssl-1.0.1i.orig/crypto/Makefile	2014-08-06 23:18:30.000000000 +0200
-+++ openssl-1.0.1i/crypto/Makefile	2014-08-09 09:36:33.891343699 +0200
-@@ -88,11 +88,11 @@
- 	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
- 
- subdirs:
--	@target=all; $(RECURSIVE_MAKE)
-+	+@target=all; $(RECURSIVE_MAKE)
- 
- files:
- 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
--	@target=files; $(RECURSIVE_MAKE)
-+	+@target=files; $(RECURSIVE_MAKE)
- 
- links:
- 	@$(PERL) $(TOP)/util/mklink.pl ../include/openssl $(EXHEADER)
-@@ -103,7 +103,7 @@
- # lib: $(LIB): are splitted to avoid end-less loop
- lib:	$(LIB)
- 	@touch lib
--$(LIB):	$(LIBOBJ)
-+$(LIB):	$(LIBOBJ) | subdirs
- 	$(AR) $(LIB) $(LIBOBJ)
- 	[ -z "$(FIPSLIBDIR)" ] || $(AR) $(LIB) $(FIPSLIBDIR)fipscanister.o
- 	$(RANLIB) $(LIB) || echo Never mind.
-@@ -114,7 +114,7 @@
- 	fi
- 
- libs:
--	@target=lib; $(RECURSIVE_MAKE)
-+	+@target=lib; $(RECURSIVE_MAKE)
- 
- install:
- 	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
-@@ -123,7 +123,7 @@
- 	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
- 	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
- 	done;
--	@target=install; $(RECURSIVE_MAKE)
-+	+@target=install; $(RECURSIVE_MAKE)
- 
- lint:
- 	@target=lint; $(RECURSIVE_MAKE)
-diff -Naur openssl-1.0.1i.orig/engines/Makefile openssl-1.0.1i/engines/Makefile
---- openssl-1.0.1i.orig/engines/Makefile	2014-08-06 23:18:43.000000000 +0200
-+++ openssl-1.0.1i/engines/Makefile	2014-08-09 09:36:33.891343699 +0200
-@@ -72,7 +72,7 @@
- 
- all:	lib subdirs
- 
--lib:	$(LIBOBJ)
-+lib:	$(LIBOBJ) | subdirs
- 	@if [ -n "$(SHARED_LIBS)" ]; then \
- 		set -e; \
- 		for l in $(LIBNAMES); do \
-@@ -89,7 +89,7 @@
- 
- subdirs:
- 	echo $(EDIRS)
--	@target=all; $(RECURSIVE_MAKE)
-+	+@target=all; $(RECURSIVE_MAKE)
- 
- files:
- 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
-@@ -128,7 +128,7 @@
- 			  mv -f $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx.new $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx ); \
- 		done; \
- 	fi
--	@target=install; $(RECURSIVE_MAKE)
-+	+@target=install; $(RECURSIVE_MAKE)
- 
- tags:
- 	ctags $(SRC)
-diff -Naur openssl-1.0.1i.orig/Makefile.org openssl-1.0.1i/Makefile.org
---- openssl-1.0.1i.orig/Makefile.org	2014-08-06 23:10:56.000000000 +0200
-+++ openssl-1.0.1i/Makefile.org	2014-08-09 09:36:33.892343687 +0200
+diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
+--- openssl-1.0.1m.orig/Makefile.org	2015-03-19 22:37:10.000000000 +0900
++++ openssl-1.0.1m/Makefile.org	2015-03-20 15:10:25.175576744 +0900
 @@ -273,17 +273,17 @@
  build_libs: build_crypto build_ssl build_engines
  
@@ -158,9 +77,9 @@ diff -Naur openssl-1.0.1i.orig/Makefile.org openssl-1.0.1i/Makefile.org
  	@pod2man="`cd ./util; ./pod2mantest $(PERL)`"; \
  	here="`pwd`"; \
  	filecase=; \
-diff -Naur openssl-1.0.1i.orig/Makefile.shared openssl-1.0.1i/Makefile.shared
---- openssl-1.0.1i.orig/Makefile.shared	2014-07-22 21:41:23.000000000 +0200
-+++ openssl-1.0.1i/Makefile.shared	2014-08-09 09:36:33.892343687 +0200
+diff -uNr openssl-1.0.1m.orig/Makefile.shared openssl-1.0.1m/Makefile.shared
+--- openssl-1.0.1m.orig/Makefile.shared	2015-01-20 21:33:36.000000000 +0900
++++ openssl-1.0.1m/Makefile.shared	2015-03-20 15:10:25.175576744 +0900
 @@ -105,6 +105,7 @@
      SHAREDFLAGS="$${SHAREDFLAGS:-$(CFLAGS) $(SHARED_LDFLAGS)}"; \
      LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
@@ -177,10 +96,84 @@ diff -Naur openssl-1.0.1i.orig/Makefile.shared openssl-1.0.1i/Makefile.shared
  			( $(SET_X); rm -f $$SHLIB$$SHLIB_SUFFIX; \
  			  ln -s $$prev $$SHLIB$$SHLIB_SUFFIX ); \
  		fi; \
-diff -Naur openssl-1.0.1i.orig/test/Makefile openssl-1.0.1i/test/Makefile
---- openssl-1.0.1i.orig/test/Makefile	2014-08-06 23:18:45.000000000 +0200
-+++ openssl-1.0.1i/test/Makefile	2014-08-09 09:36:33.893343674 +0200
-@@ -127,7 +127,7 @@
+diff -uNr openssl-1.0.1m.orig/crypto/Makefile openssl-1.0.1m/crypto/Makefile
+--- openssl-1.0.1m.orig/crypto/Makefile	2015-03-19 22:38:24.000000000 +0900
++++ openssl-1.0.1m/crypto/Makefile	2015-03-20 15:10:25.175576744 +0900
+@@ -85,11 +85,11 @@
+ 	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
+ 
+ subdirs:
+-	@target=all; $(RECURSIVE_MAKE)
++	+@target=all; $(RECURSIVE_MAKE)
+ 
+ files:
+ 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
+-	@target=files; $(RECURSIVE_MAKE)
++	+@target=files; $(RECURSIVE_MAKE)
+ 
+ links:
+ 	@$(PERL) $(TOP)/util/mklink.pl ../include/openssl $(EXHEADER)
+@@ -100,7 +100,7 @@
+ # lib: $(LIB): are splitted to avoid end-less loop
+ lib:	$(LIB)
+ 	@touch lib
+-$(LIB):	$(LIBOBJ)
++$(LIB):	$(LIBOBJ) | subdirs
+ 	$(AR) $(LIB) $(LIBOBJ)
+ 	[ -z "$(FIPSLIBDIR)" ] || $(AR) $(LIB) $(FIPSLIBDIR)fipscanister.o
+ 	$(RANLIB) $(LIB) || echo Never mind.
+@@ -111,7 +111,7 @@
+ 	fi
+ 
+ libs:
+-	@target=lib; $(RECURSIVE_MAKE)
++	+@target=lib; $(RECURSIVE_MAKE)
+ 
+ install:
+ 	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
+@@ -120,7 +120,7 @@
+ 	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
+ 	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
+ 	done;
+-	@target=install; $(RECURSIVE_MAKE)
++	+@target=install; $(RECURSIVE_MAKE)
+ 
+ lint:
+ 	@target=lint; $(RECURSIVE_MAKE)
+diff -uNr openssl-1.0.1m.orig/engines/Makefile openssl-1.0.1m/engines/Makefile
+--- openssl-1.0.1m.orig/engines/Makefile	2015-03-19 22:38:35.000000000 +0900
++++ openssl-1.0.1m/engines/Makefile	2015-03-20 15:10:25.175576744 +0900
+@@ -72,7 +72,7 @@
+ 
+ all:	lib subdirs
+ 
+-lib:	$(LIBOBJ)
++lib:	$(LIBOBJ) | subdirs
+ 	@if [ -n "$(SHARED_LIBS)" ]; then \
+ 		set -e; \
+ 		for l in $(LIBNAMES); do \
+@@ -89,7 +89,7 @@
+ 
+ subdirs:
+ 	echo $(EDIRS)
+-	@target=all; $(RECURSIVE_MAKE)
++	+@target=all; $(RECURSIVE_MAKE)
+ 
+ files:
+ 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
+@@ -128,7 +128,7 @@
+ 			  mv -f $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx.new $(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines/$$pfx$$l$$sfx ); \
+ 		done; \
+ 	fi
+-	@target=install; $(RECURSIVE_MAKE)
++	+@target=install; $(RECURSIVE_MAKE)
+ 
+ tags:
+ 	ctags $(SRC)
+diff -uNr openssl-1.0.1m.orig/test/Makefile openssl-1.0.1m/test/Makefile
+--- openssl-1.0.1m.orig/test/Makefile	2015-03-19 22:38:37.000000000 +0900
++++ openssl-1.0.1m/test/Makefile	2015-03-20 15:11:56.990007602 +0900
+@@ -130,7 +130,7 @@
  tags:
  	ctags $(SRC)
  
@@ -189,7 +182,7 @@ diff -Naur openssl-1.0.1i.orig/test/Makefile openssl-1.0.1i/test/Makefile
  
  apps:
  	@(cd ..; $(MAKE) DIRS=apps all)
-@@ -378,109 +378,109 @@
+@@ -388,118 +388,118 @@
  		link_app.$${shlib_target}
  
  $(RSATEST)$(EXE_EXT): $(RSATEST).o $(DLIBCRYPTO)
@@ -308,6 +301,10 @@ diff -Naur openssl-1.0.1i.orig/test/Makefile openssl-1.0.1i/test/Makefile
 -	@target=$(EVPTEST); $(BUILD_CMD)
 +	+@target=$(EVPTEST); $(BUILD_CMD)
  
+ $(EVPEXTRATEST)$(EXE_EXT): $(EVPEXTRATEST).o $(DLIBCRYPTO)
+-	@target=$(EVPEXTRATEST); $(BUILD_CMD)
++	+@target=$(EVPEXTRATEST); $(BUILD_CMD)
+ 
  $(ECDSATEST)$(EXE_EXT): $(ECDSATEST).o $(DLIBCRYPTO)
 -	@target=$(ECDSATEST); $(BUILD_CMD)
 +	+@target=$(ECDSATEST); $(BUILD_CMD)
@@ -333,8 +330,16 @@ diff -Naur openssl-1.0.1i.orig/test/Makefile openssl-1.0.1i/test/Makefile
 +	+@target=$(SRPTEST); $(BUILD_CMD)
  
  $(HEARTBEATTEST)$(EXE_EXT): $(HEARTBEATTEST).o $(DLIBCRYPTO)
- 	@target=$(HEARTBEATTEST); $(BUILD_CMD_STATIC)
-@@ -496,7 +496,7 @@
+-	@target=$(HEARTBEATTEST); $(BUILD_CMD_STATIC)
++	+@target=$(HEARTBEATTEST); $(BUILD_CMD_STATIC)
+ 
+ $(CONSTTIMETEST)$(EXE_EXT): $(CONSTTIMETEST).o
+-	@target=$(CONSTTIMETEST) $(BUILD_CMD)
++	+@target=$(CONSTTIMETEST) $(BUILD_CMD)
+ 
+ #$(AESTEST).o: $(AESTEST).c
+ #	$(CC) -c $(CFLAGS) -DINTERMEDIATE_VALUE_KAT -DTRACE_KAT_MCT $(AESTEST).c
+@@ -512,7 +512,7 @@
  #	fi
  
  dummytest$(EXE_EXT): dummytest.o $(DLIBCRYPTO)
