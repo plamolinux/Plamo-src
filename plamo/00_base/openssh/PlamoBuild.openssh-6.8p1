@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=openssh
-vers=6.7p1
+vers=6.8p1
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
 verify=$url.asc
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--with-privsep-user=sshd --with-privsep-path=/var/lib/sshd --sysconfdir=/etc/ssh --localstatedir=/var --with-pam'
