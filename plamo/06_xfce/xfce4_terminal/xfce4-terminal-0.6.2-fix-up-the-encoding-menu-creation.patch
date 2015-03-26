@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+<title>svntogit/packages.git - Git clone of the 'packages' repository
+</title>
+<meta name='generator' content='cgit v0.10.2'/>
+<meta name='robots' content='index, nofollow'/>
+<link rel='stylesheet' type='text/css' href='/cgit.css'/>
+<link rel='shortcut icon' href='/favicon.ico'/>
+<link rel='alternate' title='Atom feed' href='https://projects.archlinux.org/svntogit/packages.git/atom/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal' type='application/atom+xml'/>
+<link rel='vcs-git' href='git://projects.archlinux.org/svntogit/packages.git' title='svntogit/packages.git Git repository'/>
+<link rel='vcs-git' href='http://projects.archlinux.org/git/svntogit/packages.git' title='svntogit/packages.git Git repository'/>
+<link rel='vcs-git' href='https://projects.archlinux.org/git/svntogit/packages.git' title='svntogit/packages.git Git repository'/>
+<link rel='vcs-git' href='ssh://gerolde.archlinux.org/srv/projects/git/svntogit/packages.git' title='svntogit/packages.git Git repository'/>
+</head>
+<body>
+	<div id="archnavbar"><!-- Arch Linux global navigation bar -->
+		<div id="archnavbarlogo">
+			<p><a href="http://www.archlinux.org/" title="Arch news, packages, projects and more"></a></p>
+		</div>
+		<div id="archnavbarmenu">
+			<ul id="archnavbarlist">
+				<li id="anb-home"><a href="http://www.archlinux.org/" title="Arch news, packages, projects and more">Home</a></li>
+				<li id="anb-packages"><a href="http://www.archlinux.org/packages/" title="Arch Package Database">Packages</a></li>
+				<li id="anb-forums"><a href="https://bbs.archlinux.org/" title="Community forums">Forums</a></li>
+				<li id="anb-wiki"><a href="https://wiki.archlinux.org/" title="Community documentation">Wiki</a></li>
+				<li id="anb-bugs"><a href="https://bugs.archlinux.org/" title="Report and follow bugs">Bugs</a></li>
+				<li id="anb-aur"><a href="https://aur.archlinux.org/" title="Arch Linux User Repository">AUR</a></li>
+				<li id="anb-download"><a href="http://www.archlinux.org/download/" title="Get Arch Linux">Download</a></li>
+			</ul>
+		</div>
+	</div><!-- #archnavbar -->
+<div id='cgit'><table id='header'>
+<tr>
+<td class='main'><a href='/'>index</a> : <a title='svntogit/packages.git' href='/svntogit/packages.git/'>svntogit/packages.git</a></td></tr>
+<tr><td class='sub'>Git clone of the 'packages' repository
+</td><td class='sub right'></td></tr></table>
+<table class='tabs'><tr><td>
+<a href='/svntogit/packages.git/?h=packages/xfce4-terminal'>summary</a><a href='/svntogit/packages.git/refs/?h=packages/xfce4-terminal'>refs</a><a href='/svntogit/packages.git/log/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>log</a><a class='active' href='/svntogit/packages.git/tree/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>tree</a><a href='/svntogit/packages.git/commit/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>commit</a><a href='/svntogit/packages.git/diff/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>diff</a><a href='/svntogit/packages.git/stats/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>stats</a></td><td class='form'><form class='right' method='get' action='/svntogit/packages.git/log/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch'>
+<input type='hidden' name='h' value='packages/xfce4-terminal'/><select name='qt'>
+<option value='grep'>log msg</option>
+<option value='author'>author</option>
+<option value='committer'>committer</option>
+<option value='range'>range</option>
+</select>
+<input class='txt' type='text' size='10' name='q' value=''/>
+<input type='submit' value='search'/>
+</form>
+</td></tr></table>
+<div class='path'>path: <a href='/svntogit/packages.git/tree/?h=packages/xfce4-terminal'>root</a>/<a href='/svntogit/packages.git/tree/trunk?h=packages/xfce4-terminal'>trunk</a>/<a href='/svntogit/packages.git/tree/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch</a></div><div class='content'>blob: dba52d2947e66f01f966f06bc5046c99fd3dc3b6 (<a href='/svntogit/packages.git/plain/trunk/xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch?h=packages/xfce4-terminal'>plain</a>)
+<table summary='blob content' class='blob'>
+<tr><td class='linenumbers'><pre><a id='n1' href='#n1'>1</a>
+<a id='n2' href='#n2'>2</a>
+<a id='n3' href='#n3'>3</a>
+<a id='n4' href='#n4'>4</a>
+<a id='n5' href='#n5'>5</a>
+<a id='n6' href='#n6'>6</a>
+<a id='n7' href='#n7'>7</a>
+<a id='n8' href='#n8'>8</a>
+<a id='n9' href='#n9'>9</a>
+<a id='n10' href='#n10'>10</a>
+<a id='n11' href='#n11'>11</a>
+<a id='n12' href='#n12'>12</a>
+<a id='n13' href='#n13'>13</a>
+<a id='n14' href='#n14'>14</a>
+<a id='n15' href='#n15'>15</a>
+<a id='n16' href='#n16'>16</a>
+<a id='n17' href='#n17'>17</a>
+<a id='n18' href='#n18'>18</a>
+<a id='n19' href='#n19'>19</a>
+<a id='n20' href='#n20'>20</a>
+<a id='n21' href='#n21'>21</a>
+<a id='n22' href='#n22'>22</a>
+<a id='n23' href='#n23'>23</a>
+<a id='n24' href='#n24'>24</a>
+<a id='n25' href='#n25'>25</a>
+<a id='n26' href='#n26'>26</a>
+<a id='n27' href='#n27'>27</a>
+<a id='n28' href='#n28'>28</a>
+<a id='n29' href='#n29'>29</a>
+<a id='n30' href='#n30'>30</a>
+<a id='n31' href='#n31'>31</a>
+<a id='n32' href='#n32'>32</a>
+<a id='n33' href='#n33'>33</a>
+<a id='n34' href='#n34'>34</a>
+<a id='n35' href='#n35'>35</a>
+<a id='n36' href='#n36'>36</a>
+<a id='n37' href='#n37'>37</a>
+<a id='n38' href='#n38'>38</a>
+<a id='n39' href='#n39'>39</a>
+<a id='n40' href='#n40'>40</a>
+<a id='n41' href='#n41'>41</a>
+<a id='n42' href='#n42'>42</a>
+<a id='n43' href='#n43'>43</a>
+<a id='n44' href='#n44'>44</a>
+<a id='n45' href='#n45'>45</a>
+<a id='n46' href='#n46'>46</a>
+<a id='n47' href='#n47'>47</a>
+<a id='n48' href='#n48'>48</a>
+<a id='n49' href='#n49'>49</a>
+<a id='n50' href='#n50'>50</a>
+</pre></td>
+<td class='lines'><pre><code>From 71bd87a532f250d6bc98d52a5d546d43056bbd99 Mon Sep 17 00:00:00 2001
+From: Alistair Buxton &lt;a.j.buxton&#64;gmail.com&gt;
+Date: Sun, 13 Oct 2013 23:41:45 +0000
+Subject: Fix up the encoding menu creation.
+
+Don't add non-radio items to the radio item group.
+Don't leak list nodes by prepending twice to the same list.
+Fixes BUG #10395.
+<span class="hl kwb">---</span>
+diff --git a/terminal/terminal-encoding-action.c b/terminal/terminal-encoding-action.c
+index 83242e9..77c916c 100644
+<span class="hl kwb">--- a/terminal/terminal-encoding-action.c</span>
+<span class="hl kwa">+++ b/terminal/terminal-encoding-action.c</span>
+&#64;&#64; -253,7 +253,7 &#64;&#64; terminal_encoding_action_menu_shown (GtkWidget              *menu,
+   /* action to reset to the default */
+   default_label = g_strdup_printf (_(&quot;Default (%s)&quot;), default_charset);
+   item = gtk_radio_menu_item_new_with_label (groups, default_label);
+<span class="hl kwb">-  groups = g_slist_prepend (groups, item);</span>
+<span class="hl kwa">+  groups = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item));</span>
+   gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), found);
+   g_signal_connect (G_OBJECT (item), &quot;activate&quot;,
+&#64;&#64; -267,7 +267,6 &#64;&#64; terminal_encoding_action_menu_shown (GtkWidget              *menu,
+       /* category item */
+       item = gtk_menu_item_new_with_label (_(terminal_encodings_names[n]));
+       gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+<span class="hl kwb">-      groups = g_slist_prepend (groups, item);</span>
+       gtk_widget_show (item);
+ 
+       submenu = gtk_menu_new ();
+&#64;&#64; -281,7 +280,7 &#64;&#64; terminal_encoding_action_menu_shown (GtkWidget              *menu,
+             break;
+ 
+           item2 = gtk_radio_menu_item_new_with_label (groups, charset);
+<span class="hl kwb">-          groups = g_slist_prepend (groups, item2);</span>
+<span class="hl kwa">+          groups = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item2));</span>
+           gtk_menu_shell_append (GTK_MENU_SHELL (submenu), item2);
+           g_object_set_qdata (G_OBJECT (item2), encoding_action_quark, (gchar *) charset);
+           gtk_widget_show (item2);
+&#64;&#64; -304,7 +303,7 &#64;&#64; terminal_encoding_action_menu_shown (GtkWidget              *menu,
+     {
+       /* add an action with the unknown charset */
+       item2 = gtk_radio_menu_item_new_with_label (groups, action-&gt;current);
+<span class="hl kwb">-      groups = g_slist_prepend (groups, item2);</span>
+<span class="hl kwa">+      groups = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (item2));</span>
+       g_object_set_qdata_full (G_OBJECT (item2), encoding_action_quark,
+                                g_strdup (action-&gt;current), g_free);
+       gtk_menu_shell_append (GTK_MENU_SHELL (submenu), item2);
+<span class="hl kwb">--</span>
+cgit v0.9.2
+</code></pre></td></tr></table>
+</div> <!-- class=content -->
+<div class="foot" style="padding-left:1em;padding-right:1em;">
+<p>Copyright &copy; 2002-2014 <a href="mailto:jvinet@zeroflux.org"
+title="contact Judd Vinet">Judd Vinet</a> and <a href="mailto:aaron@archlinux.org"
+title="contact Aaron Griffin">Aaron Griffin</a>. The Arch Linux name and logo
+are recognized trademarks. Some rights reserved. The registered trademark
+Linux&reg; is used pursuant to a sublicense from LMI, the exclusive licensee
+of Linus Torvalds, owner of the mark on a world-wide basis.</p>
+</div>
+</div> <!-- id=cgit -->
+</body>
+</html>

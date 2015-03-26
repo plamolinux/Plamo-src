@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/apps/terminal/0.4/Terminal-0.4.8.tar.bz2'
-pkgbase=Terminal
-vers=0.4.8
-arch=x86_64
-# arch=i586
-build=P2
-src=Terminal-0.4.8
-OPT_CONFIG="--docdir=/usr/share/doc/${src}"
+pkgbase=xfce4_terminal
+vers=0.6.3
+url="http://archive.xfce.org/src/apps/xfce4-terminal/${vers:0:3}/xfce4-terminal-${vers}.tar.bz2"
+arch=`uname -m`
+build=P1
+src=xfce4-terminal-${vers}
+OPT_CONFIG="--disable-static --disable-debug"
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
-patchfiles=''
+patchfiles='xfce4-terminal-0.6.2-fix-up-the-encoding-menu-creation.patch'
 compress=txz
 ##############################################################
 
