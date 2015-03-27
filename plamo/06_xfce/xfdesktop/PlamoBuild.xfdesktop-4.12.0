@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/xfdesktop/4.10/xfdesktop-4.10.2.tar.bz2'
-verify=$url.sha1
 pkgbase=xfdesktop
-vers=4.10.2
-arch=x86_64
-# arch=i586
-build=P1
-src=xfdesktop-4.10.2
+vers=4.12.0
+url="http://archive.xfce.org/xfce/${vers:0:4}/src/xfdesktop-${vers}.tar.bz2"
+verify=$url.sha1
+arch=`uname -m`
+build=P2
+src=xfdesktop-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='xfdesktop-file-utils-strftime.patch'
+patchfiles='xfdesktop-4.12.0-file-utils-strftime.patch'
 compress=txz
 ##############################################################
 
