@@ -2,9 +2,9 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=36.0.4
+vers=37.0
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
-verify=$url.asc
+#verify=$url.asc
 arch=`uname -m`
 build=P1
 src=mozilla-release
