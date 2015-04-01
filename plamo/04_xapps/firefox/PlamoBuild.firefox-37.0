@@ -1,15 +1,16 @@
 #!/bin/sh
+unset LS_BLOCK_SIZE
 ##############################################################
-pkgbase=nss
-vers=3.17.4
-url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_${vers//./_}_RTM/src/nss-${vers}.tar.gz"
+pkgbase=firefox
+vers=37.0
+url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
+#verify=$url.asc
 arch=`uname -m`
 build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG=''
-DOCS=''
-# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.17.4-standalone-1.patch
-patchfiles='nss-3.17.4-standalone-1.patch'
+src=mozilla-release
+firefox_tag=FIREFOX_${vers//./_}_RELEASE
+DOCS='LICENSE README.txt other-licenses xpinstall'
+patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
 
@@ -136,6 +137,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      exit 1
+    fi
+  done
+  exit 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -178,6 +193,24 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -185,6 +218,13 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     esac
   done
+fi
+if [ -x /usr/bin/ccache ]; then
+  GCC="ccache gcc"
+  GPP="ccache g++"
+else
+  GCC="gcc"
+  GPP="g++"
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -195,42 +235,112 @@ if [ $opt_config -eq 1 ] ; then
 #   記述します。
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
+    #mkdir $W/obj
     cd ${B[$i]}
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
 
-    if [ -x configure ] ; then
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    if [ ! -d ../l10n ]; then
+      mkdir ../l10n
+    else
+      rm -rf ../l10n/*
     fi
+    mv ja ../l10n/
+
+#    if [ -f autogen.sh ] ; then
+#      sh ./autogen.sh
+#    fi
+
+    # bug on firefox 32 (?)
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
+
+    cat > mozconfig <<EOF
+## Project
+. ${B[$i]}/browser/config/mozconfig
+export MOZILLA_OFFICIAL=0
+
+mk_add_options MOZ_MAKE_FLAGS="-j3"
+ac_add_options --enable-strip
+ac_add_options --disable-install-strip
+ac_add_options --disable-static
+ac_add_options --enable-shared
+
+## Directory
+ac_add_options --prefix=/usr
+ac_add_options --libdir=/usr/${libdir}
+ac_add_options --localstatedir=/var
+
+## System Library
+ac_add_options --with-system-nspr
+ac_add_options --with-system-nss
+# jpeg-turbo
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-zlib
+ac_add_options --with-system-bz2
+# libpng-1.6
+ac_add_options --with-system-png
+ac_add_options --with-system-libevent
+ac_add_options --with-system-libvpx
+#ac_add_options --enable-system-hunspell
+ac_add_options --enable-system-sqlite
+ac_add_options --enable-system-ffi
+ac_add_options --enable-system-pixman
+ac_add_options --with-pthreads
+
+## Features
+ac_add_options --enable-safe-browsing
+ac_add_options --enable-startup-notification
+ac_add_options --enable-gio
+ac_add_options --enable-webm
+ac_add_options --disable-dbus
+ac_add_options --disable-necko-wifi
+ac_add_options --enable-canvas
+# disable feature
+ac_add_options --disable-gnomevfs
+ac_add_options --disable-gnomeui
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-tests
+ac_add_options --disable-installer
+
+## Branding
+ac_add_options --with-branding=browser/branding/unofficial
+
+## Japanese
+ac_add_options --with-l10n-base=${B[$i]}/../l10n
+ac_add_options --enable-ui-locale=ja
+
+EOF
+
+    # workaround on firefox-32
+#    if [ $arch != "x86_64" ]; then
+#      cat << EOF >> mozconfig 
+#ac_add_options --disable-optimize
+#EOF
+#    fi
+
+    cat << EOF >> layout/build/Makefile.in
+
+ifdef MOZ_ENABLE_CANVAS
+EXTRA_DSO_LDOPTS += \$(XLDFLAGS) -lX11 -lXrender
+endif
+
+EOF
+
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
-    export CC="gcc -isystem /usr/include $target"
-    export CXX="g++ -isystem /usr/include $target "
-    export BUILD_OPT=1
-    export NSS_USE_SYSTEM_SQLITE=1
-    export NSPR_INCLUDE_DIR=/usr/include/nspr
-    export USE_SYSTEM_NSPR=1
-    export USE_SYSTEM_ZLIB=1
-    if [ $arch = "x86_64" ]; then
-      export USE_64=1
-    fi
-    cd nss && make 
+    export CFLAGS="-isystem /usr/include ${target}"
+    export CPPFLAGS="-isystem /usr/include ${target}"
+    export MOZ_MAKE_FLAGS="-j3"
+    make -f client.mk -j3
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -244,30 +354,20 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
+    #cd $W/obj
     cd ${B[$i]}
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    export NSS_LINUXDIR=$( basename `ls -d $PWD/dist/Linux*` )
-    pushd dist
-    install -v -m755 -d $P/usr/${libdir}
-    install -v -m755 $NSS_LINUXDIR/lib/*.so $P/usr/${libdir}
-    install -v -m644 $NSS_LINUXDIR/lib/{*.chk,libcrmf.a} $P/usr/${libdir}
-    install -v -m755 -d $P/usr/include/nss
-    install -v -m755 -d $P/usr/bin
-    for file in certutil cmsutil crlutil modutil pk12util signtool signver ssltap nss-config; do
-        install -v -m755 $NSS_LINUXDIR/bin/${file} $P/usr/bin
-    done 
-    mkdir -p $P/usr/${libdir}/pkgconfig
-    cp -v -L $NSS_LINUXDIR/lib/pkgconfig/nss.pc $P/usr/${libdir}/pkgconfig
-    cp -v -RL {public,private}/nss/* $P/usr/include/nss
-    chmod 644 $P/usr/include/nss/*
-    popd
+    export LDFLAGS='-Wl,--as-needed'
+    #export MOZ_OBJDIR=$W/obj
+    make -f client.mk install DESTDIR=$P
+    #make install DESTDIR=$P
+    install -v -m755 -d $P/usr/${libdir}/mozilla/plugins
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $P/usr/share/doc/$src
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
       for omf in $P/usr/share/omf/* ; do
@@ -337,7 +437,22 @@ EOF
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
+  mv $docdir/$src $docdir/$pkgbase-$vers
+  install2 $W/build/firefox.desktop $P/usr/share/applications/
+#  ln -s $P/usr/${libdir}/$pkgbase-$vers $P/usr/${libdir}/$pkgbase
+mkdir -p $P/install
+cat << EOF >> $P/install/initpkg
+ln -sf /usr/${libdir}/$pkgbase-$vers /usr/${libdir}/$pkgbase
+EOF
   convert
+############################################################
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
+############################################################
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share $P/usr/include $P/usr/${libdir}
+  fi
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
