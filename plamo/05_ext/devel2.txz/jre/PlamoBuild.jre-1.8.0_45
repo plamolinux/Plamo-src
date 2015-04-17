@@ -9,7 +9,7 @@ if [ "$arch" = "x86_64" ]; then
     jarch="amd64"
     libdir="lib64"
 else
-    jarch="i586"
+    jarch="i386"
     libdir="lib"
 fi
 ext="txz"
