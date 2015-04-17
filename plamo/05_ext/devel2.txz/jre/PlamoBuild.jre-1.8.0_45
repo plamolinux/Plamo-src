@@ -1,9 +1,8 @@
 #!/bin/sh
 
-java_vers=1.7.0_25
+java_vers=1.8.0_45
 build=P1
-arch=x86_64
-# arch=i586
+arch=`uname -m`
 fallbackfont="/usr/share/fonts/TrueType/VL-PGothic-Regular.ttf"
 
 if [ "$arch" = "x86_64" ]; then
