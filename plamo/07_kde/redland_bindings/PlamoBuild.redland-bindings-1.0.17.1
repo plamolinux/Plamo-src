@@ -7,7 +7,7 @@ verify=$url.asc
 arch=`uname -m`
 build=P1
 src=redland-bindings-${vers}
-OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby --with-ruby-install-dir-variable=sitearchdir'
+OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby --with-ruby-install-dir-variable=sitearchdir --with-ruby-arch-install-dir-variable=sitearchdir'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL INSTALL.html LICENSE-2.0.txt LICENSE.html LICENSE.txt NEWS NEWS.html README README.html RELEASE.html TODO TODO.html'
 patchfiles=''
 compress=txz
