@@ -1,13 +1,11 @@
 #!/bin/sh
 ##############################################################
-#url='http://archives.eyrie.org/software/kerberos/remctl-3.2.tar.gz'
-url='http://archives.eyrie.org/software/ARCHIVE/remctl/remctl-3.2.tar.gz'
 pkgbase=remctl
 vers=3.2
-arch=x86_64
-# arch=i586
-build=P2
-src=remctl-3.2
+url="http://archives.eyrie.org/software/ARCHIVE/remctl/remctl-${vers}.tar.gz"
+arch=`uname -m`
+build=P3
+src=remctl-${vers}
 OPT_CONFIG='--disable-static --with-gssapi=/usr/heimdal --enable-reduced-depends --enable-perl --enable-python --enable-ruby --enable-php'
 DOCS='LICENSE NEWS README TODO'
 patchfiles=''
