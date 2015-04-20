@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://download.librdf.org/source/redland-bindings-1.0.16.1.tar.gz'
 pkgbase=redland_bindings
-vers=1.0.16.1
-arch=x86_64
-# arch=i586
+vers=1.0.17.1
+url="http://download.librdf.org/source/redland-bindings-${vers}.tar.gz"
+verify=$url.asc
+arch=`uname -m`
 build=P1
-src=redland-bindings-1.0.16.1
-OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby'
+src=redland-bindings-${vers}
+OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby --with-ruby-install-dir-variable=sitearchdir --with-ruby-arch-install-dir-variable=sitearchdir'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL INSTALL.html LICENSE-2.0.txt LICENSE.html LICENSE.txt NEWS NEWS.html README README.html RELEASE.html TODO TODO.html'
 patchfiles=''
 compress=txz
@@ -72,6 +72,20 @@ compress_all() {
   strip_all
 }  
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -116,6 +130,24 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -154,12 +186,7 @@ if [ $opt_config -eq 1 ] ; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
-      
-      ruby_incdir=`ls /usr/include/ruby* | grep linux | tr -d '/' `
-      sed -i -e "s@RUBY_INCLUDES = -I/usr/lib/ruby/1.9.1/i686-linux@RUBY_INCLUDES = -I/usr/include/ruby-1.9.1 -I/usr/include/ruby-1.9.1/ruby/backward -I/usr/include/ruby-1.9.1/${ruby_incdir}@" -e "s@RUBY_INCLUDES = -I/usr/lib64/ruby/1.9.1/x86_64-linux@RUBY_INCLUDES = -I/usr/include/ruby-1.9.1 -I/usr/include/ruby-1.9.1/ruby/backward -I/usr/include/ruby-1.9.1/${ruby_incdir}@" -e "s|DEFAULT_INCLUDES|RUBY_INCLUDES|" ruby/Makefile
-      
       sed -i -e "s|@LUA_EXTENSION_DIR@|/usr/${libdir}/lua/5.1|" lua/Makefile
-
   done
 fi
 if [ $opt_build -eq 1 ] ; then

@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.kddlabs.co.jp/X/kde/stable/4.9.5/src/qtruby-4.9.5.tar.xz'
 pkgbase=qtruby
-vers=4.9.5
-arch=x86_64
-# arch=i586
-build=P2
-src=qtruby-4.9.5
-OPT_CONFIG='-DWITH_Qwt5=OFF'
+vers=4.14.3
+url="ftp://ftp.ne.jp/X/kde/stable/${vers}/src/qtruby-${vers}.tar.xz"
+arch=`uname -m`
+build=P1
+src=qtruby-${vers}
+OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
 patchfiles=''
 compress=txz
@@ -73,12 +72,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -142,18 +142,18 @@ if [ $opt_config -eq 1 ] ; then
        fi
     done
 
-   cd $B
-       if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target"
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    cd $B
+    if [ -f $S/CMakeLists.txt ]; then
+      export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CC="gcc -isystem /usr/include $target" 
+      export CXX="g++ -isystem /usr/include $target "
+      cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+    fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -180,7 +180,7 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f setup.py ]; then
-        python setup.py install --root $P
+      python setup.py install --root $P
     elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
