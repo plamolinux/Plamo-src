@@ -1,0 +1,56 @@
+--- mate-polkit-1.7.2/po/ja.po.orig	2014-02-12 18:13:45.000000000 +0900
++++ mate-polkit-1.7.2/po/ja.po	2014-02-12 18:16:35.000000000 +0900
+@@ -61,7 +61,7 @@
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:522
+ msgid "Click to make changes"
+-msgstr "クリックして変更する"
++msgstr "Click to make changes"
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:537
+ #: ../polkitgtkmate/polkitlockbutton.c:639
+@@ -86,7 +86,7 @@
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:556
+ msgid "Click to prevent changes"
+-msgstr "クリックして変更しない"
++msgstr "Click to prevent changes"
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:571
+ msgid "Lock Tooltip"
+@@ -112,7 +112,7 @@
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:590
+ msgid "Click to lock down"
+-msgstr ""
++msgstr "Click to lock down"
+ 
+ #: ../polkitgtkmate/polkitlockbutton.c:605
+ msgid "Lock Down Tooltip"
+@@ -152,7 +152,7 @@
+ 
+ #: ../src/main.c:128
+ msgid "Click the icon to drop all elevated privileges"
+-msgstr "アイコンをクリックして与えられたすべての権限を破棄"
++msgstr "Click the icon to drop all elevated privileges"
+ 
+ #: ../src/polkitmateauthenticationdialog.c:159
+ msgid "Select user..."
+@@ -202,7 +202,7 @@
+ #: ../src/polkitmateauthenticationdialog.c:697
+ #, c-format
+ msgid "Click to edit %s"
+-msgstr "ここをクリックして %s を編集して下さい"
++msgstr "Click to edit %s"
+ 
+ #: ../src/polkitmateauthenticationdialog.c:711
+ msgid "<small><b>Vendor:</b></small>"
+@@ -211,7 +211,7 @@
+ #: ../src/polkitmateauthenticationdialog.c:713
+ #, c-format
+ msgid "Click to open %s"
+-msgstr "ここをクリックして %s を開いて下さい"
++msgstr "Click to open %s"
+ 
+ #: ../src/polkitmateauthenticationdialog.c:876
+ msgid "Authenticate"

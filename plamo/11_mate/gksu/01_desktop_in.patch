@@ -1,0 +1,14 @@
+--- /dev/null	2010-10-30 06:08:50.107935125 +0200
++++ gksu-2.0.2/gksu.desktop.in	2010-10-30 15:29:53.549770597 +0200
+@@ -0,0 +1,11 @@
++[Desktop Entry]
++_Name=Root Terminal
++_Comment=Opens a terminal as the root user, using gksu to ask for the password
++Encoding=UTF-8
++Exec=gksu /usr/bin/x-terminal-emulator
++Icon=gksu-root-terminal
++StartupNotify=true
++Terminal=false
++X-MultipleArgs=false
++Type=Application
++Categories=GTK;Utility;TerminalEmulator;

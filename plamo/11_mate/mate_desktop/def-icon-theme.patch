@@ -1,0 +1,11 @@
+--- mate-desktop-1.6.2.org/schemas/org.mate.interface.gschema.xml.in.in 2013-05-13 20:25:46.000000000 +0900
++++ mate-desktop-1.6.2/schemas/org.mate.interface.gschema.xml.in.in     2013-12-06 21:20:25.024052620 +0900
+@@ -61,7 +61,7 @@
+       <_description>Length of the cursor blink cycle, in milliseconds.</_description>
+     </key>
+     <key name="icon-theme" type="s">
+-      <default>'menta'</default>
++      <default>'matefaenza'</default>
+       <_summary>Icon Theme</_summary>
+       <_description>Icon theme to use for the panel, caja etc.</_description>
+     </key>

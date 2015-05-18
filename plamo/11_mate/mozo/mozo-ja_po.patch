@@ -1,0 +1,41 @@
+--- mozo-1.7.90/po/ja.po.orig	2014-02-24 19:55:31.000000000 +0900
++++ mozo-1.7.90/po/ja.po	2014-02-24 20:03:58.000000000 +0900
+@@ -49,31 +49,31 @@
+ 
+ #: ../data/mozo.ui.h:4
+ msgid "_Menus:"
+-msgstr "メニュー(_M):"
++msgstr "Menus(_M):"
+ 
+ #: ../data/mozo.ui.h:5
+ msgid "It_ems:"
+-msgstr "アイテム(_E):"
++msgstr "Items(_E):"
+ 
+ #: ../data/mozo.ui.h:6
+ msgid "_New Menu"
+-msgstr "新しいメニュー(_N)"
++msgstr "New Menu(_N)"
+ 
+ #: ../data/mozo.ui.h:7
+ msgid "Ne_w Item"
+-msgstr "新しいアイテム(_W)"
++msgstr "New Item(_W)"
+ 
+ #: ../data/mozo.ui.h:8
+ msgid "New _Separator"
+-msgstr "新しいセパレータ(_S)"
++msgstr "New Separator(_S)"
+ 
+ #: ../data/mozo.ui.h:9
+ msgid "Move Up"
+-msgstr "上へ"
++msgstr "Move Up"
+ 
+ #: ../data/mozo.ui.h:10
+ msgid "Move Down"
+-msgstr "下へ"
++msgstr "Move Down"
+ 
+ #: ../data/mozo.ui.h:11
+ msgid "Revert Changes?"
