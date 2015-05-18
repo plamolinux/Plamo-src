@@ -1,0 +1,21 @@
+diff -uprN openbabel-2.3.2/CMakeLists.txt openbabel-2.3.2-patched/CMakeLists.txt
+--- openbabel-2.3.2/CMakeLists.txt	2012-10-04 04:08:58.000000000 +0900
++++ openbabel-2.3.2-patched/CMakeLists.txt	2013-11-20 22:34:34.994040642 +0900
+@@ -45,7 +45,7 @@ set(BIN_INSTALL_DIR      "bin"
+   CACHE PATH "Install dir for binaries")
+ set(LIB_SUFFIX "" CACHE STRING "Suffix of the directory name, e.g. 64 for lib64")
+ if(UNIX)
+-  set(LIB_INSTALL_DIR    "lib${LIB_SUFFIX}"
++  set(LIB_INSTALL_DIR    "${LIB_INSTALL_DIR}"
+     CACHE PATH "Install dir for libraries")
+   if(ENABLE_VERSIONED_FORMATS)
+     set(OB_PLUGIN_INSTALL_DIR "${LIB_INSTALL_DIR}/openbabel/${BABEL_VERSION}"
+@@ -252,7 +252,7 @@ if(NOT MSVC)
+     }
+    " SCANDIR_NEEDS_CONST)
+ 
+-  set(OB_MODULE_PATH "${CMAKE_INSTALL_PREFIX}/${OB_PLUGIN_INSTALL_DIR}")
++  set(OB_MODULE_PATH "${OB_PLUGIN_INSTALL_DIR}")
+   add_definitions(-DOB_MODULE_PATH="\\"${OB_MODULE_PATH}\\"")
+ 
+   # Add some visibility support when using GCC

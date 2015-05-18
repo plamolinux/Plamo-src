@@ -1,0 +1,53 @@
+--- ./astrometry.net-0.50/util/makefile.common	2014-06-25 03:06:55.000000000 +0900
++++ ./util/makefile.common	2014-12-15 20:28:58.292942162 +0900
+@@ -24,13 +24,13 @@
+ 
+ # Installation subdirs
+ 
+-PY_BASE_INSTALL_DIR := $(INSTALL_DIR)/lib/python/astrometry
++PY_BASE_INSTALL_DIR := $(INSTALL_DIR)/${libdir}/python/astrometry
+ INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include/astrometry
+-LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
++LIB_INSTALL_DIR := $(INSTALL_DIR)/${libdir}
+ BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
+ DATA_INSTALL_DIR := $(INSTALL_DIR)/data
+-PY_BASE_LINK_DIR := ../lib/python/astrometry
+-ETC_INSTALL_DIR ?= $(INSTALL_DIR)/etc
++PY_BASE_LINK_DIR := ../${libdir}/python/astrometry
++ETC_INSTALL_DIR ?= $(INSTALL_DIR)/../etc
+ 
+ # If your build system stages an install in one place (say, a temp
+ # dir) and then copies everything to the final install place, (eg,
+
+$ diff -u ./astrometry.net-0.50/libkd/Makefile /tmp/build/libkd/Makefile
+--- ./astrometry.net-0.50/libkd/Makefile	2014-06-25 03:06:55.000000000 +0900
++++ ./libkd/Makefile	2014-12-15 20:41:09.286105441 +0900
+@@ -146,8 +146,8 @@
+ 	done
+ 	mkdir -p '$(INSTALL_DIR)/lib'
+ 	@for x in $(LIBKD); do \
+-		echo cp $$x '$(INSTALL_DIR)/lib'; \
+-		cp $$x '$(INSTALL_DIR)/lib'; \
++		echo cp $$x '$(INSTALL_DIR)/${libdir}'; \
++		cp $$x '$(INSTALL_DIR)/${libdir}'; \
+ 	done
+ 	-$(MAKE) install-spherematch
+ 
+kojima@plamo-next:/mnt/Srcs/A/Astrometry$ diff -u ./astrometry.net-0.50/blind/Makefile /tmp/build/blind/Makefile
+--- ./astrometry.net-0.50/blind/Makefile	2014-06-25 03:06:55.000000000 +0900
++++ ./blind/Makefile	2014-12-15 20:39:33.309463857 +0900
+@@ -245,10 +245,10 @@
+ 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+ 		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+ 	done
+-	mkdir -p '$(INSTALL_DIR)/lib'
++	mkdir -p '$(INSTALL_DIR)/${libdir}'
+ 	@for x in $(INSTALL_LIB); do \
+-		echo cp $$x '$(INSTALL_DIR)/lib'; \
+-		cp $$x '$(INSTALL_DIR)/lib'; \
++		echo cp $$x '$(INSTALL_DIR)/${libdir}'; \
++		cp $$x '$(INSTALL_DIR)/${libdir}'; \
+ 	done
+ 	mkdir -p '$(PY_INSTALL_DIR)'
+ 	@for x in $(PYTHON_INSTALL); do
+

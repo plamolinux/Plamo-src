@@ -1,0 +1,36 @@
+diff -upr libaccounts-glib-1.16/configure libaccounts-glib-1.16-patched/configure
+--- libaccounts-glib-1.16/configure	2014-01-04 01:39:45.000000000 +0900
++++ libaccounts-glib-1.16-patched/configure	2014-06-16 16:20:25.299038979 +0900
+@@ -13642,6 +13642,8 @@ if test -z "${HAVE_INTROSPECTION_TRUE}"
+   as_fn_error $? "conditional \"HAVE_INTROSPECTION\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
++HAVE_GCOV_TRUE='#'
++HAVE_GCOV_FALSE=
+ if test -z "${HAVE_GCOV_TRUE}" && test -z "${HAVE_GCOV_FALSE}"; then
+   as_fn_error $? "conditional \"HAVE_GCOV\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+diff -upr libaccounts-glib-1.16/libaccounts-glib/Makefile.am libaccounts-glib-1.16-patched/libaccounts-glib/Makefile.am
+--- libaccounts-glib-1.16/libaccounts-glib/Makefile.am	2014-01-04 01:27:22.000000000 +0900
++++ libaccounts-glib-1.16-patched/libaccounts-glib/Makefile.am	2014-06-16 16:20:48.299091389 +0900
+@@ -9,7 +9,7 @@ libaccounts_glib_la_CPPFLAGS = \
+ libaccounts_glib_la_CFLAGS = \
+ 	$(LIBACCOUNTS_CFLAGS) \
+ 	$(COVERAGE_CFLAGS) \
+-	-Wall -Werror
++	-Wall
+ libaccounts_glib_la_LIBADD = \
+ 	$(LIBACCOUNTS_LIBS)
+ libaccounts_glib_la_LDFLAGS = \
+diff -upr libaccounts-glib-1.16/libaccounts-glib/Makefile.in libaccounts-glib-1.16-patched/libaccounts-glib/Makefile.in
+--- libaccounts-glib-1.16/libaccounts-glib/Makefile.in	2014-01-04 01:39:44.000000000 +0900
++++ libaccounts-glib-1.16-patched/libaccounts-glib/Makefile.in	2014-06-16 16:20:57.905780726 +0900
+@@ -397,7 +397,7 @@ libaccounts_glib_la_CPPFLAGS = \
+ libaccounts_glib_la_CFLAGS = \
+ 	$(LIBACCOUNTS_CFLAGS) \
+ 	$(COVERAGE_CFLAGS) \
+-	-Wall -Werror
++	-Wall
+ 
+ libaccounts_glib_la_LIBADD = \
+ 	$(LIBACCOUNTS_LIBS)

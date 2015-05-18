@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
-arch=`uname -m`
-# arch=i686
-build=P1
-src=qtruby-4.14.3
+url='ftp://ftp.ne.jp/X/kde/stable/4.11.3/src/konsole-4.11.3.tar.xz'
+pkgbase=konsole
+vers=4.11.3
+arch=x86_64
+# arch=i586
+build=P2
+src=konsole-4.11.3
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
-patchfiles=''
+DOCS='COPYING COPYING.DOC COPYING.LIB COPYING.Unicode README'
+patchfiles='003-konsole-inputmethod.diff 004-konsole-fontsdraw.diff 000-konsole.diff'
 compress=txz
 ##############################################################
 
@@ -73,13 +73,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot

@@ -1,0 +1,20 @@
+Submitted By:            Igor Živković <contact at igor hyphen zivkovic dot from dot hr>
+Date:                    2013-08-12
+Initial Package Version: 2.9.3
+Upstream Status:         Reported
+Origin:                  Me
+Description:             Fixes compilation in case of missing QtDBus includes.
+
+diff -Naur soprano-2.9.3.orig/server/servercore.cpp soprano-2.9.3/server/servercore.cpp
+--- soprano-2.9.3.orig/server/servercore.cpp	2013-07-10 23:39:15.000000000 +0200
++++ soprano-2.9.3/server/servercore.cpp	2013-08-12 17:37:56.003923442 +0200
+@@ -41,7 +41,9 @@
+ #include <QtNetwork/QTcpServer>
+ #include <QtNetwork/QHostAddress>
+ #include <QtNetwork/QTcpSocket>
++#ifdef BUILD_DBUS_SUPPORT
+ #include <QtDBus/QtDBus>
++#endif
+ 
+ 
+ const quint16 Soprano::Server::ServerCore::DEFAULT_PORT = 5000;
