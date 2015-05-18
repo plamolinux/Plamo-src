@@ -1,19 +1,22 @@
 #!/bin/sh -x
 
 ######################################################################
-url="https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.9.3.tar.xz
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-20130504-3.9.patch
-    http://vdlinux.sourceforge.jp/dists/UNICON/vd_unicon-kernel-fonts-20040205.patch.bz2
-    git://aufs.git.sourceforge.net/gitroot/aufs/aufs3-standalone.git
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.9-panic_beep.patch
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.9-morse_code_panics.patch
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/current-tuxonice-for-3.9.2.patch.bz2
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/config-3.9.3-plamo64"
+url="https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.17.6.tar.xz
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-20141011-3.17.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-fonts-20140614.patch.bz2
+    git://git.code.sf.net/p/aufs/aufs3-standalone.git
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.17-panic_beep.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.17-morse_code_panics.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/current-tuxonice-for-3.17.patch.bz2
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/3.17-tuxonice_declare_fix.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-3.17-rc7.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-allow_unprivileged_mounts.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/config-3.17.6-plamo64"
 pkgbase=kernelsrc
-vers=3.9.3_plamo64
+vers=3.17.6_plamo64
 arch=noarch
 build=P1
-src=linux-3.9.3
+src=linux-3.17.6
 OPT_CONFIG=""
 DOCS=""
 ######################################################################
@@ -192,7 +195,6 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     case ${i##*.} in
-    xz) if [ ! -f ${i##*/} ] ; then wget --no-check-certificate $i ; fi ;;
     git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
     *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
     esac
@@ -204,7 +206,7 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     xz) tar xvpJf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/aufs3.x-rcN ; git reset --hard ef8e1b1 ) ;;
+        git checkout origin/aufs3.17 ; git reset --hard 8aed53f ) ;;
     esac
   done
 fi
@@ -213,20 +215,22 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  patch -Np1 -i $W/vd_unicon-kernel-20130504-3.9.patch
-  bunzip2 -c $W/vd_unicon-kernel-fonts-20040205.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/vd_unicon-kernel-20141011-3.17.patch
+  bunzip2 -c $W/vd_unicon-kernel-fonts-20140614.patch.bz2 | patch -Np1 -i -
   patch -Np1 -i $W/aufs3-standalone/aufs3-kbuild.patch
   patch -Np1 -i $W/aufs3-standalone/aufs3-base.patch
-  patch -Np1 -i $W/aufs3-standalone/aufs3-proc_map.patch
+  patch -Np1 -i $W/aufs3-standalone/aufs3-mmap.patch
   patch -Np1 -i $W/aufs3-standalone/aufs3-standalone.patch
   cp -av $W/aufs3-standalone/Documentation .
   cp -av $W/aufs3-standalone/fs .
-  cp -pv $W/aufs3-standalone/include/linux/aufs_type.h include/linux
   cp -pv $W/aufs3-standalone/include/uapi/linux/aufs_type.h include/uapi/linux
-  patch -Np1 -i $W/3.9-panic_beep.patch
-  patch -Np1 -i $W/3.9-morse_code_panics.patch
-  bunzip2 -c $W/current-tuxonice-for-3.9.2.patch.bz2 | patch -Np1 -i -
-  cp -p $W/config-3.9.3-plamo64 .config
+  patch -Np1 -i $W/3.17-panic_beep.patch
+  patch -Np1 -i $W/3.17-morse_code_panics.patch
+  bunzip2 -c $W/current-tuxonice-for-3.17.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/3.17-tuxonice_declare_fix.patch
+  patch -Np1 -i $W/overlayfs-3.17-rc7.patch
+  patch -Np1 -i $W/overlayfs-allow_unprivileged_mounts.patch
+  cp -p $W/config-3.17.6-plamo64 .config
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -334,8 +338,11 @@ if [ $opt_package -eq 1 ] ; then
   done
   convert
   prune_symlink $P/usr/src
-  touch -t `date '+%m%d0900'` $P/usr/src/$src/arch/microblaze/boot/dts
-  touch -t `date '+%m%d0900'` $P/usr/src/$src/include
+  touch -t `date '+%m%d0900'` $P/usr/src/$src/arch/arm/boot/dts/include
+  touch -t `date '+%m%d0900'` $P/usr/src/$src/arch/metag/boot/dts/include
+  touch -t `date '+%m%d0900'` $P/usr/src/$src/arch/mips/boot/dts/include
+  touch -t `date '+%m%d0900'` $P/usr/src/$src/arch/powerpc/boot/dts/include
+  touch -t `date '+%m%d0900'` $P/usr/src/$src/tools/testing/selftests/powerpc/copyloops
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/src -maxdepth 1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
