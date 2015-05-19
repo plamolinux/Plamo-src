@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
-arch=`uname -m`
-# arch=i686
+url='http://download.librdf.org/source/redland-bindings-1.0.16.1.tar.gz'
+pkgbase=redland_bindings
+vers=1.0.16.1
+arch=x86_64
+# arch=i586
 build=P1
-src=qtruby-4.14.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+src=redland-bindings-1.0.16.1
+OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL INSTALL.html LICENSE-2.0.txt LICENSE.html LICENSE.txt NEWS NEWS.html README README.html RELEASE.html TODO TODO.html'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,13 +73,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -119,52 +118,56 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
 
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p ${B[$i]}
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
 ######################################################################
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  for i in `seq 0 $((${#S[@]} - 1))` ; do
-    cd $S
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
     for patch in $patchfiles ; do
-       if [ ! -f ".$patch" ]; then
-           patch -p1 < $W/$patch
-           touch ".$patch"
-       fi
+       patch -p1 < $W/$patch
     done
 
-   cd $B
-       if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
+      
+      ruby_incdir=`ls /usr/include/ruby* | grep linux | tr -d '/' `
+      sed -i -e "s@RUBY_INCLUDES = -I/usr/lib/ruby/1.9.1/i686-linux@RUBY_INCLUDES = -I/usr/include/ruby-1.9.1 -I/usr/include/ruby-1.9.1/ruby/backward -I/usr/include/ruby-1.9.1/${ruby_incdir}@" -e "s@RUBY_INCLUDES = -I/usr/lib64/ruby/1.9.1/x86_64-linux@RUBY_INCLUDES = -I/usr/include/ruby-1.9.1 -I/usr/include/ruby-1.9.1/ruby/backward -I/usr/include/ruby-1.9.1/${ruby_incdir}@" -e "s|DEFAULT_INCLUDES|RUBY_INCLUDES|" ruby/Makefile
+      
+      sed -i -e "s|@LUA_EXTENSION_DIR@|/usr/${libdir}/lua/5.1|" lua/Makefile
+
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+    if [ -f Makefile ] ; then
+	export LDFLAGS='-Wl,--as-needed'
+	make -j3
     fi
   done
 fi
@@ -180,18 +183,18 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
   done
+# for delete perllocal.pod and it's directory
+  perl_version=`perl -v | grep "^This is" | cut -f2 -d"(" | cut -f1 -d ")" | tr -d 'v'`
+  rm -rf $P/usr/${libdir}/perl5/${perl_version}
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do

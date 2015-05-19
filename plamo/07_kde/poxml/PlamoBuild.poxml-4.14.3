@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/poxml-4.14.3.tar.xz'
+pkgbase=poxml
 vers=4.14.3
 arch=`uname -m`
 # arch=i686
 build=P1
-src=qtruby-4.14.3
+src=poxml-4.14.3
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS='COPYING COPYING.DOC'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -163,7 +163,8 @@ if [ $opt_build -eq 1 ] ; then
     if [ -f setup.py ]; then
         python setup.py build
     elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
+	export LDFLAGS='-Wl,--as-needed'
+	export PATH=$PATH:/opt/kde/bin
       make -j3
     fi
   done

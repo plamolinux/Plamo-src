@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
-arch=`uname -m`
-# arch=i686
+url='git clone git://anongit.kde.org/libkfbapi'
+# HEAD is now at b2d1717 Stop looking for xsltproc.
+pkgbase=libkfbapi
+vers=20140616
+arch=x86_64
+# arch=i586
 build=P1
-src=qtruby-4.14.3
+src=libkfbapi
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS='COPYING.LIB'
 patchfiles=''
 compress=txz
 ##############################################################

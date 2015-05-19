@@ -1,0 +1,24 @@
+--- kde-workspace-4.11.14/plasma/generic/applets/notifications/contents/ui/main.qml~	2014-11-07 07:36:58.000000000 +0900
++++ kde-workspace-4.11.14/plasma/generic/applets/notifications/contents/ui/main.qml	2015-01-14 12:32:18.979939556 +0900
+@@ -23,7 +23,7 @@
+ import org.kde.plasma.components 0.1 as PlasmaComponents
+ import org.kde.qtextracomponents 0.1
+ import org.kde.plasma.extras 0.1 as PlasmaExtras
+-import org.kde.locale 0.1 as KLocale
++// import org.kde.locale 0.1 as KLocale
+ 
+ import "plasmapackage:/ui/uiproperties.js" as UiProperties
+ 
+@@ -92,9 +92,9 @@
+         showJobs = plasmoid.readConfig("ShowJobs")
+     }
+ 
+-    KLocale.Locale {
+-        id: locale
+-    }
++//    KLocale.Locale {
++//        id: locale
++//    }
+ 
+     PlasmaCore.Svg {
+         id: configIconsSvg
