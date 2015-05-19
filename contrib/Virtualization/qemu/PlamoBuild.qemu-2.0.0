@@ -1,16 +1,17 @@
 #!/bin/sh
 
 ######################################################################
-url="http://wiki.qemu-project.org/download/qemu-2.0.0.tar.bz2"
 pkgbase=qemu
 vers=2.0.0
-arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+url="http://wiki.qemu-project.org/download/qemu-${vers}.tar.bz2"
+arch=`uname -m`
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var --disable-gtk
     --audio-drv-list=pa,esd,sdl,alsa,oss --enable-vnc-sasl"
 DOCS="LICENSE HACKING MAINTAINERS README COPYING VERSION
     CODING_STYLE COPYING.LIB Changelog"
+patchfiles="cve-2015-3456.patch"
 ######################################################################
 
 fscheck() {
@@ -203,6 +204,9 @@ if [ $opt_config -eq 1 ] ; then
   done
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
+    for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+    done
     if [ -f Makefile ] ; then
       make clean
     fi
@@ -268,6 +272,11 @@ if [ $opt_package -eq 1 ] ; then
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
   mv $docdir/qemu/{qemu-{doc,tech}.html,qmp-commands.txt} $docdir/$src
   mv $docdir/$src/{qemu-tech.html,{LICENSE,HACKING}.gz,qmp-commands.txt} $C
