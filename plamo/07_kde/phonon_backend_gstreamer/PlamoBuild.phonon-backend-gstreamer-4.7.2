@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
+url='http://download.kde.org/stable/phonon/phonon-backend-gstreamer/4.7.2/src/phonon-backend-gstreamer-4.7.2.tar.xz'
+pkgbase=phonon_backend_gstreamer
+vers=4.7.2
 arch=`uname -m`
-# arch=i686
 build=P1
-src=qtruby-4.14.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+src=phonon-backend-gstreamer-4.7.2
+OPT_CONFIG='-DCMAKE_BUILD_TYPE=Release'
+DOCS='COPYING.LIB'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -17,20 +16,40 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
-      else
-         echo "stripping $chk"
-         strip $chk
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
       fi
-    fi
-  done
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
 }
 
 gzip_dir() {
@@ -67,19 +86,61 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress_all() {
-  cd $P
-  strip_all
-}  
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -119,9 +180,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    gz) tar xvpzf ${i##*/} ;;
+    tar) tar xvpf ${i##*/} ;;
+    xz) tar xvpf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -144,13 +205,12 @@ if [ $opt_config -eq 1 ] ; then
     done
 
    cd $B
-       if [ -f $S/CMakeLists.txt ]; then
+      if [ -f $S/CMakeLists.txt ]; then
           export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
           export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
+          export CXX="g++ -isystem /usr/include $target"
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DPHONON_LIBRARY:FILEPATH=/opt/kde/${libdir}/libphonon.so.4 -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+      fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -160,9 +220,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -180,9 +238,10 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
@@ -191,35 +250,48 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
-
-######################################################################
-# path に lib があるバイナリは strip -g, ないバイナリは strip する
-######################################################################
-  cd $P
-  compress_all
-  if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
+    for loc in * ; do
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
   fi
+
+  cd $W
+  compress
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
-  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -241,17 +313,10 @@ if [ $opt_package -eq 1 ] ; then
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
-
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  convert
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

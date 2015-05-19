@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/kdepim-runtime-4.14.3.tar.xz'
+pkgbase=kdepim_runtime
 vers=4.14.3
 arch=`uname -m`
-# arch=i686
-build=P1
-src=qtruby-4.14.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+build=P3
+src=kdepim-runtime-4.14.3
+OPT_CONFIG='-Wno-dev'
+DOCS='COPYING COPYING.LIB README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -149,7 +148,7 @@ if [ $opt_config -eq 1 ] ; then
           export LDFLAGS='-Wl,--as-needed' 
           export CC="gcc -isystem /usr/include $target" 
           export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+	  cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
        fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"

@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
-arch=`uname -m`
-# arch=i686
+url='http://downloads.sourceforge.net/project/openbabel/openbabel/2.3.2/openbabel-2.3.2.tar.gz'
+pkgbase=openbabel
+vers=2.3.2
+arch=x86_64
+# arch=i586
 build=P1
-src=qtruby-4.14.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
-patchfiles=''
+src=openbabel-2.3.2
+OPT_CONFIG='-DBUILD_GUI:BOOL=OFF'
+DOCS='AUTHORS COPYING ChangeLog ChangeLog.1.x INSTALL NEWS README THANKS'
+patchfiles='openbabel.pc.cmake.patch openbabel-2.3.2-OB_MODULE_PATH.patch'
 compress=txz
 ##############################################################
 
@@ -73,13 +73,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -119,9 +118,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -144,13 +143,13 @@ if [ $opt_config -eq 1 ] ; then
     done
 
    cd $B
-       if [ -f $S/CMakeLists.txt ]; then
+      if [ -f $S/CMakeLists.txt ]; then
           export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
           export LDFLAGS='-Wl,--as-needed' 
           export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
+          export CXX="g++ -isystem /usr/include $target"
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix  ${OPT_CONFIG} $S
+      fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -160,9 +159,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -180,9 +177,10 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
@@ -191,6 +189,28 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 

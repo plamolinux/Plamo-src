@@ -1,11 +1,12 @@
 #!/bin/sh
 ##############################################################
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/korundum-4.14.3.tar.xz'
 pkgbase=korundum
 vers=4.14.3
-url="ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/korundum-${vers}.tar.xz"
 arch=`uname -m`
-build=P2
-src=korundum-${vers}
+# arch=i686
+build=P1
+src=korundum-4.14.3
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog README TODO'
 patchfiles=''

@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/pykde4-4.14.3.tar.xz'
+pkgbase=pykde4
 vers=4.14.3
 arch=`uname -m`
-# arch=i686
-build=P1
-src=qtruby-4.14.3
+build=P2
+src=pykde4-4.14.3
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS='AUTHORS COPYING COPYING.LESSER ChangeLog INSTALL NEWS README THANKS'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -144,17 +143,17 @@ if [ $opt_config -eq 1 ] ; then
     done
 
    cd $B
-       if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
+   if [ -f $S/CMakeLists.txt ]; then
+       export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       export CC="gcc -isystem /usr/include $target" 
+       export CXX="g++ -isystem /usr/include $target "
        cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+   fi
+   if [ $? != 0 ]; then
+       echo "configure error. $0 script stop"
+       exit 255
+   fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -186,6 +185,15 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
+
+    # what's the heck!
+    # Python doesn't look /opt/kde/${libdir}/python
+    py_ver="python`python --version |& cut -f2 -d' ' | cut -f1-2 -d'.'`"
+    mkdir -p $P/usr/${libdir}/${py_ver}/site-packages
+    ( cd $P/usr/${libdir}/${py_ver}/site-packages ; ln -sf ../../../../opt/kde/${libdir}/${py_ver}/site-packages/PyKDE4 .)
+    mkdir -p $P/usr/${libdir}/${py_ver}/site-packages/PyQt4/uic
+    ( cd $P/usr/${libdir}/${py_ver}/site-packages/PyQt4/uic ;
+      for dir in ../../../../../../opt/kde/${libdir}/${py_ver}/site-packages/PyQt4/uic/* ; do ln -sf $dir `basename $dir`; done )
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。

@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/kde-wallpapers-4.14.3.tar.xz'
+pkgbase=kde_wallpapers
 vers=4.14.3
-arch=`uname -m`
+arch=noarch
 # arch=i686
 build=P1
-src=qtruby-4.14.3
+src=kde-wallpapers-4.14.3
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS='LICENSE'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -90,15 +90,15 @@ docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
-else
-    target="-m32"
-    libdir="lib"
-    suffix=""
-fi
+#if [ $arch = "x86_64" ]; then
+#    target="-m64"
+#    libdir="lib64"
+#    suffix="64"
+#else
+#    target="-m32"
+#    libdir="lib"
+#    suffix=""
+#fi
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1

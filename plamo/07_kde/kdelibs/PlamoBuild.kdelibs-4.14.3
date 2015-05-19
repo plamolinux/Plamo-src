@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
+url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/kdelibs-4.14.3.tar.xz'
+pkgbase=kdelibs
 vers=4.14.3
-arch=`uname -m`
+arch=x86_64
 # arch=i686
 build=P1
-src=qtruby-4.14.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+src=kdelibs-4.14.3
+OPT_CONFIG=' -DDOCBOOKXML_CURRENTDTD_DIR:PATH=/usr/share/xml/docbook/schema/4.2/dtd'
+DOCS='AUTHORS COPYING COPYING.DOC COPYING.LIB INSTALL README README-WIN32.TXT TODO knewstuff licenses'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -142,6 +142,13 @@ if [ $opt_config -eq 1 ] ; then
            touch ".$patch"
        fi
     done
+
+    if [ ! -f kded/.gnome_menu ]; then
+
+	sed -i "s@{SYSCONF_INSTALL_DIR}/xdg/menus@& RENAME kde-applications.menu@" kded/CMakeLists.txt
+	sed -i "s@applications.menu@kde-&@" kded/kbuildsycoca.cpp
+	touch kded/.gnome_menu
+    fi
 
    cd $B
        if [ -f $S/CMakeLists.txt ]; then

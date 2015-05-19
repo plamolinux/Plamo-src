@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
-arch=`uname -m`
-# arch=i686
+url=''
+pkgbase=00_kde_links
+vers=0.2
+arch=noarch
+# arch=x86_64
+# arch=i586
 build=P1
-src=qtruby-4.14.3
+src=''
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS=''
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,13 +74,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -126,121 +126,60 @@ if [ $opt_download -eq 1 ] ; then
   done
 fi
 
-if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p ${B[$i]}
-  done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
-  for i in `seq 0 $((${#S[@]} - 1))` ; do
-    cd $S
-    for patch in $patchfiles ; do
-       if [ ! -f ".$patch" ]; then
-           patch -p1 < $W/$patch
-           touch ".$patch"
-       fi
-    done
+#########
+if [ $opt_package -eq 1 ]; then
 
-   cd $B
-       if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
-  done
+if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+mkdir -p $P/etc/dbus-1
+cat << "EOF" > $P/etc/dbus-1/system-local.conf.new
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+
+  <includedir>/opt/kde/etc/dbus-1/system.d</includedir>
+
+</busconfig>
+EOF
+
+mkdir -p $P/install
+
+cat << "EOF" > $P/install/doinst.sh
+if [ ! -d opt/kde/share ];  then
+    mkdir -p opt/kde/share
 fi
-if [ $opt_build -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
-    fi
-  done
+( cd opt/kde/share ; ln -sf ../../../usr/share/dbus-1 . )
+( cd opt/kde/share ; ln -sf ../../../usr/share/polkit-1 .)
+( cd opt/kde/share ; ln -sf ../../../usr/share/applications . )
+( cd opt/kde/share ; ln -sf ../../../usr/share/mime . )
+
+if [ ! -d opt/kde/etc ];  then
+    mkdir -p opt/kde/etc
 fi
-if [ $opt_package -eq 1 ] ; then
+( cd opt/kde/etc ; ln -sf ../../../etc/xdg . )
+
+if [ -f etc/dbus-1/system-local.conf ]; then
+  ( cd etc/dbus-1 ; mv system-local.conf system-local.conf.org )
+fi
+( cd etc/dbus-1 ; mv system-local.conf.new system-local.conf )
+
+EOF
+
+###################################################################
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
     if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
-  done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
-
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
-
-######################################################################
-# path に lib があるバイナリは strip -g, ないバイナリは strip する
-######################################################################
-  cd $P
-  compress_all
-  if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
-  fi
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
-  cd $W
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
-  done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
+  mkdir -p $docdir/$pkgbase-$vers
+  cp $W/PlamoBuild.$pkgbase-$vers $docdir/$pkgbase-$vers/
+  gzip $docdir/$pkgbase-$vers/PlamoBuild.$pkgbase-$vers
 
 ############################################################
 #   /usr/share/doc 以下には一般ユーザのIDのままのファイルが

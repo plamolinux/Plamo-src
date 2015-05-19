@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
-pkgbase=qtruby
-vers=4.14.3
+url='http://downloads.sourceforge.net/project/quazip/quazip/0.7.1/quazip-0.7.1.tar.gz'
+pkgbase=quazip
+vers=0.7.1
 arch=`uname -m`
-# arch=i686
 build=P1
-src=qtruby-4.14.3
+src=quazip-0.7.1
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
+DOCS='COPYING NEWS.txt README.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -149,7 +148,7 @@ if [ $opt_config -eq 1 ] ; then
           export LDFLAGS='-Wl,--as-needed' 
           export CC="gcc -isystem /usr/include $target" 
           export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+	  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_INSTALL_DIR:PATH=/usr/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
        fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
