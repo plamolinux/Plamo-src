@@ -1,11 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='https://red.libssh.org/attachments/download/107/libssh-0.6.4.tar.gz'
 pkgbase=libssh
-vers=0.6.4
+vers=0.6.5
+url='https://red.libssh.org/attachments/download/121/libssh-0.6.5.tar.xz'
+verify='https://red.libssh.org/attachments/download/120/libssh-0.6.5.tar.asc'
 arch=`uname -m`
 build=P1
-src=libssh-0.6.4
+src=libssh-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL README'
 patchfiles=''
@@ -75,6 +76,20 @@ compress_all() {
   strip_all
 }  
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
@@ -118,13 +133,35 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget --no-check-certificate $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget --no-check-certificate $i
+      xz -dc ${i##*/} > `basename ${i##*/} .xz`
+    fi
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvf ${i##*/} ;;
     esac
   done
 fi
