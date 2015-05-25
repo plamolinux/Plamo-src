@@ -3,9 +3,8 @@
 url='http://www.docbook.org/xml/5.0/docbook-5.0.zip'
 pkgbase=docbook_xml_5.0
 vers=5.0
-arch=x86_64
-# arch=i586
-build=P2
+arch=noarch
+build=P4
 src=docbook-5.0
 OPT_CONFIG=''
 DOCS=''
@@ -181,13 +180,8 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $url ; do
-    case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    esac
-  done
+  mkdir $src
+  unzip ${i##*/} -d $src
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -224,7 +218,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+    cd ${B[$i]}/docbook-5.0
 
     # pasted from http://cblfs.cross-lfs.org/index.php/DocBook-XML-5.0
 

@@ -1,0 +1,29 @@
+--- build/configure~	2010-09-03 06:31:00.000000000 +0900
++++ build/configure	2011-02-28 09:17:20.073947418 +0900
+@@ -39461,7 +39461,7 @@
+   $as_echo_n "(cached) " >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lxvidcore  $LIBS"
++LIBS="-lxvidcore -lpthread $LIBS"
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -39499,7 +39499,7 @@
+   $as_echo_n "(cached) " >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lxvidcore  $LIBS"
++LIBS="-lxvidcore -lpthread  $LIBS"
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -39537,7 +39537,7 @@
+   $as_echo_n "(cached) " >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lxvidcore  $LIBS"
++LIBS="-lxvidcore  -lpthread $LIBS"
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 

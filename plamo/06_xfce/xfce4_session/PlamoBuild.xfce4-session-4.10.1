@@ -3,10 +3,10 @@
 pkgbase=xfce4_session
 vers=4.10.1
 url="http://archive.xfce.org/src/xfce/xfce4-session/4.10/xfce4-session-${vers}.tar.bz2"
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
+arch=`uname -m`
+build=P2
 src=xfce4-session-${vers}
-OPT_CONFIG="--docdir=/usr/share/doc/${src} --disable-static --disable-debug"
+OPT_CONFIG="--docdir=/usr/share/doc/${src} --disable-static --disable-debug --disable-systemd"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz

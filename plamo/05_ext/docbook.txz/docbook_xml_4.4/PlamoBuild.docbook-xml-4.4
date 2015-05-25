@@ -3,9 +3,8 @@
 url='http://www.docbook.org/xml/4.4/docbook-xml-4.4.zip'
 pkgbase=docbook_xml_4.4
 vers=4.4
-arch=x86_64
-# arch=i586
-build=P2
+arch=noarch
+build=P4
 src=docbook-xml-4.4
 OPT_CONFIG=''
 DOCS='ChangeLog README'
@@ -183,13 +182,8 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $url ; do
-    case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    esac
-  done
+  mkdir $src
+  unzip ${i##*/} -d $src
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
