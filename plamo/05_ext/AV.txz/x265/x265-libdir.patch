@@ -1,0 +1,20 @@
+diff -uprN x265/source/CMakeLists.txt x265.org/source/CMakeLists.txt
+--- x265/source/CMakeLists.txt	2015-02-28 09:34:19.716319195 +0900
++++ x265.org/source/CMakeLists.txt	2015-02-28 09:26:55.120408999 +0900
+@@ -192,8 +192,14 @@ if(CHECKED_BUILD)
+ endif()
+ 
+ # Build options
+-set(LIB_INSTALL_DIR lib CACHE STRING "Install location of libraries")
+-set(BIN_INSTALL_DIR bin CACHE STRING "Install location of executables")
++if(X64)
++    set(LIB_INSTALL_DIR lib64 CACHE STRING "Install location of libraries")
++    set(BIN_INSTALL_DIR bin CACHE STRING "Install location of executables")
++else(X64)
++    set(LIB_INSTALL_DIR lib CACHE STRING "Install location of libraries")
++    set(BIN_INSTALL_DIR bin CACHE STRING "Install location of executables")
++endif(X64)
++
+ 
+ if(X64)
+     # NOTE: We only officially support 16bit-per-pixel compiles of x265
