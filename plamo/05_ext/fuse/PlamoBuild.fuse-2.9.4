@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/fuse/fuse-2.9.0.tar.gz'
 pkgbase=fuse
-vers=2.9.0
-arch=x86_64
-# arch=i586
+vers=2.9.4
+url="http://downloads.sourceforge.net/fuse/fuse-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=fuse-2.9.0
+src=fuse-${vers}
 OPT_CONFIG='--enable-lib --enable-util'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README README.NFS'
 patchfiles=''
