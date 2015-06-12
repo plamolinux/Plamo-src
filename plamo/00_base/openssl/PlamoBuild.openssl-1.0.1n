@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase=openssl
-vers=1.0.1m
+vers=1.0.1n
 url="http://www.openssl.org/source/openssl-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
-patchfiles='openssl-1.0.1m-fix_parallel_build-1.patch'
+patchfiles='openssl-1.0.1n-fix_parallel_build-1.patch'
 compress=txz
 ##############################################################
 
