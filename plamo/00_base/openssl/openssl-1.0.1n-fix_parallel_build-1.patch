@@ -1,8 +1,8 @@
-diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
---- openssl-1.0.1m.orig/Makefile.org	2015-03-19 22:37:10.000000000 +0900
-+++ openssl-1.0.1m/Makefile.org	2015-03-20 15:10:25.175576744 +0900
-@@ -273,17 +273,17 @@
- build_libs: build_crypto build_ssl build_engines
+diff -uNr openssl-1.0.1n.orig/Makefile.org openssl-1.0.1n/Makefile.org
+--- openssl-1.0.1n.orig/Makefile.org	2015-06-11 23:01:49.000000000 +0900
++++ openssl-1.0.1n/Makefile.org	2015-06-12 16:25:13.703488210 +0900
+@@ -276,17 +276,17 @@
+ build_libssl: build_ssl libssl.pc
  
  build_crypto:
 -	@dir=crypto; target=all; $(BUILD_ONE_CMD)
@@ -30,7 +30,7 @@ diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
  
  all_testapps: build_libs build_testapps
  build_testapps:
-@@ -538,9 +538,9 @@
+@@ -528,9 +528,9 @@
  dist_pem_h:
  	(cd crypto/pem; $(MAKE) -e $(BUILDENV) pem.h; $(MAKE) clean)
  
@@ -42,7 +42,7 @@ diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
  	@$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/bin \
  		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR) \
  		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)/engines \
-@@ -549,12 +549,19 @@
+@@ -539,12 +539,19 @@
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/misc \
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/certs \
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/private
@@ -63,7 +63,7 @@ diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
  	@set -e; liblist="$(LIBS)"; for i in $$liblist ;\
  	do \
  		if [ -f "$$i" ]; then \
-@@ -634,12 +641,7 @@
+@@ -624,12 +631,7 @@
  		done; \
  	done
  
@@ -77,9 +77,9 @@ diff -uNr openssl-1.0.1m.orig/Makefile.org openssl-1.0.1m/Makefile.org
  	@pod2man="`cd ./util; ./pod2mantest $(PERL)`"; \
  	here="`pwd`"; \
  	filecase=; \
-diff -uNr openssl-1.0.1m.orig/Makefile.shared openssl-1.0.1m/Makefile.shared
---- openssl-1.0.1m.orig/Makefile.shared	2015-01-20 21:33:36.000000000 +0900
-+++ openssl-1.0.1m/Makefile.shared	2015-03-20 15:10:25.175576744 +0900
+diff -uNr openssl-1.0.1n.orig/Makefile.shared openssl-1.0.1n/Makefile.shared
+--- openssl-1.0.1n.orig/Makefile.shared	2015-06-11 22:01:06.000000000 +0900
++++ openssl-1.0.1n/Makefile.shared	2015-06-12 16:25:13.703488210 +0900
 @@ -105,6 +105,7 @@
      SHAREDFLAGS="$${SHAREDFLAGS:-$(CFLAGS) $(SHARED_LDFLAGS)}"; \
      LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
@@ -96,9 +96,9 @@ diff -uNr openssl-1.0.1m.orig/Makefile.shared openssl-1.0.1m/Makefile.shared
  			( $(SET_X); rm -f $$SHLIB$$SHLIB_SUFFIX; \
  			  ln -s $$prev $$SHLIB$$SHLIB_SUFFIX ); \
  		fi; \
-diff -uNr openssl-1.0.1m.orig/crypto/Makefile openssl-1.0.1m/crypto/Makefile
---- openssl-1.0.1m.orig/crypto/Makefile	2015-03-19 22:38:24.000000000 +0900
-+++ openssl-1.0.1m/crypto/Makefile	2015-03-20 15:10:25.175576744 +0900
+diff -uNr openssl-1.0.1n.orig/crypto/Makefile openssl-1.0.1n/crypto/Makefile
+--- openssl-1.0.1n.orig/crypto/Makefile	2015-06-11 23:04:59.000000000 +0900
++++ openssl-1.0.1n/crypto/Makefile	2015-06-12 16:25:13.703488210 +0900
 @@ -85,11 +85,11 @@
  	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
  
@@ -140,9 +140,9 @@ diff -uNr openssl-1.0.1m.orig/crypto/Makefile openssl-1.0.1m/crypto/Makefile
  
  lint:
  	@target=lint; $(RECURSIVE_MAKE)
-diff -uNr openssl-1.0.1m.orig/engines/Makefile openssl-1.0.1m/engines/Makefile
---- openssl-1.0.1m.orig/engines/Makefile	2015-03-19 22:38:35.000000000 +0900
-+++ openssl-1.0.1m/engines/Makefile	2015-03-20 15:10:25.175576744 +0900
+diff -uNr openssl-1.0.1n.orig/engines/Makefile openssl-1.0.1n/engines/Makefile
+--- openssl-1.0.1n.orig/engines/Makefile	2015-06-11 23:05:09.000000000 +0900
++++ openssl-1.0.1n/engines/Makefile	2015-06-12 16:25:13.703488210 +0900
 @@ -72,7 +72,7 @@
  
  all:	lib subdirs
@@ -170,9 +170,9 @@ diff -uNr openssl-1.0.1m.orig/engines/Makefile openssl-1.0.1m/engines/Makefile
  
  tags:
  	ctags $(SRC)
-diff -uNr openssl-1.0.1m.orig/test/Makefile openssl-1.0.1m/test/Makefile
---- openssl-1.0.1m.orig/test/Makefile	2015-03-19 22:38:37.000000000 +0900
-+++ openssl-1.0.1m/test/Makefile	2015-03-20 15:11:56.990007602 +0900
+diff -uNr openssl-1.0.1n.orig/test/Makefile openssl-1.0.1n/test/Makefile
+--- openssl-1.0.1n.orig/test/Makefile	2015-06-11 23:05:11.000000000 +0900
++++ openssl-1.0.1n/test/Makefile	2015-06-12 16:25:13.703488210 +0900
 @@ -130,7 +130,7 @@
  tags:
  	ctags $(SRC)
@@ -182,7 +182,7 @@ diff -uNr openssl-1.0.1m.orig/test/Makefile openssl-1.0.1m/test/Makefile
  
  apps:
  	@(cd ..; $(MAKE) DIRS=apps all)
-@@ -388,118 +388,118 @@
+@@ -389,118 +389,118 @@
  		link_app.$${shlib_target}
  
  $(RSATEST)$(EXE_EXT): $(RSATEST).o $(DLIBCRYPTO)
@@ -339,7 +339,7 @@ diff -uNr openssl-1.0.1m.orig/test/Makefile openssl-1.0.1m/test/Makefile
  
  #$(AESTEST).o: $(AESTEST).c
  #	$(CC) -c $(CFLAGS) -DINTERMEDIATE_VALUE_KAT -DTRACE_KAT_MCT $(AESTEST).c
-@@ -512,7 +512,7 @@
+@@ -513,7 +513,7 @@
  #	fi
  
  dummytest$(EXE_EXT): dummytest.o $(DLIBCRYPTO)
