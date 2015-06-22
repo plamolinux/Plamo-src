@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase=util_linux
-vers=2.25.2
+vers=2.26.2
 url="http://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
 arch=`uname -m`
-build=P2
+build=P1
 src=util-linux-${vers}
 OPT_CONFIG='--disable-su --disable-login --disable-sulogin --enable-partx --enable-write --without-python --disable-pylibmount --without-user --without-systemd --without-systemdsystemunitdir --disable-chfn-chsh --disable-mesg --disable-last --disable-nologin --disable-setpriv'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
-patchfiles='CVE-2014-9114.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
