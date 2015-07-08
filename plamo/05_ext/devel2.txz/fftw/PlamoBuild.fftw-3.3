@@ -188,7 +188,6 @@ if [ $opt_download -eq 1 ] ; then
   done
 fi
 
-if [ $opt_config -eq 1 -o $opt_build -eq 1 ]; then
 CFLAGS+=" -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math"
 CONFIGURE="./configure F77=gfortran --prefix=/usr --libdir=/usr/${libdir} --enable-shared --enable-threads"
 
@@ -219,10 +218,8 @@ $CONFIGURE --enable-float --enable-sse
 make -j4
 make DESTDIR=${P} install
 
-fi
-
 ##### packageing
-if [ $opt_package -eq 1 ]; then
+
 mkdir -p $docdir/$src
 
 cd $W
@@ -244,10 +241,8 @@ for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
 done
 
 cd $P
-sudo chown -R root.root *
+sudo chown -R root.root
 /sbin/makepkg ../$pkg.$compress <<EOF
 y
 1
 EOF
-
-fi

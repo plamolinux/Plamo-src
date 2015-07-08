@@ -1,15 +1,18 @@
 #!/bin/sh
 ##############################################################
-url='http://www.oberhumer.com/opensource/lzo/download/lzo-2.06.tar.gz'
-pkgbase=lzo
-vers=2.06
+url='http://tuxera.com/opensource/ntfs-3g_ntfsprogs-2015.3.14.tgz'
+url='https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=786475;att=1;msg=5;filename=0002-CVE-2015-3202.patch'
+url='https://github.com/PhantomX/slackbuilds/blob/master/ntfs-3g/patches/ntfs-3g_ntfsprogs-2011.10.9-RC-ntfsck-unsupported-return-0.patch'
+#url='http://ftp.jaist.ac.jp/pub/Linux/Fedora/development/rawhide/source/SRPMS/n/ntfs-3g-2015.3.14-2.fc23.src.rpm'
+pkgbase=ntfs_3g_ntfsprogs
+vers=2015.3.14
 arch=x86_64
-# arch=i586
+#arch=i686
 build=P1
-src=lzo-2.06
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
-patchfiles=''
+src=ntfs-3g_ntfsprogs-2015.3.14
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO.ntfsprogs'
+patchfiles='0002-CVE-2015-3202.patch ntfs-3g_ntfsprogs-2011.10.9-RC-ntfsck-unsupported-return-0.patch'
 compress=txz
 ##############################################################
 
@@ -172,7 +175,7 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P/${libdir}
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do

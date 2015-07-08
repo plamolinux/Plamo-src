@@ -6,7 +6,7 @@ vers=3.6.2
 # arch=x86_64
 # arch=i586
 arch=noarch
-build=P1
+build=P2
 src=gnome-icon-theme-3.6.2
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING NEWS README TODO'
@@ -253,6 +253,7 @@ if [ $opt_package -eq 1 ] ; then
   cat <<"EOF" > $P/install/initpkg
 /usr/bin/update-mime-database /usr/share/mime
 /usr/bin/update-desktop-database /usr/share/applications
+touch /usr/share/applications/mimeinfo.cache
 EOF
   
 

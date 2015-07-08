@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
+url='http://ftp.gnome.org/pub/gnome/sources/evince/2.32/evince-2.32.0.tar.bz2'
 pkgbase=evince
 vers=2.32.0
-url="http://ftp.gnome.org/pub/gnome/sources/evince/2.32/evince-2.32.0.tar.bz2"
-verify="http://ftp.gnome.org/pub/gnome/sources/evince/2.32/evince-2.32.0.sha256sum"
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=x86_64
+# arch=i586
 build=P5
-src=evince-${vers}
+src=evince-2.32.0
 OPT_CONFIG='--disable-nautilus --without-keyring --enable-pixbuf'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README TODO'
 patchfiles=''
@@ -72,20 +72,6 @@ compress_all() {
   strip_all
 }  
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      return 1
-    fi
-  done
-  return 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -129,24 +115,6 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
   done
   for i in $url ; do
     case ${i##*.} in

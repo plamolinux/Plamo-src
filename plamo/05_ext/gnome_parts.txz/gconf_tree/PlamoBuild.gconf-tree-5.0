@@ -5,7 +5,7 @@ pkgbase=gconf_tree
 vers=5.0
 arch=noarch
 # arch=i586
-build=P4
+build=P5
 src=gconf-tree
 OPT_CONFIG=''
 DOCS=''
@@ -172,6 +172,7 @@ if [ $opt_package -eq 1 ] ; then
   # これはヘンにコンパイル済のデータを持っていくより，コンパイルしたが方がよさげ
   cat <<EOF > $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas
+touch /usr/share/glib-2.0/schemas/gschemas.compiled
 EOF
 
   mkdir -p $docdir/$src
