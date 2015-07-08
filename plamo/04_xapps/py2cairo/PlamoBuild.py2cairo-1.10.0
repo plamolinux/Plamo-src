@@ -1,17 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2'
+pkgbase=py2cairo
+vers=1.10.0
 arch=x86_64
 # arch=i686
-build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+build=P1
+src=py2cairo-1.10.0
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1 INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +73,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
@@ -147,32 +144,23 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-    if [ -f setup.py ]; then
-        python ./setup.py config        
-    elif [ -f Makefile.PL ]; then
-        perl ./Makefile.PL
-    elif [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CC="gcc -isystem /usr/include $target" 
-       export CXX="g++ -isystem /usr/include $target "
-       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     python_vers=`python --version |& grep " 2."`
+    if [ "$python_vers.x" == "x." ]; then
+	echo "You need python as python2"
+	echo "change link about python"
+	exit
     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+
+    ./waf --prefix=/usr --libdir=/usr/${libdir} configure
+
+
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
-    fi
+    ./waf build
+    
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -187,12 +175,8 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+    ./waf --destdir=$P install
+    
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。

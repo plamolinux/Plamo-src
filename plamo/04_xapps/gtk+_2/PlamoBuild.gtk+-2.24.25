@@ -1,17 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
-arch=x86_64
-# arch=i686
+url='http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.25.tar.xz'
+pkgbase=gtk+_2
+vers=2.24.25
+arch=`uname -m`
 build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+src=gtk+-2.24.25
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING ChangeLog ChangeLog.gtk-async-file-chooser ChangeLog.gtk-printing ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-10 ChangeLog.pre-2-12 ChangeLog.pre-2-14 ChangeLog.pre-2-16 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-2-8 HACKING INSTALL NEWS NEWS.pre-1-0 README README.commits README.win32'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +72,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
@@ -122,9 +118,10 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
     esac
   done
 fi
@@ -143,33 +140,33 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    cp -p docs/tutorial/Makefile.in{,.orig}
+    sed -i -e "s|db2html gtk-tut.sgml;|mkdir gtk-tut; (cd gtk-tut; db2html ../gtk-tut.sgml);|" docs/tutorial/Makefile.in
+
+    cp -p docs/faq/Makefile.in{,.orig}
+    sed -i -e "s|db2html gtk-faq.sgml;|mkdir gtk-faq; (cd gtk-gaq; db2html ../gtk-faq.sgml);|" docs/faq/Makefile.in
+
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
 
-    if [ -f setup.py ]; then
-        python ./setup.py config        
-    elif [ -f Makefile.PL ]; then
-        perl ./Makefile.PL
-    elif [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CC="gcc -isystem /usr/include $target" 
-       export CXX="g++ -isystem /usr/include $target "
-       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+  if [ -x configure ] ; then
+      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CC="gcc -isystem /usr/include $target" 
+      export CXX="g++ -isystem /usr/include $target "
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  fi
+  if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+  fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -187,9 +184,10 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
@@ -198,6 +196,10 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  mkdir -p $P/install
+  cat <<"EOF" > $P/install/initpkg
+gtk-query-immodules-2.0 --update-cache
+EOF
 
 # remove locales except ja
 # 

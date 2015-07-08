@@ -1,17 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://download.savannah.gnu.org/releases/m17n/m17n-lib-1.6.4.tar.gz'
+pkgbase=m17n_lib
+vers=1.6.4
 arch=x86_64
-# arch=i686
-build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+# arch=i586
+build=P1
+src=m17n-lib-1.6.4
+OPT_CONFIG='--disable-static'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +73,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
@@ -171,7 +168,7 @@ if [ $opt_build -eq 1 ] ; then
         python setup.py build
     elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make -j1
     fi
   done
 fi

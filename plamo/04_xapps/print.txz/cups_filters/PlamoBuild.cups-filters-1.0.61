@@ -1,17 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://www.openprinting.org/download/cups-filters/cups-filters-1.0.61.tar.xz'
+pkgbase=cups_filters
+vers=1.0.61
 arch=x86_64
 # arch=i686
 build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+src=cups-filters-1.0.61
+OPT_CONFIG='--disable-static'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +73,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
@@ -194,6 +191,9 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
+
+  chmod -x $P/etc/rc.d/init.d/cups-browsed
+
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################

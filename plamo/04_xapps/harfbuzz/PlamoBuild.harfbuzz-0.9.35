@@ -1,17 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
-arch=x86_64
-# arch=i686
+url='http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.35.tar.bz2'
+pkgbase=harfbuzz
+vers=0.9.35
+arch=`uname -m`
 build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+src=harfbuzz-0.9.35
+OPT_CONFIG='--disable-static'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,13 +72,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -147,17 +142,13 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-    if [ -f setup.py ]; then
-        python ./setup.py config        
-    elif [ -f Makefile.PL ]; then
-        perl ./Makefile.PL
-    elif [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CC="gcc -isystem /usr/include $target" 
-       export CXX="g++ -isystem /usr/include $target "
-       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -167,9 +158,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -187,9 +176,10 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
@@ -198,6 +188,28 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 

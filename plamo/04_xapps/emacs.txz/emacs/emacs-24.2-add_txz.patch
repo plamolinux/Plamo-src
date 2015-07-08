@@ -1,7 +1,7 @@
-diff -upr emacs-24.2/lisp/eshell/esh-util.el emacs-24.2.patched/lisp/eshell/esh-util.el
---- emacs-24.2/lisp/eshell/esh-util.el	2012-08-23 14:33:42.000000000 +0900
-+++ emacs-24.2.patched/lisp/eshell/esh-util.el	2012-11-09 11:11:03.925301499 +0900
-@@ -70,7 +70,7 @@ Setting this to nil is offered as an aid
+diff -ur emacs-24.4.orig/lisp/eshell/esh-util.el emacs-24.4/lisp/eshell/esh-util.el
+--- emacs-24.4.orig/lisp/eshell/esh-util.el	2014-03-21 14:34:40.000000000 +0900
++++ emacs-24.4/lisp/eshell/esh-util.el	2014-10-29 15:45:20.878182611 +0900
+@@ -72,7 +72,7 @@
    :group 'eshell-util)
  
  (defcustom eshell-tar-regexp
@@ -10,10 +10,10 @@ diff -upr emacs-24.2/lisp/eshell/esh-util.el emacs-24.2.patched/lisp/eshell/esh-
    "Regular expression used to match tar file names."
    :version "24.1"			; added xz
    :type 'regexp
-diff -upr emacs-24.2/lisp/ibuffer.el emacs-24.2.patched/lisp/ibuffer.el
---- emacs-24.2/lisp/ibuffer.el	2012-08-23 14:33:42.000000000 +0900
-+++ emacs-24.2.patched/lisp/ibuffer.el	2012-11-09 11:08:50.024889925 +0900
-@@ -331,7 +331,7 @@ directory, like `default-directory'."
+diff -ur emacs-24.4.orig/lisp/ibuffer.el emacs-24.4/lisp/ibuffer.el
+--- emacs-24.4.orig/lisp/ibuffer.el	2014-03-21 14:34:40.000000000 +0900
++++ emacs-24.4/lisp/ibuffer.el	2014-10-29 15:46:05.650334998 +0900
+@@ -332,7 +332,7 @@
    :group 'ibuffer)
  
  (defcustom ibuffer-compressed-file-name-regexp
@@ -22,33 +22,33 @@ diff -upr emacs-24.2/lisp/ibuffer.el emacs-24.2.patched/lisp/ibuffer.el
    "Regexp to match compressed file names."
    :version "24.1"                       ; added xz
    :type 'regexp
-diff -upr emacs-24.2/lisp/ldefs-boot.el emacs-24.2.patched/lisp/ldefs-boot.el
---- emacs-24.2/lisp/ldefs-boot.el	2012-08-23 14:33:42.000000000 +0900
-+++ emacs-24.2.patched/lisp/ldefs-boot.el	2012-11-09 11:09:28.311673337 +0900
-@@ -9434,7 +9434,7 @@ Use the `etags' program to make a tags t
+diff -ur emacs-24.4.orig/lisp/ldefs-boot.el emacs-24.4/lisp/ldefs-boot.el
+--- emacs-24.4.orig/lisp/ldefs-boot.el	2014-10-17 13:51:02.000000000 +0900
++++ emacs-24.4/lisp/ldefs-boot.el	2014-10-29 15:46:35.475102159 +0900
+@@ -9366,7 +9366,7 @@
  
  (custom-autoload 'tags-table-list "etags" t)
  
 -(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
 +(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz")) "\
- *List of extensions tried by etags when jka-compr is used.
- An empty string means search the non-compressed file.
- These extensions will be tried only if jka-compr was activated
-diff -upr emacs-24.2/lisp/loaddefs.el emacs-24.2.patched/lisp/loaddefs.el
---- emacs-24.2/lisp/loaddefs.el	2012-08-24 18:57:32.000000000 +0900
-+++ emacs-24.2.patched/lisp/loaddefs.el	2012-11-09 11:09:43.238385848 +0900
-@@ -9434,7 +9434,7 @@ Use the `etags' program to make a tags t
+ List of extensions tried by etags when `auto-compression-mode' is on.
+ An empty string means search the non-compressed file.")
+ 
+diff -ur emacs-24.4.orig/lisp/loaddefs.el emacs-24.4/lisp/loaddefs.el
+--- emacs-24.4.orig/lisp/loaddefs.el	2014-10-18 00:57:21.000000000 +0900
++++ emacs-24.4/lisp/loaddefs.el	2014-10-29 15:46:55.549400577 +0900
+@@ -9366,7 +9366,7 @@
  
  (custom-autoload 'tags-table-list "etags" t)
  
 -(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
 +(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz")) "\
- *List of extensions tried by etags when jka-compr is used.
- An empty string means search the non-compressed file.
- These extensions will be tried only if jka-compr was activated
-diff -upr emacs-24.2/lisp/pcmpl-gnu.el emacs-24.2.patched/lisp/pcmpl-gnu.el
---- emacs-24.2/lisp/pcmpl-gnu.el	2012-08-23 14:33:42.000000000 +0900
-+++ emacs-24.2.patched/lisp/pcmpl-gnu.el	2012-11-09 11:10:42.718568952 +0900
+ List of extensions tried by etags when `auto-compression-mode' is on.
+ An empty string means search the non-compressed file.")
+ 
+diff -ur emacs-24.4.orig/lisp/pcmpl-gnu.el emacs-24.4/lisp/pcmpl-gnu.el
+--- emacs-24.4.orig/lisp/pcmpl-gnu.el	2014-03-21 14:34:40.000000000 +0900
++++ emacs-24.4/lisp/pcmpl-gnu.el	2014-10-29 15:48:02.059264808 +0900
 @@ -90,7 +90,7 @@
      (lambda (entry)
        (when (and (file-readable-p entry)
@@ -62,8 +62,8 @@ diff -upr emacs-24.2/lisp/pcmpl-gnu.el emacs-24.2.patched/lisp/pcmpl-gnu.el
        (pcomplete-uniqify-list rules))))
  
  (defcustom pcmpl-gnu-tarfile-regexp
--  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
+-  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
 +  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\)\\'"
    "A regexp which matches any tar archive."
+   :version "24.3"                       ; added xz
    :type 'regexp
-   :group 'pcmpl-gnu)

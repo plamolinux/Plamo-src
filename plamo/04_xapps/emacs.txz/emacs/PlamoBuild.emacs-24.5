@@ -1,14 +1,23 @@
 #!/bin/sh
 ##############################################################
-url='http://sourceforge.net/projects/navi2ch/files/navi2ch/navi2ch-1.8.4/navi2ch-1.8.4.tar.gz/download'
-pkgbase=navi2ch
-vers=1.8.4
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P2
-src=navi2ch-1.8.4
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL NEWS README TODO navi2ch-history.el'
-patchfiles='patch-aa'
+pkgbase=emacs
+vers=24.5
+url="http://ftp.jaist.ac.jp/pub/GNU/emacs/emacs-${vers}.tar.xz"
+verify=${url}.sig
+arch=`uname -m`
+build=P1
+src=${pkgbase}-${vers}
+OPT_CONFIG='--with-xim --without-imagemagick --with-x --with-x-toolkit=gtk3 --without-rsvg --without-gsettings --without-selinux'
+#OPT_CONFIG='--without-all --without-x'
+DOCS='COPYING ChangeLog INSTALL README'
+# this patch is bug with glib 2.31 and emacs >= 23.3
+# http://debbugs.gnu.org/cgi/bugreport.cgi?bug=9754
+# https://bugs.launchpad.net/ubuntu/+source/emacs23/+bug/902043
+#patchfiles='emacs-xgselect.patch'
+patchfiles='emacs-24.2-add_txz.patch'
+#file1=menu-tree.el
+file1_url="http://cdn11.atwikiimg.com/s-irie/?plugin=ref&serial=91"
+file2='http://homepage1.nifty.com/blankspace/emacs/wb-line-number.el'
 compress=txz
 ##############################################################
 
@@ -135,6 +144,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -150,7 +173,10 @@ mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
-pkg=$pkgbase-$vers-noarch-$build
+pkg=${pkgbase}-$vers-$arch-$build
+pkgmini=${pkgbase}_mini-$vers-$arch-$build
+pkgbin=${pkgbase}_bin-$vers-$arch-$build
+pkglib=${pkgbase}_lib-$vers-noarch-$build
 
 if [ $arch = "x86_64" ]; then
     target="-m64"
@@ -177,13 +203,34 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
+  #if [ ! -f menu-tree-el-0.97/"${file1}" ] ; then wget -O ${file1}.tar.gz $file1_url ; tar xvf ${file1}.tar.gz; fi
+  if [ ! -f ${file2##*/} ] ; then wget $file2 ; fi
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -199,9 +246,9 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
 
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
@@ -220,7 +267,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make -j4
     fi
   done
 fi
@@ -247,6 +294,10 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/usr/share/emacs/site-lisp
+  #install $W/menu-tree-el-0.97/$file1 $P/usr/share/emacs/site-lisp/
+  install $W/${file2##*/} $P/usr/share/emacs/site-lisp/
+
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
       for omf in $P/usr/share/omf/* ; do
@@ -291,6 +342,9 @@ EOF
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/usr/share/doc/$src
+  #cp $W/menu-tree-el-0.97/$file1 $P/usr/share/doc/$src
+  cp $W/${file2##*/} $P/usr/share/doc/$src
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -328,8 +382,26 @@ EOF
 # tar rvpf $pkg.tar -C $P usr/share/doc/$src
 # touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
 # mv $pkg.tar.gz $pkg.tgz
+  mkdir -p $P.${pkg}/usr/bin
+  mkdir -p $P.${pkg}/usr/share/doc
+  rm $P/usr/bin/emacs
+  mv $P/usr/bin/emacs-$vers $P.${pkg}/usr/bin/emacs-$vers
+  (cd $P.${pkg}/usr/bin; ln -sf emacs-$vers emacs)
+  mv $P/usr/share/doc/$src $P.${pkg}/usr/share/doc/${pkgbase}-$vers
+  cd $P.${pkg}
+  /sbin/makepkg ../${pkg}.$compress <<EOF
+y
+1
+EOF
+  mkdir -p $P.${pkgbin}/usr
+  mv $P/usr/bin $P/usr/libexec $P.${pkgbin}/usr
+  cd $P.${pkgbin}
+  /sbin/makepkg ../${pkgbin}.$compress <<EOF
+y
+1
+EOF
   cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
+  /sbin/makepkg ../${pkglib}.$compress <<EOF
 y
 1
 EOF

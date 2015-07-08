@@ -1,18 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://www.cups.org/software/2.0.0/cups-2.0.0-source.tar.bz2'
+pkgbase=cups
+vers=2.0.0
 arch=x86_64
 # arch=i686
-build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
-patchfiles=''
+build=P1
+src=cups-2.0.0
+OPT_CONFIG='--disable-systemd'
+DOCS='CHANGES-1.0.txt CHANGES-1.1.txt CHANGES-1.2.txt CHANGES-1.3.txt CHANGES-1.4.txt CHANGES-1.5.txt CHANGES-1.6.txt CHANGES-1.7.txt CHANGES-IPPTOOL.txt CHANGES.txt CREDITS.txt INSTALL.txt IPPTOOL.txt LICENSE.txt README.txt'
+patchfiles='cups-2.0.0-template-ja.patch'
 compress=txz
 ##############################################################
 
@@ -76,7 +73,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
@@ -143,9 +140,19 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    # BLFS setup
+    sed -i 's:555:755:g;s:444:644:g' Makedefs.in 
+    sed -i '/MAN.*.EXT/s:.gz::g' \
+	configure config-scripts/cups-manpages.m4
+    sed -i '/LIBGCRYPTCONFIG/d' config-scripts/cups-ssl.m4
+
+    # Dirty hack .. X-<
+    if [ "$arch" = "x86_64" ]; then
+	sed -i "s|/lib/security/|/lib64/security/|" config-scripts/cups-pam.m4
+    fi
+
+    aclocal  -I config-scripts
+    autoconf -I config-scripts
 
     if [ -f setup.py ]; then
         python ./setup.py config        
@@ -191,7 +198,7 @@ if [ $opt_package -eq 1 ] ; then
         python setup.py install --root $P
     elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
+      make install DSTROOT=$P
     fi
   done
 ######################################################################
@@ -201,15 +208,15 @@ if [ $opt_package -eq 1 ] ; then
 
 # remove locales except ja
 # 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+#  for loc_dir in `find $P -name locale` ; do
+#      pushd $loc_dir
+#      for loc in * ; do
+#          if [ "$loc" != "ja" ]; then
+#              rm -rf $loc
+#          fi
+#      done
+#      popd
+#   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する

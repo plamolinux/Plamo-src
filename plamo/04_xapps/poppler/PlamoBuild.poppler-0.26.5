@@ -1,17 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://poppler.freedesktop.org/poppler-0.26.5.tar.xz'
+pkgbase=poppler
+vers=0.26.5
 arch=x86_64
 # arch=i686
-build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+build=P1
+src=poppler-0.26.5
+OPT_CONFIG='--enable-zlib --disable-static --enable-xpdf-headers --enable-libcurl'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README-XPDF TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +73,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then

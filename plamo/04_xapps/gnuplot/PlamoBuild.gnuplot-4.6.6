@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='https://sourceforge.net/projects/wxwindows/files/2.8.12/wxWidgets-2.8.12.tar.gz'
-pkgbase=wxWidgets
-vers=2.8.12
+url='http://downloads.sourceforge.net/project/gnuplot/gnuplot/4.6.6/gnuplot-4.6.6.tar.gz'
+pkgbase=gnuplot
+vers=4.6.6
 arch=x86_64
 # arch=i686
-build=P2
-src=wxWidgets-2.8.12
-OPT_CONFIG="--enable-unicode --enable-gui --with-sdl --enable-shared --enable-intl \
- --enable-config --enable-protocols --enable-ftp --enable-http --enable-fileproto \
---enable-sockets --enable-dataobj --enable-ipc --enable-arcstream --enable-backtrace \
---enable-catch-segvs --with-opengl --with-x " # --with-odbc --with-zlib"
-DOCS="INSTALL-MSW.txt INSTALL-OS2.txt README-MSW.txt readme*.txt"
+build=P1
+src=gnuplot-4.6.6
+OPT_CONFIG="--enable-qt --enable-thin-splines --enable-backwards-compatibility
+    --with-texdir=/opt/texlive/texmf-local/gnuplot --with-lasergnu
+    --with-plot"
+DOCS='ChangeLog INSTALL INSTALL.gnu NEWS README README.1ST RELEASE_NOTES'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -76,7 +75,7 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
