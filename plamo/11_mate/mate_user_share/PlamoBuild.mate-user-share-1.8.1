@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.8/mate-notification-daemon-1.8.1.tar.xz'
-pkgbase=mate_notification_daemon
+url='http://pub.mate-desktop.org/releases/1.8/mate-user-share-1.8.1.tar.xz'
+pkgbase=mate_user_share
 vers=1.8.1
 arch=x86_64
-#arch=i586
-build=P2
-src=mate-notification-daemon-1.8.1
+#arch=i686
+build=P1
+src=mate-user-share-1.8.1
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog NEWS README'
+DOCS='AUTHORS COPYING ChangeLog MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -212,8 +212,8 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-#         export CC="gcc -isystem /usr/include $target" 
-#         export CXX="g++ -isystem /usr/include $target "
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -283,7 +283,6 @@ mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
-update-mime-database /usr/share/mime > /dev/null 2>&1
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
