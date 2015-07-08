@@ -1,36 +1,86 @@
 #!/bin/sh
-##############################################################
+
+######################################################################
+url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
 pkgbase=coreutils
 vers=8.23
-url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-verify=$url.sig
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG='--without-gmp --enable-no-install-program=kill,uptime,su --enable-install-program=arch'
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2005 ChangeLog-2006 ChangeLog-2007 ChangeLog-2008 INSTALL NEWS README THANKS THANKS-to-translators TODO thanks-gen'
-patchfiles=''
-compress=txz
-##############################################################
+arch=`uname -m`
+build=P2
+src=$pkgbase-$vers
+OPT_CONFIG="--enable-install-program=arch
+    --enable-no-install-program=kill,uptime,su --without-gmp"
+DOCS="ChangeLog-2005 COPYING INSTALL ABOUT-NLS ChangeLog-2007 NEWS
+    README ChangeLog-2006 ChangeLog-2008 THANKS-to-translators
+    ChangeLog AUTHORS TODO THANKS"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
-      else
-         echo "stripping $chk"
-         strip $chk
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
       fi
-    fi
-  done
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
 }
 
 gzip_dir() {
@@ -38,7 +88,6 @@ gzip_dir() {
   if [ -d $1 ] ; then (
     cd $1
     files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -67,54 +116,65 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress_all() {
-  cd $P
-  strip_all
-}  
-
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      return 1
-    fi
-  done
-  return 0
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
 }
 
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
-else
-    target="-m32"
-    libdir="lib"
-    suffix=""
-fi
-
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -130,73 +190,44 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
-  done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
     esac
   done
 fi
-
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
+  cd $B
+  cp -p po/Makevars{,.orig}
+  sed 's@EXTRA_LOCALE_CATEGORIES@#&@g' po/Makevars.orig > po/Makevars
+  cp -p src/copy.c{,.orig}
+  sed 's@FASTREAD@NONE@g' src/copy.c.orig > src/copy.c
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
-
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-
-    sed -i -e "s/EXTRA_LOCALE_CATEGORIES=LC_TIME//" bootstrap.conf
-    sed -i -e "s/EXTRA_LOCALE_CATEGORIES = LC_TIME//" po/Makevars
-
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make
     fi
   done
 fi
@@ -212,81 +243,22 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-
-    mkdir -p $P/sbin
-    ( cd $P/usr/bin ; mv sleep $P/sbin ; ln -sf ../../sbin/sleep . )
-
-    mkdir -p $P/bin
-    ( cd $P/usr/bin 
-      for i in dd cp df du ln ls mv rm cat cut pwd date echo head stty sync true chmod chown false mkdir mknod rmdir shred touch uname chroot mkfifo dircolors chgrp ; do
-        mv $i $P/bin
-        ln -sf ../../bin/$i $i
-      done
-    )
-
   done
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-  mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
-
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
-
-######################################################################
-# path に lib があるバイナリは strip -g, ないバイナリは strip する
-######################################################################
-  cd $P
-  compress_all
-  if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
-  fi
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
+  install -d $P/{sbin,bin}
+  mv $P/usr/bin/sleep $P/sbin ; ln -s /sbin/sleep $P/usr/bin
+  for i in chroot stty df cat chgrp chmod chown cp cut date dd dircolors \
+      du echo false head ln ls mkdir mkfifo mknod mv pwd rm rmdir shred \
+      sync touch true uname ; do
+    mv $P/usr/bin/$i $P/bin ; ln -s /bin/$i $P/usr/bin
+  done
+  touch $W/i.et
   cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -297,43 +269,26 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
-
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
-
-######################################################################
-# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
-#   記述します(prune_symlink を使います)。
-# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
-#   します(こだわりを求めないなら単に makepkg でも良いです)。
-######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
+  convert
+  prune_symlink $P/usr/share/locale
+  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/libexec/coreutils
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
 fi

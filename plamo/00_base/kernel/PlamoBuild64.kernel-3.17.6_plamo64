@@ -1,14 +1,24 @@
-#!/bin/sh
+#!/bin/sh -x
 
 ######################################################################
-url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-13.tar.bz2"
-pkgbase=kmod
-vers=13
-arch=i586
-build=P2
-src=$pkgbase-$vers
-OPT_CONFIG="--bindir=/bin --sysconfdir=/etc --with-xz --with-zlib"
-DOCS="README COPYING NEWS TODO"
+url="https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.17.6.tar.xz
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-20141011-3.17.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-fonts-20140614.patch.bz2
+    git://git.code.sf.net/p/aufs/aufs3-standalone.git
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.17-panic_beep.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/3.17-morse_code_panics.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/current-tuxonice-for-3.17.patch.bz2
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/3.17-tuxonice_declare_fix.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-3.17-rc7.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-allow_unprivileged_mounts.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/config-3.17.6-plamo64"
+pkgbase=kernel
+vers=3.17.6_plamo64
+arch=x86_64
+build=P1
+src=linux-3.17.6
+OPT_CONFIG=""
+DOCS=""
 ######################################################################
 
 fscheck() {
@@ -115,7 +125,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -153,7 +163,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -184,11 +194,8 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $url ; do
-    case ${i%%:*} in
-    https) if [ ! -f ${i##*/} ] ; then wget --no-check-certificate $i ; fi ;;
+    case ${i##*.} in
+    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
     *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
     esac
   done
@@ -197,6 +204,9 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/aufs3.17 ; git reset --hard 8aed53f ) ;;
     esac
   done
 fi
@@ -204,6 +214,31 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
+  cd $B
+  patch -Np1 -i $W/vd_unicon-kernel-20141011-3.17.patch
+  bunzip2 -c $W/vd_unicon-kernel-fonts-20140614.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/aufs3-standalone/aufs3-kbuild.patch
+  patch -Np1 -i $W/aufs3-standalone/aufs3-base.patch
+  patch -Np1 -i $W/aufs3-standalone/aufs3-mmap.patch
+  patch -Np1 -i $W/aufs3-standalone/aufs3-standalone.patch
+  cp -av $W/aufs3-standalone/Documentation .
+  cp -av $W/aufs3-standalone/fs .
+  cp -pv $W/aufs3-standalone/include/uapi/linux/aufs_type.h include/uapi/linux
+  patch -Np1 -i $W/3.17-panic_beep.patch
+  patch -Np1 -i $W/3.17-morse_code_panics.patch
+  bunzip2 -c $W/current-tuxonice-for-3.17.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/3.17-tuxonice_declare_fix.patch
+  patch -Np1 -i $W/overlayfs-3.17-rc7.patch
+  patch -Np1 -i $W/overlayfs-allow_unprivileged_mounts.patch
+  cp -p $W/config-3.17.6-plamo64 .config
+  cp -p arch/x86/boot/install.sh{,.orig}
+  head -n-9 arch/x86/boot/install.sh.orig > arch/x86/boot/install.sh
+  sed -i '/INSTALLKERNEL/s@^@#@g' arch/x86/boot/install.sh
+  cat <<- "EOF" | patch arch/x86/boot/install.sh
+	48a49
+	> cp .config $4/config-$1
+	EOF
+  sed -i '/\(vmlinuz\|System.map\)$/s@$@-\$1@g' arch/x86/boot/install.sh
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -213,7 +248,8 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --infodir='${prefix}'/share/info \
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+          --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
   done
@@ -239,43 +275,23 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      make install DESTDIR=$P
+      install -d $P/boot
+      make install INSTALL_PATH=$P/boot
+      make modules_install INSTALL_MOD_PATH=$P
     fi
   done
-  install -d $P/sbin
-  for i in insmod modprobe {rm,dep}mod ; do
-    ln -s /bin/kmod $P/sbin/$i
-  done
-  install -d $P/usr/bin
-  for i in lsmod modinfo ; do
-    ln -s /bin/kmod $P/usr/bin/$i
-  done
+  krel=${vers//_/-}
+  ln -s config-$krel $P/boot/config
+  ln -s vmlinuz-$krel $P/boot/vmlinuz
+  ln -s System.map-$krel $P/boot/System.map
+  rm $P/lib/modules/$krel/{source,build}
+  ln -s /usr/src/linux $P/lib/modules/$krel/source
+  ln -s /usr/src/linux $P/lib/modules/$krel/build
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  install -d $P/etc/modprobe.d
-  cat <<- "EOF" > $P/etc/modprobe.d/plamo-default.conf
-	# sample modprobe.conf entries
-	#
-	# alias 定義をしておけば modprobe eth0 で必要なモジュールをロード可能
-	# alias eth0 skge
-	#
-	# モジュールをロードする際のオプションは option 定義で指定可能
-	# options sb io=0x220 irq=7 dma=1 dma15=5 mpu_io=0x330
-	# options skge debug=16
-	#
-	# install 定義はそのモジュールを組み込む際の動作を指定する。
-	# ロードして欲しくないモジュールはこういう風に指定すればいい
-	# install intel_rng /bin/true
-	# install rng_core_rng /bin/true
-	# install ieee1394 /bin/true
-	# install ohci1394 /bin/true
-	
-	install usblp /bin/true
-	EOF
-  touch -t `date '+%m%d0900'` $P/etc/modprobe.d{,/plamo-default.conf}
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -284,6 +300,7 @@ if [ $opt_package -eq 1 ] ; then
         gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
       done
     done
+    install -d $docdir/$src
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
       touch -t `date '+%m%d0900'` $docdir/$src/$myname
@@ -294,14 +311,12 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib ! -name pkgconfig | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
-  tar rvpf $pkg.tar -C $P etc/modprobe.d
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  prune_symlink $P/boot
+  prune_symlink $P/lib/modules/$krel
+  touch -t `date '+%m%d0900'` $P/lib/modules/$krel
+  tar cvpf $pkg.tar -C $P `cd $P ; find boot | tail -n+2`
+  tar rvpf $pkg.tar -C $P lib/modules/$krel
+  tar rvpf $pkg.tar -C $P lib/firmware
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

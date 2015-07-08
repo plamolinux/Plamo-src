@@ -1,18 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnu.org/gnu/grub/grub-2.00.tar.xz'
-pkgbase=grub
-vers=2.00
-arch=x86_64
-# arch=i586
-build=P6
-src=grub-2.00
-OPT_CONFIG=" --disable-grub-emu-usb --disable-efiemu --disable-werror"
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
-# patchfiles='grub_label.patch grub-install-prefix_drive.patch'
-patchfiles='grub_label.patch'
-files='grubconfig grubconfig2 setup.bootloader'
+url='http://daniel-baumann.ch/files/software/dosfstools/dosfstools-3.0.26.tar.xz'
+pkgbase=dosfstools
+vers=3.0.26
+arch=`uname -m`
+build=P1
+src=dosfstools-3.0.26
+OPT_CONFIG=''
+DOCS='COPYING ChangeLog'
+patchfiles=''
 compress=txz
+#compress=tgz
 ##############################################################
 
 install2() {
@@ -93,8 +91,6 @@ compress() {
   for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
-  for i in $P/opt/kde/lib{,64} ; do strip_libdir $i ; done
-  for i in $P/opt/kde/bin ; do strip_bindir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -141,12 +137,13 @@ convert() {
 }
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -160,11 +157,9 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
-    suffix="64"
 else
     target="-m32"
     libdir="lib"
-    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -188,11 +183,10 @@ if [ $opt_download -eq 1 ] ; then
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
-
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -207,23 +201,19 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # for glibc-2.16
-    sed -i -e '/gets is a/d' grub-core/gnulib/stdio.in.h
-
-    #if [ -f autogen.sh ] ; then
-    #    sh ./autogen.sh
-    #fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
     if [ -x configure ] ; then
-        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-        export LDFLAGS='-Wl,--as-needed' 
-        export CC="gcc -isystem /usr/include $target" 
-        export CXX="g++ -isystem /usr/include $target "
-        ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
     fi
   done
 fi
@@ -231,7 +221,8 @@ if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed -static'
+      export LDFLAGS='-Wl,--as-needed -L/usr/lib'
+      export CC="gcc -isystem /usr/include $target"
       make -j3
     fi
   done
@@ -248,44 +239,14 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed -static'
-      make install DESTDIR=$P
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P PREFIX=/usr
     fi
   done
-  mkdir -p $P/etc/default
-  cat <<EOF >> $P/etc/default/grub
-# Default Menu Entry
-GRUB_DEFAULT=0
-# Time after the menu displayed
-GRUB_TIMEOUT=10
-# Time before displaying the menu
-#GRUB_HIDDEN_TIMEOUT=0
-# Display countdown or not
-#GRUB_HIDDEN_TIMEOUT_QUIET=false
-# Command line arguments for default linux entry
-GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
-# Command line arguments for all linux entry
-#GRUB_CMDLINE_LINUX=
-# Distributor
-GRUB_DISTRIBUTOR=Plamo
-EOF
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
-
-  mkdir -p $P/var/log/setup
-  cp $W/setup.bootloader $P/var/log/setup
-  chmod +x $P/var/log/setup
-
-  mkdir -p $P/sbin
-  cp $W/grubconfig{,2} $P/sbin
-  chmod +x $P/sbin/grubconfig{,2}
-
 
 # remove locales except ja
 # 

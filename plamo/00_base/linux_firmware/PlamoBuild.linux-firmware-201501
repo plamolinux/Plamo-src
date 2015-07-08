@@ -2,13 +2,12 @@
 ##############################################################
 url="http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary"
 pkgbase=linux_firmware
-vers=201303
+vers=201501
 arch=noarch
-# arch=i586
 build=P1
 src=linux-firmware
 OPT_CONFIG=''
-DOCS='LICENCE.ralink-firmware.txt LICENCE.rtlwifi_firmware.txt LICENCE.tda7706-firmware.txt LICENSE.dib0700 LICENSE.radeon README TDA7706_OM_v2.5.1_boot.txt TDA7706_OM_v3.0.2_boot.txt'
+DOCS='GPL-3 LICENCE* LICENSE* README WHENCE'
 patchfiles=''
 compress=txz
 ##############################################################

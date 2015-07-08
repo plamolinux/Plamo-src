@@ -1,24 +1,16 @@
 #!/bin/sh
 
 ######################################################################
-url="http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.tar.gz/765e2153f5fc4f21793f2edc2647305a/nvi-1.79.tar.gz
-    http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.m17n-20040401.diff.gz/851650ced51697b3b08400fa75621c97/nvi-1.79.m17n-20040401.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/nvi-1.79-64bit_breakage.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/nvi-1.79-DESTDIR.patch.gz"
-pkgbase=nvi
-vers=1.79
-arch=i586
-build=P3
+url="http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/for-5.0/plamo-rc-scripts/plamo-rc-scripts-20150105.tgz"
+pkgbase=sysvinit
+vers=2.88dsf
+arch=`uname -m`
+build=P13
 src=$pkgbase-$vers
-OPT_CONFIG="--enable-multibyte"
-DOCS="LAYOUT README FAQ
-    `echo docs/USD.doc/{edit/edittut,vi.ref/vi.ref}.ps`
-    `echo docs/USD.doc/vitut/{vitut,summary,viapwh}.ps`
-    `echo docs/USD.doc/exref/{exref,summary}.ps`
-    `echo docs/{ev,features,interp/interp,TODO,help}`
-    `echo docs/internals/{gdb.script,structures,autowrite,quoting}`
-    `echo docs/internals/{input,context,openmode,cscope.NOTES}`
-    docs/changelog docs/tutorial/* `echo build/README{,.LynxOS}` LICENSE"
+OPT_CONFIG=""
+DOCS="doc/bootlogd.README doc/Install doc/Changelog doc/Propaganda
+    COPYING COPYRIGHT Makefile README"
 ######################################################################
 
 fscheck() {
@@ -125,7 +117,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -163,7 +155,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -179,6 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -200,6 +193,7 @@ if [ $opt_download -eq 1 ] ; then
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
+    tgz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     esac
   done
@@ -208,15 +202,8 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-  cd $B
-  gunzip -c $W/nvi-1.79.m17n-20040401.diff.gz | patch -Np0 -i -
-  gunzip -c $W/nvi-1.79-64bit_breakage.patch.gz | patch -Np1 -i -
-  gunzip -c $W/nvi-1.79-DESTDIR.patch.gz | patch -Np1 -i -
-  cp -p build/configure{,.orig} ; chmod 755 build/configure
-  sed '/^LDFLAGS=/s@$LDFLAGS@${LDFLAGS-"-lncurses"}@g' build/configure.orig \
-      > build/configure
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       make clean
     fi
@@ -224,14 +211,15 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --infodir='${prefix}'/share/info \
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       make
     fi
@@ -248,17 +236,35 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
-      make install DESTDIR=$P
+      make install ROOT=$P
     fi
   done
+  cat <<- "EOF" > $P/sbin/link_rootdev.sh
+	#!/bin/sh
+	
+	root="`cat /proc/cmdline | sed -n 's@.*\<root\>=\([^ ]*\).*@\1@p'`"
+	if [ -n "`echo $root | grep "/dev/"`" ] ; then
+	  # root=/dev/sdb1 (grub)
+	  root_part=`echo $root | sed 's@/dev/@@'`
+	else
+	  # root=821 (lilo)
+	  maj=$((`printf "%d" 0x$root` / 256)) ; min=$((`printf "%d" 0x$root` % 256))
+	  root_part=`cat /proc/partitions | sed -n "/ $maj *$min /s@.* \([^ ]*\)@\1@p"`
+	fi
+	( cd /dev ; rm -rf root )
+	( cd /dev ; ln -sf $root_part root )
+	exit 0
+	EOF
+  chmod 755 $P/sbin/link_rootdev.sh
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/cat1
+  cp -a etc $P
+  chown -R root.root $P/etc
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -276,21 +282,28 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-  chmod 755 $docdir/$src/docs/tutorial/vi.tut.csh.gz
-  cp -a $B/docs.m17n $docdir/$src
-  chown -R root.root $docdir/$src/docs.m17n
-  find $docdir/$src/docs.m17n -exec touch -t `date '+%m%d0900'` {} \;
-  gzip_dir $docdir/$src/docs.m17n
-  touch -t `date '+%m%d0900'` $docdir/$src/docs.m17n
-  mv $docdir/$src/{docs.m17n,$myname.gz} $C
-  mv $C/{docs.m17n,$myname.gz} $docdir/$src
-  touch -r $S $docdir/$src
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/share/vi
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/cat1 | tail -n+2`
+  prune_symlink $P/etc/rc.d
+  touch -r etc/rc.d $P/etc/rc.d
+  cat <<- EOF >> $P/install/doinst.sh
+	#%% begin initialize $src
+	EOF
+  cat <<- "EOF" >> $P/install/doinst.sh
+	vers=`ls /usr/lib/setup/Plamo* | tail -n1 | cut -d"/" -f5`
+	echo "%s %r ($vers) %v" > /etc/motd.in
+	#%% end
+	EOF
+  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc -maxdepth 1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans

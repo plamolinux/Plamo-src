@@ -5,9 +5,9 @@ url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-13.tar.bz2"
 pkgbase=kmod
 vers=13
 arch=x86_64
-build=P2
+build=P3
 src=$pkgbase-$vers
-OPT_CONFIG="--bindir=/bin --sysconfdir=/etc --with-xz --with-zlib"
+OPT_CONFIG="--bindir=/bin --sysconfdir=/etc --disable-shared"
 DOCS="README COPYING NEWS TODO"
 ######################################################################
 
@@ -185,12 +185,6 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $url ; do
-    case ${i%%:*} in
-    https) if [ ! -f ${i##*/} ] ; then wget --no-check-certificate $i ; fi ;;
-    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
-    esac
   done
   for i in $url ; do
     case ${i##*.} in

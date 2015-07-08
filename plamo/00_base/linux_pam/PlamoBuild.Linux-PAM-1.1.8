@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='https://fedorahosted.org/releases/l/i/linux-pam/Linux-PAM-1.1.5.tar.bz2'
+url='https://fedorahosted.org/releases/l/i/linux-pam/Linux-PAM-1.1.8.tar.bz2'
 pkgbase=linux_pam
-vers=1.1.5
-arch=x86_64
-# arch=i586
-build=P4
-src=Linux-PAM-1.1.5
+vers=1.1.8
+arch=`uname -m`
+build=P1
+src=Linux-PAM-1.1.8
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
@@ -14,9 +13,11 @@ else
     target="-m32"
     libdir="lib"
 fi
-OPT_CONFIG="--sbindir=/${libdir}/security --enable-securedir=/${libdir}/security --enable-shared --enable-read-both-confs --docdir=/usr/share/doc/$src"
+OPT_CONFIG="--sbindir=/${libdir}/security --enable-securedir=/${libdir}/security --enable-shared --enable-read-both-confs --docdir=/usr/share/doc/$src --disable-nis"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog INSTALL NEWS README'
-patchfiles='Linux-PAM-1.1.0-pam_console-1.patch'
+patchfiles='pam-1.1.8-cve-2014-2583.patch pam-1.1.8-cve-2013-7041.patch'
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/pam-1.1.8-cve-2014-2583.patch?h=packages/pam
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/pam-1.1.8-cve-2013-7041.patch?h=packages/pam
 compress=txz
 ##############################################################
 
@@ -144,12 +145,13 @@ convert() {
 }
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -203,6 +205,7 @@ if [ $opt_config -eq 1 ] ; then
     # autoconf && libtoolize -i -f 
     autoreconf
 
+    export PATH=/usr/bin:/bin:/sbin:/usr/sbin
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed -L/usr/lib64' 
@@ -341,7 +344,6 @@ password   required     pam_deny.so
 
 session    required     pam_limits.so
 session    required     pam_unix.so
-session    optional     pam_console.so
 EOF
 ( cd $P/etc/pam.d/ ; ln -sf system-auth plamo-default )
 
@@ -372,7 +374,7 @@ EOF
 # The common PAM configuration file for shutdown operations
 #
 auth       sufficient   pam_rootok.so
-auth       required     pam_console.so
+auth       required     pam_unix.so
 
 account    required     pam_permit.so
 EOF

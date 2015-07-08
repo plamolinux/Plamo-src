@@ -1,26 +1,34 @@
 #!/bin/sh -x
 ##############################################################
-url='http://ftp.gnu.org/gnu/glibc/glibc-2.16.0.tar.xz'
+url='http://ftp.ne.jp/GNU/glibc/glibc-2.20.tar.xz'
 pkgbase=glibc
-vers=2.16.0
+vers=2.20
 arch=x86_64
-# arch=i586
-build=P5
-src=glibc-2.16.0
+# arch=i686
+build=P1
+src=glibc-2.20
 if [ "$arch" = "x86_64" ]; then
-    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.0 --libexecdir=/usr/lib64/glibc --localedir=/usr/share/locale --enable-tls'
+    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.32 --libexecdir=/usr/lib64/glibc --localedir=/usr/share/locale --enable-tls'
 else
-    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.0 --libexecdir=/usr/lib/glibc --localedir=/usr/share/locale --enable-tls'
+    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.32 --libexecdir=/usr/lib/glibc --localedir=/usr/share/locale --enable-tls'
 fi
-DOCS='COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL LICENSES NEWS README README.libm'
-patchfiles='glibc-2.16.0-localedir.patch glibc-2.15-fix-res_query-assert.patch glibc-2.15-revert-c5a0802a.patch glibc-2.16-rpcgen-cpp-path.patch glibc-2.16-strncasecmp-segfault.patch glibc-2.16-strtod-overflow.patch'
-compress=txz
-# http://projects.archlinux.org/svntogit/packages.git/tree/glibc/repos/core-x86_64/glibc-2.15-fix-res_query-assert.patch
-# http://projects.archlinux.org/svntogit/packages.git/tree/glibc/repos/core-x86_64/glibc-2.15-revert-c5a0802a.patch
-# http://projects.archlinux.org/svntogit/packages.git/tree/glibc/repos/core-x86_64/glibc-2.16-rpcgen-cpp-path.patch
-# http://projects.archlinux.org/svntogit/packages.git/tree/glibc/repos/core-x86_64/glibc-2.16-strncasecmp-segfault.patch
-# http://projects.archlinux.org/svntogit/packages.git/tree/glibc/repos/core-x86_64/glibc-2.16-strtod-overflow.patch
+DOCS='COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL LICENSES NEWS README'
 
+# these patches are derived from Arch Linux
+
+# 'https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.20-do_ftell_wide-memleak.patch?h=packages/glibc'
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.20-getifaddrs_internal-segfault.patch?h=packages/glibc
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.20-linux-3.16-additions.patch?h=packages/glibc' 
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.19-fix-sign-in-bsloww1-input.patch?h=packages/glibc
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.19-tzselect-default.patch?h=packages/glibc
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/glibc-2.19-xattr_header.patch?h=packages/glibc
+#
+# LFS's patch
+# http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.19-fhs-1.patch
+
+patchfiles='glibc-2.19-fhs-1.patch glibc-2.20-do_ftell_wide-memleak.patch glibc-2.20-getifaddrs_internal-segfault.patch glibc-2.20-linux-3.16-additions.patch'
+
+compress=txz
 ##############################################################
 
 install2() {
@@ -150,12 +158,13 @@ convert() {
 }
 
 W=`pwd`
+WD=/home/kojima/Build
 for i in `seq 0 $((${#src[@]} - 1))` ; do
     S[$i]=$W/${src[$i]} 
     if [ $arch = "x86_64" ]; then
-	B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+	B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
     else
-	B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+	B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
     fi      
 done
 
@@ -198,7 +207,7 @@ if [ $opt_download -eq 1 ] ; then
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvf ${i##*/} ;;
     esac
   done
 fi
@@ -223,17 +232,17 @@ if [ $opt_config -eq 1 ] ; then
        fi
     done
     sed -i -e 's/"db1"/& \&\& $name ne "nss_test1"/' scripts/test-installation.pl
-    if [ -d $W/${src}_build ]; then
-	rm -rf $W/${src}_build 
+    if [ -d $WD/${src}_build ]; then
+	rm -rf $WD/${src}_build 
     fi
-    mkdir $W/${src}_build
-    cd $W/${src}_build
+    mkdir $WD/${src}_build
+    cd $WD/${src}_build
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
 
-  if [ -x ../$src/configure ] ; then
+  if [ -x $W/$src/configure ] ; then
       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
       export LDFLAGS='-Wl,--as-needed' 
 
@@ -244,7 +253,7 @@ if [ $opt_config -eq 1 ] ; then
 	  echo "CFLAGS += -mtune=generic -O3 -pipe" >> configparms
       fi
 
-      ../$src/configure --prefix=/usr --build="$arch"-pc-linux --target="$arch"-pc-linux ${OPT_CONFIG}
+      $W/$src/configure --prefix=/usr --build="$arch"-pc-linux --target="$arch"-pc-linux ${OPT_CONFIG}
   fi
   if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
@@ -253,7 +262,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $W/${src}_build
+    cd $WD/${src}_build
     if [ -f Makefile ] ; then
 	export LDFLAGS='-Wl,--as-needed'
 	make -j3
@@ -270,7 +279,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
-  cd ${src}_build
+  cd $WD/${src}_build
   if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install install_root=$P
@@ -314,7 +323,15 @@ if [ $opt_package -eq 1 ] ; then
       mv -v $P2/usr/share/$i $P/usr/share
   done
 
-  ( cd $P/usr/${libdir} ; ln -sf ../share/locale )
+  # $localedir は localedata の置き場で，生成した mo ファイルは
+  # x86/x86_64 とも $msgcatdir に置くのが最近の流儀っぽい
+  mkdir -p $P/usr/lib
+  ( cd $P/usr/lib ; ln -sf ../share/locale )
+  # 過去との互換性のためにこっちもリンクを張っておく
+  if [ "$arch" = "x86_64" ]; then
+      mkdir -p $P/usr/${libdir}
+      ( cd $P/usr/${libdir} ; ln -sf ../share/locale )
+  fi
   ( cd $P/usr/share/locale ; mv ja ja_JP.eucJP )
   ( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja )
   ( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja_JP )
