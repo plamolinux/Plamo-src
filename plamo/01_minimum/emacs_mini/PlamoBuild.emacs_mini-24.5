@@ -1,15 +1,23 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnutls.org/gcrypt/gnutls/v2.12/gnutls-2.12.23.tar.bz2'
-verify=$url.sig
-pkgbase=gnutls
-vers=2.12.23
-arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P5
-src=gnutls-2.12.23
-OPT_CONFIG='--with-libgcrypt --without-p11-kit --disable-static'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
-patchfiles='cve-2014-1959.patch cve-2014-0092.patch cve-2014-3466.patch CVE-2015-0294.patch CVE-2015-0282.patch'
+pkgbase=emacs
+vers=24.5
+url="http://ftp.jaist.ac.jp/pub/GNU/emacs/emacs-${vers}.tar.xz"
+verify=${url}.sig
+arch=`uname -m`
+build=P1
+src=${pkgbase}-${vers}
+#OPT_CONFIG='--with-xim --without-imagemagick --with-x --with-x-toolkit=gtk3 --without-rsvg --without-gsettings --without-selinux'
+OPT_CONFIG='--without-all --without-x'
+DOCS='COPYING ChangeLog INSTALL README'
+# this patch is bug with glib 2.31 and emacs >= 23.3
+# http://debbugs.gnu.org/cgi/bugreport.cgi?bug=9754
+# https://bugs.launchpad.net/ubuntu/+source/emacs23/+bug/902043
+#patchfiles='emacs-xgselect.patch'
+patchfiles='emacs-24.2-add_txz.patch'
+#file1=menu-tree.el
+file1_url="http://cdn11.atwikiimg.com/s-irie/?plugin=ref&serial=91"
+file2='http://homepage1.nifty.com/blankspace/emacs/wb-line-number.el'
 compress=txz
 ##############################################################
 
@@ -144,10 +152,10 @@ verify_checksum() {
     srcsum=`$checksum_command ${s##*/}`
     verifysum=`grep ${s##*/} $verify_file`
     if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
+      return 1
     fi
   done
-  exit 0
+  return 0
 }
 
 W=`pwd`
@@ -165,7 +173,8 @@ mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
-pkg=$pkgbase-$vers-$arch-$build
+pkg=${pkgbase}-$vers-$arch-$build
+pkgmini=${pkgbase}_mini-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
     target="-m64"
@@ -215,8 +224,11 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
+  #if [ ! -f menu-tree-el-0.97/"${file1}" ] ; then wget -O ${file1}.tar.gz $file1_url ; tar xvf ${file1}.tar.gz; fi
+  if [ ! -f ${file2##*/} ] ; then wget $file2 ; fi
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -232,12 +244,12 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
 
     if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
         CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
@@ -253,7 +265,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make -j4
     fi
   done
 fi
@@ -264,26 +276,29 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-
-  check_lib32=`echo $0 | grep 'lib32'`
-  if [ "$check_lib32.x" != ".x" ]; then
-      if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+    # for mk in `find . -name "[Mm]akefile" ` ; do
+    #     sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    # done
+    # if [ -f Makefile ] ; then
+    #   export LDFLAGS='-Wl,--as-needed'
+    #   make install DESTDIR=$P
+    # fi
+    mkdir -p $P/usr/bin/
+    cp -p src/${pkgbase} $P/usr/bin/${pkgbase}_mini-$vers
+    (cd $P/usr/bin; ln -sf ${pkgbase}_mini-$vers ${pkgbase}_mini)
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/usr/share/emacs/site-lisp
+  #install $W/menu-tree-el-0.97/$file1 $P/usr/share/emacs/site-lisp/
+  #install $W/${file2##*/} $P/usr/share/emacs/site-lisp/
+
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
       for omf in $P/usr/share/omf/* ; do
@@ -328,6 +343,9 @@ EOF
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/usr/share/doc/$src
+  cp $W/menu-tree-el-0.97/$file1 $P/usr/share/doc/$src
+  cp $W/${file2##*/} $P/usr/share/doc/$src
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -365,8 +383,11 @@ EOF
 # tar rvpf $pkg.tar -C $P usr/share/doc/$src
 # touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
 # mv $pkg.tar.gz $pkg.tgz
+  mkdir -p $P/usr/bin
+  mkdir -p $P/usr/share/doc
+  mv $P/usr/share/doc/$src $P/usr/share/doc/${pkgbase}_mini-$vers
   cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
+  /sbin/makepkg ../${pkgmini}.$compress <<EOF
 y
 1
 EOF

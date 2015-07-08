@@ -1,22 +1,15 @@
 #!/bin/sh
 
 ######################################################################
-url="http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/w3m-0.5.3-GC_fix.patch.gz"
-pkgbase=w3m
-vers=0.5.3
+url="https://www.python.org/ftp/python/2.7.9/Python-2.7.9.tar.xz"
+pkgbase=Python2
+vers=2.7.9
 arch=`uname -m`
 build=P2
-src=$pkgbase-$vers
-OPT_CONFIG=""
-DOCS="`echo doc-jp/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc-jp/README.{SSL,cookie,cygwin,dict,func,img,keymap,m17n}`
-    `echo doc-jp/README.{mailcap,menu,migemo,mouse,pre_form,tab}`
-    `echo doc-jp/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    doc-jp/README.passwd `echo doc/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc/README.{cygwin,dict,func,img,m17n,mouse,pre_form,tab}`
-    `echo doc/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    `echo doc/README.{cookie,passwd}` ABOUT-NLS ChangeLog NEWS README TODO"
+src=Python-$vers
+OPT_CONFIG="--enable-shared --with-system-expat --with-system-ffi
+    --with-dbmliborder=gdbm:bdb:ndbm"
+DOCS="LICENSE README"
 ######################################################################
 
 fscheck() {
@@ -200,6 +193,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
     esac
   done
 fi
@@ -208,9 +202,15 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  sed -i '/w3mimgdisplay/s@$(LIBS)@& -lX11@g' Makefile.in
-  sed -i 's@file_handle@w3m_&@g' istream.[ch]
-  gunzip -c $W/w3m-0.5.3-GC_fix.patch.gz | patch -Np1 -i -
+  sed -i 's@\(#! /usr\)/local\(/bin/python\)@\1\22@' Lib/cgi.py
+  if [ $arch == x86_64 ] ; then
+    sed -i 's@lib\(/python\)@lib64\1@' \
+        Lib/{distutils/command/install,sysconfig}.py
+    sed -i 's@"lib"@"lib64"@' Lib/{distutils/sysconfig,site}.py
+    sed -i '/^SCRIPTDIR/s@lib@lib64@' Makefile.pre.in
+    sed -i -e '/VERSION/s@lib/@lib64/@' -e '/joinpath/s@lib/@lib64/@' \
+        Modules/getpath.c
+  fi
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -250,14 +250,17 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install -d $mandir/ja_JP.eucJP
-  mv $mandir/ja/man1 $mandir/ja_JP.eucJP
+  touch $P/usr/bin/{pydoc,idle,2to3,smtpd.py}
+  ln -s /usr/$libdir/libpython2.7.so $P/usr/$libdir/python2.7/config
+  touch $P/usr/$libdir/python2.7/lib-dynload/*
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/ja_JP.eucJP/man1
+  strip_libdir $P/usr/$libdir/python2.7/config
+  strip_libdir $P/usr/$libdir/python2.7/lib-dynload
+  touch -t `date '+%m%d0900'` $P/usr/$libdir/python2.7/lib-dynload
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -276,13 +279,15 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
+  touch -t `date '+%m%d0900'` $P/usr/$libdir/python2.7/config
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/libexec/w3m
-  tar rvpf $pkg.tar -C $P usr/share/w3m
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 -name libpython2.7.*`
+  tar rvpf $pkg.tar -C $P usr/$libdir/python2.7
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/include/python2.7
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans

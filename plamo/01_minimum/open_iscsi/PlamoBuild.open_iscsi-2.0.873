@@ -1,22 +1,14 @@
 #!/bin/sh
 
 ######################################################################
-url="http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/w3m-0.5.3-GC_fix.patch.gz"
-pkgbase=w3m
-vers=0.5.3
-arch=`uname -m`
-build=P2
-src=$pkgbase-$vers
+url="http://www.open-iscsi.org/bits/open-iscsi-2.0-873.tar.gz"
+pkgbase=open_iscsi
+vers=2.0_873
+arch=`uname -m | sed 's/i.86/i586/'`
+build=P4
+src=open-iscsi-2.0-873
 OPT_CONFIG=""
-DOCS="`echo doc-jp/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc-jp/README.{SSL,cookie,cygwin,dict,func,img,keymap,m17n}`
-    `echo doc-jp/README.{mailcap,menu,migemo,mouse,pre_form,tab}`
-    `echo doc-jp/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    doc-jp/README.passwd `echo doc/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc/README.{cygwin,dict,func,img,m17n,mouse,pre_form,tab}`
-    `echo doc/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    `echo doc/README.{cookie,passwd}` ABOUT-NLS ChangeLog NEWS README TODO"
+DOCS="COPYING Changelog README THANKS TODO"
 ######################################################################
 
 fscheck() {
@@ -177,7 +169,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -208,9 +200,28 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  sed -i '/w3mimgdisplay/s@$(LIBS)@& -lX11@g' Makefile.in
-  sed -i 's@file_handle@w3m_&@g' istream.[ch]
-  gunzip -c $W/w3m-0.5.3-GC_fix.patch.gz | patch -Np1 -i -
+  cp -p Makefile Makefile.orig
+  cat <<- "EOF" | patch Makefile
+	118c118
+	< 	if [ ! -f /etc/iscsi/iscsid.conf ]; then \
+	---
+	> 	if true || [ ! -f /etc/iscsi/iscsid.conf ]; then \
+	131c131
+	< 	if [ ! -f /etc/iscsi/initiatorname.iscsi ]; then \
+	---
+	> 	if true || [ ! -f /etc/iscsi/initiatorname.iscsi ]; then \
+	EOF
+  cp -p usr/Makefile{,.orig}
+  cat <<- "EOF" | patch usr/Makefile
+	57c57
+	< 	$(CC) $(CFLAGS) $^ -o $@  -L../utils/open-isns -lisns
+	---
+	> 	$(CC) $(CFLAGS) $^ -o $@  -L../utils/open-isns -lisns -lslp
+	60c60
+	< 	$(CC) $(CFLAGS) $^ -o $@ -L../utils/open-isns -lisns
+	---
+	> 	$(CC) $(CFLAGS) $^ -o $@ -L../utils/open-isns -lisns -lslp
+	EOF
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -250,14 +261,56 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install -d $mandir/ja_JP.eucJP
-  mv $mandir/ja/man1 $mandir/ja_JP.eucJP
+  for i in iscsid.conf initiatorname.iscsi ; do
+    mv $P/etc/iscsi/$i $C/$i.dist
+  done
+  mv $P/etc/iscsi/ifaces $C
+  for i in iscsid.conf initiatorname.iscsi ; do
+    mv $C/$i.dist $P/etc/iscsi
+  done
+  mv $C/ifaces $P/etc/iscsi
+  install -d $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/rc.d/init.d/open-iscsi
+	#!/bin/sh
+	
+	start()
+	{
+	  iscsid
+	  iscsiadm -m node -L automatic
+	}
+	
+	stop()
+	{
+	  sync
+	  iscsiadm -m node -U all
+	  iscsiadm -k 0
+	  modprobe -r iscsi_tcp ib_iser 2> /dev/null
+	}
+	
+	case "$1" in
+	start)
+	  start
+	  ;;
+	stop)
+	  stop
+	  ;;
+	restart)
+	  stop
+	  start
+	  ;;
+	*)
+	  echo $"Usage: $0 {start|stop|restart}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 755 $P/etc/rc.d/init.d/open-iscsi
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/ja_JP.eucJP/man1
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -276,13 +329,31 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/libexec/w3m
-  tar rvpf $pkg.tar -C $P usr/share/w3m
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  install -d $P/install
+  cat <<- "EOF" > $P/install/doinst.sh
+	open_iscsi_config() {
+	  if [ -f etc/iscsi/$1 ] ; then
+	    rm etc/iscsi/$1.dist
+	  else
+	    mv etc/iscsi/$1.dist /tmp
+	    mv /tmp/$1.dist etc/iscsi/$1
+	  fi
+	}
+	
+	open_iscsi_config iscsid.conf
+	rm etc/iscsi/initiatorname.iscsi.dist
+	if [ ! -f etc/iscsi/initiatorname.iscsi ] ; then
+	  echo "InitiatorName=`iscsi-iname`" \
+	      > etc/iscsi/initiatorname.iscsi
+	fi
+	EOF
+  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P etc/iscsi
+  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/open-iscsi
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans

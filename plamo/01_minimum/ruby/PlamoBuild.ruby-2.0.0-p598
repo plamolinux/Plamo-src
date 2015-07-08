@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnutls.org/gcrypt/gnutls/v2.12/gnutls-2.12.23.tar.bz2'
-verify=$url.sig
-pkgbase=gnutls
-vers=2.12.23
+url="http://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p598.tar.gz"
+pkgbase=ruby
+vers=2.0.0_p598
 arch=`uname -m | sed -e 's/i.86/i586/'`
-build=P5
-src=gnutls-2.12.23
-OPT_CONFIG='--with-libgcrypt --without-p11-kit --disable-static'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
-patchfiles='cve-2014-1959.patch cve-2014-0092.patch cve-2014-3466.patch CVE-2015-0294.patch CVE-2015-0282.patch'
+build=P1
+src=ruby-2.0.0-p598
+OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/${src}"
+DOCS='COPYING COPYING.ja ChangeLog NEWS README README.EXT README.EXT.ja README.ja ToDo'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -91,6 +90,8 @@ compress() {
   for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in $P/opt/kde/lib{,64} ; do strip_libdir $i ; done
+  for i in $P/opt/kde/bin ; do strip_bindir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -136,20 +137,6 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
-    fi
-  done
-  exit 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -170,9 +157,11 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
+    suffix="64"
 else
     target="-m32"
     libdir="lib"
+    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -192,24 +181,6 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
-  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -218,6 +189,7 @@ if [ $opt_download -eq 1 ] ; then
     esac
   done
 fi
+
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -232,20 +204,21 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
 
-    if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
-    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -264,11 +237,7 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-
-  check_lib32=`echo $0 | grep 'lib32'`
-  if [ "$check_lib32.x" != ".x" ]; then
-      if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -284,6 +253,14 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/etc/profile.d
+  cat <<EOF > $P/etc/profile.d/ruby.sh
+export SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+EOF
+  cat <<EOF > $P/etc/profile.d/ruby.csh
+setenv SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt
+EOF
+  mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
       for omf in $P/usr/share/omf/* ; do

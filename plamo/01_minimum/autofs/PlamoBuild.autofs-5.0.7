@@ -1,22 +1,15 @@
 #!/bin/sh
 
 ######################################################################
-url="http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/w3m-0.5.3-GC_fix.patch.gz"
-pkgbase=w3m
-vers=0.5.3
-arch=`uname -m`
+url="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-5.0.7.tar.bz2
+    http://plamo.linet.gr.jp/~tamuki/src/autofs-5.0.5-heimdal.patch.gz"
+pkgbase=autofs
+vers=5.0.7
+arch=`uname -m | sed 's/i.86/i586/'`
 build=P2
 src=$pkgbase-$vers
-OPT_CONFIG=""
-DOCS="`echo doc-jp/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc-jp/README.{SSL,cookie,cygwin,dict,func,img,keymap,m17n}`
-    `echo doc-jp/README.{mailcap,menu,migemo,mouse,pre_form,tab}`
-    `echo doc-jp/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    doc-jp/README.passwd `echo doc/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc/README.{cygwin,dict,func,img,m17n,mouse,pre_form,tab}`
-    `echo doc/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    `echo doc/README.{cookie,passwd}` ABOUT-NLS ChangeLog NEWS README TODO"
+OPT_CONFIG="--with-confdir=/etc --without-openldap"
+DOCS="CHANGELOG COPYING COPYRIGHT CREDITS INSTALL README*"
 ######################################################################
 
 fscheck() {
@@ -177,7 +170,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -208,9 +201,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  sed -i '/w3mimgdisplay/s@$(LIBS)@& -lX11@g' Makefile.in
-  sed -i 's@file_handle@w3m_&@g' istream.[ch]
-  gunzip -c $W/w3m-0.5.3-GC_fix.patch.gz | patch -Np1 -i -
+  gunzip -c $W/autofs-5.0.5-heimdal.patch.gz | patch -Np1 -i -
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -250,14 +241,19 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install -d $mandir/ja_JP.eucJP
-  mv $mandir/ja/man1 $mandir/ja_JP.eucJP
+  chmod 644 $P/etc/rc.d/init.d/autofs
+  for i in fs fs_ldap_auth.conf .master .misc .net .smb ; do
+    mv $P/etc/auto$i $C/auto$i.dist
+  done
+  for i in fs fs_ldap_auth.conf .master .misc .net .smb ; do
+    mv $C/auto$i.dist $P/etc
+  done
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/ja_JP.eucJP/man1
+  strip_libdir $P/usr/$libdir/autofs
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -276,13 +272,28 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/libexec/w3m
-  tar rvpf $pkg.tar -C $P usr/share/w3m
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  cat <<- "EOF" >> $P/install/doinst.sh
+	autofs_config() {
+	  if [ -f etc/auto$1 ] ; then
+	    rm etc/auto$1.dist
+	  else
+	    mv etc/auto$1.dist /tmp
+	    mv /tmp/auto$1.dist etc/auto$1
+	  fi
+	}
+	
+	for i in fs fs_ldap_auth.conf .master .misc .net .smb ; do
+	  autofs_config $i
+	done
+	EOF
+  touch -t `date '+%m%d0900'` $P/usr/$libdir/autofs $P/install/doinst.sh
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/$libdir/autofs
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc -type f`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans

@@ -1,22 +1,15 @@
 #!/bin/sh
 
 ######################################################################
-url="http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/w3m-0.5.3-GC_fix.patch.gz"
-pkgbase=w3m
-vers=0.5.3
-arch=`uname -m`
-build=P2
+url="http://hostap.epitest.fi/releases/hostapd-2.0.tar.gz"
+pkgbase=hostapd
+vers=2.0
+arch=x86_64
+build=P1
 src=$pkgbase-$vers
 OPT_CONFIG=""
-DOCS="`echo doc-jp/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc-jp/README.{SSL,cookie,cygwin,dict,func,img,keymap,m17n}`
-    `echo doc-jp/README.{mailcap,menu,migemo,mouse,pre_form,tab}`
-    `echo doc-jp/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    doc-jp/README.passwd `echo doc/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc/README.{cygwin,dict,func,img,m17n,mouse,pre_form,tab}`
-    `echo doc/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    `echo doc/README.{cookie,passwd}` ABOUT-NLS ChangeLog NEWS README TODO"
+DOCS="COPYING README
+    `echo hostapd/{ChangeLog,README{,-WPS},{eap_testing,hlr_auc_gw}.txt}`"
 ######################################################################
 
 fscheck() {
@@ -123,7 +116,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -161,7 +154,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -177,7 +170,6 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -208,11 +200,31 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  sed -i '/w3mimgdisplay/s@$(LIBS)@& -lX11@g' Makefile.in
-  sed -i 's@file_handle@w3m_&@g' istream.[ch]
-  gunzip -c $W/w3m-0.5.3-GC_fix.patch.gz | patch -Np1 -i -
+  cp -p hostapd/Makefile{,.orig}
+  sed 's@/local@@g' hostapd/Makefile.orig \
+      | sed 's@\<bin\>@sbin@g' > hostapd/Makefile
+  cp -p hostapd/{defconfig,.config}
+  cat <<- "EOF" | patch hostapd/.config
+	10a11
+	> CFLAGS += -I/usr/include/libnl3
+	16c17
+	< #CONFIG_DRIVER_WIRED=y
+	---
+	> CONFIG_DRIVER_WIRED=y
+	106c107
+	< #CONFIG_WPS=y
+	---
+	> CONFIG_WPS=y
+	155c156
+	< #CONFIG_DEBUG_FILE=y
+	---
+	> CONFIG_DEBUG_FILE=y
+	269a271,272
+	> 
+	> CONFIG_LIBNL32=y
+	EOF
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+    cd ${B[$i]}/hostapd
     if [ -f Makefile ] ; then
       make clean
     fi
@@ -220,7 +232,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
@@ -228,7 +240,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+    cd ${B[$i]}/hostapd
     if [ -f Makefile ] ; then
       make
     fi
@@ -245,19 +257,97 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+    cd ${B[$i]}/hostapd
     if [ -f Makefile ] ; then
       make install DESTDIR=$P
     fi
   done
-  install -d $mandir/ja_JP.eucJP
-  mv $mandir/ja/man1 $mandir/ja_JP.eucJP
+  install -d $mandir/man1
+  install -m 644 $B/hostapd/hostapd_cli.1 $mandir/man1
+  install -d $mandir/man8
+  install -m 644 $B/hostapd/hostapd.8 $mandir/man8
+  install -d $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/rc.d/init.d/hostapd
+	#!/bin/sh
+	# Start/stop/restart the hostapd (IEEE 802.11 Wireless AP) server:
+	
+	start() {
+	  if [ -x /usr/sbin/hostapd ] ; then
+	    hostapd -B /etc/hostapd.conf
+	  fi
+	}
+	
+	stop() {
+	  killall hostapd
+	}
+	
+	case "$1" in
+	start)
+	  start
+	  ;;
+	stop)
+	  stop
+	  ;;
+	restart)
+	  stop
+	  sleep 3
+	  start
+	  ;;
+	*)
+	  echo $"Usage: $0 {start|stop|restart}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 644 $P/etc/rc.d/init.d/hostapd
+  cat <<- "EOF" > $P/etc/hostapd.conf.dist
+	interface=wlan0
+	ctrl_interface=/var/run/hostapd
+	ctrl_interface_group=wheel
+	ssid="replace SSID"
+	country_code=JP
+	ieee80211d=1
+	hw_mode=g
+	macaddr_acl=0
+	accept_mac_file=/etc/hostapd.accept
+	deny_mac_file=/etc/hostapd.deny
+	auth_algs=1
+	wpa=2
+	wpa_psk_file=/etc/hostapd.wpa_psk
+	wpa_key_mgmt=WPA-PSK
+	rsn_pairwise=CCMP
+	EOF
+  cat <<- "EOF" > $P/etc/hostapd.accept.dist
+	# List of MAC addresses that are allowed to authenticate (IEEE 802.11)
+	# with the AP.
+	#00:11:22:33:44:55
+	#00:66:77:88:99:aa
+	#00:00:22:33:44:55
+	EOF
+  cat <<- "EOF" > $P/etc/hostapd.deny.dist
+	# List of MAC addresses that are not allowed to authenticate (IEEE 802.11)
+	# with the AP.
+	#00:20:30:40:50:60
+	#00:ab:cd:ef:12:34
+	#00:00:30:40:50:60
+	EOF
+  cat <<- "EOF" > $P/etc/hostapd.wpa_psk.dist
+	# List of WPA PSKs. Each line, except for empty lines and lines starting
+	# with #, must contain a MAC address and PSK separated with a space.
+	# Special MAC address 00:00:00:00:00:00 can be used to configure PSKs that
+	# anyone can use. PSK can be configured as an ASCII passphrase of 8..63
+	# characters or as a 256-bit hex PSK (64 hex digits).
+	#00:00:00:00:00:00 secret passphrase
+	#00:11:22:33:44:55 another passphrase
+	#00:22:33:44:55:66 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+	#00:00:00:00:00:00 another passphrase for all STAs
+	EOF
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/ja_JP.eucJP/man1
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -275,14 +365,35 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
+  install -d $docdir/$src/hostapd/examples
+  cp -p $S/hostapd/hostapd.[a-z]* $docdir/$src/hostapd/examples
+  chmod -R g-w $docdir/$src/hostapd/examples
+  chown -R root.root $docdir/$src/hostapd/examples
+  touch -r $S $docdir/$src/hostapd{/examples,}
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/libexec/w3m
-  tar rvpf $pkg.tar -C $P usr/share/w3m
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
+  install -d $P/install
+  cat <<- "EOF" > $P/install/doinst.sh
+	hostapd_config() {
+	  if [ -f etc/hostapd.$1 ] ; then
+	    rm etc/hostapd.$1.dist
+	  else
+	    mv etc/hostapd.$1.dist /tmp
+	    mv /tmp/hostapd.$1.dist etc/hostapd.$1
+	  fi
+	}
+	
+	hostapd_config conf
+	hostapd_config accept
+	hostapd_config deny
+	hostapd_config wpa_psk
+	EOF
+  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc -type f`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans

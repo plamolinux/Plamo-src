@@ -1,22 +1,14 @@
 #!/bin/sh
 
 ######################################################################
-url="http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/w3m-0.5.3-GC_fix.patch.gz"
-pkgbase=w3m
-vers=0.5.3
-arch=`uname -m`
-build=P2
+url="http://www.hazard.maks.net/parprouted/parprouted-0.7.tar.gz"
+pkgbase=parprouted
+vers=0.7
+arch=x86_64
+build=P1
 src=$pkgbase-$vers
 OPT_CONFIG=""
-DOCS="`echo doc-jp/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc-jp/README.{SSL,cookie,cygwin,dict,func,img,keymap,m17n}`
-    `echo doc-jp/README.{mailcap,menu,migemo,mouse,pre_form,tab}`
-    `echo doc-jp/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    doc-jp/README.passwd `echo doc/{FAQ.html,HISTORY,MANUAL.html,README}`
-    `echo doc/README.{cygwin,dict,func,img,m17n,mouse,pre_form,tab}`
-    `echo doc/{STORY.html,keymap.{default,lynx},menu.{default,submenu}}`
-    `echo doc/README.{cookie,passwd}` ABOUT-NLS ChangeLog NEWS README TODO"
+DOCS="CHANGELOG README COPYING"
 ######################################################################
 
 fscheck() {
@@ -123,7 +115,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -161,7 +153,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -177,7 +169,6 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -208,9 +199,17 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  sed -i '/w3mimgdisplay/s@$(LIBS)@& -lX11@g' Makefile.in
-  sed -i 's@file_handle@w3m_&@g' istream.[ch]
-  gunzip -c $W/w3m-0.5.3-GC_fix.patch.gz | patch -Np1 -i -
+  cp -p Makefile Makefile.orig
+  cat <<- "EOF" | patch Makefile
+16,17c16,19
+	< 	install parprouted /usr/local/sbin
+	< 	install parprouted.8 /usr/local/man/man8
+	---
+	> 	install -d $(DESTDIR)/usr/sbin
+	> 	install parprouted $(DESTDIR)/usr/sbin
+	> 	install -d $(DESTDIR)/usr/share/man/man8
+	> 	install parprouted.8 $(DESTDIR)/usr/share/man/man8
+	EOF
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -220,7 +219,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
@@ -250,14 +249,11 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install -d $mandir/ja_JP.eucJP
-  mv $mandir/ja/man1 $mandir/ja_JP.eucJP
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/ja_JP.eucJP/man1
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -276,12 +272,8 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/libexec/w3m
-  tar rvpf $pkg.tar -C $P usr/share/w3m
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man1 | tail -n+2`
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
