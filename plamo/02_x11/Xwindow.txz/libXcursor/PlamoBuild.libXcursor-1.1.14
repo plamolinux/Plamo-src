@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/lib/libXcursor-1.1.14.tar.bz2'
+pkgbase=libXcursor
+vers=1.1.14
 arch=x86_64
 # arch=i686
 build=P2
-src=libxkbfile-1.0.8
+src=libXcursor-1.1.14
 OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+DOCS='AUTHORS COPYING ChangeLog INSTALL README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,12 +73,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot

@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://invisible-island.net/xterm/xterm-313.tgz'
+pkgbase=xterm
+vers=313
 arch=x86_64
 # arch=i686
-build=P2
-src=libxkbfile-1.0.8
-OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+build=P1
+src=xterm-313
+OPT_CONFIG='--with-app-defaults=/etc/X11/app-defaults'
+DOCS='AAA_README_VMS.txt INSTALL README README.i18n README.os390 THANKS ctlseqs.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -118,9 +118,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -139,17 +139,26 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    sed -i '/v0/,+1s/new:/new:kb=^?:/' termcap
+    echo -e '\tkbs=\\177,' >> terminfo
+    export TERMINFO=/usr/share/terminfo
+
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
+    if [ -f setup.py ]; then
+        python ./setup.py config        
+    elif [ -f Makefile.PL ]; then
+        perl ./Makefile.PL
+    elif [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       export CC="gcc -isystem /usr/include $target" 
+       export CXX="g++ -isystem /usr/include $target "
+       export TERMINFO=/usr/share/terminfo
+       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -159,7 +168,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py build
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -177,12 +188,12 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py install --root $P
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
+      make install-ti DESTDIR=$P
     fi
   done
 ######################################################################

@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/lib/libX11-1.6.2.tar.bz2'
+pkgbase=libX11
+vers=1.6.2
 arch=x86_64
 # arch=i686
 build=P2
-src=libxkbfile-1.0.8
+src=libX11-1.6.2
+#OPT_CONFIG='--disable-static --disable-loadable-i18n'
 OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -192,15 +193,15 @@ if [ $opt_package -eq 1 ] ; then
 
 # remove locales except ja
 # 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+#  for loc_dir in `find $P -name locale` ; do
+#      pushd $loc_dir
+#      for loc in * ; do
+#          if [ "$loc" != "ja" ]; then
+#              rm -rf $loc
+#          fi
+#      done
+#      popd
+#   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する

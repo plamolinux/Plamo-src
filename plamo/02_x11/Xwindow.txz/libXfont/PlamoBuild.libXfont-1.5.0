@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/lib/libXfont-1.5.0.tar.bz2'
+pkgbase=libXfont
+vers=1.5.0
 arch=x86_64
 # arch=i686
-build=P2
-src=libxkbfile-1.0.8
+build=P1
+src=libXfont-1.5.0
 OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+DOCS='AUTHORS COPYING ChangeLog INSTALL README'
 patchfiles=''
 compress=txz
 ##############################################################

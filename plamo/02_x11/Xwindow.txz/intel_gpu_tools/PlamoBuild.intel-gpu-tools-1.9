@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
-arch=x86_64
-# arch=i686
-build=P2
-src=libxkbfile-1.0.8
-OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+url='http://xorg.freedesktop.org/releases/individual/app/intel-gpu-tools-1.9.tar.bz2'
+pkgbase=intel_gpu_tools
+vers=1.9
+arch=`uname -m`
+build=P1
+src=intel-gpu-tools-1.9
+OPT_CONFIG=''
+DOCS='COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,12 +72,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -118,9 +118,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -143,13 +143,17 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
+    if [ -f setup.py ]; then
+        python ./setup.py config        
+    elif [ -f Makefile.PL ]; then
+        perl ./Makefile.PL
+    elif [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       export CC="gcc -isystem /usr/include $target" 
+       export CXX="g++ -isystem /usr/include $target "
+       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -159,7 +163,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py build
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -177,10 +183,9 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py install --root $P
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi

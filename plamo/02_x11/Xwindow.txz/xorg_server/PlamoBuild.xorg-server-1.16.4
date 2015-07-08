@@ -1,15 +1,17 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
-arch=x86_64
-# arch=i686
-build=P2
-src=libxkbfile-1.0.8
-OPT_CONFIG='--disable-static'
+url='http://www.x.org/releases/individual/xserver/xorg-server-1.16.4.tar.bz2'
+pkgbase=xorg_server
+vers=1.16.4
+arch=`uname -m`
+build=P1
+src=xorg-server-1.16.4
+OPT_CONFIG='--disable-systemd-logind'
 DOCS='COPYING ChangeLog INSTALL README'
-patchfiles=''
+patchfiles='autoconfig-nvidia.patch  autoconfig-sis.patch xorg-server-1.16.2-add_prime_support-1.patch'
+# https://projects.archlinux.org/svntogit/packages.git/tree/trunk/autoconfig-nvidia.patch
+# https://projects.archlinux.org/svntogit/packages.git/tree/trunk/autoconfig-sis.patch
+# http://www.linuxfromscratch.org/patches/blfs/svn/xorg-server-1.16.2-add_prime_support-1.patch
 compress=txz
 ##############################################################
 
@@ -73,12 +75,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -143,17 +146,18 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    autoreconf -fi
+    if [ -x configure ] ; then
+        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+        export LDFLAGS='-Wl,--as-needed' 
+        export CC="gcc -isystem /usr/include $target" 
+        export CXX="g++ -isystem /usr/include $target "
+        ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -177,13 +181,11 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
+    chmod +s $P/usr/bin/Xorg
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。

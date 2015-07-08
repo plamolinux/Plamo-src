@@ -1,0 +1,21 @@
+--- ./src/via_3d.h~	2013-05-24 00:11:28.000000000 +0900
++++ ./src/via_3d.h	2014-12-16 22:26:58.501133296 +0900
+@@ -24,6 +24,7 @@
+ #ifndef VIA_3D_H
+ #define VIA_3D_H
+ 
++#include "xorg-server.h"
+ #include "xf86.h"
+ #include "via_dmabuffer.h"
+ 
+diff -u ./src/via_driver.h{~,}
+--- ./src/via_driver.h~	2013-05-24 00:11:28.000000000 +0900
++++ ./src/via_driver.h	2014-12-16 22:27:32.454421386 +0900
+@@ -36,6 +36,7 @@
+ #endif
+ 
+ #include "vgaHW.h"
++#include "xorg-server.h"
+ #include "xf86.h"
+ 
+ #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6

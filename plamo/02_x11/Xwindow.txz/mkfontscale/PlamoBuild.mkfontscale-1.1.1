@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/app/mkfontscale-1.1.1.tar.bz2'
+pkgbase=mkfontscale
+vers=1.1.1
 arch=x86_64
-# arch=i686
-build=P2
-src=libxkbfile-1.0.8
-OPT_CONFIG='--disable-static'
+# arch=i586
+build=P1
+src=mkfontscale-1.1.1
+OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL README'
 patchfiles=''
 compress=txz
@@ -189,7 +189,16 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-
+  mkdir -p $P/install
+  cat <<"EOF" > $P/install/initpkg
+for i in 100dpi 75dpi TTF Type1 cyrillic misc ; do
+    cd /usr/share/fonts/X11/$i
+    echo "making font.scale in  /usr/share/fonts/X11/$i"
+    mkfontscale .
+    echo "making font.dir in  /usr/share/fonts/X11/$i"
+    mkfontdir .
+done
+EOF
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do

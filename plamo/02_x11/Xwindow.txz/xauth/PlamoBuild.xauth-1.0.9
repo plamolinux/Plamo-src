@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/app/xauth-1.0.9.tar.bz2'
+pkgbase=xauth
+vers=1.0.9
 arch=x86_64
-# arch=i686
-build=P2
-src=libxkbfile-1.0.8
-OPT_CONFIG='--disable-static'
+# arch=i586
+build=P1
+src=xauth-1.0.9
+OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL README'
 patchfiles=''
 compress=txz
@@ -189,6 +189,28 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
+
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 

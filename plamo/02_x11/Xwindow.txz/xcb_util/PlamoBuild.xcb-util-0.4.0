@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/X11R7.7/src/lib/libxkbfile-1.0.8.tar.bz2'
-pkgbase=libxkbfile
-vers=1.0.8
+url='http://xcb.freedesktop.org/dist/xcb-util-0.4.0.tar.bz2'
+pkgbase=xcb_util
+vers=0.4.0
 arch=x86_64
 # arch=i686
-build=P2
-src=libxkbfile-1.0.8
+build=P1
+src=xcb-util-0.4.0
 OPT_CONFIG='--disable-static'
-DOCS='COPYING ChangeLog INSTALL README'
+DOCS='ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -184,6 +184,8 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
+    # for backward compatibility
+    ( cd $P/usr/${libdir} ; ln -sf libxcb-util.so.{1,0} )
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
