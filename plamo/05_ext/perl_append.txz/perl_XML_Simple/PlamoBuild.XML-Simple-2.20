@@ -5,7 +5,7 @@ pkgbase=perl_XML_Simple
 vers=2.20
 arch=x86_64
 # arch=i586
-build=P2
+build=P3
 src=XML-Simple-2.20
 OPT_CONFIG='--disable-static'
 DOCS='README'
@@ -238,11 +238,6 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # Create ParserDetails.ini
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-perl -MXML::SAX -e "XML::SAX->add_parser(q(XML::SAX::PurePerl))->save_parsers()" > /dev/null 2>&1
-EOF
 
 # remove locales except ja
 # 

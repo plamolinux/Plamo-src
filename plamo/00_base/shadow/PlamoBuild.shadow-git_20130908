@@ -2,11 +2,11 @@
 
 ######################################################################
 url="https://github.com/shadow-maint/shadow.git
-    http://plamo.linet.gr.jp/~tamuki/src/shadow-adduser-20131121"
+    http://plamo.linet.gr.jp/~tamuki/src/shadow-adduser-20141229"
 pkgbase=shadow
 vers=git_20130908
-arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+arch=`uname -m`
+build=P3
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
     --with-libcrack"
@@ -171,7 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -225,9 +225,11 @@ if [ $opt_config -eq 1 ] ; then
 	< session		required	pam_selinux.so close
 	---
 	> #session		required	pam_selinux.so close
-	11c11,13
+	10,11c10,13
+	< session		optional	pam_console.so
 	< session		required	pam_selinux.so open
 	---
+	> session		optional	pam_unix.so
 	> #session		required	pam_selinux.so open
 	> session		required	pam_lastlog.so
 	> session		optional	pam_ck_connector.so nox11
@@ -366,7 +368,7 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install $W/shadow-adduser-20131121 $P/usr/sbin/adduser
+  install $W/shadow-adduser-20141229 $P/usr/sbin/adduser
   install -d $mandir/ja_JP.eucJP/man{1,5,8}
   for i in `cd $mandir/ja ; find . -type f` ; do
     nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
@@ -400,6 +402,7 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
+  touch -t `date '+%m%d0900'` $docdir/$src
   convert
   cat <<- EOF >> $P/install/doinst.sh
 	#%% begin initialize $pkg

@@ -5,12 +5,13 @@ pkgbase=libtirpc
 vers=0.2.3
 arch=x86_64
 # arch=i586
-build=P1
+build=P2
 src=libtirpc-0.2.3
-OPT_CONFIG='--disable-static'
+OPT_CONFIG='--disable-static --enable-gss'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
-patchfiles='libtirpc-0.2.3-remove_nis-1.patch'
+patchfiles='libtirpc-0.2.3-remove_nis-1.patch use_standard_gssapi.patch'
 # http://www.linuxfromscratch.org/patches/blfs/svn/libtirpc-0.2.3-remove_nis-1.patch
+# http://comments.gmane.org/gmane.linux.nfs/55609
 compress=txz
 ##############################################################
 

@@ -1,11 +1,12 @@
 #!/bin/sh
 ##############################################################
+url='https://webm.googlecode.com/files/libvpx-v1.3.0.tar.bz2'
 pkgbase=libvpx
 vers=1.3.0
-url="https://github.com/webmproject/libvpx/archive/v${vers}.tar.gz"
-arch=`uname -m`
+arch=x86_64
+# arch=i586
 build=P1
-src=libvpx-${vers}
+src=libvpx-v1.3.0
 OPT_CONFIG='--enable-runtime-cpu-detect --disable-static --enable-shared --disable-static'
 DOCS='AUTHORS CHANGELOG LICENSE PATENTS README'
 patchfiles=''

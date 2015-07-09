@@ -4,11 +4,11 @@
 url="http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
 pkgbase=graphviz
 vers=2.38.0
-arch=`uname -m | sed 's/i.86/i586/'`
-build=P1
+arch=`uname -m`
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG=""
-DOCS="README NEWS INSTALL ChangeLog COPYING AUTHORS"
+DOCS="NEWS cpl1.0.txt INSTALL ChangeLog README AUTHORS COPYING"
 ######################################################################
 
 fscheck() {
@@ -169,7 +169,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -202,7 +202,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   cp -p tclpkg/gv/Makefile.in{,.orig}
   cat <<- "EOF" | patch tclpkg/gv/Makefile.in
-	3447a3448
+	3350a3351
 	> 	sed -i 's/^  \(char \*type_name;\)/  const \1/' gv_php.cpp
 	EOF
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -249,7 +249,7 @@ if [ $opt_package -eq 1 ] ; then
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  for i in . tcl R java lua ocaml perl php python ruby ; do
+  for i in . tcl R lua ocaml perl php python ; do
     strip_libdir $P/usr/$libdir/graphviz/$i
   done
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
@@ -270,7 +270,7 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  for i in . tcl R java lua ocaml perl php python ruby ; do
+  for i in . tcl R lua ocaml perl php python ; do
     touch -t `date '+%m%d0900'` $P/usr/$libdir/graphviz/$i
   done
   prune_symlink $P/usr/share/graphviz/doc/pdf
@@ -291,15 +291,13 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 -name libgvc.*`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 -name libgvpr.*`
   tar rvpf $pkg.tar -C $P usr/$libdir/graphviz
-  tar rvpf $pkg.tar -C $P usr/$libdir/lua/gv.so
+  tar rvpf $pkg.tar -C $P usr/$libdir/lua/5.1/gv.so
   tar rvpf $pkg.tar -C $P \
       `cd $P ; find usr/$libdir/perl5/vendor_perl/5.14.2/*-linux-thread-multi \
       | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/$libdir/php/modules/gv.so
   tar rvpf $pkg.tar -C $P \
       `cd $P ; find usr/$libdir/python*/site-packages | tail -n+2`
-  tar rvpf $pkg.tar -C $P \
-      `cd $P ; find usr/$libdir/ruby/vendor_ruby/1.9.1/*-linux | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/$libdir/tcl8.5/graphviz
   tar rvpf $pkg.tar -C $P usr/include/graphviz
   tar rvpf $pkg.tar -C $P usr/share/graphviz

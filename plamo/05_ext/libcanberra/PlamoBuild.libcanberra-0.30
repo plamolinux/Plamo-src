@@ -3,9 +3,8 @@
 url='http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz'
 pkgbase=libcanberra
 vers=0.30
-arch=x86_64
-# arch=i586
-build=P1
+arch=`uname -m`
+build=P4
 src=libcanberra-0.30
 OPT_CONFIG='--disable-static --disable-oss'
 DOCS='README'

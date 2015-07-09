@@ -7,7 +7,7 @@ vers=0.99
 arch=x86_64
 # arch=i586
 # arch=noarch
-build=P1
+build=P2
 src=XML-SAX-0.99
 OPT_CONFIG=''
 DOCS='LICENSE README'
@@ -220,6 +220,12 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  # Create ParserDetails.ini
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+perl -MXML::SAX -e "XML::SAX->add_parser(q(XML::SAX::PurePerl))->save_parsers()" > /dev/null 2>&1
+EOF
+
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
     mkdir -p $P/install

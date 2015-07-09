@@ -10,7 +10,7 @@ url="http://www.ibiblio.org/pub/linux/games/bsd-games-2.17.tar.gz
 pkgbase=bsd_games
 vers=2.17
 arch=x86_64
-build=P2
+build=P4
 src=bsd-games-$vers
 OPT_CONFIG=""
 DOCS="THANKS AUTHORS BUGS COPYING NEWS ChangeLog PACKAGING
@@ -256,6 +256,8 @@ if [ $opt_package -eq 1 ] ; then
   done
   install -d $P/usr/share/dict
   gunzip -c $W/hangman-words.gz > $P/usr/share/dict/words
+  chgrp -R games $P/var/games
+  chmod -R g+w $P/var/games
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \

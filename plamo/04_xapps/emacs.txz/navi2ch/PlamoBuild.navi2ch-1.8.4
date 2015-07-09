@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://jaist.dl.sourceforge.net/project/navi2ch/navi2ch/navi2ch-1.8.4/navi2ch-1.8.4.tar.gz'
+url='http://sourceforge.net/projects/navi2ch/files/navi2ch/navi2ch-1.8.4/navi2ch-1.8.4.tar.gz/download'
 pkgbase=navi2ch
 vers=1.8.4
-arch=x86_64
-# arch=i586
-build=P4
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P2
 src=navi2ch-1.8.4
-OPT_CONFIG='--with-icondir=/usr/share/emacs/icons/navi2ch/'
+OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL NEWS README TODO navi2ch-history.el'
-patchfiles=''
+patchfiles='patch-aa'
 compress=txz
 ##############################################################
 
@@ -151,7 +150,7 @@ mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
-pkg=$pkgbase-$vers-$arch-$build
+pkg=$pkgbase-$vers-noarch-$build
 
 if [ $arch = "x86_64" ]; then
     target="-m64"

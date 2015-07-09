@@ -1,0 +1,19 @@
+*** navi2ch-1.8.4/elisp-comp.orig	2014-12-29 02:50:21.035290219 +0900
+--- navi2ch-1.8.4/elisp-comp	2014-12-29 02:48:11.643131312 +0900
+***************
+*** 72,78 ****
+  
+  (
+    cd $tempdir
+!   echo "(setq load-path (cons nil load-path))" > script
+  #  $EMACS -batch -q -l script -f batch-byte-compile *.el || exit $?
+    $EMACS -batch -q -l script -l ../bcomp.el || exit $?
+    mv *.elc ..
+--- 72,78 ----
+  
+  (
+    cd $tempdir
+!   echo "(setq load-path (cons \".\" load-path))" > script
+  #  $EMACS -batch -q -l script -f batch-byte-compile *.el || exit $?
+    $EMACS -batch -q -l script -l ../bcomp.el || exit $?
+    mv *.elc ..

@@ -1,0 +1,411 @@
+#!/bin/sh
+
+######################################################################
+url="http://hostap.epitest.fi/releases/wpa_supplicant-2.0.tar.gz"
+pkgbase=wpa_supplicant
+vers=2.0
+arch=x86_64
+build=P1
+src=$pkgbase-$vers
+OPT_CONFIG=""
+DOCS="README
+    `echo wpa_supplicant/{README-HS20,eap_testing.txt,todo.txt,ChangeLog}`
+    `echo wpa_supplicant/README{-P2P,,-WPS,-Windows.txt}`
+    COPYING"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+if [ $# -eq 0 ] ; then
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+  cd $B
+  cp -p wpa_supplicant/Makefile{,.orig}
+  sed '/^export/s@/local\(.*\)/$@\1@g' wpa_supplicant/Makefile.orig \
+      | sed '/LIBDIR/s@lib@lib64@g' > wpa_supplicant/Makefile
+  cp -p wpa_supplicant/{defconfig,.config}
+  cat <<- "EOF" | patch wpa_supplicant/.config
+	10a11
+	> CFLAGS += -I/usr/include/libnl3
+	199c200
+	< #CONFIG_WPS=y
+	---
+	> CONFIG_WPS=y
+	245c246
+	< #CONFIG_READLINE=y
+	---
+	> CONFIG_READLINE=y
+	376c377
+	< #CONFIG_CTRL_IFACE_DBUS=y
+	---
+	> CONFIG_CTRL_IFACE_DBUS=y
+	380c381
+	< #CONFIG_CTRL_IFACE_DBUS_NEW=y
+	---
+	> CONFIG_CTRL_IFACE_DBUS_NEW=y
+	383c384
+	< #CONFIG_CTRL_IFACE_DBUS_INTRO=y
+	---
+	> CONFIG_CTRL_IFACE_DBUS_INTRO=y
+	410c411
+	< #CONFIG_DEBUG_FILE=y
+	---
+	> CONFIG_DEBUG_FILE=y
+	523a525,527
+	> 
+	> CONFIG_IPV6=y
+	> CONFIG_LIBNL32=y
+	EOF
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}/wpa_supplicant
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}/wpa_supplicant
+    if [ -f Makefile ] ; then
+      make
+    fi
+  done
+  ( cd wpa_gui-qt4 ; qmake ; make )
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}/wpa_supplicant
+    if [ -f Makefile ] ; then
+      make install DESTDIR=$P
+    fi
+  done
+  wpadir=$B/wpa_supplicant
+  install $wpadir/wpa_gui-qt4/wpa_gui $P/usr/sbin
+  cat <<- "EOF" > $P/usr/sbin/wpa_action.sh
+	#!/bin/sh
+	
+	IFNAME=$1
+	CMD=$2
+	
+	if [ "$CMD" == "CONNECTED" ] ; then
+	  dhclient $IFNAME
+	fi
+	
+	if [ "$CMD" == "DISCONNECTED" ] ; then
+	  ifconfig $IFNAME down
+	fi
+	EOF
+  chmod 755 $P/usr/sbin/wpa_action.sh
+  install -d $P/usr/share/dbus-1/system-services
+  install -m 644 $wpadir/dbus/fi.*.service $P/usr/share/dbus-1/system-services
+  install -d $P/etc/dbus-1/system.d
+  install -m 644 $wpadir/dbus/*.conf $P/etc/dbus-1/system.d/wpa_supplicant.conf
+  install -d $mandir/man5
+  install -m 644 $wpadir/doc/docbook/wpa_supplicant.conf.5 $mandir/man5
+  install -d $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_supplicant.8 $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_cli.8 $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_passphrase.8 $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_priv.8 $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_gui.8 $mandir/man8
+  install -m 644 $wpadir/doc/docbook/wpa_background.8 $mandir/man8
+  install -d $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/rc.d/init.d/wpa_supplicant
+	#!/bin/sh
+	
+	IFNAME=`iwconfig 2> /dev/null | grep "IEEE 802.11" | awk '{print $1}'`
+	
+	start() {
+	  if [ -x /usr/sbin/wpa_supplicant ] ; then
+	    wpa_supplicant -B -c /etc/wpa_supplicant.conf -i $IFNAME
+	  fi
+	  if [ -x /usr/sbin/wpa_cli ] ; then
+	    wpa_cli -a /usr/sbin/wpa_action.sh -B
+	  fi
+	}
+	
+	stop() {
+	  killall wpa_supplicant
+	}
+	
+	case "$1" in
+	start)
+	  start
+	  ;;
+	stop)
+	  stop
+	  ;;
+	restart)
+	  stop
+	  sleep 3
+	  start
+	  ;;
+	*)
+	  echo $"Usage: $0 {start|stop|restart}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 644 $P/etc/rc.d/init.d/wpa_supplicant
+  cat <<- "EOF" | unexpand > $P/etc/wpa_supplicant.conf.dist
+	ctrl_interface=/var/run/wpa_supplicant
+	ctrl_interface_group=wheel
+	network={
+	        ssid="replace SSID"
+	        key_mgmt=WPA-PSK
+	        psk="very secret passphrase"
+	}
+	EOF
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+  cp -a $S/wpa_supplicant/examples $docdir/$src/wpa_supplicant
+  chmod -R g-w $docdir/$src/wpa_supplicant/examples
+  chown -R root.root $docdir/$src/wpa_supplicant/examples
+  mv $docdir/$src/wpa_supplicant/{examples,README-{WPS,Windows.txt}.gz} $C
+  mv $C/{examples,README-{WPS,Windows.txt}.gz} $docdir/$src/wpa_supplicant
+  touch -r $S $docdir/$src/wpa_supplicant
+  convert
+  install -d $P/install
+  cat <<- "EOF" > $P/install/doinst.sh
+	if [ -f etc/wpa_supplicant.conf ] ; then
+	  rm etc/wpa_supplicant.conf.dist
+	else
+	  mv etc/wpa_supplicant.conf.dist /tmp
+	  mv /tmp/wpa_supplicant.conf.dist etc/wpa_supplicant.conf
+	fi
+	EOF
+  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/dbus-1/system-services | tail -n+2`
+  tar rvpf $pkg.tar -C $P etc/dbus-1/system.d/wpa_supplicant.conf
+  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/wpa_supplicant
+  tar rvpf $pkg.tar -C $P etc/wpa_supplicant.conf.dist
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
+fi
