@@ -41,11 +41,11 @@ diff -uNr openssl-1.0.1p.orig/Makefile.org openssl-1.0.1p/Makefile.org
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/misc \
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/certs \
  		$(INSTALL_PREFIX)$(OPENSSLDIR)/private
-+	@$(PERL) $(TOP)/util/mkdir-p.pl
++	@$(PERL) $(TOP)/util/mkdir-p.pl \
 +		$(INSTALL_PREFIX)$(MANDIR)/man1 \
 +		$(INSTALL_PREFIX)$(MANDIR)/man3 \
 +		$(INSTALL_PREFIX)$(MANDIR)/man5 \
-+		$(INSTALL_PREFIX)$(MANDIR)/man7 \
++		$(INSTALL_PREFIX)$(MANDIR)/man7
 +
 +install_sw: install_dirs
  	@set -e; headerlist="$(EXHEADER)"; for i in $$headerlist;\
