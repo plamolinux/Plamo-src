@@ -1,15 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='https://www.stunnel.org/downloads/stunnel-5.08.tar.gz'
+url='https://www.stunnel.org/downloads/stunnel-5.20.tar.gz'
 verify=
 pkgbase=stunnel
-vers=5.08
+vers=5.20
 commitid=
-# arch=x86_64
-# arch=i586
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
-src=stunnel-5.08
+src=stunnel-5.20
 #OPT_CONFIG="--with-ssl=/usr --docdir=/usr/share/doc/${src}"
 OPT_CONFIG="--with-ssl=/usr"
 DOCS='AUTHORS BUGS COPYING COPYRIGHT.GPL CREDITS ChangeLog INSTALL INSTALL.FIPS INSTALL.W32 INSTALL.WCE NEWS PORTS README TODO'

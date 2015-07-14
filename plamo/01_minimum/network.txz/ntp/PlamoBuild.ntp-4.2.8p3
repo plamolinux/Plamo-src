@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=ntp
-vers=4.2.8p2
+vers=4.2.8p3
 url="http://archive.ntp.org/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
