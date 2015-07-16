@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://www.nih.at/libzip/libzip-0.10.1.tar.bz2'
 pkgbase=libzip
-vers=0.10.1
-arch=x86_64
-# arch=i586
+vers=0.11.2
+url="http://www.nih.at/libzip/libzip-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=libzip-0.10.1
+src=libzip-${vers}
 OPT_CONFIG='--enable-shared --disable-static'
 DOCS='AUTHORS INSTALL LICENSE NEWS README THANKS TODO'
-patchfiles=''
+patchfiles='CVE-2015-2331.patch'
 compress=txz
 ##############################################################
 
