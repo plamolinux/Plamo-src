@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.mariadb.org/f/mariadb-5.5.30/kvm-tarbake-jaunty-x86/mariadb-5.5.30.tar.gz/from/http:/ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb -O mariadb-5.5.30.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.44/source/mariadb-5.5.44.tar.gz'
 pkgbase=mariadb
-vers=5.5.30
-arch=x86_64
+vers=5.5.44
+arch=`uname -m`
 # arch=i586
 build=P1
-src=mariadb-5.5.30
+src=mariadb-5.5.44
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
 DOCS='COPYING INSTALL-SOURCE INSTALL-WIN-SOURCE README'
 patchfiles=''
