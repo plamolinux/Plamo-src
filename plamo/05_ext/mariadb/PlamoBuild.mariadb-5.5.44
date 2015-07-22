@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase=httpd
-vers=2.4.12
-url="http://www.apache.org/dist/httpd/httpd-${vers}.tar.gz"
-verify=$url.asc
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.44/source/mariadb-5.5.44.tar.gz'
+pkgbase=mariadb
+vers=5.5.44
 arch=`uname -m`
+# arch=i586
 build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --mandir=/usr/share/man"
-DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
-patchfiles='httpdlogrotate_plamo.patch'
+src=mariadb-5.5.44
+OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
+DOCS='COPYING INSTALL-SOURCE INSTALL-WIN-SOURCE README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -72,20 +72,6 @@ compress_all() {
   strip_all
 }  
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
-    fi
-  done
-  exit 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -104,13 +90,13 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-  target="-m64"
-  libdir="lib64"
-  suffix="64"
+    target="-m64"
+    libdir="lib64"
+    suffix="64"
 else
-  target="-m32"
-  libdir="lib"
-  suffix=""
+    target="-m32"
+    libdir="lib"
+    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -128,67 +114,46 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
 
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p ${B[$i]}
   done
 ######################################################################
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+  for i in `seq 0 $((${#S[@]} - 1))` ; do
+    cd $S
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+       if [ ! -f ".$patch" ]; then
+           patch -p1 < $W/$patch
+           touch ".$patch"
+       fi
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-
-    if [ -x configure ] ; then
-      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-      export LDFLAGS='-Wl,--as-needed' 
-      export CC="gcc -isystem /usr/include $target" 
-      export CXX="g++ -isystem /usr/include $target "
-      sed -i -e "s|\${prefix}/lib|\${prefix}/${libdir}|" config.layout
-      exec ./configure ${OPT_CONFIG[$i]}
-    fi
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
+   cd $B
+      if [ -f $S/CMakeLists.txt ]; then
+          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+          export LDFLAGS='-Wl,--as-needed' 
+          # export CC="gcc -isystem /usr/include $target" 
+          # export CXX="g++ -isystem /usr/include $target"
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/mysql -DINSTALL_LIBDIR:STRING=${libdir} -DINSTALL_PLUGINDIR:STRING=${libdir}/plugin  ${OPT_CONFIG} $S
+      fi
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -198,6 +163,15 @@ if [ $opt_build -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
+
+    # mkdir -p libmysqld/work
+    # cd libmysqld/work
+    # ar -x ../libmysqld.a
+    # these result in missing dependencies: (filed upstream as bug 59104)
+    # rm -f sql_binlog.cc.o rpl_utility.cc.o
+    # gcc $CFLAGS $LDFLAGS -shared -Wl,-soname,libmysqld.so.0 -o libmysqld.so.0.0.1 \
+    #	*.o  -lpthread -lcrypt -lssl -lcrypto -lz -lrt -lstdc++ -ldl -lm -lc
+
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -219,91 +193,85 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-
-    chk_me=`whoami | grep root`
-    if [ "$chk_me.x" != ".x" ]; then
-      echo "chown"
-      chown -R root:root $P/usr/sbin
-      chown -R root:root $P/usr/bin
-      chown -R root:root $P/usr/${libdir}
-      chown -R root:root $P/usr/share/man
-      chown -R root:root $P/srv/httpd
-    fi
+    for archive in $P/opt/mysql/${libdir}/*.a ; do
+	echo "strip $archive with -g "
+	strip -g $archive
+    done
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $P/etc/logrotate.d
-  cp ${B[i]}/build/rpm/httpd.logrotate $P/etc/logrotate.d/
-  mv $P/etc/httpd/httpd.conf $P/etc/httpd/httpd.conf.dist
-  mv $P/etc/httpd/extra $P/etc/httpd/extra.dist
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-  MYHOST=\`cat /etc/HOSTNAME\`
-  sed -i -e 's/^User\sdaemon/User www/' \
-    -e 's/Group\sdaemon/Group apache/'  \
-    -e 's/mpm_event/mpm_prefork/g' \
-    -e "s/^#ServerName.*$/ServerName \$MYHOST/" /etc/httpd/httpd.conf.dist
-if [ ! -f /etc/httpd/httpd.conf ]; then
-  ( cd /etc/httpd ; cp httpd.conf.dist httpd.conf )
-fi
-if [ ! -d /etc/httpd/extra ]; then
-  ( cd /etc/httpd ; cp -rp extra.dist extra )
-fi
-( cd /etc/rc.d/init.d ; ln -sf /usr/sbin/apachectl )
-if [ -d /etc/httpd/conf ]; then
-  echo "Caution!: sysconfdir was changed to /etc/httpd (previously /etc/httpd/conf)"
-fi
-if [ -d /var/www ]; then
-  echo "Caution!: datadir was changed to /srv (previously /var/www)"
-fi
-EOF
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-    mkdir -p $P/install
-    for omf in $P/usr/share/omf/* ; do
-      omf_name=`basename $omf`
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-    done
-  fi
 
-  if [ -d $P/etc/gconf/schemas ]; then
-    mkdir -p $P/install
-    for schema in $P/etc/gconf/schemas/* ; do
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+  mkdir -p $P/etc/profile.d
+  cat <<'EOF' > $P/etc/profile.d/mysql.csh
+# path for MySQL
+if ($?PATH) then
+    set path = ( $path /opt/mysql/bin )
+else
+    set path = ( /bin /usr/bin /opt/mysql/bin )
+endif
+EOF
+  cat <<'EOF' > $P/etc/profile.d/mysql.sh
+# path for MySQL
+if [ "$PATH.x" != ".x" ]; then
+    PATH=$PATH:/opt/mysql/bin
+else
+    PATH=/bin:/usr/bin:/opt/mysql/bin
 fi
 EOF
-    done
-  fi
+
+  mkdir -p $P/usr/share/info
+  mv $P/opt/mysql/docs/mysql.info $P/usr/share/info/
+  gzip $P/usr/share/info/mysql.info
+  #cp libmysqld/work/libmysqld.so.0.0.1 $P/opt/mysql/${libdir}
+  #( pushd $P/opt/mysql/${libdir} ; ln -sf libmysqld.so.0.0.1 libmysqld.so.0.0 ;
+  #    ln -sf libmysqld.so.0.0 libmysqld.so.0 ; ln -sf libmysqld.so.0.0 libmysqld.so )
+
+  mkdir -p $P/install
+  cat <<"EOF" > $P/install/initpkg
+grp=`cat /etc/group | grep mysql`
+if [ "$grp.x" = ".x" ]; then
+    groupadd -g 40 mysql
+fi
+usr=`cat /etc/passwd | grep mysql`
+if [ "$usr.x" = ".x" ]; then
+    useradd -g mysql -u 33 mysql
+fi
+cd /opt/mysql
+chown -R mysql .
+chgrp -R mysql .
+./scripts/mysql_install_db --user=mysql
+chown -R root .
+chown -R mysql data
+cp ./support-files/my-small.cnf /etc/my.cnf
+EOF
+
+  mkdir -p $P/etc/rc.d/init.d/
+  install -m 644 support-files/mysql.server $P/etc/rc.d/init.d/mysql
+  sed -i -e "s|^basedir=|basedir=/opt/mysql|" -e "s|^datadir=|datadir=/opt/mysql/data|" $P/etc/rc.d/init.d/mysql
+
+  if [ -d $W/work2 ]; then rm -rf $W/work2 ; fi
+  mkdir -p $W/work2/opt/mysql/
+  mv $P/opt/mysql/{mysql-test,sql-bench} $W/work2/opt/mysql
 
 # remove locales except ja
 # 
-  for loc_dir in `find $P -name locale` ; do
-    pushd $loc_dir
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
     for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
     done
     popd
-  done      
+  fi
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
-  if [ -d $P/usr/share/man ]; then
-    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-      gzip_dir $mdir
-    done
-  fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -328,20 +296,9 @@ EOF
   done
 
   for patch in $patchfiles ; do
-    cp $W/$patch $docdir/$src/$patch
-    gzip_one $docdir/$src/$patch
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
   done
-
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
-
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
@@ -355,6 +312,12 @@ EOF
 # mv $pkg.tar.gz $pkg.tgz
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+  cd $W/work2
+  /sbin/makepkg ../mariadb_testsuits-$vers-$arch-P1.txz <<EOF
 y
 1
 EOF
