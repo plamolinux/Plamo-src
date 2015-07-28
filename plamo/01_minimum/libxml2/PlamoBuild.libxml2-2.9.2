@@ -5,11 +5,11 @@ vers=2.9.2
 url="ftp://xmlsoft.org/libxml2/libxml2-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
-build=P2
+build=P3
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static --with-history'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles=''
+patchfiles='xmlcaltalog-bugfix.patch CVE-2015-1819.patch'
 compress=txz
 ##############################################################
 
@@ -232,15 +232,9 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/general/libxml2.html
-    sed -e /xmlInitializeCatalog/d \
-	-e 's/((ent->checked =.*&&/(((ent->checked == 0) ||\
-          ((ent->children == NULL) \&\& (ctxt->options \& XML_PARSE_NOENT))) \&\&/' \
-	-i parser.c
-
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
 
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
