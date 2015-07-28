@@ -1,0 +1,22 @@
+--- libxml2-2.9.2/parser.c	2014-10-16 14:57:40.000000000 +0900
++++ build/parser.c	2015-07-28 17:21:28.617742668 +0900
+@@ -7235,7 +7235,8 @@
+      * far more secure as the parser will only process data coming from
+      * the document entity by default.
+      */
+-    if ((ent->checked == 0) &&
++    if (((ent->checked == 0) ||
++          ((ent->children == NULL) && (ctxt->options & XML_PARSE_NOENT))) &&
+         ((ent->etype != XML_EXTERNAL_GENERAL_PARSED_ENTITY) ||
+          (ctxt->options & (XML_PARSE_NOENT | XML_PARSE_DTDVALID)))) {
+ 	unsigned long oldnbent = ctxt->nbentities;
+@@ -14830,9 +14831,6 @@
+ #ifdef LIBXML_XPATH_ENABLED
+ 	xmlXPathInit();
+ #endif
+-#ifdef LIBXML_CATALOG_ENABLED
+-        xmlInitializeCatalog();
+-#endif
+ 	xmlParserInitialized = 1;
+ #ifdef LIBXML_THREAD_ENABLED
+     }
