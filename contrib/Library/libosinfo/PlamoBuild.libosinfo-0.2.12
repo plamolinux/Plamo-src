@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libosinfo
-vers=0.2.11
+vers=0.2.12
 url="https://fedorahosted.org/releases/l/i/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify=
 commitid=
 arch=`uname -m | sed -e 's/i.86/i586/'`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG=''
+OPT_CONFIG='--disable-tests'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README'
-patchfiles=''
+patchfiles='plamo.patch'
 compress=txz
 ##############################################################
 
