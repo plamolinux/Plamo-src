@@ -156,13 +156,13 @@ if [ $opt_config -eq 1 ] ; then
     elif [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-#       if [ -x /usr/bin/clang -a -x /usr/bin/clang++ ]; then
-#	   export CC="clang"
-#	   export CXX="clang++"
-#       else
+       if [ -x /usr/bin/clang -a -x /usr/bin/clang++ ]; then
+	   export CC="clang"
+	   export CXX="clang++"
+       else
 	   export CC="gcc -isystem /usr/include $target" 
 	   export CXX="g++ -isystem /usr/include $target "
-#       fi
+       fi
        ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
       if [ $? != 0 ]; then
