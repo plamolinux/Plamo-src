@@ -253,13 +253,15 @@ if [ $opt_config -eq 1 ] ; then
 #      sh ./autogen.sh
 #    fi
 
-    # bug on firefox 32 (?)
-    #sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
+    # configure script misdetects the preprocessor without an optimization level
+    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
 
     cat > mozconfig <<EOF
 ## Project
 . ${B[$i]}/browser/config/mozconfig
 export MOZILLA_OFFICIAL=0
+CC="gcc"
+CXX="g++"
 
 mk_add_options MOZ_MAKE_FLAGS="-j3"
 ac_add_options --enable-strip
