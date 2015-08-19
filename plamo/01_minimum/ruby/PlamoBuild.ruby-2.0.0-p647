@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url="http://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p598.tar.gz"
 pkgbase=ruby
-vers=2.0.0_p598
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=2.0.0_p647
+url="http://cache.ruby-lang.org/pub/ruby/2.0/ruby-${vers/_/-}.tar.gz"
+arch=`uname -m`
 build=P1
-src=ruby-2.0.0-p598
+src=ruby-${vers/_/-}
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README README.EXT README.EXT.ja README.ja ToDo'
 patchfiles=''
