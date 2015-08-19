@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=39.0.3
+vers=40.0.2
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
 #verify=$url.asc
 arch=`uname -m`
@@ -241,8 +241,6 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
-
     hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
@@ -255,13 +253,15 @@ if [ $opt_config -eq 1 ] ; then
 #      sh ./autogen.sh
 #    fi
 
-    # bug on firefox 32 (?)
+    # configure script misdetects the preprocessor without an optimization level
     sed -i '/ac_cpp=/s/$CPPFLAGS/& -O2/' configure
 
     cat > mozconfig <<EOF
 ## Project
 . ${B[$i]}/browser/config/mozconfig
 export MOZILLA_OFFICIAL=0
+CC="gcc"
+CXX="g++"
 
 mk_add_options MOZ_MAKE_FLAGS="-j3"
 ac_add_options --enable-strip
@@ -316,21 +316,6 @@ ac_add_options --enable-ui-locale=ja
 
 EOF
 
-    # workaround on firefox-32
-#    if [ $arch != "x86_64" ]; then
-#      cat << EOF >> mozconfig 
-#ac_add_options --disable-optimize
-#EOF
-#    fi
-
-    cat << EOF >> layout/build/Makefile.in
-
-ifdef MOZ_ENABLE_CANVAS
-EXTRA_DSO_LDOPTS += \$(XLDFLAGS) -lX11 -lXrender
-endif
-
-EOF
-
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -340,7 +325,7 @@ if [ $opt_build -eq 1 ] ; then
     export CFLAGS="-isystem /usr/include ${target}"
     export CPPFLAGS="-isystem /usr/include ${target}"
     export MOZ_MAKE_FLAGS="-j3"
-    make -f client.mk -j3
+    make -f client.mk build
   done
 fi
 if [ $opt_package -eq 1 ] ; then
