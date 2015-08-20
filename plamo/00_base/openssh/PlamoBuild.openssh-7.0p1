@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=openssh
-vers=6.9p1
+vers=7.0p1
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG='--with-privsep-user=sshd --with-privsep-path=/var/lib/sshd --sysconfdir=/etc/ssh --localstatedir=/var --with-pam'
+OPT_CONFIG='--with-privsep-user=sshd --with-privsep-path=/var/lib/sshd --sysconfdir=/etc/ssh --localstatedir=/var --with-pam --with-md5-passwords'
 DOCS='ChangeLog INSTALL README README.dns README.platform README.privsep README.tun TODO'
 patchfiles=''
 compress=txz
@@ -277,7 +277,7 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
 
-# CLFS に合わせてみたが，root.sys にすべきかは不明
+# /var/lib/sshd を root:sys に
     chk_me=`whoami | grep root`
     if [ "$chk_me.x" != ".x" ]; then
 	chown root:sys $P/var/lib/sshd
@@ -306,6 +306,9 @@ EOF
   chmod 644 $P/etc/ssh/sshd_config
   mv $P/etc/ssh/sshd_config $P/etc/ssh/sshd_config.new
   mv $P/etc/ssh/ssh_config $P/etc/ssh/ssh_config.new
+
+  install -v -m755 contrib/ssh-copy-id $P/usr/bin
+  install -v -m644 contrib/ssh-copy-id.1 $mandir/man1
 
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
