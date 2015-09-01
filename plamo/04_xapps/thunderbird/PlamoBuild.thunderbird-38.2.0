@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=thunderbird
-vers=38.0.1
+vers=38.2.0
 url="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/${vers}/source/${pkgbase}-${vers}.source.tar.bz2"
 #verify=$url.asc
 arch=`uname -m`
