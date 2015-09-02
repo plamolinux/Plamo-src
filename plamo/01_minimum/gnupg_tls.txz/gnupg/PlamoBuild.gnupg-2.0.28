@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=gnupg
-vers=2.0.27
+vers=2.0.28
 url="ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-${vers}.tar.bz2"
 verify=$url.sig
 arch=`uname -m`
