@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=util_linux
-vers=2.26.2
+vers=2.27
 url="http://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
 arch=`uname -m`
