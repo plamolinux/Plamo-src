@@ -1,12 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libidn
-vers=1.19
-arch=i586
-src=libidn-1.19
+vers=1.32
+url="http://ftp.jaist.ac.jp/pub/GNU/libidn/libidn-${vers}.tar.gz"
+verify=$url.sig
+arch=`uname -m`
+build=P1
+src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='.clcopying ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
+compress=txz
 ##############################################################
 
 install2() {
@@ -132,6 +136,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+    echo "Verify Checksum..."
+    checksum_command=$1
+    verify_file=${verify##*/}
+    for s in $url ; do
+	srcsum=`$checksum_command ${s##*/}`
+	verifysum=`grep ${s##*/} $verify_file`
+	if [ x"$srcsum" != x"$verifysum" ]; then
+	    return 1
+	fi
+    done
+    return 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -173,6 +191,24 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $verify ; do
+      if [ ! -f ${i##*/} ] ; then
+	  wget $i
+      fi
+  done
+  for i in $verify ; do
+      case ${i##*.} in
+	  asc) gpg2 --verify ${i##*/} ;;
+	  sig) gpg2 --verify ${i##*/} ;;
+	  sha256sum) verify_checksum "sha256sum" ;;
+      esac
+      if [ $? -ne 0 ]; then
+	  echo "archive verify was failed."
+	  exit 1
+      else
+	  echo "archive verify was successed."
+      fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -283,7 +319,56 @@ EOF
     popd
   fi
 
-  mkdir -p $docdir/$src
-  install $W/$myname $docdir/$src
-  gzip_one $docdir/$src/$myname
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+######################################################################
+# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
+#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
+# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
+######################################################################
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      gzip_one $docdir/$src/$myname
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+
+  for patch in $patchfiles ; do
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
+  done
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  convert
+######################################################################
+# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
+#   記述します(prune_symlink を使います)。
+# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
+#   します(こだわりを求めないなら単に makepkg でも良いです)。
+######################################################################
+# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+# tar rvpf $pkg.tar -C $P usr/share/doc/$src
+# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
+# mv $pkg.tar.gz $pkg.tgz
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
 fi
