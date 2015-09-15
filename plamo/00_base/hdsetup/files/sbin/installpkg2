@@ -1,6 +1,23 @@
 #!/sbin/installer/sh
 export PATH=/sbin/installer
 
+chk_lang=`/usr/bin/env | grep LANG | grep -i utf`
+if [ -x /usr/bin/iconv ]; then
+    ICONV='/usr/bin/iconv -f EUC-JP -t UTF8'
+else
+    ICONV='cat'
+fi
+
+my_echo() {
+    mes=$1
+    if [ "$chk_lang.x" != ".x" ]; then
+	my_mes=`echo $mes | $ICONV`
+    else
+	my_mes=$mes
+    fi
+    echo $my_mes
+}
+
 # Copyright 1994, 1998, 2000  Patrick Volkerding, Concord, CA, USA 
 # Copyright 2001, 2003  Slackware Linux, Inc., Concord, CA, USA
 # All rights reserved.
@@ -267,9 +284,9 @@ for package in $* ; do
   if [ -r "$ADM_DIR/packages/$packagebase" ]; then
     EXITSTATUS=3
     if [ "$MODE" = "install" ]; then
-      echo " すでに $packagebase というパッケージはインストールされています。"
-      echo "再インストールする場合は removepkg $packagebase で削除するか、" 
-      echo "/var/log/packages/$packagebase を別の名前に変更してください。"
+      my_echo " すでに $packagebase というパッケージはインストールされています。"
+      my_echo "再インストールする場合は removepkg $packagebase で削除するか、" 
+      my_echo "/var/log/packages/$packagebase を別の名前に変更してください。"
     fi
     continue
   fi
@@ -375,11 +392,18 @@ for package in $* ; do
 
   COMPRESSED="`expr $COMPRESSED / 1024` K"
   UNCOMPRESSED="`expr $UNCOMPRESSED / 1024` K"
-#  MD5SUM=`md5sum $package | cut -f 1 -d ' '`
-  cat $DESCRIPTION | grep "^$packagebase:" | cut -f 2- -d : | cut -b2- 1> $TMP/tmpmsg$$ 2> /dev/null
-  if [ "$shortname" != "$packagebase" ]; then
-    cat $DESCRIPTION | grep "^$shortname:" | cut -f 2- -d : | cut -b2- 1>> $TMP/tmpmsg$$ 2> /dev/null
-  fi
+  #  MD5SUM=`md5sum $package | cut -f 1 -d ' '`
+  if [ "$chk_lang.x" = ".x" ]; then
+      cat $DESCRIPTION | grep "^$packagebase:" | cut -f 2- -d : | cut -b2- 1> $TMP/tmpmsg$$ 2> /dev/null
+      if [ "$shortname" != "$packagebase" ]; then
+	  cat $DESCRIPTION | grep "^$shortname:" | cut -f 2- -d : | cut -b2- 1>> $TMP/tmpmsg$$ 2> /dev/null
+      fi
+  else
+      cat $DESCRIPTION | $ICONV | grep "^$packagebase:" | cut -f 2- -d : | cut -b2- 1> $TMP/tmpmsg$$ 2> /dev/null
+      if [ "$shortname" != "$packagebase" ]; then
+	  cat $DESCRIPTION | $ICONV | grep "^$shortname:" | cut -f 2- -d : | cut -b2- 1>> $TMP/tmpmsg$$ 2> /dev/null
+      fi
+  fi	
   # Adjust the length here.  This allows a slack-desc to be any size up to 13 lines instead of fixed at 11.
   #TMPMSG=`cat $TMP/tmpmsg$$`
   #echo "TMP:$TMP, tmpmsg:$TMP/tmpmsg$$ $TMPMSG"
@@ -413,14 +437,21 @@ EOF
   # Emit information to the console:
   if [ "$MODE" = "install" ]; then
     if [ "$PMSG" = "" ]; then
-      echo "$shortname のインストール中 "
+      my_echo "$shortname のインストール中 "
     else
-      echo "$shortname ($PMSG) のインストール中"
+      my_echo "$shortname ($PMSG) のインストール中"
     fi
     echo "PACKAGE DESCRIPTION:"
-    cat $DESCRIPTION | grep "^$packagebase:" | uniq
-    if [ "$shortname" != "$packagebase" ]; then
-      cat $DESCRIPTION | grep "^$shortname:" | uniq
+    if [ "$chk_lang.x" = ".x" ]; then
+	cat $DESCRIPTION | grep "^$packagebase:" | uniq
+	if [ "$shortname" != "$packagebase" ]; then
+	    cat $DESCRIPTION | grep "^$shortname:" | uniq
+	fi
+    else
+	cat $DESCRIPTION | $ICONV | grep "^$packagebase:" | uniq
+	if [ "$shortname" != "$packagebase" ]; then
+	    cat $DESCRIPTION | $ICONV | grep "^$shortname:" | uniq
+	fi
     fi
   elif [ "$MODE" = "infobox" -a ! "$PRIORITY" = "SKP" ]; then # install non-SKP infobox package
     dialog --title "Installing package ==>$shortname<== $PMSG" --infobox "`cat $TMP/tmpmsg$$`" 0 0
@@ -436,9 +467,9 @@ EOF
     continue
   else # we must need a full menu:
     dialog --title "Package Name: ==>$shortname<== $PMSG" --menu "`cat $TMP/tmpmsg$$`" 0 0 3 \
-    "Yes" "$shortname をインストールする" \
-    "No" "$shortname はインストールしない" \
-    "Quit" "インストールを中止する" 2> $TMP/reply$$
+    "Yes" "Install $shortname " \
+    "No" "Not instal $shortname " \
+    "Quit" "Stop Install" 2> $TMP/reply$$
     if [ ! $? = 0 ]; then
       echo "No" > $TMP/reply$$
     fi
@@ -465,7 +496,7 @@ EOF
   if [ ! "$TARERROR" = "0" ]; then
     EXITSTATUS=1 # tar file corrupt
     if [ "$MODE" = "install" ]; then
-      echo "$package をインストールできませんでした。パッケージが壊れているようです (tar returned error code $TARERROR)"
+      my_echo "$package をインストールできませんでした。パッケージが壊れているようです (tar returned error code $TARERROR)"
     fi
     rm -f $TMP/tmplist$$
     continue
@@ -519,7 +550,7 @@ EOF
   echo "i $dtstr: $shortname" >> $ADM_DIR/install.log
   if [ -f $ROOT/install/doinst.sh ]; then
     if [ "$MODE" = "install" ]; then
-      echo "$shortname のインストールスクリプトを実行中"
+      my_echo "$shortname のインストールスクリプトを実行中"
     fi
     ( cd $ROOT/
          sed -e '/^#%% begin/,/^#%% end/d' install/doinst.sh > install/doinst.tmp
