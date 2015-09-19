@@ -1,0 +1,2 @@
+#!/bin/sh
+dialog --title "エラー: Linux用パーティションがありません" --textbox "/usr/lib/setup/nopartHELPj" 22 74

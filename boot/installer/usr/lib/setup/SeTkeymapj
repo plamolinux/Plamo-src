@@ -1,0 +1,73 @@
+#!/bin/sh
+# Copyright 1993, Patrick Volkerding, Moorhead, MN.
+# Use and redistribution covered by the same terms as the "setup" script.
+#if [ ! -d /usr/lib/kbd/keytables ]; then
+# dialog --title "必要なファイルが見つかりません" --msgbox \
+#"ディスクA3のパッケージ、'keymaps.tgz'をインストールするまで、\n\
+#キーボード配列を変更することはできません。パッケージには先に\n\
+#進むのに必要なキーボードマップが含まれています。" 9 70
+# exit
+#fi
+
+KEYSET106=off
+SWCTRL=off
+SWESC=off
+if [ -f /tmp/keyset ] ; then
+  if [ ! "`grep jp106 /tmp/keyset`" = "" ] ; then 
+    KEYSET106=on
+    SWESC=on
+  fi
+  if [ ! "`grep cl2c-d /tmp/keyset`" = "" ] ; then 
+    SWCTRL=on
+  fi 
+  if [ ! "`grep k2esc-d /tmp/keyset`" = "" ] ; then 
+    SWESC=on
+  fi
+fi
+
+dialog --title "キーボード配列の変更" --checklist \
+"キーボード配列の日本語106/英語101を選んだり、Caps Lock と CTRL の入れ\n\
+換え、「半角/全角」キーを ESCキーに割り当てる設定をします。US 101 キー\n\
+ボードを使っている場合や、キーの入れ換えが不要な場合は X マークを外して\n\
+ください。" 14 76 4 \
+"106" "日本語 106 キーの配置" "$KEYSET106" \
+"CTRL" "CTRLとCapsLockを入れかえ(A の左が CTRL になります)" "$SWCTRL" \
+"ESC" "「半角/全角」キーを ESC に(日本語 106 キー: 常に有効)" "$SWESC" \
+    2> /tmp/keys
+if [ $? = 1 -o $? = 255 ]; then
+  exit
+fi
+
+DF="/etc/custom/kbd/defkeymap.map"
+JP="/etc/custom/kbd/jp106.map"
+CL="/etc/custom/kbd/cl2c-d.map"
+K2="/etc/custom/kbd/k2esc-d.map"
+
+if grep 106 /tmp/keys 1> /dev/null 2> /dev/null ; then
+	echo "jp106.map" > /tmp/keyset
+	if grep CTRL /tmp/keys 1> /dev/null 2> /dev/null ; then
+		echo "cl2c-d.map" >> /tmp/keyset
+		loadkeys $JP $CL
+	else
+		loadkeys $JP
+	fi
+else
+	echo "defkeymap.map" > /tmp/keyset
+	if grep CTRL /tmp/keys 1> /dev/null 2> /dev/null ; then
+		echo "cl2c-d.map" >> /tmp/keyset
+		if grep ESC /tmp/keys 1> /dev/null 2> /dev/null ; then
+        		echo "k2esc-d.map" >> /tmp/keyset
+			loadkeys $DF $CL $K2
+		else
+			loadkeys $DF $CL
+		fi
+	else
+		if grep ESC /tmp/keys 1> /dev/null 2> /dev/null ; then
+        		echo "k2esc-d.map" >> /tmp/keyset
+			loadkeys $DF $K2
+		else
+			loadkeys $DF
+		fi
+	fi
+fi
+

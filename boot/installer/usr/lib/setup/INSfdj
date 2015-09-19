@@ -1,0 +1,11 @@
+#!/bin/sh
+rm -f /tmp/SeTDS /tmp/SeTmount
+cat << EOF > /tmp/tmpmsg
+
+申し分けありませんが、Plamo Linux は FD インストールができません。
+CD-ROM からインストールできない場合は、HDD や MO などの大容量
+メディアにコピーするか、NFS インストールを試してください。
+EOF
+
+exit
+

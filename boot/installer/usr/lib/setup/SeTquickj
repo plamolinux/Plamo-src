@@ -1,0 +1,24 @@
+#!/bin/sh
+dialog --title "インストールモードの変更" --menu "
+インストールには基本的な２つのモード、QUICK（確認なし）と\n\
+VERBOSE（確認あり）があります。VERBOSEモードでは、個々の\n\
+オプションパッケージをインストールする前に説明が表示され、\n\
+インストールするかどうかの確認がなされます。QUICKモード\n\
+では、個々のディスクセットの最初のところで確認するだけです。\n\
+QUICKモードはそれぞれのパッケージの説明をしませんから、\n\
+初心者の方はおそらく最初はVERBOSEモードばかりを使用すべき\n\
+でしょう。QUICKモードを使用すると、あとでどのタグファイルを\n\
+指定しようが関係ありません - それぞれのディスクセットの\n\
+先頭で選択します。どちらのモードを使用しますか？" 18 74 2 \
+"VERBOSE" "インストールの際確認を取ります" \
+"QUICK" "インストールの際確認しません" 2> /tmp/SeTreturn
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/SeTreturn
+ exit
+fi
+if [ "`cat /tmp/SeTreturn`" = "VERBOSE" ]; then
+ rm -f /tmp/SeTQUICK
+else
+ touch /tmp/SeTQUICK
+fi
+rm -f /tmp/SeTreturn

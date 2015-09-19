@@ -1,0 +1,313 @@
+#!/bin/sh
+# SeTpartition user-friendly rewrite Fri Dec 15 13:17:40 CST 1995 pjv
+crunch () { # remove extra whitespace
+    read STRING;
+    echo $STRING
+}
+T_PX=/mnt
+if [ ! -r /tmp/SeTplist ]; then
+ # Give warning?
+    echo "exit"
+fi
+dialog --title "ハードディスクのスキャン中" --infobox \
+    "Plamo セットアップはLinuxパーティションを探すために \n\
+ハードディスクをスキャン中です。少々お待ちください。" 6 60
+
+cat << EOF > /tmp/tmpscript
+#!/bin/sh
+dialog --title "Linuxをインストールするパーティションの選択:" --menu \\
+"root（/）パーティションにするLinuxパーティションを \\
+リストから選択してください。" 15 70 5 \\
+EOF
+export COUNT=0
+cat /tmp/SeTplist | while [ 0 ]; do
+    read PARTITION;
+    if [ "$PARTITION" = "" ]; then
+	break;
+    fi
+    NAME=`echo $PARTITION | crunch | cut -f 1 -d ' '`
+    SIZE=`echo "$PARTITION" | tr -d "*" | tr -d "+" | crunch | cut -f 4 -d ' '`
+    echo "\"$NAME\" \"Linux用, ${SIZE}K\" \\" >> /tmp/tmpscript
+done
+echo "\"---\" \"(なし，セットアップメニューに戻る)\" \\" >> /tmp/tmpscript
+echo "\"---\" \"(なし，セットアップメニューに戻る)\" \\" >> /tmp/tmpscript
+echo "\"---\" \"(なし，セットアップメニューに戻る)\" \\" >> /tmp/tmpscript
+echo "\"---\" \"(なし，セットアップメニューに戻る)\" \\" >> /tmp/tmpscript
+echo "\"---\" \"(なし，セットアップメニューに戻る)\" \\" >> /tmp/tmpscript
+echo "2> /tmp/return" >> /tmp/tmpscript
+. /tmp/tmpscript
+if [ $? = 1 -o $? = 255 ]; then
+    rm /tmp/tmpscript
+    exit 255 # user abort
+fi
+ROOT_DEVICE="`cat /tmp/return`"
+rm /tmp/tmpscript
+if [ "$ROOT_DEVICE" = "---" ]; then
+    exit 255
+fi
+ROOT_SIZE=`probe -l | grep "$ROOT_DEVICE " | tr -d "*" | tr -d "+" | crunch | cut -f 4 -d ' '`
+dialog --title "パーティション$ROOT_DEVICEのフォーマット" \
+    --menu "まだこのパーティションがフォーマットされていなかったら， \
+フォーマットしなければなりません。注: フォーマットするとパーティ \
+ション上のすべてのデータは消去されます。既存のパーティションを変更 \
+するのなら，起動／ルートディスクからではなく，ハードディスクから \
+セットアップを実行しなければいけません。（ハードディスク上のセット \
+アッププログラムと起動／ルートディスクのセットアップはバージョン \
+が異なります。）このパーティションをフォーマットしますか?" 18 76 3 \
+    "Format" "クィックフォーマット -- バッドブロックのチェックはしません" \
+    "Check" "スローフォーマット -- バッドブロックをチェックします" \
+    "No" "このパーティションをフォーマットしません" 2> /tmp/format
+if [ $? = 1 -o $? = 255 ]; then
+    rm -f /tmp/format
+    exit
+fi
+DOFORMAT="`cat /tmp/format`"
+rm -f /tmp/format
+if [ ! "$DOFORMAT" = "No" ]; then
+    dialog --title "$ROOT_DEVICEのFS形式の選択" --menu \
+	"Plamo Linux ではファイルシステムとしてext4/ext3/ext2/btrfs  \
+	が利用できます．このパーティションをどのファイルシステムで作成 \
+	しますか？" 22 76 6 \
+	"ext4" "ext3 + 新機能(過去との互換性を気にしないなら高性能)" \
+	"ext3" "ext2 + journaling 機能(ここしばらくの標準)" \
+	"ext2" "ext2 fs(小規模FS等、限定用途向け)" \
+	"btrfs" "Btree-fs(新世代FS、まだ歴史は浅い)" 2> /tmp/fstype
+    if [ $? = 1 -o $? = 255 ]; then
+	rm -f /tmp/fstype
+	exit
+    fi
+    FSTYPE="`cat /tmp/fstype`"
+    rm -rf /tmp/fstype
+    ROOT_SYS_TYPE=$FSTYPE
+
+    dialog --title "フォーマット中" --infobox "$ROOT_DEVICEをフォーマット中  \n\
+  $ROOT_DEVICE を $FSTYPE でフォーマットしています" 6 45
+    if mount | grep "$ROOT_DEVICE " 1> /dev/null 2> /dev/null ; then
+	umount $ROOT_DEVICE 2> /dev/null
+    fi
+    if [ "$FSTYPE" = "ext4" ]; then
+	if [ "$DOFORMAT" = "Check" ]; then
+	    mkfs.ext4 -L rootfs -c  $ROOT_DEVICE
+	else
+	    mkfs.ext4 -L rootfs  $ROOT_DEVICE
+	fi
+    fi
+
+    if [ "$FSTYPE" = "ext3" ]; then
+	if [ "$DOFORMAT" = "Check" ]; then
+	    mkfs.ext3 -I 128 -L rootfs  -c $ROOT_DEVICE
+	else
+	    mkfs.ext3 -I 128 -L rootfs -j $ROOT_DEVICE
+	fi
+    fi
+    if [ "$FSTYPE" = "ext2" ]; then
+	if [ "$DOFORMAT" = "Check" ]; then
+	    mke2fs -I 128 -L rootfs -c $ROOT_DEVICE
+	else
+	    mke2fs -I 128 -L rootfs $ROOT_DEVICE
+	fi
+    fi
+    if [ "$FSTYPE" = "btrfs" ]; then
+	mkfs.btrfs -L rootfs  $ROOT_DEVICE
+    fi
+else # DOFORMAT?
+    ROOT_SYS_TYPE="";
+    dialog --infobox "$ROOT_DEVICEをマウント中..." 3 60
+    for filesystem in ext4 ext3 ext2 btrfs ; do
+	mount -t $filesystem $ROOT_DEVICE $T_PX 1> /dev/null 2> /dev/null
+	if [ $? = 0 ]; then
+	    ROOT_SYS_TYPE=$filesystem
+	    break
+	fi
+    done
+    if [ "$ROOT_SYS_TYPE" = "" ]; then
+	dialog --title "$ROOT_DEVICEがマウントできません" --msgbox \
+	    "$ROOT_DEVICEが ext4/ext3/ext2/btrfs の形式でマウントできませんでした．\n\
+何か問題があると思われるのでインストールを終了します." 14 70
+	exit
+    fi
+fi
+
+# Now, we need to mount the newly selected root device:
+sync
+mount -t $ROOT_SYS_TYPE $ROOT_DEVICE $T_PX 1> /dev/null 2> /dev/null
+echo "$ROOT_DEVICE       /        $ROOT_SYS_TYPE        defaults   1   1" > /tmp/SeTnative
+echo $ROOT_DEVICE > /tmp/SeTrootdev
+# done mounting the target root partition
+
+# More than one Linux partition
+if [ ! "`cat /tmp/SeTplist | sed -n '2 p'`" = "" ]; then 
+    while [ 0 ]; do # next partition loop
+	cat << EOF > /tmp/tmpscript
+#! /bin/sh
+dialog --title "/etc/fstabに追加するその他のLinuxパーティションの選択" \\
+--menu \\
+"Linux用とマークされたパーティションが他にもあるようです。 \\
+現在，$ROOT_DEVICEが / パーティションとしてマウントされて \\
+います。/usr や /opt のような大きいディレクトリは， \\
+独立したパーティションにマウントした方がいいかもしれません。 \\
+ただし /etc，/sbin あるいは /bin のようなディレクトリを / 以外の \\
+パーティションにマウントしてはいけません。これらのディレクト \\
+リに含まれているファイルはシステムの起動やパーティションのマウ \\
+ントに使われるからです(缶切りが缶の中にある状態になっちゃいます)。 \\
+また，すでに指定してあるパーティションを再度指定してはいけません。 \\
+リストからいずれかのLinuxパーティションを選択するか， \\
+キャンセルを押してください。" 22 76 4 \\
+EOF
+	cat /tmp/SeTplist | while [ 0 ]; do
+	    read PARTITION;
+	    if [ "$PARTITION" = "" ]; then
+		break;
+	    fi
+	    SIZE=`echo "$PARTITION" | tr -d "*" | tr -d "+" | crunch | cut -f 4 -d ' '`
+	    ALTNAME=""
+	    DEVICE=`echo "$PARTITION" | tr -d "*" | crunch | cut -f 1 -d ' '`
+	    if grep "$DEVICE " /tmp/SeTnative 1> /dev/null; then # it's been used
+		ALTNAME="$DEVICE, Linux用, ${SIZE}K"
+	    fi
+	    NAME=`echo $PARTITION | crunch | cut -f 1 -d ' '`
+	    if [ "$ALTNAME" = "" ]; then
+		echo "\"$NAME\" \"Linux用, ${SIZE}K\" \\" >> /tmp/tmpscript
+	    else
+		echo "\"(使用中)\" \"$ALTNAME\" \\" >> /tmp/tmpscript
+	    fi
+	done
+	echo "\"---\" \"(なし, セットアップに戻る)\" \\" >> /tmp/tmpscript
+	echo "\"---\" \"(なし, セットアップに戻る)\" \\" >> /tmp/tmpscript
+	echo "\"---\" \"(なし, セットアップに戻る)\" \\" >> /tmp/tmpscript
+	echo "\"---\" \"(なし, セットアップに戻る)\" \\" >> /tmp/tmpscript
+	echo "2> /tmp/return" >> /tmp/tmpscript
+	. /tmp/tmpscript
+	if [ $? = 1 -o $? = 255 ]; then
+	    break;
+	fi
+	NEXT_PARTITION=`cat /tmp/return`
+	if [ "$NEXT_PARTITION" = "---" ]; then
+	    break;
+	elif [ "$NEXT_PARTITION" = "(in use)" ]; then
+	    continue;
+	fi 
+	SIZE=`probe -l | grep "$NEXT_PARTITION " | tr -d "*" | tr -d "+" | crunch | cut -f 4 -d ' '`
+	dialog --title "パーティション$NEXT_PARTITIONのフォーマット" --menu \
+	    "まだこのパーティションがフォーマットされていなければ， \
+	    フォーマットしなければなりません。注: フォーマットすると \
+	    パーティション上のすべてのデータは消去されます。 \
+	    既存のパーティションを変更したいのなら，起動／ルートディスク \
+	    からではなく， ハードディスクからセットアップを実行してください。 \
+	    (ハードディスク上のセットアッププログラムと起動/ルートディスク \
+	    のセットアッププログラムはバージョンが異なります。) \
+	    このパーティションをフォーマットしますか? " 20 76 3 \
+	    "Format" "クィックフォーマット - バッドブロックのチェックはしません " \
+	    "Check" "スローフォーマット - バッドブロックをチェックします " \
+	    "No" "このパーティションをフォーマットしません " 2> /tmp/format
+	if [ $? = 1 -o $? = 255 ]; then
+	    rm -f /tmp/format
+	    exit
+	fi
+	DOFORMAT="`cat /tmp/format`"
+	rm -f /tmp/format
+	FSTYPE=""
+	if [ ! "$DOFORMAT" = "No" ]; then
+            dialog --title "$NEXT_PARTITIONのFS形式の選択" --menu \
+		"現在のPlamo ではファイルシステムとして，ext4/ext3/ext2/btrfsの4種 \
+が利用できます．このパーティションをどのファイルシステムで作成 \
+しますか？" 22 74 6 \
+		"ext4" "ext3 + 新機能(過去との互換性を気にしないなら高性能)" \
+		"ext3" "ext2 + journaling 機能(ここしばらくの標準)" \
+		"ext2" "ext2 fs(小規模FS等、限定用途向け)" \
+		"btrfs" "Btree-FS(新世代FS。歴史はまだ浅い)" 2> /tmp/fstype
+	    if [ $? = 1 -o $? = 255 ]; then
+		rm -f /tmp/fstype
+		exit
+	    fi
+	    FSTYPE="`cat /tmp/fstype`"
+	    rm -rf /tmp/fstype
+	    dialog --title "フォーマット中" --infobox "$NEXT_PARTITIONをフォーマット中  \n\
+ファイルシステムのタイプ : $FSTYPE " 6 60
+	    if mount | grep "$NEXT_PARTITION " 1> /dev/null 2> /dev/null ; then
+		umount $NEXT_PARTITION 2> /dev/null
+	    fi
+
+	    if [ "$FSTYPE" = "ext4" ]; then
+		if [ "$DOFORMAT" = "Check" ]; then
+		    mkfs.ext4 -c  $NEXT_PARTITION
+		else
+		    mkfs.ext4 $NEXT_PARTITION
+		fi
+	    fi
+
+	    if [ "$FSTYPE" = "ext3" ]; then
+		if [ "$DOFORMAT" = "Check" ]; then
+		    mkfs.ext3 -c $NEXT_PARTITION
+		else
+		    mke2fs -j $NEXT_PARTITION
+		fi
+	    fi
+
+	    if [ "$FSTYPE" = "ext2" ]; then
+		if [ "$DOFORMAT" = "Check" ]; then
+		    mke2fs -c $NEXT_PARTITION
+		else
+		    mke2fs  $NEXT_PARTITION
+		fi
+	    fi
+
+	    if [ "$FSTYPE" = "btrfs" ]; then
+		mkfs.btrfs  $NEXT_PARTITION
+	    fi
+
+	else # DOFORMAT ?
+
+	    if [ ! -d /tmpmnt ]; then
+		mkdir /tmpmnt
+	    fi
+
+	    FSTYPE="";
+	    dialog --infobox "$NEXT_PARTITIONをマウント中..." 3 60
+	    for filesystem in ext4 ext3 ext2 btrfs ; do
+		mount -t $filesystem $NEXT_PARTITION /tmpmnt 1> /dev/null 2> /dev/null
+		if [ $? = 0 ]; then
+		    FSTYPE=$filesystem
+		    umount /tmpmnt
+		    break
+		fi
+	    done
+	    if [ "$FSTYPE" = "" ]; then
+		dialog --title "$NEXT_PARTITONがマウントできません" --msgbox \
+		    "$NEXT_PARTITIONが ext4/ext3/ext2/btrfs の形式でマウントできませんでした．\n\
+何か問題があると思われるのでインストールを終了します." 14 70
+		exit
+	    fi
+	fi
+
+	dialog --title "$NEXT_PARTITIONのマウントポイントの選択" --inputbox \
+	    "このパーティションをディレクトリツリーのどこへマウントするか指定 \n\
+してください。たとえば、パーティションを/optへマウントする \n\
+なら、/opt と入力してください \n\n\
+$NEXT_PARTITIONをどこへマウントしますか？" 12 70 2> /tmp/return
+	if [ $? = 255 -o $? = 1 ]; then 
+	    exit 1
+	fi
+	MTPT=`cat /tmp/return`
+	rm /tmp/return
+    # Now, we need to mount the newly selected root device:
+	sync
+	if [ ! -d /mnt/$MTPT ]; then
+	    mkdir -p /mnt/$MTPT
+	fi
+
+	if [ $FSTYPE = "" ]; then
+            for filesystem in ext4 ext3 ext2 btrfs ; do
+		mount -t $filesystem $NEXT_PARTITION /mnt/$MTPT 1> /dev/null 2>/dev/null
+		if [ $? = 0 ]; then
+		    FSTYPE=$filesystem
+		    break
+		fi
+	    done
+	else
+            mount -t $FSTYPE $NEXT_PARTITION /mnt/$MTPT 1> /dev/null 2> /dev/null
+	fi
+	echo "$NEXT_PARTITION       $MTPT        $FSTYPE     defaults   1   2" >> /tmp/SeTnative
+
+    done # next partition loop
+fi # more than one Linux partition
