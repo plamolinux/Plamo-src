@@ -1,0 +1,82 @@
+#!/bin/sh
+# This is 'probe', a wrapper for using fdisk to gather drive info for
+# the Slackware setup scripts.  I hate to bounce this much garbage through
+# a tmpdir, but it looks like large variables can make ash crash...
+TMP=/var/log/setup/tmp
+rm -f $TMP/SeTfdisk
+
+# listide major minor hd1 hd2 (2 base devs for major)
+list_ide() {
+  if [ "$2" = "0" ]; then
+    fdisk -l /dev/$3 >> $TMP/SeTfdisk
+  elif [ "$2" = "64" ]; then
+    fdisk -l /dev/$4 >> $TMP/SeTfdisk
+  fi
+}
+
+list_scsi() {
+  # find drive # 0 - 15
+  DRV=`expr $1 / 16`
+  NUM=`expr $1 % 16`
+  if [ ! "$NUM" = "0" ]; then
+    return
+  fi
+  if [ "$DRV" = "0" ]; then
+    fdisk -l /dev/sda >> $TMP/SeTfdisk
+  elif [ "$DRV" = "1" ]; then
+    fdisk -l /dev/sdb >> $TMP/SeTfdisk
+  elif [ "$DRV" = "2" ]; then
+    fdisk -l /dev/sdc >> $TMP/SeTfdisk
+  elif [ "$DRV" = "3" ]; then
+    fdisk -l /dev/sdd >> $TMP/SeTfdisk
+  elif [ "$DRV" = "4" ]; then
+    fdisk -l /dev/sde >> $TMP/SeTfdisk
+  elif [ "$DRV" = "5" ]; then
+    fdisk -l /dev/sdf >> $TMP/SeTfdisk
+  elif [ "$DRV" = "6" ]; then
+    fdisk -l /dev/sdg >> $TMP/SeTfdisk
+  elif [ "$DRV" = "7" ]; then
+    fdisk -l /dev/sdh >> $TMP/SeTfdisk
+  elif [ "$DRV" = "8" ]; then
+    fdisk -l /dev/sdi >> $TMP/SeTfdisk
+  elif [ "$DRV" = "9" ]; then
+    fdisk -l /dev/sdj >> $TMP/SeTfdisk
+  elif [ "$DRV" = "10" ]; then
+    fdisk -l /dev/sdk >> $TMP/SeTfdisk
+  elif [ "$DRV" = "11" ]; then
+    fdisk -l /dev/sdl >> $TMP/SeTfdisk
+  elif [ "$DRV" = "12" ]; then
+    fdisk -l /dev/sdm >> $TMP/SeTfdisk
+  elif [ "$DRV" = "13" ]; then
+    fdisk -l /dev/sdn >> $TMP/SeTfdisk
+  elif [ "$DRV" = "14" ]; then
+    fdisk -l /dev/sdo >> $TMP/SeTfdisk
+  elif [ "$DRV" = "15" ]; then
+    fdisk -l /dev/sdp >> $TMP/SeTfdisk
+  fi
+}
+
+if cat /proc/partitions | grep / 1> /dev/null 2> /dev/null ; then # new
+  cat /proc/partitions | grep / | while read line ; do
+    SMASHED_LINE=$line
+    MAJOR=`echo $SMASHED_LINE | cut -f 1 -d ' '`
+    MINOR=`echo $SMASHED_LINE | cut -f 2 -d ' '`
+    if [ "$MAJOR" = "3" ]; then
+      list_ide $MAJOR $MINOR hda hdb
+    elif [ "$MAJOR" = "8" ]; then
+      list_scsi $MINOR
+    elif [ "$MAJOR" = "22" ]; then
+      list_ide $MAJOR $MINOR hdc hdd
+    elif [ "$MAJOR" = "33" ]; then
+      list_ide $MAJOR $MINOR hde hdf
+    elif [ "$MAJOR" = "34" ]; then
+      list_ide $MAJOR $MINOR hdg hdh
+    elif [ "$MAJOR" = "56" ]; then
+      list_ide $MAJOR $MINOR hdi hdj
+    fi
+  done
+else # old format
+  fdisk -l >> $TMP/SeTfdisk
+fi
+
+cat $TMP/SeTfdisk
