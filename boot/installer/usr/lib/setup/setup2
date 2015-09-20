@@ -1,0 +1,87 @@
+#! /bin/sh
+
+setterm -blank 0
+export LANG=ja_JP.eucJP
+
+while [ 0 ]; do
+ dialog --title "Plamo Linux のセットアップメニューへようこそ" --menu \
+"お使いのハードウェアがブートディスクのカーネルに認識されていない \n\
+場合、いったんこのメニューを終了して、modules コマンドで必要なモ  \n\
+ジュールを組みこんでから、再度 install コマンドを実行するか、KON を \n\
+を起動して setup 実行してください。また、Linux をインストールする \n\
+には、あらかじめHDD 上にLinux 用のパーティションが最低 1 つは必要 \n\
+です。Linux 用のパーティションが無い場合は、fdisk を選んで、パーティ\n\
+ションを用意してください。さて、どうしましょう？ " 16 74 4 \
+"KEYMAP" "キーボードのキー配列を変更" \
+"fdisk" "fdisk で Linux 用パーティションを作成" \
+"cfdisk" "cfdisk でLinux 用パーティションを作成" \
+"install" "Plamo Linux のインストールを開始" \
+"exit" "いったん終了" 2> /tmp/preset
+
+if [ $? = 1 -o $? = 255 ]; then
+  exit
+fi
+ PRESELECT="`cat /tmp/preset`"
+ rm /tmp/preset
+
+if [ "$PRESELECT" = "exit" ]; then
+  exit
+
+elif [ "$PRESELECT" = "KEYMAP" ]; then
+  SeTkeymapj
+
+elif [ "$PRESELECT" = "fdisk" ]; then
+
+echo "#! /bin/sh" > /tmp/fdiskset
+echo "dialog --title \"HDD selection\" --menu \\" >> /tmp/fdiskset
+echo "\"どのディスクを fdisk しますか？\" 10 60 5 \\" >> /tmp/fdiskset
+
+  ( export LANG=C && fdisk -l | grep "^Disk"| grep -v "identifier" |  cut -d ' ' -f 2-4 | \
+       sed -f /usr/lib/setup/conv.sed  1>> /tmp/fdiskset 2> /dev/null )
+  export LANG=ja_JP.eucJP
+echo "\"quit\" \"quit\" 2> /tmp/Fdisk" >> /tmp/fdiskset
+chmod +x /tmp/fdiskset
+/tmp/fdiskset
+
+  if [ $? = 1 -o $? = 255 ]; then
+    exit
+  fi
+
+ TD="`cat /tmp/Fdisk`"
+
+ if [ "$TD" = "quit" ]; then
+    continue
+ else
+    jfdisk $TD
+ fi
+
+elif [ "$PRESELECT" = "cfdisk" ]; then
+
+echo "#! /bin/sh" > /tmp/fdiskset
+echo "dialog --title \"HDD selection\" --menu \\" >> /tmp/fdiskset
+echo "\"どのディスクを cfdisk しますか？\" 10 60 5 \\" >> /tmp/fdiskset
+
+  ( export LANG=C && fdisk -l | grep "^Disk"| grep -v "identifier" | cut -d ' ' -f 2-4 | \
+       sed -f /usr/lib/setup/conv.sed  1>> /tmp/fdiskset 2> /dev/null )
+   export LANG=ja_JP.eucJP
+echo "\"quit\" \"quit\" 2> /tmp/Fdisk" >> /tmp/fdiskset
+chmod +x /tmp/fdiskset
+/tmp/fdiskset
+
+  if [ $? = 1 -o $? = 255 ]; then
+    exit
+  fi
+
+ TD="`cat /tmp/Fdisk`"
+
+ if [ "$TD" = "quit" ]; then
+    continue
+ else
+    cfdisk $TD
+ fi
+
+elif [ "$PRESELECT" = "install" ]; then
+  exec setupj
+fi
+
+done

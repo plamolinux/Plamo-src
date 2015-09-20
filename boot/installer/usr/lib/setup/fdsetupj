@@ -1,0 +1,313 @@
+#!/bin/sh
+#
+# Copyright 1993,1994 Patrick Volkerding, Moorhead, Minnesota USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is 
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# As always, bug reports, suggestions, etc: volkerdi@mhd1.moorhead.msus.edu
+# or bf703@cleveland.freenet.edu, or (if you absolutely must) (218) 233-4349.
+#
+# 日本語版については、JF projectのサポートの下、
+# 嶋崎＠梨大（simazaki@yu-gate.yamanashi.ac.jp）が翻訳しました。
+#
+
+rm -f /tmp/SeT*
+echo "on" > /tmp/SeTcolor # turn on color menus
+PATH="$PATH:/usr/lib/setup"
+export PATH;
+/sbin/probe -r 1> /dev/null 2> /dev/null
+PARTLIST="`probe -l | grep "83  Linux" 2> /dev/null`"
+if [ "$PARTLIST" = "" ]; then
+ SeTnopartj
+ exit
+fi
+echo "$PARTLIST" > /tmp/SeTplist
+T_PX="/mnt"
+echo "$T_PX" > /tmp/SeTT_PX
+#DISTRIBUTION_SOURCE="/var/adm/mount"
+#echo "$DISTRIBUTION_SOURCE" > /tmp/SeTDS
+#SOURCE_DEVICE="/dev/fd0"
+# We may want to force the issue...
+# echo "$SOURCE_DEVICE" > /tmp/SeTsource
+ROOT_DEVICE="`mount | grep "on / " | cut -b-10`"
+echo "$ROOT_DEVICE" > /tmp/SeTrootdev
+if mount | grep /var/adm/mount 1> /dev/null 2> /dev/null ; then # clear source
+ umount /var/adm/mount                                           # location
+fi
+rm -f /var/adm/mount 2> /dev/null
+rmdir /var/adm/mount 2> /dev/null
+mkdir /var/adm/mount 2> /dev/null
+
+while [ 0 ]; do
+
+# Reset menu flag:
+rm -f /tmp/SeTQUICK
+ dialog --title "Plamo Linuxインストールメニュー(version 2.0)" \
+--menu \
+"Plamo Linuxインストールメニューへようこそ.\n\
+上下カーソルキーおよびスペースあるいはENTERキーで以下のオプションを\n\
+選択してください。'+', '-'とTABキーも使用できます。KEYMAPは先に\n\
+設定していれば設定不要です。" 19 76 10 \
+"HELP" "Plamo Linux セットアップのHELPを表示" \
+"KEYMAP" "キーボードのキー配列を変更" \
+"ADDSWAP" "スワップパーティションの設定" \
+"TARGET" "インストール先パーティションの設定" \
+"SOURCE" "インストール元の選択" \
+"DISK SETS" "インストールするディスクセットの選択" \
+"INSTALL" "選択したディスクセットのインストール" \
+"CONFIGURE" "インストールしたLinuxシステムの設定" \
+"EXIT" "Plamo Linuxセットアップを終了" 2> /tmp/hdset
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/hdset /tmp/SeT*
+  exit
+ fi
+ MAINSELECT="`cat /tmp/hdset`"
+ rm /tmp/hdset
+
+ # Start checking what to do. Some modules may reset MAINSELECT to run the
+ # next item in line.
+
+ if [ "$MAINSELECT" = "HELP" ]; then
+  SeTfdHELPj
+ fi
+
+
+ if [ "$MAINSELECT" = "KEYMAP" ]; then
+  SeTkeymapj
+  if [ -r /tmp/SeTkeymap ]; then
+   dialog --yesno "キー配列の変更が終了しましたが、次にスワップ領域の設定を\
+行いますか？" 9 76
+   if [ $? = 0 ]; then
+    MAINSELECT="ADDSWAP" 
+   fi
+  fi
+ fi
+ 
+ if [ "$MAINSELECT" = "MAKE TAGS" ]; then
+  SeTmaketagj
+ fi
+ 
+ if [ "$MAINSELECT" = "ADDSWAP" ]; then
+  SeTswapj
+  if [ -r /tmp/SeTswap ]; then
+   dialog --title "インストールを続行しますか？" --yesno "スワップ領域の設定が済みましたが、このままインストールを続ける\n\
+こともできますし、メインメニューに戻ることもできます。インスト\n\
+ールを続行し、インストール先ドライブの設定を行いますか？" 9 70
+   if [ $? = 0 ]; then
+    MAINSELECT="TARGET"
+   fi
+  fi
+ fi
+
+ if [ "$MAINSELECT" = "TARGET" ]; then
+  SeTpartitionsj
+  SeTDOSj
+  if [ -r /tmp/SeTnative ]; then
+   dialog --title "続行しますか？" --yesno "インストール先ドライブの設定が終了しました。\n\
+インストール元の選択へ進みますか？" 7 62
+   if [ $? = 0 ]; then
+    MAINSELECT="SOURCE"
+   fi
+  fi
+ fi
+
+ if [ "$MAINSELECT" = "SOURCE" ]; then
+  SeTmediaj 
+  if [ -r /tmp/SeTsource ]; then
+   dialog --title "続行しますか？" --yesno "DISK SETSへ進み、どのソフトウェアをインストールするか\n\
+選択しますか？" 7 60
+   if [ $? = 0 ]; then
+    MAINSELECT="DISK SETS"
+   fi
+  fi
+ fi
+
+ if [ "$MAINSELECT" = "DISK SETS" ]; then
+  SeTPKGj
+  if [ -r /tmp/SeTSERIES ]; then
+   dialog --title "継続しますか？" --yesno \
+"インストールするディスクセットの指定が終了しました。\n\
+INSTALLを選択することでインストールを開始します。インストールに\n\
+必要な設定が終ってないと、メッセージが出てメインメニューに\n\
+戻りますから注意してください。INSTALLへ進みますか？" 11 70
+   if [ $? = 0 ]; then
+    MAINSELECT="INSTALL"
+   fi
+  fi
+ fi
+
+ if [ "$MAINSELECT" = "INSTALL" ]; then
+  if [ ! -r /tmp/SeTSERIES -o ! -r /tmp/SeTsource -o ! /tmp/SeTnative ]; then
+   dialog --title "まだインストールはできません" --msgbox "\
+\n\
+ソフトウェアをインストールする前に、以下の項目を実行してください\n\
+\n\
+1. インストール元の選択\n\
+2. インストール先Linuxパーティションの設定\n\
+3. インストールするディスクセットの選択\n\
+\n\
+キーボード配列を変更したり、スワップパーティションの設定も\n\
+できます。\n\
+\n\
+メインメニューに戻ります。ENTERキーを押してください。" 16 70
+   continue
+  fi
+  SERIES="`cat /tmp/SeTSERIES`"
+  SOURCE_DEVICE="`cat /tmp/SeTsource`"
+  IGNORE_TAGFILES=""
+
+  while [ 0 ]; do
+   dialog --title "プロンプトモードの選択" --menu "\
+\n\
+インストールの際のファイル指定をどうするか、を選択して\n\
+ください。よくわからない場合はヘルプを読んでください。\n\n\
+どのプロンプトモードを使用しますか？\
+" 19 70 7 \
+"RECOM" "カテゴリー単位で全てをインストール(お勧め)" \
+"EXPERT" "個々のパッケージを選択(詳しい人向け)" \
+"HELP" "プロンプトモードのヘルプを読む" 2> /tmp/SeTpmode
+   if [ $? = 1 -o $? = 255 ]; then
+    rm -f /tmp/SeTpmode
+    exit
+   fi
+   MODE="`cat /tmp/SeTpmode`"
+   rm -f /tmp/SeTtagext
+
+   if [ "$MODE" = "HELP" ]; then
+    dialog --title "プロンプトモードのヘルプ" --textbox "/usr/lib/setup/PROMPThelpj" 19 65
+   fi
+
+   if [ "$MODE" = "RECOM" ]; then
+    touch /tmp/recom
+    dialog --infobox "お勧めモード。カテゴリー単位で全てのパッケージを \n\
+インストールします。" 4 70
+    break;
+   fi
+
+   if [ "$MODE" = "EXPERT" ]; then
+    touch /tmp/SeTQUICK
+    MAKETAG="maketag"
+    dialog --infobox "メニュープロンプトモード。メニューを使用して \n\
+個々のパッケージを選択します。" 4 70
+    break;
+   fi 
+  done
+
+  export MAKETAG;
+  sleep 3
+ 
+ if [ ! -r /tmp/SeTCDdev ]; then # only try to remount media if it's a CD/DVD
+    slackinstall --device noremount --promptmode $MODE --srcpath `cat /tmp/SeTDS` --mountpoint /var/log/mount --target $T_PX --series "$SERIES"
+  else
+    echo " calling slackinstall with --device `cat /tmp/SeTCDdev` --promptmode $MODE --srcpath `cat /tmp/SeTDS` --mountpoint /var/log/mount --target $T_PX --series $SERIES"
+    slackinstall --device `cat /tmp/SeTCDdev` --promptmode $MODE --srcpath `cat /tmp/SeTDS` --mountpoint /var/log/mount --target $T_PX --series "$SERIES"
+  fi
+ 
+  MAINSELECT="CONFIGURE"
+ fi
+
+ if [ "$MAINSELECT" = "CONFIGURE" ]; then
+  if [ -r /tmp/SeTnative ]; then
+   if [ -r /mnt/etc/fstab ]; then
+    dialog --title "/etc/fstabを更新しますか？" --yesno "
+インストール先パーティションにすでに/etc/fstabがあります。単\n\
+にソフトウェアを追加するだけなら、/etc/fstabはそのままにして\n\
+おいた方がよいでしょう。パーティション構成を変更していたら、\n\
+/etc/fstabに反映させなければなりません。古い/etc/fstabを更新\n\
+しますか？" 10 70
+    if [ $? = 0 ]; then
+     cat /dev/null > /mnt/etc/fstab
+     if [ -r /tmp/SeTswap ]; then
+      cat /tmp/SeTswap > /mnt/etc/fstab
+     fi
+     cat /tmp/SeTnative >> /mnt/etc/fstab
+     # Mount up the CD-ROM if it exists...
+     # if [ -r /tmp/SeTcdfstab ]; then
+     # mkdir -p /mnt/cdrom
+     # cat /tmp/SeTcdfstab >> /tmp/SeTDOS
+     #fi
+     if [ -r /tmp/SeTDOS ]; then
+      cat /tmp/SeTDOS >> /mnt/etc/fstab
+     fi
+     echo "/dev/sr0       /cdrom   iso9660   user,ro,noauto,exec,iocharset=euc-jp 0   0" >> /mnt/etc/fstab
+     echo "none             /proc    proc        defaults   0   0" >> /mnt/etc/fstab
+     echo "none             /sys     sysfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none             /dev     tmpfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none		    /tmp     tmpfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none            /dev/pts        devpts  gid=5,mode=620    0 0" >> /mnt/etc/fstab
+     echo "none            /proc/bus/usb             usbfs        noauto   0   0" >> /mnt/etc/fstab
+
+    fi
+   else # /mnt/etc/fstab not found
+    cat /dev/null > /mnt/etc/fstab
+    if [ -r /tmp/SeTswap ]; then
+     cat /tmp/SeTswap > /mnt/etc/fstab
+    fi
+    cat /tmp/SeTnative >> /mnt/etc/fstab
+    # Mount up the CD-ROM if it exists...
+    #if [ -r /tmp/SeTcdfstab ]; then
+    # mkdir -p /mnt/cdrom
+    # cat /tmp/SeTcdfstab >> /tmp/SeTDOS
+    #fi
+    if [ -r /tmp/SeTDOS ]; then
+     cat /tmp/SeTDOS >> /mnt/etc/fstab
+    fi
+    echo "/dev/sr0       /cdrom   iso9660   user,ro,noauto,exec,iocharset=euc-jp 0   0" >> /mnt/etc/fstab
+    echo "none             /proc    proc        defaults   0   0" >> /mnt/etc/fstab
+     echo "none             /sys     sysfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none             /dev     tmpfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none		    /tmp     tmpfs       defaults   0   0" >> /mnt/etc/fstab
+     echo "none            /dev/pts        devpts  gid=5,mode=620    0 0" >> /mnt/etc/fstab
+     echo "none            /proc/bus/usb             usbfs        noauto   0   0" >> /mnt/etc/fstab
+   fi
+  fi
+  SeTconfigj
+   dialog --title "セットアップ完了" --msgbox "システム設定が終了しました。セットアップを終了し、\n\
+CTRL-ALT-DELを押してマシンをリブートしてください。 \
+" 6 60
+ fi
+
+ if [ "$MAINSELECT" = "EXIT" ]; then
+  break
+ fi
+
+done # end of main loop
+ 
+sync
+if mount | grep /var/adm/mount 1> /dev/null 2> /dev/null ; then
+ umount /var/adm/mount 
+fi
+if mount | grep /var/log/mount 1> /dev/null 2> /dev/null ; then
+ umount /var/log/mount 
+fi
+rm -f /var/adm/mount 2> /dev/null
+rmdir /var/adm/mount 2> /dev/null
+mkdir /var/adm/mount 2> /dev/null
+chmod 755 /var/adm/mount
+chmod 755 $T_PX
+if [ -d $T_PX/tmp ]; then
+ chmod 1777 $T_PX/tmp
+fi
+if [ -f /tmp/SeTCDdev ]; then
+  eject `cat /tmp/SeTCDdev`
+fi
+rm -f /tmp/tagfile /tmp/SeT*
+# end slackware setup script
+
+

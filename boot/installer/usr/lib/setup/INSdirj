@@ -1,0 +1,47 @@
+#!/bin/sh
+while [ 0 ]; do
+rm -f /tmp/SeTDS /tmp/SeTmount
+cat << EOF > /tmp/tmpmsg
+
+あらかじめマウントされているパーティション内のディレク
+トリからインストールします。インストール元のパーティショ
+ンは手動でマウントしておく必要があります(まだマウント
+していなければ、別の仮想コンソールでマウントすることが
+可能です)。作業用に使うので、インストール元のパーティ
+ションは/mntや/var/adm/mountにはマウントしないでください。
+
+以下では、インストール元のパーティションをマウントした
+位置とPlamo Linuxの個々のパッケージが含まれたサブディ
+レクトリを持つディレクトリ名を指定する必要があります。
+
+どのディレクトリからインストールしますか？
+EOF
+dialog --title "指定したディレクトリからのインストール" \
+ --inputbox "`cat /tmp/tmpmsg`" 19 67 2> /tmp/sourcedir
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/sourcedir /tmp/tmpmsg
+ exit
+fi
+SOURCEDIR="`cat /tmp/sourcedir`"
+rm -f /tmp/sourcedir /tmp/tmpmsg
+rm -f /var/adm/mount 2> /dev/null
+rmdir /var/adm/mount 2> /dev/null
+ln -sf $SOURCEDIR /var/adm/mount
+if [ -d $SOURCEDIR ]; then
+ echo "/var/adm/mount" > /tmp/SeTDS
+ echo "-source_mounted" > /tmp/SeTmount
+ echo "/dev/null" > /tmp/SeTsource
+ exit
+else
+ cat << EOF > /tmp/tmpmsg
+
+恐れ入りますが、指定したディレクトリが無効です。ディレク
+トリを確認し、再挑戦してみてください。
+
+(指定されたディレクトリ： $SOURCEDIR)
+
+EOF
+ dialog --title "無効なディレクトリが指定されました" --msgbox "`cat /tmp/tmpmsg`" 10 65
+ rm -f /tmp/SeTDS /tmp/SeTmount /tmp/sourcedir /tmp/tmpmsg
+fi
+done;

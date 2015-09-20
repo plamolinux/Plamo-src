@@ -1,0 +1,136 @@
+#!/bin/sh
+while [ 0 ]; do
+ dialog --title "LINUXカーネルのインストール" --menu \
+"システムが正常に起動できるようにするためには，カーネルを \
+インストールする必要があります。お勧めメニューからインス \
+トールした場合は、自動的にカーネルも組み込まれています。 \
+パッケージのインストール時にカーネルを組み込んだ場合は、 \
+skipを選んでそのカーネルを使ってください。起動用ディスク \
+のカーネルを使うこともできますが、その場合はモジュール類 \
+がうまく組み込めない可能性がありますので注意してください。" 20 72 5 \
+"skip"     "イントール済の/boot/vmlinuzを使用する" \
+"bootdsk" "インストール用起動ディスクのカーネルを使用" \
+"floppy"   "FDから(b)zimageファイルをインストール"  2> /tmp/SeTreturn
+ if [ $? = 1 -o $? = 255 ]; then
+  continue;
+ fi
+
+ if [ "`cat /tmp/SeTreturn`" = "bootdsk" ]; then
+  dialog --title "インストール用起動ディスクを入れてください" --msgbox "
+インストール用起動ディスクを/dev/fd0(ドライブa:)に入れ，\n\
+ENTERを押してください。" 7 70
+  mount /dev/fd0 /floppy
+  if [ -r /floppy/vmlinuz ]; then
+   dialog --title "コピー中" --infobox  \
+"起動ディスクのカーネルを/vmlinuzとしてシステムに転送中..." 4 60
+
+   cp /floppy/vmlinuz $T_PX/vmlinuz
+   chmod 400 $T_PX/vmlinuz
+   rdev -R $T_PX/vmlinuz 1
+   rdev $T_PX/vmlinuz $ROOT_DEVICE
+   umount /floppy
+   break;
+
+  else
+   umount /floppy
+
+   dialog --title "エラー: カーネルが見つかりません" --msgbox \
+"申し訳ありませんが，フロッピーには/vmlinuzというファイルが \n\
+存在しないので，カーネルをインストールすることはできません。 \n\
+インストール用起動ディスクを入れましたか? カーネルインストール \n\
+メニューに戻るにはENTERキーを押してください" 8 72
+
+  fi 
+ elif [ "`cat /tmp/SeTreturn`" = "cdrom" ]; then
+  if [ ! -d /cdrom/kernels ]; then
+   dialog --title "エラー" --msgbox "申し訳ありませんが，ディレクトリ \
+/cdrom/kernels は存在しません。Plamo LinuxのCDからインストールしようと \
+していますか? そうでないなら，フロッピー，起動ディスク，あるいはAシリ \
+ーズからカーネルをインストールせねばなりません"  7 70
+  else
+   cat << EOF > /tmp/tmpscript
+dialog --title "Linuxカーネルの選択" --menu \\
+"以下のどのディレクトリからLinuxカーネルをインストールしますか?  \\
+注: もしSCSIカードを使用するなら，それをサポートしているカーネル \\
+を選択してください。CDROMドライブやネットワークカードについては， \\
+後からカーネルモジュールによりサポートすることが できます。" 18 74 8  \\
+EOF
+   for dir in /cdrom/kernels/* ; do
+    if [ -d $dir ]; then
+     echo "\"$dir\" \"\" \\" >> /tmp/tmpscript
+    fi
+   done
+   echo "2> /tmp/SeTreturn" >> /tmp/tmpscript
+   . /tmp/tmpscript
+   if [ $? = 1 -o $? = 255 ]; then
+    continue;
+   fi
+   dir=`cat /tmp/SeTreturn`
+   dialog --title "コピー中" --infobox \
+"$dirからカーネル /vmlinuzをシステムに転送中..." 4 60
+   if [ -r $dir/zImage ]; then
+    cp $dir/zImage $T_PX/vmlinuz
+   elif [ -r $dir/bzImage ]; then
+    cp $dir/bzImage $T_PX/vmlinuz
+   fi    
+   chmod 400 $T_PX/vmlinuz
+   rdev -R $T_PX/vmlinuz 1
+   rdev $T_PX/vmlinuz $ROOT_DEVICE
+   break;
+  fi
+ elif [ "`cat /tmp/SeTreturn`" = "floppy" ]; then
+  dialog --title "ディスクを入れてください" --msgbox \
+"フロッピーディスクからLinuxカーネルをインストールします。\n\
+カーネルファイル\"ZIMAGE\"あるいは\"BZIMAGE\"の入ったMSDOS \n\
+フォーマットのフロッピーを入れ，ENTERを押してください。" 8 72
+
+  mount /dev/fd0 /floppy -t msdos
+  if [ -r /floppy/zimage ]; then
+
+   dialog --title "コピー中" --infobox \
+"フロッピーからカーネルを/vmlinuz としてシステムに転送中..." 4 40
+   cp /floppy/zimage $T_PX/vmlinuz
+   chmod 400 $T_PX/vmlinuz
+   rdev -R $T_PX/vmlinuz 1
+   rdev $T_PX/vmlinuz $ROOT_DEVICE
+   umount /floppy
+   break;
+  elif [ -r /floppy/bzimage ]; then
+   dialog --title "コピー中" --infobox  \
+"フロッピーからカーネルを /vmlinuz としてシステムに転送中..." 4 40
+   cp /floppy/bzimage $T_PX/vmlinuz
+   chmod 400 $T_PX/vmlinuz
+   rdev -R $T_PX/vmlinuz 1
+   rdev $T_PX/vmlinuz $ROOT_DEVICE
+   umount /floppy
+   break;
+  else
+   umount /floppy
+   dialog --title "エラー: Linuxカーネルが見つかりません" --msgbox  \
+"申し訳ないですが，フロッピーには/zimageあるいは/bzimage \
+というファイルがないため，カーネルをインストールできません。 \
+そのようなファイルが入っているMSDOSフォーマットのフロッピーを \
+入れましたか? ENTERを押すとカーネルインストールメニューに戻ります。" 8 74
+  fi
+ elif [ "`cat /tmp/SeTreturn`" = "skip" ]; then
+  if [ ! -r $T_PX/vmlinuz ]; then
+
+   dialog --title "カーネルなしでいいですか?" --yesno \
+"警告: システムにはカーネルがまったくインストールされませんので， \
+起動ディスクを作成したり，LILOをインストールすることはできません  \
+-- もしカーネルのインストールを行わないなら，システムを起動する \
+には別のなんらかの手段を取らなければなりません。LOADLINやインス \
+トール用起動ディスクを利用できます。本当にカーネルをインストール \
+しなくてよいのなら，YES を選択してください。NO を選択すれば、 \
+カーネルインストールメニューに戻ります。" 12 72
+
+   if [ $? = 0 ]; then
+    break;
+   else
+    continue;
+   fi
+  fi # no kernel
+  break;
+ fi # skip option
+done
+#rm -f /tmp/SeTreturn

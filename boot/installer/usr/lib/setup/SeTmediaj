@@ -1,0 +1,28 @@
+#!/bin/sh
+
+dialog --title "インストール元の選択" --menu \
+"\nどこからPlamo Linuxをインストールしますか？"\
+ 14 65 5 \
+"1" "CD-ROMからインストール"  \
+"2" "ハードディスクパーティションからインストール" \
+"3" "あらかじめマウントされたディレクトリからインストール" \
+"4" "NFS マウント経由でインストール"  \
+  2> /tmp/media
+if [ $? = 1 -o $? = 255 ]; then
+ rm /tmp/media
+ exit
+fi
+
+SOURCE_MEDIA="`cat /tmp/media`"
+rm -f /tmp/media
+if [ "$SOURCE_MEDIA" = "1" ]; then
+ INSCDj
+elif [ "$SOURCE_MEDIA" = "2" ]; then
+ INShdj
+elif [ "$SOURCE_MEDIA" = "3" ]; then
+ INSdirj
+elif [ "$SOURCE_MEDIA" = "4" ]; then
+ INSNFSj
+elif [ "$SOURCE_MEDIA" = "5" ]; then
+ INSSMBj
+fi

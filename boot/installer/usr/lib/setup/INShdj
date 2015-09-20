@@ -1,0 +1,138 @@
+#!/bin/sh
+while [ 0 ]; do
+rm -f /tmp/SeTDS /tmp/SeTmount
+
+while [ 0 ]; do
+ cat << EOF > /tmp/tmpmsg
+
+ハードディスクから直接インストールするには、Plamo
+Linux のブートディスク以外の各ディスクに対応したサブディ
+レクトリを持つパーティションがなければなりません。例え
+ば、Plamo Linuxが/dev/hda4の/tmp/plamo以下にある場合、
+パーティションとして/dev/hda4を、ディレクトリとして
+/tmp/plamoを指定する必要があります。/dev/hda4はDOSや
+VFATパーティションであっても構いません。
+
+パーティションリストを見るには[enter]キーを押してく
+ださい： \n
+EOF
+ dialog --title "パーティションの指定" --inputbox \
+"`cat /tmp/tmpmsg`" 20 70 2> /tmp/source.part
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/source.part /tmp/tmpmsg
+  exit
+ fi
+ rm -f /tmp/tmpmsg
+ SLACK_DEVICE="`cat /tmp/source.part`"
+ rm -f /tmp/source.part
+ if [ "$SLACK_DEVICE" = "" ]; then
+  dialog --title "パーティションリスト" --msgbox "`probe -l | grep -v cylind | grep dev 2> /dev/null`" 22 75
+  continue;
+ fi
+ break;
+done
+
+dialog --title "インストール元ディレクトリの選択" --inputbox \
+"\n\
+このパーティションのどこにPlamo Linuxのパッケージがあるのか\n\
+指定してください（a や ap というディレクトリが存在する\n\
+ディレクトリです。）注：指定はパーティションの先頭からの\n\
+指定になります。普段は/dev/hda4を/mntにマウントして使って\n\
+いて/mnt/plamo以下にパッケージがある場合、パーティションは\n\
+/dev/hda4、ディレクトリの指定はplamoになります。 \n\n\
+どこにPlamo Linuxのパッケージがありますか？ \n" \
+19 65 2> /tmp/source.dir
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/source.dir
+ exit
+fi
+SLACK_SOURCE_LOCATION="`cat /tmp/source.dir`"
+rm -f /tmp/source.dir
+if mount | grep $SLACK_DEVICE 1> /dev/null 2> /dev/null ; then
+ # This partition is already mounted, so we will have to
+ # tweak things funny.
+ rm -f /var/adm/mount 2> /dev/null
+ rmdir /var/adm/mount 2> /dev/null
+ PREFIX="`mount | grep $SLACK_DEVICE`"
+ PREFIX="`echo "$PREFIX" | cut -b14-`"
+ end_of_line="1"
+ while [ 0 ]; do
+  end_of_line="`expr $end_of_line + 1`"
+  if [ "`echo "$PREFIX" | cut -b$end_of_line`" = " " ]; then  # Found it!
+   end_of_line="`expr $end_of_line - 1`"
+   break;
+  fi
+ done
+ PREFIX="`echo "$PREFIX" | cut -b1-$end_of_line`"
+ ln -sf $PREFIX /var/adm/mount 
+else
+ SUCCESS=false
+ for type in msdos ext2 ext3 btrfs reiserfs jfs xfs ntfs hpfs ; do
+   mount -t $type $SLACK_DEVICE /var/adm/mount 1> /dev/null 2> /dev/null
+   if [ $? = 0 ]; then # mounted successfully 
+     SUCCESS=true
+     break;
+   fi
+ done
+ if [ ! $SUCCESS = true ]; then # there was a mount error
+  cat << EOF > /tmp/tmpmsg
+パーティションをマウントする際にエラーが発生しました。\n\
+どうしましょうか？
+
+EOF
+  dialog --title "マウントエラー" --menu "`cat /tmp/tmpmsg`" 10 68 2 \
+"Restart" "やり直し" \
+"Ignore " "エラーを無視して継続" 2> /tmp/dowhat
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/dowhat
+   exit
+  fi
+  DOWHAT="`cat /tmp/dowhat`"
+  rm -f /tmp/dowhat
+  if [ "$DOWHAT" = "Restart" ]; then
+   umount /var/adm/mount 2> /dev/null
+   continue;
+  fi
+  echo
+ fi # mount error
+fi
+
+if [ -d /var/adm/mount/$SLACK_SOURCE_LOCATION ]; then
+ echo "/var/adm/mount/$SLACK_SOURCE_LOCATION" > /tmp/SeTDS
+ echo "-source_mounted" > /tmp/SeTmount
+ echo "/dev/null" > /tmp/SeTsource
+ exit
+else
+ cat << EOF > /tmp/tmpmsg
+
+恐れ入りますが、ディレクトリ$SLACK_SOURCE_LOCATIONはパーティション
+$SLACK_DEVICEには存在しません。
+
+やり直しますか？
+EOF
+ dialog --title "インストール元ディレクトリが見つかりません" --yesno "`cat /tmp/tmpmsg`" 10 70
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg
+  exit
+ fi
+ rm -r /tmp/tmpmsg
+fi
+
+
+if [ ! -d /var/adm/mount/$SLACK_SOURCE_LOCATION/a ]; then
+ cat << EOF > /tmp/tmpmsg
+
+恐れ入りますが、ディレクトリ$SLACK_SOURCE_LOCATIONには
+必要なディレクトリ(a,apなど)が存在しません。
+
+やり直しますか？
+EOF
+ dialog --title "インストール元ディレクトリが見つかりません" --yesno "`cat /tmp/tmpmsg`" 10 70
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg
+  exit
+ fi
+ rm -r /tmp/tmpmsg
+fi
+
+done

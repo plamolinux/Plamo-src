@@ -1,0 +1,158 @@
+#!/bin/sh
+MOUNT=/tag
+mkdir -p $MOUNT
+dialog --title "カスタムタグファイルの作成" --yesno "
+タグファイルは、ディスクセットの１枚目に書き込まれて\n\
+いて、どのパッケージをインストールするか、あるいはスキ\n\
+ップするかを決定する、特別なファイルです。\n\
+前もってどのファイルをインストールするか決めておくと、\n\
+（いちいちインストールするかどうかの問い合わせがないので）\n\
+インストールが素早く行えます。今までに一度もPlamo Linuxの\n\
+Linuxをインストールしたことがなければ、まずデフォルトの\n\
+タグファイルを使ってインストールしてみることをお勧めします。\n\
+というのは、カスタムタグファイルを作成するにあたって必要な、\n\
+パッケージ内容に関する情報をあまりご存知でないと思われる\n\
+からです。このプロセスはあなたがすでにどのパッケージを\n\
+インストールしたいか把握していることを前提としています。\n\
+よくわからない場合は、通常のタグファイルを使用してイン\n\
+ストールしてください。\
+カスタムタグファイルを作成しますか？" 19 70
+if [ $? = 1 -o $? = 255 ]; then
+ exit
+fi
+dialog --title "カスタムタグファイルの拡張子の入力" --inputbox "カスタムファイルの拡張子を入力してください。\n\
+この拡張子は、カスタムタグファイルのファイル名の最後の\n\
+部分に使われます。例えば、わたしはカスタムファイルの\n\
+拡張子に'.pat'を指定しています。ですからそれぞれのディスク\n\
+セットの１枚目のディスクにあるわたしのカスタムファイルの\n\
+ファイル名は'tagfile.pat'となります。.tgzや.tar以外で\n\
+したら、好きな拡張子を使用することができます。拡張子は\n\
+ピリオドとそれに続く３文字から構成されます。３文字以外\n\
+では行けません。" 15 70 2> /tmp/SeTtagmake
+if [ $? = 1 -o $? = 255 -o ! "`cat /tmp/SeTtagmake | cut -b1`" = "." -o "`cat /tmp/SeTtagmake`" = "" ]; then
+ rm -f /tmp/SeTtagmake
+ exit
+fi
+TAGEXT="`cat /tmp/SeTtagmake`"
+dialog --title "エキスパートメニューを使用しますか?" --menu "お好みに応じて\
+エキスパートメニューからパッケージを選択することもできます。ノーマルメニュー\
+の方は'Cコンパイラシステム'のような選択肢を表示するのですが，エキスパート\
+メニューの方は'Cライブラリ'，'Cコンパイラ'，'Cインクルードファイル'のような\
+表示になります -- 個々のパッケージが表示されるわけです。エキスパートメニュー\
+を使用すると，特定のサブシステムが動作するのに必須のパッケージをスキップして\
+しまうことも可能ですから，よく内容がわかっていなければなりません。" \
+15 65 2 \
+"normal" "パッケージのグループを選択するのにノーマルメニューを使用する" \
+"expert" "個々のパッケージを選択するのにエキスパートメニューを使用する" 2> /tmp/SeTreturn
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/SeTreturn
+ exit
+fi
+MENU="`cat /tmp/SeTreturn`"
+rm -f /tmp/SeTreturn
+if [ "$MENU" = "normal" ]; then
+ MAKETAG="maketag.ez"
+else
+ MAKETAG="maketag"
+fi
+while [ 0 ]; do
+ dialog --title "ディスクセットのカスタマイズ" --menu "ディスクセットの １枚目のディスク（ライトプロテクト状態でない\n\
+ことを確認してください！）にカスタムタグファイルを作成します。\n\
+あるいはハードディスクからインストールしている場合には、各\n\
+ディスクに相当するディレクトリに作成します。\n\
+以下から１つ選択してください。" 13 70 3 \
+"/dev/fd0" "フロッピードライブ１(a:)にカスタムタグファイルを作成" \
+"/dev/fd1" "フロッピードライブ２(b:)にカスタムタグファイルを作成" \
+"Directory" "ディスクのディレクトリにタグファイルを作成" 2> /tmp/SeTreturn
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/SeTreturn
+  break
+ fi
+ CHOICE="`cat /tmp/SeTreturn`"
+ rm -f /tmp/SeTreturn
+ if [ "$CHOICE" = "/dev/fd0" -o "$CHOICE" = "/dev/fd1" ]; then
+  dialog --title "INSERT DISK IN DRIVE $CHOICE" --msgbox "
+カスタムタグファイルを作成するディスクセットの１枚目の\n\
+フロッピーを入れて、ENTERキーを押してください。\n\
+フロッピーがライトプロテクト状態になっていてはいけません。" 7 70
+  if [ $? = 255 ]; then
+   continue
+  fi
+  mount $CHOICE $MOUNT -t vfat
+  if [ ! $? = 0 ]; then
+   dialog --title "マウントエラー" --msgbox "ドライブ$CHOICEのフロッピーをMSDOSのファイルシステムとして\n\
+マウントできませんでした。" 6 70
+   umount $MOUNT 2> /dev/null
+   continue
+  fi
+  if [ -r $MOUNT/$MAKETAG -o $MOUNT/maketag ]; then
+   if [ -r $MOUNT/$MAKETAG ]; then
+    sh $MOUNT/$MAKETAG
+   else
+    sh $MOUNT/maketag
+   fi
+  else # no tagfile create script!
+   dialog --title "タグファイル作成スクリプトがありません" --msgbox "恐れ入りますが、'maketag'スクリプトが見つかりませんので、\n\
+カスタムタグファイルを作成できません。\n\
+maketagスクリプトはSlackware 1.1.2から導入され、パッケー\n\
+ジを選択するためのメニューを表示するものです。今ディスクを\n\
+見てインストールするパッケージを選別する方法はありません。\n\
+まあいつかパッケージはインストールされるでしょうが。多分この\n\
+ディスクのタグファイルを手で編集しなければならないでしょう。" 13 70
+   umount $MOUNT
+   continue 
+  fi
+  if [ ! -r /tmp/SeTnewtag ]; then
+   umount $MOUNT
+   continue
+  fi
+  cp /tmp/SeTnewtag $MOUNT/tagfile$TAGEXT
+  if [ $? = 0 ]; then
+   dialog --title "タグファイルが作成されました" --msgbox "カスタムタグファイルが作成されました。拡張子は以下の通りです： \n\
+$TAGEXT" 8 70
+  else
+   dialog --title "コピーエラー" --msgbox "カスタムタグファイルをディスクへコピーできませんでした。\n\
+ディスクがライトプロテクトされていないか、あるいは空きが\n\
+あるかどうかを調べて、再挑戦してください。" 9 70
+  fi
+  umount $MOUNT
+ fi
+ if [ "$CHOICE" = "Directory" ]; then
+  dialog --title "ディレクトリの選択" --inputbox "カスタムタグファイルを作成するディスクシリーズの１枚目に\n\
+相当するディレクトリを指定してください。このディレクトリ\n\
+は、現在のファイルシステムのどこかにマウントされていなけ\n\
+ればなりません。" 11 70 2> /tmp/SeTreturn
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/SeTreturn
+   continue
+  fi
+  DIR="`cat /tmp/SeTreturn`"
+  rm -f /tmp/SeTreturn
+  if [ ! -r $DIR/maketag -a ! -r $DIR/$MAKETAG ]; then
+   dialog --title "タグファイルスクリプトがありません" --msgbox "恐れ入りますが指定されたディレクトリに'maketag'スクリプト\n\
+がないためこのディスクセットのためのカスタムタグファイル\n\
+を作成できません。maketagスクリプトはSlackware 1.1.2から\n\
+導入され、パッケージを選択するメニューを表示するものです。\n\
+今現在、パッケージを見てそれをインストールするかどうかを\n\
+決定する方法はありません。が、いつかはインストールされる\n\
+ことでしょう。このディレクトリのタグファイルを手で編集し\n\
+なければならないかもしれません。" 13 70
+   continue
+  fi
+  if [ -r $DIR/$MAKETAG ]; then
+   sh $DIR/$MAKETAG
+  else
+   sh $DIR/maketag
+  fi
+  if [ ! -r /tmp/SeTnewtag ]; then
+   continue
+  fi
+  cp /tmp/SeTnewtag $DIR/tagfile$TAGEXT
+  if [ $? = 0 ]; then
+   dialog --title "タグファイルが作成されました" --msgbox "カスタムタグファイルが作成されました。拡張子は以下の通りです：\n\
+$TAGEXT" 8 70
+  else
+   dialog --msgbox "何が起こったかわかりません、がどこかおかしいようです。" 6 70
+  fi
+ fi
+done

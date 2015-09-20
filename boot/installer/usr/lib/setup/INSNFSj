@@ -1,0 +1,218 @@
+#!/bin/sh
+
+modprobe nfs
+
+while [ 0 ]; do
+rm -f /tmp/SeTDS /tmp/SeTmount
+
+ cat << EOF > /tmp/tmpmsg
+
+警告！ NFS経由のインストールは、あなたがTCP／IPに慣れていれば
+本当に時間を節約できますが、初心者の方にとってはかなり複雑な
+インストール法です。NFS経由のインストールで行わなければならな
+い項目には、以下のようなものがあります：
+
+-- ブートディスク（bootdisk）の/etc/networksの設定
+-- 必須：NFSサーバーに、インストール元ディレクトリを
+   exportさせる
+
+本当にNFS経由のインストールを行いますか？
+EOF
+ dialog --title "NFS経由のインストール" --yesno "`cat /tmp/tmpmsg`" 16 68
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg
+  exit
+ fi
+ rm -f /tmp/tmpmsg
+ T_PX="`cat /tmp/SeTT_PX`"
+ UPNRUN=1
+ if [ "$T_PX" = "/" ]; then
+  cat << EOF > /tmp/tmpmsg
+
+今、ハードディスクのファイルシステムから実行しています。この
+マシンは現在インストール元となるサーバとネットワークで接続さ
+れていますか？もしそうなら、イーサネットカードのリコンフィグ
+は行いません。
+
+ネットワークに接続していますか？
+EOF
+
+  dialog --title "NFSインストール" --yesno "`cat /tmp/tmpmsg`" 11 68
+  UPNRUN=$?
+ fi
+ if [ $UPNRUN = 1 ]; then
+
+  dialog --title "DHCPを利用？" --yesno "このインストーラはDHCPでIPアドレスを\n\
+設定可能です．DHCPを利用しますか？\n\
+(ネットワーク上にDHCPサーバが必要)" 7 62
+  if [ $? = 0 ]; then
+      DHCP=1
+  fi
+
+if [ ! $DHCP ]; then
+  cat << EOF > /tmp/tmpmsg
+
+このマシンに割り当てるIPアドレスを入力してください。
+例えば：111.112.113.114
+
+IPアドレスは何ですか？
+EOF
+  dialog --title "IPアドレスの設定" --inputbox "`cat /tmp/tmpmsg`" 13 65 2> /tmp/local
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/tmpmsg /tmp/local
+   exit
+  fi
+  LOCAL_IPADDR="`cat /tmp/local`"
+  rm -f /tmp/local
+  cat << EOF > /tmp/tmpmsg
+
+ネットマスクを設定する必要があります。
+典型的には255.255.255.0ですが、
+これはローカルの設定によって、異なる
+可能性があります。
+
+ネットマスクは何ですか？
+EOF
+  dialog --title "ネットマスクの設定" --inputbox "`cat /tmp/tmpmsg`" 15 65 2> /tmp/mask
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/tmpmsg /tmp/mask
+   exit
+  fi
+  LOCAL_NETMASK="`cat /tmp/mask`"
+  rm /tmp/mask
+#  cat << EOF > /tmp/tmpmsg
+#
+#Typically your broadcast address will be the same as
+#your IP address with 255 replacing the final value.
+#Example: 111.112.113.255
+#
+#What is your broadcast address?
+#EOF
+#  dialog --title "ASSIGN BROADCAST ADDRESS" --inputbox "`cat /tmp/tmpmsg`" 14 65 2> /tmp/broadc
+#  if [ $? = 1 -o $? = 255 ]; then
+#   rm -f /tmp/tmpmsg /tmp/broadc
+#   exit
+#  fi
+#  LOCAL_BROADCAST="`cat /tmp/broadc`"
+#  rm /tmp/broadc
+#  cat << EOF > /tmp/tmpmsg
+#
+#Now we need your network address.
+#
+#Your network address will usually be the same as your IP
+#address, with the last value replaced by 0.
+#For example: 111.112.113.0
+#
+#What is your network address? 
+#EOF
+#  dialog --title "ASSIGN NETWORK ADDRESS" --inputbox "`cat /tmp/tmpmsg`" 16 65 2> /tmp/netw
+#  if [ $? = 1 -o $? = 255 ]; then
+#   rm -f /tmp/tmpmsg /tmp/netw
+#   exit
+#  fi
+#  LOCAL_NETWORK="`cat /tmp/netw`"
+#  rm /tmp/netw
+LOCAL_BROADCAST=`ipmask $LOCAL_NETMASK $LOCAL_IPADDR | cut -f 1 -d ' '`
+LOCAL_NETWORK=`ipmask $LOCAL_NETMASK $LOCAL_IPADDR | cut -f 2 -d ' '`
+ dialog --title "ゲートウェイアドレスの設定" \
+--inputbox "\nゲートウェイアドレスは何ですか？ \
+ゲートウェイが無い場合は Enter を押して進めてください" 15 72 2> /tmp/gw
+   if [ $? = 1 -o $? = 255 ]; then
+    rm -f /tmp/tmpmsg /tmp/gw
+    exit
+   fi
+   LOCAL_GATEWAY="`cat /tmp/gw`"
+   rm -f /tmp/gw
+   HAVE_GATEWAY=0 
+   if [ ! "x.$LOCAL_GATEWAY" = "x." ]; then
+       HAVE_GATEWAY=1
+   fi
+ fi # DHCP
+
+ fi # ! UPNRUN
+
+ cat << EOF > /tmp/tmpmsg
+
+さて、こちら側の設定は終りましたが、次はどこにインストールする
+ソフトウェアパッケージがあるかを指定する必要があります。まず、
+Plamo Linuxのインストール元となるマシンのIPアドレスを設定します。
+
+EOF
+ if [ "$UPNRUN" = "0" ]; then
+  cat << EOF >> /tmp/tmpmsg
+もうネットワークに接続されてますから、必要ならIPアドレスの
+かわりにホスト名が使用できるはずです。
+
+EOF
+ fi
+ echo "NFSサーバーのIPアドレスは何ですか？ " >> /tmp/tmpmsg
+ dialog --title "ENTER IP ADDRESS OF NFS SERVER" --inputbox \
+ "`cat /tmp/tmpmsg`" 17 70 2> /tmp/remote
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/remote
+  exit
+ fi
+ REMOTE_IPADDR="`cat /tmp/remote`"
+ rm /tmp/remote
+ if [ ! "$UPNRUN" = "0" ]; then
+   ENET_DEVICE="eth0" 
+ fi # ! UPNRUN
+
+ cat << EOF > /tmp/tmpmsg
+
+ サーバーのPlamo Linuxの入っているディレクトリの下には、
+個々のディスクに対応したサブディレクトリがなければ
+なりません。
+このインストールスクリプトを実行するために、それぞれの
+ディスクに対応したサブディレクトリを持っているサーバー
+のディレクトリ名が必要です。例えば、ディスクセット a 
+が /plamo/a にあるのなら、/plamo とお答えください。
+
+Plamoのインストール元のディレクトリを入力してください。
+EOF
+ dialog --title "ソースディレクトリの選択" --inputbox "`cat /tmp/tmpmsg`" 17 65 2> /tmp/slacksrc
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/slacksrc
+  exit
+ fi
+ REMOTE_PATH="`cat /tmp/slacksrc`"
+ rm /tmp/slacksrc
+ echo
+ echo 
+ echo
+ echo "エラーを確認するため、テキストモードに切替えます。"
+ echo
+ if [ ! "$UPNRUN" = "0" ]; then
+  echo
+  echo "エラーを確認するため、テキストモードに切替えます。"
+  echo
+  echo "イーサネットカード設定中..."
+  if [ ! $DHCP  ]; then
+    ifconfig $ENET_DEVICE $LOCAL_IPADDR netmask $LOCAL_NETMASK broadcast $LOCAL_BROADCAST
+    route add -net $LOCAL_NETWORK
+    if [ "$HAVE_GATEWAY" != "0" ]; then
+     echo "ゲートウェイの設定中..."
+     route add default gw $LOCAL_GATEWAY metric 1
+    fi
+  else
+    udhcpc -q $ENET_DEVICE
+  fi
+ fi
+ echo "NFSマウント中..."
+ mount -t nfs $REMOTE_IPADDR:$REMOTE_PATH /var/adm/mount -o nolock,rsize=8192,wsize=8192
+ echo "/var/adm/mount" > /tmp/SeTDS
+ echo "-source_mounted" > /tmp/SeTmount
+ echo "/dev/null" > /tmp/SeTsource
+ echo
+ echo "現在のマウントテーブル："
+ mount
+ echo -n "NFSマウントをやり直す必要がありますか ([y]es, [n]o)? "
+ read TRY_AGAIN;
+ if [ "$TRY_AGAIN" = "n" -o "$TRY_AGAIN" = "N" ]; then
+  exit
+ fi
+ if [ "$UPNRUN" = "1" ]; then
+  route del $LOCAL_NETWORK
+  ifconfig $ENET_DEVICE down 
+ fi
+done

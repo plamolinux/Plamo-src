@@ -1,0 +1,67 @@
+#!/bin/sh
+crunch() {
+ read STRING;
+ echo $STRING;
+}
+rm -f /tmp/SeTswap
+SWAPLIST="`probe -l | grep "Linux swap" 2> /dev/null`"
+if [ "$SWAPLIST" = "" ]; then
+ dialog --title "スワップ領域がありません" --yesno "Linuxのfdiskでスワップパーティションが\n\
+作られていません。スワップファイルなしで\n\
+このままインストールを進めますか？" 8 60
+ if [ "$?" = "1" ]; then
+  dialog --title "インストール中止" --msgbox "Linuxのfdiskでスワップパーティションを作成し、\n\
+再度インストールしてください。" \
+6 60
+  exit
+ fi
+else
+ echo > /tmp/swapmsg 
+ if [ "`echo "$SWAPLIST" | sed -n '2 p'`" = "" ]; then
+  echo "スワップとして利用できるパーティションが見つかりました：" >> /tmp/swapmsg
+  echo >> /tmp/swapmsg
+  echo "   Device Boot   Begin    Start      End   Blocks   Id  System" >> /tmp/swapmsg
+  echo "`echo "$SWAPLIST" | sed -n '1 p'`" >> /tmp/swapmsg
+  echo >> /tmp/swapmsg
+  echo "これをスワップパーティションとしてインストールしますか？" >> /tmp/swapmsg
+  dialog --title "スワップ領域が見つかりました" --yesno "`cat /tmp/swapmsg`" 12 70
+  REPLY=$?
+ else
+  echo "以下のスワップパーティションが見つかりました：" >> /tmp/swapmsg
+  echo >> /tmp/swapmsg
+  echo "   Device Boot   Begin    Start      End   Blocks   Id  System" >> /tmp/swapmsg
+  echo "$SWAPLIST" >> /tmp/swapmsg
+  echo >> /tmp/swapmsg
+  echo "これらをスワップパーティションとしてインストールしますか？" >> /tmp/swapmsg
+  dialog --title "スワップ領域が見つかりました" --yesno "`cat /tmp/swapmsg`" 15 70
+  REPLY=$?
+ fi
+ rm -f /tmp/swapmsg
+ if [ $REPLY = 0 ]; then # yes
+   dialog --title "MKSWAPを使いますか？" --yesno \
+"mkswap を使ってスワップパーティションを初期化しますか？ \n\
+初めてこのスワップパーティションを使うときはYesを選んでください。 \n\
+既存のスワップパーティションを流用する際はNoでも構いません" \
+  10 74
+  USE_SWAP=$?
+  CURRENT_SWAP="1" 
+  while [ ! "`echo "$SWAPLIST" | sed -n "$CURRENT_SWAP p"`" = "" ]; do 
+   SWAP_SIZE=`probe -l | grep "Linux swap" | sed -n "$CURRENT_SWAP p" | crunch | cut -f 4 -d ' '`
+   SWAP_PART=`probe -l | grep "Linux swap" | sed -n "$CURRENT_SWAP p" | crunch | cut -f 1 -d ' '`
+   if [ $USE_SWAP = 0 ]; then 
+    mkswap -c $SWAP_PART 1> /dev/null 2> /dev/null
+    dialog --msgbox "スワップパーティションの初期化が終了しました。" 5 70
+   fi
+   swapon $SWAP_PART
+   SWAP_IN_USE="`echo "$SWAP_PART       swap        swap        defaults   0   0"`"
+   echo "$SWAP_IN_USE" >> /tmp/SeTswap
+   CURRENT_SWAP="`expr $CURRENT_SWAP + 1`"
+  done
+  echo "スワップ領域が設定されました。この情報は" > /tmp/swapmsg
+  echo "/etc/fstabに追加されます：" >> /tmp/swapmsg
+  echo >> /tmp/swapmsg
+  echo "$SWAP_IN_USE" >> /tmp/swapmsg 
+  dialog --title "スワップ領域の設定完了" --msgbox "`cat /tmp/swapmsg`" 13 72
+  rm /tmp/swapmsg
+ fi
+fi  

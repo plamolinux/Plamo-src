@@ -1,0 +1,211 @@
+#!/bin/sh
+T_PX="`cat /tmp/SeTT_PX`"
+rm -f /tmp/SeTmount /tmp/SeTDS /tmp/SeTCDdev
+
+modprobe isofs
+modprobe nls_cp932
+modprobe sr_mod
+
+dialog --title "Install from the Plamo Linux CD-ROM" \
+--menu \
+"Plamo Linuxでは、ATAPIとSCSI以外の独自仕様CD-ROMはサポート \n\
+しておりません（テスト環境が周りに存在しないので、、） \n\
+それらのCD-ROMの場合、あらかじめCD-ROMの内容をハードディスク \n\
+にコピーしておいて、HDDからインストールする方法があります。 \n\
+PDドライブがCD-ROMとして認識されない場合は \n\
+LUNの設定を変えてみてください（DOS/V用からMac用にするなど） \n\
+お使いのCDドライブの種類は？" 18 74 4 \
+"scan" "CDドライブのタイプを自動認識してみます" \
+"1" "ほとんどのATAPI/IDE CDドライブ (/dev/hd*)" \
+"2" "SCSI (/dev/scd0 あるいは /dev/scd1)" \
+2> /tmp/cdtype
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/tmpmsg /tmp/cdtype
+ exit
+fi
+CD_ROM_TYPE="`cat /tmp/cdtype`"
+rm -f /tmp/tmpmsg /tmp/cdtype
+if [ "$CD_ROM_TYPE" = "scan" ]; then
+  for device in /dev/sr0 /dev/sr1 /dev/sr2 /dev/scd0 /dev/scd1 /dev/scd2 /dev/scd3 /dev/scd4 /dev/scd5 /dev/scd6 ; do
+   dialog --infobox "$deviceをスキャン中..." 3 60
+   mount -o ro -t iso9660 $device /var/adm/mount 1> /dev/null 2> /dev/null
+   if [ $? = 0 ]; then
+    DRIVE_FOUND=$device
+    break
+   fi
+  done
+  umount /var/adm/mount 1> /dev/null 2> /dev/null
+  if [ "$DRIVE_FOUND" = "" ]; then
+   dialog --title "ドライブが見つかりません" --msgbox "調べたデバイスのどこにもCD-ROMドライブが見つかりませんでした。\n\
+自分のCDドライブをサポートしているブートディスクを使用しているか、\n\
+確認してみてください。ドライブを認識するために必要な、より詳しい\n\
+情報については、ファイルBOOTINGを参照してください。それから \n\
+インストールに再挑戦してみてください。どうしてもだめな場合は、\n\
+FAQ.TXTにCDの内容をDOSパーティションにコピーしてインストール\n\
+方法が書かれていますので、それを参照してください。" 14 70
+  else
+   dialog --title "CD-ROMドライブが見つかりました" --msgbox "CD-ROMがデバイス$DRIVE_FOUNDにありました。" 5 65
+   CD_DEVICE="$DRIVE_FOUND"
+  fi
+elif [ "$CD_ROM_TYPE" = "2" ]; then
+ dialog --title "SCSIデバイスの選択" --menu "どのSCSI CD-ROMを使用しますか？（わからない場合は、\n\
+/dev/scd0 を選んでください）" 10 60 3 \
+"/dev/scd0" "SCSI CD 0" \
+"/dev/scd1" "SCSI CD 1" \
+"/dev/scd2" "SCSI CD 2" \
+"/dev/scd3" "SCSI CD 3" \
+"/dev/scd4" "SCSI CD 4" \
+"/dev/scd5" "SCSI CD 5" \
+"/dev/scd6" "SCSI CD 6"  2> /tmp/whichscsi
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/cdtype /tmp/whichscsi
+  exit
+ fi
+ CD_DEVICE="`cat /tmp/whichscsi`"
+ rm -f /tmp/whichscsi
+elif [ "$CD_ROM_TYPE" = "3" ]; then
+ CD_DEVICE="/dev/sonycd"
+elif [ "$CD_ROM_TYPE" = "4" ]; then
+ CD_DEVICE="/dev/cdu535"
+elif [ "$CD_ROM_TYPE" = "5" ]; then
+ CD_DEVICE="/dev/mcd"
+elif [ "$CD_ROM_TYPE" = "6" ]; then
+ CD_DEVICE="/dev/mcdx0"
+elif [ "$CD_ROM_TYPE" = "7" ]; then
+ CD_DEVICE="/dev/sbpcd"
+elif [ "$CD_ROM_TYPE" = "8" ]; then
+ CD_DEVICE="/dev/aztcd"
+elif [ "$CD_ROM_TYPE" = "9" ]; then
+ CD_DEVICE="/dev/cm206cd"
+elif [ "$CD_ROM_TYPE" = "10" ]; then
+ CD_DEVICE="/dev/gscd"
+elif [ "$CD_ROM_TYPE" = "11" ]; then
+ CD_DEVICE="/dev/optcd"
+elif [ "$CD_ROM_TYPE" = "12" ]; then
+ CD_DEVICE="/dev/sjcd"
+elif [ "$CD_ROM_TYPE" = "1" ]; then
+ dialog --title "IDEデバイスの選択" --menu "CD-ROMドライブはどのIDEデバイスに接続されていますか？ \n\
+良く分からなければ、自動検出させてみることもできます。" 17 70 9 \
+"scan" "ドライブを自動検出してみます" \
+"/dev/hda" "プライマリIDEインターフェース, ドライブ1" \
+"/dev/hdb" "プライマリIDEインターフェース, ドライブ2" \
+"/dev/hdc" "セカンダリIDEインターフェース, ドライブ1" \
+"/dev/hdd" "セカンダリIDEインターフェース, ドライブ2" \
+"/dev/hde" "サードIDEインターフェース, ドライブ1" \
+"/dev/hdf" "サードIDEインターフェース, ドライブ2" \
+"/dev/hdg" "フォースIDEインターフェース, ドライブ1" \
+"/dev/hdh" "フォースIDEインターフェース, ドライブ2" \
+2> /tmp/idecd
+ if [ ! "`cat /tmp/idecd`" = "scan" ]; then
+  CD_DEVICE="`cat /tmp/idecd`"
+ else
+  for device in /dev/hdd /dev/hdc /dev/hdb /dev/hda \
+/dev/hde /dev/hdf /dev/hdg /dev/hdh ; do
+   dialog --infobox "$deviceスキャン中..." 3 30
+   mount -o ro -t iso9660 $device /var/adm/mount 1> /dev/null 2> /dev/null
+   if [ $? = 0 ]; then
+    DRIVE_FOUND=$device
+    break
+   fi
+  done
+  umount /var/adm/mount 1> /dev/null 2> /dev/null
+  if [ "$DRIVE_FOUND" = "" ]; then
+   dialog --title "ドライブが見つかりません" --msgbox "調べたどのデバイスにもIDE(ATAPI) CD-ROMドライブは見つかり\n\
+ませんでした。ドライブを認識するために必要な、より詳しい \n\
+情報に付いては、ファイルBOOTINGを参照してください。それから\n\
+インストールに再挑戦してみてください。どうしてもだめな場合は、\n\
+FAQ.TXTにCDの内容をDOSパーティションにコピーしてインスト\n\
+ール方法が書かれていますので、それを参照してください。" \
+12 70
+  else
+   dialog --title "IDE(ATAPI) CD-ROMドライブが見つかりました" --msgbox "IDE(ATAPI) CD-ROMドライブがデバイス$DRIVE_FOUNDで見つかりました。" 5 70
+   CD_DEVICE="$DRIVE_FOUND"
+  fi
+ fi
+fi
+
+# The CD will be mounted automatically later on:
+if [ "$DRIVE_FOUND" != "" ]; then
+    echo "$CD_DEVICE       /cdrom        iso9660       user,ro,noauto,exec,iocharset=euc-jp  0   0" > /tmp/SeTcdfstab
+fi
+
+while [ 0 ] ; do
+ dialog --title "インストール方法の選択" \
+--menu "Plamo Linux の配布 CD-R からのインストールの場合は plamo を \n\
+選んでください(/cdrom/plamo から必要なファイルがインストールされます) \n\
+配布CD-R以外のCD-ROMからインストールする場合は、custom を選んで \n\
+plamo Linuxのパッケージのあるディレクトリを指定してください。" 15 74 4 \
+ "plamo" "ハードディスクへの通常のインストール" \
+ "custom" "通常とは異なるディレクトリからのインストール" \
+ 2> /tmp/SeTreturn
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/cdtype /tmp/SeTreturn
+  exit
+ fi
+ if [ "`cat /tmp/SeTreturn`" = "help" ]; then
+  dialog --title "インストール法のヘルプ" --textbox /usr/lib/setup/IMhelpj \
+  20 74
+  continue
+ fi
+ break
+done
+
+SLACK_SOURCE_LOCATION="`cat /tmp/SeTreturn`"
+
+if [ "$SLACK_SOURCE_LOCATION" = "custom" ]; then
+ dialog --title "インストール元ディレクトリの選択" --inputbox "Plamo Linuxの \
+ ソースが入っているCDのディレクトリを入力\n\
+ してください。これはCDの種類によって異なっている可能性があり\n\
+ ます。先頭の'/'は省いてしまってもかまいません。 \n\
+ どのディレクトリにPlamo Linuxのソースがありますか？" 11 67 \
+ 2> /tmp/slacksource
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/cdtype /tmp/slacksource
+  exit
+ fi
+ rm -f /tmp/tmpmsg
+ SLACK_SOURCE_LOCATION="`cat /tmp/slacksource`"
+ rm -f /tmp/slacksource
+fi
+
+while [ 0 ]; do
+ mount -o ro -t iso9660 $CD_DEVICE /var/adm/mount 1> /dev/null 2> /dev/null
+ if [ ! $? = 0 ]; then
+  dialog --title "MOUNT ERROR" --menu "CD-ROMのマウント中にエラーが発生しました。" 11 60 3 \
+"1" "CDからのインストールを中止" \
+"2" "CD-ROMを再度マウントしてみる" \
+"3" "エラーを無視し，継続" 2> /tmp/errordo
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/SeTDS /tmp/SeTmount /tmp/SeTCDdev /tmp/errordo
+   exit;
+  fi
+  DOWHAT="`cat /tmp/errordo`"
+  rm -f /tmp/errordo
+  if [ $DOWHAT = 1 ]; then
+   rm -f /tmp/SeTDS /tmp/SeTmount /tmp/SeTCDdev
+   exit;
+  elif [ $DOWHAT = 3 ]; then
+   break;
+  fi
+ else
+  if [ ! -d /var/adm/mount/$SLACK_SOURCE_LOCATION ]; then
+   dialog --title "エラー：ディレクトリが見つかりません" --msgbox "Plamo Linuxのソースディレクトリが見つかりませんでした。\n\
+インストールするには，ソースディレクトリを設定し直してください。" 8 70
+    rm -f /tmp/SeTmount /tmp/SeTDS /tmp/SeTCDdev   
+   exit
+  fi
+  break;
+ fi
+done
+
+# since we've mounted successfully, let's refresh the link:
+if [ ! -d $T_PX/dev ]; then
+ mkdir $T_PX/dev
+ chown root.root $T_PX/dev
+ chmod 755 $T_PX/dev
+fi
+( cd $T_PX/dev ; ln -sf $CD_DEVICE cdrom )
+echo "/var/adm/mount/$SLACK_SOURCE_LOCATION" > /tmp/SeTDS
+echo "-source_mounted" > /tmp/SeTmount
+echo "$CD_DEVICE" > /tmp/SeTCDdev
+echo "/dev/null" > /tmp/SeTsource
