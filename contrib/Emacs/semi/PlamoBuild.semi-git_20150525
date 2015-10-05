@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase=flim
-vers=git_20141217
-url="https://github.com/wanderlust/flim.git"
+pkgbase=semi
+vers=git_20150525
+url="https://github.com/wanderlust/semi.git"
 verify=
-commitid=488a4d70fb4ae57bdd30dc75c2d75579894e28a2
+commitid=35c9ff77db07ace4b7178189c1fe45118ebf9a65
 arch=noarch
 build=P1
-src=flim
+src=semi
 OPT_CONFIG=''
-DOCS='ChangeLog NEWS README.en README.ja'
+DOCS='ChangeLog NEWS README.en README.ja TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -167,7 +167,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout flim-1_14-wl
+        git checkout semi-1_14-wl
         if [ -n "$commitid" ] ; then
           git reset --hard $commitid
         fi
@@ -217,6 +217,7 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
       make install PREFIX=$P/usr
     fi
     if [ $? != 0 ]; then
