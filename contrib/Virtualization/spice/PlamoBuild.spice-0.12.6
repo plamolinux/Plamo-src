@@ -1,13 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='input sourcecode url here'
-verify=
 pkgbase=spice
-vers=0.12.4
-arch=x86_64
-# arch=i586
+vers=0.12.6
+url="http://www.spice-space.org/download/releases/spice-${vers}.tar.bz2"
+verify=$url.sign
+arch=`uname -m`
 build=P1
-src=spice-0.12.4
+src=spice-${vers}
 OPT_CONFIG='--enable-client'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
