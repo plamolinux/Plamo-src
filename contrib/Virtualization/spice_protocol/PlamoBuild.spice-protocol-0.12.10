@@ -1,14 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://spice-space.org/download/releases/spice-protocol-0.12.6.tar.bz2'
-verify=
 pkgbase=spice_protocol
-vers=0.12.6
-# arch=x86_64
-# arch=i586
+vers=0.12.10
+url="http://spice-space.org/download/releases/spice-protocol-${vers}.tar.bz2"
+verify=
 arch=noarch
 build=P1
-src=spice-protocol-0.12.6
+src=spice-protocol-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
