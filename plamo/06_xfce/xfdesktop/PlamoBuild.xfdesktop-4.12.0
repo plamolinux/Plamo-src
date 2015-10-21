@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/xfce4-settings/4.10/xfce4-settings-4.10.0.tar.bz2'
-pkgbase=xfce4_settings
-vers=4.10.0
+pkgbase=xfdesktop
+vers=4.12.0
+url="http://archive.xfce.org/xfce/${vers:0:4}/src/xfdesktop-${vers}.tar.bz2"
+verify=$url.sha1
 arch=`uname -m`
-build=P7
-src=xfce4-settings-4.10.0
-OPT_CONFIG='--disable-static --enable-sound-settings --enable-libnotify --enable-pluggable-dialogs'
+build=P2
+src=xfdesktop-${vers}
+OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='xfce4-settings-xml-4.10.0.patch'
+patchfiles='xfdesktop-4.12.0-file-utils-strftime.patch'
 compress=txz
 ##############################################################
 
@@ -137,6 +138,20 @@ convert() {
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      exit 1
+    fi
+  done
+  exit 0
+}
+
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -180,6 +195,24 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in

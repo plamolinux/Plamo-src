@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/xfconf/4.10/xfconf-4.10.0.tar.bz2'
-pkgbase=xfconf
-vers=4.10.0
-arch=x86_64
-# arch=i586
+pkgbase=xfce4_terminal
+vers=0.6.3
+url="http://archive.xfce.org/src/apps/xfce4-terminal/${vers:0:3}/xfce4-terminal-${vers}.tar.bz2"
+arch=`uname -m`
 build=P2
-src=xfconf-4.10.0
-OPT_CONFIG='--disable-static'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+src=xfce4-terminal-${vers}
+OPT_CONFIG="--disable-static --disable-debug"
+DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################

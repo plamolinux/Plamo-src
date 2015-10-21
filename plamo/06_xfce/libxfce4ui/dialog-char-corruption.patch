@@ -1,7 +1,7 @@
-diff -uNr libxfce4ui-4.10.0.orig/libxfce4ui/xfce-dialogs.c libxfce4ui-4.10.0/libxfce4ui/xfce-dialogs.c
---- libxfce4ui-4.10.0.orig/libxfce4ui/xfce-dialogs.c	2012-04-29 04:46:52.000000000 +0900
-+++ libxfce4ui-4.10.0/libxfce4ui/xfce-dialogs.c	2013-01-08 12:55:11.076146079 +0900
-@@ -144,6 +144,7 @@
+diff -uNr libxfce4ui-4.12.1.orig/libxfce4ui/xfce-dialogs.c libxfce4ui-4.12.1/libxfce4ui/xfce-dialogs.c
+--- libxfce4ui-4.12.1.orig/libxfce4ui/xfce-dialogs.c	2015-02-19 01:57:43.000000000 +0900
++++ libxfce4ui-4.12.1/libxfce4ui/xfce-dialogs.c	2015-03-27 17:10:33.245706617 +0900
+@@ -197,6 +197,7 @@
    GdkScreen   *screen;
  
    g_return_if_fail (parent == NULL || GTK_IS_WINDOW (parent));
@@ -9,7 +9,7 @@ diff -uNr libxfce4ui-4.10.0.orig/libxfce4ui/xfce-dialogs.c libxfce4ui-4.10.0/lib
  
    /* get the user's locale without encoding */
    locale = g_strdup (setlocale (LC_MESSAGES, NULL));
-@@ -661,7 +662,7 @@
+@@ -784,7 +785,7 @@
    g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), 0);
  
    va_start (args, first_button_text);
