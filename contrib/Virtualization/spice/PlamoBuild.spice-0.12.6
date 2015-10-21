@@ -1,15 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://spice-space.org/download/releases/spice-protocol-0.12.6.tar.bz2'
-verify=
-pkgbase=spice_protocol
+pkgbase=spice
 vers=0.12.6
-# arch=x86_64
-# arch=i586
-arch=noarch
+url="http://www.spice-space.org/download/releases/spice-${vers}.tar.bz2"
+verify=$url.sign
+arch=`uname -m`
 build=P1
-src=spice-protocol-0.12.6
-OPT_CONFIG=''
+src=spice-${vers}
+OPT_CONFIG='--enable-client'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
@@ -91,7 +89,11 @@ verify_checksum() {
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
-  B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  if [ $arch = "x86_64" ]; then
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
