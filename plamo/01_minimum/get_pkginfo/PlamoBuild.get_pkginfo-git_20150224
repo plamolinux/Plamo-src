@@ -2,9 +2,9 @@
 
 ######################################################################
 url="https://github.com/plamolinux/get_pkginfo.git
-    http://plamo.linet.gr.jp/~tamuki/src/gitlog2changelog.py"
+    https://raw.github.com/plamolinux/Plamo-src/master/plamo/01_minimum/get_pkginfo/gitlog2changelog.py"
 pkgbase=get_pkginfo
-vers=git_20150216
+vers=git_20150224
 arch=noarch
 build=P1
 src=$pkgbase
@@ -198,7 +198,7 @@ if [ $opt_download -eq 1 ] ; then
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     git) ( cd `basename ${i##*/} .git`
-        git checkout origin/master ; git reset --hard b47596a
+        git checkout origin/master ; git reset --hard 0f9b0a8
         git set-file-times ; TZ=UTC ../gitlog2changelog.py) ;;
     esac
   done
@@ -229,6 +229,7 @@ if [ $opt_build -eq 1 ] ; then
       make
     fi
   done
+  nkf -w --overwrite README.md
   pandoc -f markdown_github -t plain -o README README.md
 fi
 if [ $opt_package -eq 1 ] ; then
