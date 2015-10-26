@@ -1,18 +1,19 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnome.org/pub/GNOME/sources/system-tools-backends/2.10/system-tools-backends-2.10.2.tar.bz2'
-url='https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=761806'
-#fix-user-module.patch
+url='http://pub.mate-desktop.org/releases/1.10/mate-user-guide-1.10.1.tar.xz'
 verify=
-pkgbase=system_tools_backends
-vers=2.10.2
-arch=x86_64
-#arch=i686
-build=P2
-src=system-tools-backends-2.10.2
+pkgbase=mate_user_guide
+vers=1.10.1
+commitid=
+# arch=x86_64
+# arch=i586
+#arch=`uname -m | sed -e 's/i.86/i686/'`
+arch=noarch
+build=P1
+src=mate-user-guide-1.10.1
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='fix-user-module.patch services.patch'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -83,10 +84,10 @@ for s in $url ; do
 srcsum=`$checksum_command ${s##*/}`
 verifysum=`grep ${s##*/} $verify_file`
 if [ x"$srcsum" != x"$verifysum" ]; then
-exit 1
+return 1
 fi
 done
-exit 0
+return 0
 }
 
 W=`pwd`
@@ -131,9 +132,20 @@ done
 fi
 if [ $opt_download -eq 1 ] ; then
 for i in $url ; do
+case ${i##*.} in
+git)
+if [ ! -d `basename ${i##*/} .git` ] ; then
+git clone $i
+else
+( cd `basename ${i##*/} .git` ; git pull origin master )
+fi
+;;
+*)
 if [ ! -f ${i##*/} ] ; then
 wget $i
 fi
+;;
+esac
 done
 for i in $verify ; do
 if [ ! -f ${i##*/} ] ; then
@@ -157,6 +169,12 @@ for i in $url ; do
 case ${i##*.} in
 gz) tar xvpzf ${i##*/} ;;
 bz2) tar xvpjf ${i##*/} ;;
+git) ( cd `basename ${i##*/} .git`
+git checkout origin/master
+if [ -n "$commitid" ] ; then
+git reset --hard $commitid
+fi
+git set-file-times ) ;;
 *) tar xvpf ${i##*/} ;;
 esac
 done
@@ -176,15 +194,15 @@ for patch in $patchfiles ; do
 patch -p1 < $W/$patch
 done
 
- if [ -f autogen.sh ] ; then
- sh ./autogen.sh
- fi
+# if [ -f autogen.sh ] ; then
+# sh ./autogen.sh
+# fi
 
 if [ -x configure ] ; then
 export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
 export LDFLAGS='-Wl,--as-needed'
-#export CC="gcc -isystem /usr/include $target"
-#export CXX="g++ -isystem /usr/include $target "
+#export CFLAGS="-isystem /usr/include $target"
+#export CPPFLAGS="-isystem /usr/include $target "
 ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
 fi
 if [ $? != 0 ]; then
@@ -248,6 +266,7 @@ fi
 EOF
 done
 fi
+
 
 # remove locales except ja
 #

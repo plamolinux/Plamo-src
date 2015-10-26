@@ -1,18 +1,18 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnome.org/pub/GNOME/sources/system-tools-backends/2.10/system-tools-backends-2.10.2.tar.bz2'
-url='https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=761806'
-#fix-user-module.patch
+url='http://webkitgtk.org/releases/webkitgtk-2.4.7.tar.xz'
 verify=
-pkgbase=system_tools_backends
-vers=2.10.2
-arch=x86_64
-#arch=i686
-build=P2
-src=system-tools-backends-2.10.2
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='fix-user-module.patch services.patch'
+pkgbase=webkitgtk3
+vers=2.4.7
+commitid=
+# arch=x86_64
+# arch=i586
+arch=`uname -m | sed -e 's/i.86/i586/'`
+build=P1
+src=webkitgtk-2.4.7
+OPT_CONFIG='--enable-geolocation --enable-introspection --with-gtk=3.0 --enable-webkit2'
+DOCS='ChangeLog INSTALL NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -83,10 +83,10 @@ for s in $url ; do
 srcsum=`$checksum_command ${s##*/}`
 verifysum=`grep ${s##*/} $verify_file`
 if [ x"$srcsum" != x"$verifysum" ]; then
-exit 1
+return 1
 fi
 done
-exit 0
+return 0
 }
 
 W=`pwd`
@@ -131,9 +131,20 @@ done
 fi
 if [ $opt_download -eq 1 ] ; then
 for i in $url ; do
+case ${i##*.} in
+git)
+if [ ! -d `basename ${i##*/} .git` ] ; then
+git clone $i
+else
+( cd `basename ${i##*/} .git` ; git pull origin master )
+fi
+;;
+*)
 if [ ! -f ${i##*/} ] ; then
 wget $i
 fi
+;;
+esac
 done
 for i in $verify ; do
 if [ ! -f ${i##*/} ] ; then
@@ -157,6 +168,12 @@ for i in $url ; do
 case ${i##*.} in
 gz) tar xvpzf ${i##*/} ;;
 bz2) tar xvpjf ${i##*/} ;;
+git) ( cd `basename ${i##*/} .git`
+git checkout origin/master
+if [ -n "$commitid" ] ; then
+git reset --hard $commitid
+fi
+git set-file-times ) ;;
 *) tar xvpf ${i##*/} ;;
 esac
 done
@@ -176,15 +193,15 @@ for patch in $patchfiles ; do
 patch -p1 < $W/$patch
 done
 
- if [ -f autogen.sh ] ; then
- sh ./autogen.sh
- fi
+# if [ -f autogen.sh ] ; then
+# sh ./autogen.sh
+# fi
 
 if [ -x configure ] ; then
 export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
 export LDFLAGS='-Wl,--as-needed'
-#export CC="gcc -isystem /usr/include $target"
-#export CXX="g++ -isystem /usr/include $target "
+export CFLAGS="-isystem /usr/include $target"
+export CPPFLAGS="-isystem /usr/include $target "
 ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
 fi
 if [ $? != 0 ]; then
@@ -196,9 +213,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
 for i in `seq 0 $((${#B[@]} - 1))` ; do
 cd ${B[$i]}
-if [ -f Makefile ] ; then
+if [ -f GNUmakefile ] ; then
 export LDFLAGS='-Wl,--as-needed'
-make -j3
+make Programs_DumpRenderTree_LDFLAGS="-no-fast-install -no-install -lfontconfig"
 fi
 done
 fi
@@ -214,10 +231,10 @@ if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
 touch $W/i.st ; sleep 1
 for i in `seq 0 $((${#B[@]} - 1))` ; do
 cd ${B[$i]}
-for mk in `find . -name "[Mm]akefile" ` ; do
+for mk in `find . -name GNUmakefile ` ; do
 sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
 done
-if [ -f Makefile ] ; then
+if [ -f GNUmakefile ] ; then
 export LDFLAGS='-Wl,--as-needed'
 make install DESTDIR=$P
 fi
