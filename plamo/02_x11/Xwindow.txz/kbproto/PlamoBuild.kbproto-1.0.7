@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-video-fbdev-0.4.4.tar.bz2'
-pkgbase=xf86_video_fbdev
-vers=0.4.4
+url='http://ftp.x.org/pub/individual/proto/kbproto-1.0.7.tar.bz2'
+pkgbase=kbproto
+vers=1.0.7
 arch=`uname -m`
-build=P3
-src=xf86-video-fbdev-0.4.4
+build=P1
+src=kbproto-1.0.7
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL README'
 patchfiles=''
@@ -141,7 +141,6 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-   sed -e "/mibstore.h/d" -e "/miInitializeBackingStore/d"  -i src/fbdev.c
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig

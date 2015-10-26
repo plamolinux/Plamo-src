@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-video-fbdev-0.4.4.tar.bz2'
-pkgbase=xf86_video_fbdev
-vers=0.4.4
+url='http://www.freedesktop.org/software/vaapi/releases/libva-intel-driver/libva-intel-driver-1.6.1.tar.bz2'
+pkgbase=libva_intel_driver
+vers=1.6.1
 arch=`uname -m`
-build=P3
-src=xf86-video-fbdev-0.4.4
+build=P1
+src=libva-intel-driver-1.6.1
 OPT_CONFIG=''
-DOCS='COPYING ChangeLog INSTALL README'
+DOCS='AUTHORS COPYING NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -117,9 +117,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -141,15 +141,16 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-   sed -e "/mibstore.h/d" -e "/miInitializeBackingStore/d"  -i src/fbdev.c
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
+    if [ -f setup.py ]; then
+        python ./setup.py config        
+    elif [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       export CC="gcc -isystem /usr/include $target" 
+       export CXX="g++ -isystem /usr/include $target "
+       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -159,7 +160,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py build
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
@@ -177,10 +180,9 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
+    if [ -f setup.py ]; then
+        python setup.py install --root $P
+    elif [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
@@ -189,28 +191,6 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
 
 # remove locales except ja
 # 

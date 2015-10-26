@@ -3,9 +3,8 @@
 url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-video-nouveau-1.0.11.tar.bz2'
 pkgbase=xf86_video_nouveau
 vers=1.0.11
-arch=x86_64
-# arch=i686
-build=P1
+arch=`uname -m`
+build=P2
 src=xf86-video-nouveau-1.0.11
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL'

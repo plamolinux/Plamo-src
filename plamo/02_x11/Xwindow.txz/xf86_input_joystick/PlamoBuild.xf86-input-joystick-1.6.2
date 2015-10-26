@@ -3,9 +3,8 @@
 url='ftp://ftp.x.org/pub/individual/driver/xf86-input-joystick-1.6.2.tar.bz2'
 pkgbase=xf86_input_joystick
 vers=1.6.2
-arch=x86_64
-#arch=i686
-build=P1
+arch=`uname -m`
+build=P2
 src=xf86-input-joystick-1.6.2
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL README'

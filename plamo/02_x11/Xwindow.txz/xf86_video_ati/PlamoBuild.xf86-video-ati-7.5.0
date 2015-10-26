@@ -3,9 +3,8 @@
 url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-video-ati-7.5.0.tar.bz2'
 pkgbase=xf86_video_ati
 vers=7.5.0
-arch=x86_64
-# arch=i686
-build=P1
+arch=`uname -m`
+build=P2
 src=xf86-video-ati-7.5.0
 OPT_CONFIG='--enable-glamor'
 DOCS='COPYING ChangeLog INSTALL README'

@@ -1,14 +1,23 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-video-fbdev-0.4.4.tar.bz2'
-pkgbase=xf86_video_fbdev
-vers=0.4.4
+url='ftp://ftp.freedesktop.org/pub/mesa/10.6.7/MesaLib-10.6.7.tar.xz'
+pkgbase=MesaLib
+vers=10.6.7
 arch=`uname -m`
-build=P3
-src=xf86-video-fbdev-0.4.4
-OPT_CONFIG=''
-DOCS='COPYING ChangeLog INSTALL README'
-patchfiles=''
+build=P1
+src=mesa-10.6.7
+OPT_CONFIG='--enable-texture-float 
+         --enable-llvm-shared-libs
+         --enable-gles1  --enable-gles2 
+         --enable-osmesa --enable-xa --enable-gbm 
+         --enable-glx-tls 
+         --with-egl-platforms=drm,x11
+         --with-gallium-drivers=nouveau,r300,r600,radeonsi,svga,swrast,i915,ilo
+         '
+DOCS='docs/*'
+
+# http://www.linuxfromscratch.org/patches/blfs/svn/MesaLib-9.1.6-add_xdemos-1.patch
+ patchfiles='MesaLib-10.1.0-svga_texture-1.patch MesaLib-9.1.6-add_xdemos-1.patch'
 compress=txz
 ##############################################################
 
@@ -72,12 +81,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -91,7 +101,7 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
-    suffix="64"
+    suffix=""
 else
     target="-m32"
     libdir="lib"
@@ -134,35 +144,50 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
+     for patch in $patchfiles ; do
+        patch -p1 < $W/$patch
+     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-   sed -e "/mibstore.h/d" -e "/miInitializeBackingStore/d"  -i src/fbdev.c
+    # sed -i "/LLVM_VERSION_INT/s:-ne:-lt:" configure.ac 
+    # autoreconf -fi 
+
+     # if [ -f autogen.sh ] ; then
+     #  sh ./autogen.sh
+     #fi
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+	 # if [ -x /usr/bin/clang -a -x /usr/bin/clang++ ]; then
+	 #    export CC="clang"
+	 #    export CXX='clang++ -std=c++11 -stdlib=libc++ -lc++abi'
+	 #else
+	     export CC="gcc"
+	     export CXX="g++"
+	 #fi
+         # export CC="gcc -isystem /usr/include $target" 
+         # export CXX="g++ -isystem /usr/include $target "
+	     
+         ./autogen.sh --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man --with-dri-driverdir=/usr/${libdir}/dri ${OPT_CONFIG[$i]}
+         #./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man --with-dri-driverdir=/usr/${libdir}/dri ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
+      # -Werror=date-time implemented from GCC-4.9
+      sed -i -e 's/ -Werror=date-time//' src/gallium/auxiliary/Makefile
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      # export LDFLAGS='-Wl,--as-needed'
+      make V=1 
+      make -C xdemos DEMOS_PREFIX=/usr
     fi
+
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -184,34 +209,20 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
+    mkdir -p $P/usr/bin
+    for i in glxgears glxinfo ; do
+	install xdemos/$i $P/usr/bin
+    done
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+
+  # コンパイルに使ったLLVMのライブラリ群をパッケージに含めてしまう
+  # mkdir -p $P/usr/${libdir}
+  # cp -av /usr/${libdir}/libLLVM* $P/usr/${libdir}
+
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
-
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do
