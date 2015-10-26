@@ -1,0 +1,10 @@
+--- a/src/efibootmgr/efibootmgr.c	2015-10-10 09:03:50.316097404 +0900
++++ b/src/efibootmgr/efibootmgr.c	2015-10-10 12:54:03.575132286 +0900
+@@ -58,6 +58,7 @@
+ #define EFIBOOTMGR_VERSION "unknown (fix Makefile!)"
+ #endif
+ 
++efi_guid_t const efi_guid_zero = {0};
+ 
+ typedef struct _var_entry {
+ 	char		*name;

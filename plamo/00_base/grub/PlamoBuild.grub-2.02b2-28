@@ -1,15 +1,18 @@
 #!/bin/sh
 ##############################################################
-url='http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-4.06.tar.bz2'
-pkgbase=syslinux
-vers=4.06
-arch=x86_64
-# arch=i586
-build=P1
-src=syslinux-4.06
-OPT_CONFIG=''
-DOCS='COPYING NEWS README'
-patchfiles=''
+url='http://ftp.de.debian.org/debian/pool/main/g/grub2/grub2_2.02~beta2.orig.tar.xz 
+     http://ftp.de.debian.org/debian/pool/main/g/grub2/grub2_2.02~beta2-28.debian.tar.xz'
+# Debian sid patch use
+pkgbase=grub
+vers=2.02b2_28
+arch=`uname -m`
+build=P7
+src=grub-2.02~beta2
+OPT_CONFIG="--disable-werror --disable-grub-mount"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
+# patchfiles='grub_label.patch grub-install-prefix_drive.patch'
+patchfiles='grub2_2.02~beta2-28.debian.tar.xz'
+files='grubconfig grubconfig_mbr grubconfig_efi setup.bootloader'
 compress=txz
 ##############################################################
 
@@ -91,6 +94,8 @@ compress() {
   for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in $P/opt/kde/lib{,64} ; do strip_libdir $i ; done
+  for i in $P/opt/kde/bin ; do strip_bindir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -140,9 +145,9 @@ W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=/tmp/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=/tmp/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -157,10 +162,12 @@ if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
     suffix="64"
+    CPU_CONFIG='--target=x86_64-pc-linux'
 else
     target="-m32"
     libdir="lib"
     suffix=""
+    CPU_CONFIG='--target=i386-pc-linux'
 fi
 
 if [ $# -eq 0 ] ; then
@@ -199,34 +206,54 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
+    tar xvJf $W/$patchfiles
+for patchi in $(cat debian/patches/series)
+do
+    patch -p1 < debian/patches/$patchi
+    if [ $? -ne 0 ]; then
+        exit 255
+    fi
+done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    # for glibc-2.16
+    sed -i -e '/gets is a/d' grub-core/gnulib/stdio.in.h
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -f autogen.sh ] ; then
+        sh ./autogen.sh
+    fi
+
+    if [ -d $P ]; then rm -rf $P ; mkdir $P ; fi
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    export CC="gcc -isystem /usr/include $target" 
+    export CXX="g++ -isystem /usr/include $target "
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG} ${CPU_CONFIG}
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed -static'
+      make -j3
+      make install DESTDIR=$P
+    fi
+    make clean
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man --with-platform=efi ${OPT_CONFIG}  ${CPU_CONFIG} 
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed -static'
+      make -j3
+      make install DESTDIR=$P
+    fi
+    
   done
 fi
 if [ $opt_build -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      make -j3
-    fi
-  done
+    echo "if you finish configure, build is also done. proceed to package"
+    opt_package=1
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -235,45 +262,40 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
-      make install INSTALLROOT=$P
-    fi
-    mv $P/usr/man $P/usr/share
-  done
+
+  chown -R root.root $P/*
+  mkdir -p $P/etc/default
+  cat <<EOF >> $P/etc/default/grub
+# Default Menu Entry
+GRUB_DEFAULT=0
+# Time after the menu displayed
+GRUB_TIMEOUT=10
+# Time before displaying the menu
+#GRUB_HIDDEN_TIMEOUT=0
+# Display countdown or not
+#GRUB_HIDDEN_TIMEOUT_QUIET=false
+# Command line arguments for default linux entry
+GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
+# Command line arguments for all linux entry
+#GRUB_CMDLINE_LINUX=
+# Distributor
+GRUB_DISTRIBUTOR=Plamo
+EOF
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
 
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
+  mkdir -p $P/var/log/setup
+  cp $W/setup.bootloader $P/var/log/setup
+  chmod +x $P/var/log/setup
+
+  mkdir -p $P/sbin
+  cp $W/grubconfig $W/grubconfig{_efi,_mbr} $P/sbin
+  chmod +x $P/sbin/grubconfig*
+
 
 # remove locales except ja
 # 
@@ -308,16 +330,13 @@ EOF
       install $myname $docdir/$src
       touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
+      cp $patchfiles $docdir/$src
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################

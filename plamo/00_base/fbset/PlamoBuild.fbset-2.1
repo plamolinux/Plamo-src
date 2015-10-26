@@ -1,24 +1,15 @@
 #!/bin/sh
 
 ######################################################################
-url="http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.tar.gz/765e2153f5fc4f21793f2edc2647305a/nvi-1.79.tar.gz
-    http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.m17n-20040401.diff.gz/851650ced51697b3b08400fa75621c97/nvi-1.79.m17n-20040401.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/nvi-1.79-64bit_breakage.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/nvi-1.79-DESTDIR.patch.gz"
-pkgbase=nvi
-vers=1.79
-arch=x86_64
-build=P4
+url="http://users.telenet.be/geertu/Linux/fbdev/fbset-2.1.tar.gz
+    http://archive.debian.org/debian/pool/main/f/fbset/fbset_2.1-23.diff.gz"
+pkgbase=fbset
+vers=2.1
+arch=`uname -m`
+build=P1
 src=$pkgbase-$vers
-OPT_CONFIG="--enable-multibyte=euc-jp"
-DOCS="LAYOUT README FAQ
-    `echo docs/USD.doc/{edit/edittut,vi.ref/vi.ref}.ps`
-    `echo docs/USD.doc/vitut/{vitut,summary,viapwh}.ps`
-    `echo docs/USD.doc/exref/{exref,summary}.ps`
-    `echo docs/{ev,features,interp/interp,TODO,help}`
-    `echo docs/internals/{gdb.script,structures,autowrite,quoting}`
-    `echo docs/internals/{input,context,openmode,cscope.NOTES}`
-    docs/changelog docs/tutorial/* `echo build/README{,.LynxOS}` LICENSE"
+OPT_CONFIG=""
+DOCS="INSTALL"
 ######################################################################
 
 fscheck() {
@@ -125,7 +116,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -163,7 +154,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -179,6 +170,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -209,14 +201,12 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  gunzip -c $W/nvi-1.79.m17n-20040401.diff.gz | patch -Np0 -i -
-  gunzip -c $W/nvi-1.79-64bit_breakage.patch.gz | patch -Np1 -i -
-  gunzip -c $W/nvi-1.79-DESTDIR.patch.gz | patch -Np1 -i -
-  cp -p build/configure{,.orig} ; chmod 755 build/configure
-  sed '/^LDFLAGS=/s@$LDFLAGS@${LDFLAGS-"-lncurses"}@g' build/configure.orig \
-      > build/configure
+  gunzip -c $W/fbset_2.1-23.diff.gz | patch -Np1 -i -
+  for i in `cat $B/debian/patches/series` ; do
+    patch -Np1 -i $B/debian/patches/$i
+  done
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       make clean
     fi
@@ -224,7 +214,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
@@ -232,7 +222,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       make
     fi
@@ -249,7 +239,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       make install DESTDIR=$P
     fi
@@ -259,7 +249,6 @@ if [ $opt_package -eq 1 ] ; then
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  gzip_dir $mandir/cat1
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -277,20 +266,11 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-  chmod 755 $docdir/$src/docs/tutorial/vi.tut.csh.gz
-  cp -a $B/docs.m17n $docdir/$src
-  chown -R root.root $docdir/$src/docs.m17n
-  find $docdir/$src/docs.m17n -exec touch -t `date '+%m%d0900'` {} \;
-  gzip_dir $docdir/$src/docs.m17n
-  touch -t `date '+%m%d0900'` $docdir/$src/docs.m17n
-  mv $docdir/$src/{docs.m17n,$myname.gz} $C
-  mv $C/{docs.m17n,$myname.gz} $docdir/$src
-  touch -r $S $docdir/$src
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/share/vi
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/cat1 | tail -n+2`
+  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P etc/fb.modes
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz

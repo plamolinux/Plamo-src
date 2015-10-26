@@ -1,19 +1,22 @@
-#!/bin/sh
+#!/bin/sh -x
 
 ######################################################################
-url="http://lilo.alioth.debian.org/ftp/sources/lilo-23.2.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/lilo-23.2-x86_64.patch.gz
-    ftp://ftp.internat.freebsd.org/pub/FreeBSD/distfiles/Dev86src-0.16.18.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/dev86-0.16.17-x86_64.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/dev86-0.16.17-copt.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/plamo_liloconfig.tar.gz"
-pkgbase=lilo
-vers=23.2
+url="https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.3.tar.xz
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-20150905-4.2.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-fonts-20140614.patch.bz2
+    git://github.com/sfjro/aufs4-standalone.git
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/4.2-panic_beep.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/4.2-morse_code_panics.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/tuxonice-for-linux-4.2.3-2015-10-10.patch.bz2
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-allow_unprivileged_mounts.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/config-4.2.3-plamo64"
+pkgbase=kernel
+vers=4.2.3_plamo64
 arch=x86_64
-build=P5
-src=$pkgbase-$vers
+build=P1
+src=linux-4.2.3
 OPT_CONFIG=""
-DOCS="readme/* CHANGELOG_old TODO TOOLS README NEWS COPYING CHANGELOG"
+DOCS=""
 ######################################################################
 
 fscheck() {
@@ -189,13 +192,19 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    case ${i##*.} in
+    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
+    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
+    esac
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/aufs4.2 ; git reset --hard 5e75e79 ) ;;
     esac
   done
 fi
@@ -204,21 +213,28 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  gunzip -c $W/lilo-23.2-x86_64.patch.gz | patch -Np1 -i -
-  cp -p checkit checkit.orig
-  sed 's@^gcc @LANG=C gcc @g' checkit.orig > checkit
-  cp -p diagnose/Makefile diagnose/Makefile.orig
-  cat <<- "EOF" | patch diagnose/Makefile
-	36c36
-	< 	@if [ -x /usr/bin/bcc -o -x /usr/local/bin/bcc ]; then echo Okay; \
-	---
-	> 	@if which bcc; then echo Okay; \
+  patch -Np1 -i $W/vd_unicon-kernel-20150905-4.2.patch
+  bunzip2 -c $W/vd_unicon-kernel-fonts-20140614.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/aufs4-standalone/aufs4-kbuild.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-base.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-mmap.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-standalone.patch
+  cp -av $W/aufs4-standalone/Documentation .
+  cp -av $W/aufs4-standalone/fs .
+  cp -pv $W/aufs4-standalone/include/uapi/linux/aufs_type.h include/uapi/linux
+  patch -Np1 -i $W/4.2-panic_beep.patch
+  patch -Np1 -i $W/4.2-morse_code_panics.patch
+  bunzip2 -c $W/tuxonice-for-linux-4.2.3-2015-10-10.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/overlayfs-allow_unprivileged_mounts.patch
+  cp -p $W/config-4.2.3-plamo64 .config
+  cp -p arch/x86/boot/install.sh{,.orig}
+  head -n-9 arch/x86/boot/install.sh.orig > arch/x86/boot/install.sh
+  sed -i '/INSTALLKERNEL/s@^@#@g' arch/x86/boot/install.sh
+  cat <<- "EOF" | patch arch/x86/boot/install.sh
+	48a49
+	> cp .config $4/config-$1
 	EOF
-  cd $W/dev86-0.16.18
-  gunzip -c $W/dev86-0.16.17-x86_64.patch.gz | patch -Np1 -i -
-  gunzip -c $W/dev86-0.16.17-copt.patch.gz | patch -Np1 -i -
-  make PREFIX=$W/dev86 install
-  PATH="$W/dev86/bin:$PATH"
+  sed -i '/\(vmlinuz\|System.map\)$/s@$@-\$1@g' arch/x86/boot/install.sh
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -238,7 +254,7 @@ if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      make -i alles diagnostic
+      make
     fi
   done
 fi
@@ -255,26 +271,23 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      make install DESTDIR=$P
+      install -d $P/boot
+      make install INSTALL_PATH=$P/boot
+      make modules_install INSTALL_MOD_PATH=$P
     fi
   done
-  install src/lilo.static $P/sbin/lilo
-  rm $P/usr/sbin/liloconfig
-  rm $P/boot/{debian{,-de,lilo},coffee}.bmp
+  krel=${vers//_/-}
+  ln -s config-$krel $P/boot/config
+  ln -s vmlinuz-$krel $P/boot/vmlinuz
+  ln -s System.map-$krel $P/boot/System.map
+  rm $P/lib/modules/$krel/{source,build}
+  ln -s /usr/src/linux $P/lib/modules/$krel/source
+  ln -s /usr/src/linux $P/lib/modules/$krel/build
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  for i in {{,e}lilo,{,e}osldr}config ; do
-    cp -p plamo_liloconfig/sbin/$i $P/sbin ; chown root.root $P/sbin/$i
-  done
-  ln -s liloconfig $P/sbin/liloconfig-color
-  install -d $P/var/log/setup
-  for i in {,e}text.lilohelp {,e}setup.bootloader ; do
-    cp -p plamo_liloconfig/var/log/setup/$i $P/var/log/setup
-    chown root.root $P/var/log/setup/$i
-  done
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -283,6 +296,7 @@ if [ $opt_package -eq 1 ] ; then
         gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
       done
     done
+    install -d $docdir/$src
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
       touch -t `date '+%m%d0900'` $docdir/$src/$myname
@@ -292,26 +306,13 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-  mkdir $docdir/$src/sample
-  for i in sample/lilo.{example,old-{raid,special}}.conf \
-      images/{{inside,onlyblue,tuxlogo}_16c.dat,README} ; do
-    cp -p $S/$i $docdir/$src/sample
-  done
-  touch -r $S/sample $docdir/$src/sample
-  cp -a $S/doc $docdir/$src
-  chown -R root.root $docdir/$src/{sample,doc}
-  mv $docdir/$src/{doc,readme,sample,{CHANGELOG_old,TODO,TOOLS}.gz} $C
-  mv $docdir/$src/{README,NEWS,COPYING,CHANGELOG,$myname}.gz $C
-  mv $C/{doc,readme,sample,{CHANGELOG_old,TODO,TOOLS}.gz} $docdir/$src
-  mv $C/{README,NEWS,COPYING,CHANGELOG,$myname}.gz $docdir/$src
-  touch -r $S $docdir/$src
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find boot | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find var/log/setup | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  prune_symlink $P/boot
+  prune_symlink $P/lib/modules/$krel
+  touch -t `date '+%m%d0900'` $P/lib/modules/$krel
+  tar cvpf $pkg.tar -C $P `cd $P ; find boot | tail -n+2`
+  tar rvpf $pkg.tar -C $P lib/modules/$krel
+  tar rvpf $pkg.tar -C $P lib/firmware
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

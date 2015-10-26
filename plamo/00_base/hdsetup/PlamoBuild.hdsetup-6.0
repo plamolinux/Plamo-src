@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/project/lsb/lsb_release/1.4/lsb-release-1.4.tar.gz'
-pkgbase=lsb_release
-vers=1.4
-plamo_vers=6.0
-arch=noarch
-build=P4
-src=lsb-release-1.4
+url=''
+pkgbase=hdsetup
+vers=6.0
+arch='i586'
+build=P1
+src=hdsetup-6.0
+plamo_vers='Plamo-6.0'
 OPT_CONFIG=''
-DOCS='ChangeLog INSTALL README lsb-release.template lsb_release lsb_release.examples'
+DOCS=''
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,12 +73,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -133,18 +134,12 @@ if [ $opt_config -eq 1 ] ; then
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
-
-    echo "no need to configure. proceed to build"
-    opt_build=1
-  done
+  echo "no need to config. proceed to build"
+  opt_build=1
 fi
 if [ $opt_build -eq 1 ] ; then
-    make
+    echo "no need to build. proceed to package"
+    opt_package=1
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -156,16 +151,16 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    mkdir -p $P/etc
-    echo "Plamo Linux release ${plamo_vers}" >> $P/etc/plamo-release
+  cd ${B[$i]}
+  mkdir -p $P/sbin
+  mkdir -p $P/usr/lib/setup
+  cp -a sbin/* $P/sbin
+  touch $P/usr/lib/setup/${plamo_vers}
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/*
+  fi
 
-    mkdir -p $P/usr/share/man/man1
-    mkdir -p $P/usr/bin
-    install -m 644 lsb_release.1.gz $P/usr/share/man/man1/lsb_release.1.gz
-    install -m 755 lsb_release $P/usr/bin/lsb_release
-  done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
