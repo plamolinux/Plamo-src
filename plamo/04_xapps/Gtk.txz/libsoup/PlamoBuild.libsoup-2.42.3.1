@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/garcon/0.2/garcon-0.2.0.tar.bz2'
-pkgbase=garcon
-vers=0.2.0
+url='http://ftp.gnome.org/pub/gnome/sources/libsoup/2.42/libsoup-2.42.3.1.tar.xz'
+pkgbase=libsoup
+vers=2.42.3.1
 arch=x86_64
 # arch=i586
-build=P2
-src=garcon-0.2.0
+build=P1
+src=libsoup-2.42.3.1
 OPT_CONFIG='--disable-static'
-DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
+DOCS='AUTHORS COPYING NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -213,8 +213,8 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
+#         export CC="gcc -isystem /usr/include $target" 
+#         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then

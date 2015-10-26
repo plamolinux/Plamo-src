@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/src/xfce/exo/0.8/exo-0.8.0.tar.bz2'
-pkgbase=exo
-vers=0.8.0
+url='http://search.cpan.org/CPAN/authors/id/M/MI/MIROD/XML-Twig-3.48.tar.gz'
+pkgbase=perl_XML_Twig
+vers=3.48
 arch=x86_64
-# arch=i586
-build=P3
-src=exo-0.8.0
-OPT_CONFIG="--disable-static --docdir=/usr/share/doc/${src}"
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
+#arch=i586
+build=P1
+src=XML-Twig-3.48
+OPT_CONFIG=''
+DOCS='README Changes'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -187,7 +187,6 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -206,23 +205,15 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+#     if [ -f autogen.sh ] ; then
+#       sh ./autogen.sh
+#     fi
+    if [ -f Makefile.PL ] ; then
+        perl ./Makefile.PL
+    fi
   done
 fi
+
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
@@ -244,9 +235,6 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
@@ -255,29 +243,6 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
 
 # remove locales except ja
 # 
@@ -322,17 +287,6 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
-
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################

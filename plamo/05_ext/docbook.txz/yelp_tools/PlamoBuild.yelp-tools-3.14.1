@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://mp4v2.googlecode.com/files/mp4v2-1.9.1.tar.bz2'
-pkgbase=mp4v2
-vers=1.9.1
+url=ftp://ftp.gnome.org/pub/gnome/sources/yelp-tools/3.14/yelp-tools-3.14.1.tar.xz
+pkgbase=yelp_tools
+vers=3.14.1
+#arch=noarch
 arch=x86_64
-# arch=i586
+#arch=i586
 build=P1
-src=mp4v2-1.9.1
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='COPYING INSTALL README'
+src=yelp-tools-3.14.1
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING COPYING.GPL ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -91,6 +92,8 @@ compress() {
   for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
   for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in $P/opt/kde/lib{,64} ; do strip_libdir $i ; done
+  for i in $P/opt/kde/bin ; do strip_bindir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -203,15 +206,15 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+     if [ -f autogen.sh ] ; then
+       sh ./autogen.sh
+     fi
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
+#         export CC="gcc -isystem /usr/include $target" 
+#         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -223,9 +226,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f GNUmakefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3 -f GNUmakefile
+      make -j3
     fi
   done
 fi
@@ -244,10 +247,9 @@ if [ $opt_package -eq 1 ] ; then
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    if [ -f GNUmakefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P -f GNUmakefile
-      make install-man DESTDIR=$P -f GNUmakefile
+      make install DESTDIR=$P
     fi
   done
 ######################################################################
@@ -276,6 +278,13 @@ fi
 EOF
       done
   fi
+
+
+# update gschema.compiled
+if [ -d $P/usr/share/glib-2.0/schemas ]; then
+mkdir -p $P/install
+echo "/usr/bin/glib-compile-schemas  /usr/share/glib-2.0/schemas >/dev/null 2>&1" >> $P/install/initpkg
+fi
 
 # remove locales except ja
 # 
