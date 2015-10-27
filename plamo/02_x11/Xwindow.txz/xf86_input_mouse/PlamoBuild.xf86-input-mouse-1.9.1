@@ -3,9 +3,8 @@
 url='ftp://ftp.ring.gr.jp/pub/X/opengroup/individual/driver/xf86-input-mouse-1.9.1.tar.bz2'
 pkgbase=xf86_input_mouse
 vers=1.9.1
-arch=x86_64
-# arch=i686
-build=P1
+arch=`uname -m`
+build=P2
 src=xf86-input-mouse-1.9.1
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL README'
