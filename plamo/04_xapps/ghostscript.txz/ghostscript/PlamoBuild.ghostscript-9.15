@@ -5,7 +5,7 @@ pkgbase=ghostscript
 vers=9.15
 arch=x86_64
 #arch=i686
-build=P1
+build=P2
 src=ghostscript-9.15
 OPT_CONFIG="--x-includes=/usr/include/X11 --x-libraries=/usr/lib64 --disable-compile-inits --with-system-libtiff --with-ijs --with-jbig2dec --with-jasper --with-x --with-drivers=ALL --enable-contrib"
 DOCS='LICENSE'
@@ -263,8 +263,8 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 
  cat <<EOF >> $P/usr/share/ghostscript/$vers/Resource/Init/cidfmap
-/Ryumin-Light        << /FileType /TrueType /Path (/usr/share/fonts/TrueType/ipam.ttf) /CSI [(Japan1) 6] >> ;
-/GothicBBB-Medium    << /FileType /TrueType /Path (/usr/share/fonts/TrueType/ipag.ttf) /CSI [(Japan1) 6] >> ;
+/Ryumin-Light        << /FileType /TrueType /Path (/usr/share/ghostscript/fonts/ipam.ttf) /CSI [(Japan1) 6] >> ;
+/GothicBBB-Medium    << /FileType /TrueType /Path (/usr/share/ghostscript/fonts/ipag.ttf) /CSI [(Japan1) 6] >> ;
 /Ryumin-Medium         /Ryumin-Light ;
 /HeiseiMin-W3          /Ryumin-Light ;
 /HeiseiKakuGo-W5       /GothicBBB-Medium ;

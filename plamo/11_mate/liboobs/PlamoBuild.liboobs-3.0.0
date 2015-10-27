@@ -1,16 +1,17 @@
 #!/bin/sh
 ##############################################################
 url='http://ftp.gnome.org/pub/GNOME/sources/liboobs/3.0/liboobs-3.0.0.tar.bz2'
+#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=761964
 verify=
 pkgbase=liboobs
 vers=3.0.0
 arch=x86_64
-#arch=i586
-build=P1
+#arch=i686
+build=P2
 src=liboobs-3.0.0
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+patchfiles='return-error.patch'
 compress=txz
 ##############################################################
 

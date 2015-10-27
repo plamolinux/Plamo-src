@@ -3,13 +3,12 @@
 url='http://archive.xfce.org/src/xfce/libxfcegui4/4.10/libxfcegui4-4.10.0.tar.bz2'
 pkgbase=libxfcegui4
 vers=4.10.0
-arch=x86_64
-# arch=i586
-build=P3
+arch=`uname -m`
+build=P4
 src=libxfcegui4-4.10.0
 OPT_CONFIG='--disable-static'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
-patchfiles=''
+patchfiles='libxfcegui4-xfce_setenv.patch'
 compress=txz
 ##############################################################
 
