@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/xfce/4.12/src/exo-0.10.3.tar.bz2'
 pkgbase=exo
-vers=0.10.3
+vers=0.10.6
+url="http://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
 arch=`uname -m`
 build=P1
-src=exo-0.10.3
+src=exo-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
