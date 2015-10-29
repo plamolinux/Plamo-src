@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/xfce/4.12/src/garcon-0.4.0.tar.bz2'
 pkgbase=garcon
-vers=0.4.0
+vers=0.5.0
+url="http://archive.xfce.org/src/xfce/garcon/${vers%.*}/garcon-${vers}.tar.bz2"
 arch=`uname -m`
 build=P1
-src=garcon-0.4.0
+src=garcon-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
