@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://archive.xfce.org/xfce/4.12/src/Thunar-1.6.6.tar.bz2'
 pkgbase=Thunar
-vers=1.6.6
+vers=1.6.10
+url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/Thunar-${vers}.tar.bz2"
 arch=`uname -m`
 build=P1
-src=Thunar-1.6.6
+src=Thunar-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
