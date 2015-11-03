@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libssh
-vers=0.6.5
-url='https://red.libssh.org/attachments/download/121/libssh-0.6.5.tar.xz'
-verify='https://red.libssh.org/attachments/download/120/libssh-0.6.5.tar.asc'
+vers=0.7.2
+url='https://red.libssh.org/attachments/download/177/libssh-0.7.2.tar.xz'
+verify='https://red.libssh.org/attachments/download/168/libssh-0.7.2.tar.asc'
 arch=`uname -m`
 build=P1
 src=libssh-${vers}
@@ -188,7 +188,7 @@ if [ $opt_config -eq 1 ] ; then
           export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
           export CC="gcc -isystem /usr/include $target" 
           export CXX="g++ -isystem /usr/include $target"
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_INSTALL_DIR:PATH=/usr/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
       fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
