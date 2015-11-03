@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.44/source/mariadb-5.5.44.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.46/source/mariadb-5.5.46.tar.gz'
 pkgbase=mariadb
-vers=5.5.44
+vers=5.5.46
 arch=`uname -m`
 # arch=i586
 build=P1
-src=mariadb-5.5.44
+src=mariadb-5.5.46
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
 DOCS='COPYING INSTALL-SOURCE INSTALL-WIN-SOURCE README'
 patchfiles=''
