@@ -2,12 +2,12 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=41.0.2
+vers=42.0
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
 build=P1
-src=mozilla-release
+src=firefox-${vers}
 firefox_tag=FIREFOX_${vers//./_}_RELEASE
 DOCS='LICENSE README.txt other-licenses xpinstall'
 patchfiles='firefox.desktop.patch'
