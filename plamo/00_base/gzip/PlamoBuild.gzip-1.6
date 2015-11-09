@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/gnu/gzip/gzip-1.4.tar.gz'
+url='http://ftp.gnu.org/gnu/gzip/gzip-1.6.tar.gz'
 pkgbase=gzip
-vers=1.4
-arch=x86_64
+vers=1.6
+arch=`uname -m`
 # arch=i586
-build=P2
-src=gzip-1.4
+build=P1
+src=gzip-${vers}
 OPT_CONFIG='--bindir=/bin'
-DOCS='AUTHORS COPYING ChangeLog ChangeLog-2007 INSTALL NEWS README THANKS TODO'
+DOCS='AUTHORS COPYING ChangeLog ChangeLog-2007 INSTALL NEWS README README-release THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
