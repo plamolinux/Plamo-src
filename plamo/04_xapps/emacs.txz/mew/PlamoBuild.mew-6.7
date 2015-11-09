@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://www.mew.org/Release/mew-6.6.tar.gz'
+url='http://www.mew.org/Release/mew-6.7.tar.gz'
 pkgbase=mew
-vers=6.6
-arch=x86_64
+vers=6.7
+arch=`uname -m`
 # arch=i586
 build=P1
-src=mew-6.6
+src=mew-${vers}
 OPT_CONFIG='--disable-static'
-DOCS='00readme'
+DOCS='00readme 00changes.6.7 00copyright 00copyright.ja 00diff README.md dot.emacs dot.mew dot.theme'
 patchfiles=''
 compress=txz
 ##############################################################
