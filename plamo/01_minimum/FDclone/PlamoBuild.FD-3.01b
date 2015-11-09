@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://hp.vector.co.jp/authors/VA012337/soft/fd/FD-3.00j.tar.gz'
+url='http://hp.vector.co.jp/authors/VA012337/soft/fd/FD-3.01b.tar.gz'
 pkgbase=FDclone
-vers=3.00j
-arch=x86_64
+vers=3.01b
+arch=`uname -m`
 # arch=i586
 build=P1
-src=FD-3.00j
+src=FD-${vers}
 OPT_CONFIG=''
 DOCS='HISTORY HISTORY.eng Install Install.eng LICENSES LICENSES.eng README README.eng'
 patchfiles='FD-3.00-version.h.patch'
