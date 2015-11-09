@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://sourceforge.net/projects/zsh/files/zsh-dev/4.3.15/zsh-4.3.15.tar.bz2'
+url='http://sourceforge.net/projects/zsh/files/zsh/5.1.1/zsh-5.1.1.tar.xz'
 pkgbase=zsh
-vers=4.3.15
-arch=x86_64
+vers=5.1.1
+arch=`uname -m`
 # arch=i586
 build=P1
-src=zsh-4.3.15
+src=zsh-${vers}
 OPT_CONFIG='--enable-multibyte'
 DOCS='ChangeLog INSTALL NEWS README'
 patchfiles=''
@@ -121,6 +121,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    xz) tar xvpf ${i##*/} ;;
     esac
   done
 fi
