@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://www.mew.org/Release/mew-6.6.tar.gz'
-pkgbase=mew
-vers=6.6
-arch=x86_64
+url='http://hp.vector.co.jp/authors/VA012337/soft/fd/FD-3.01b.tar.gz'
+pkgbase=FDclone
+vers=3.01b
+arch=`uname -m`
 # arch=i586
 build=P1
-src=mew-6.6
-OPT_CONFIG='--disable-static'
-DOCS='00readme'
-patchfiles=''
+src=FD-${vers}
+OPT_CONFIG=''
+DOCS='HISTORY HISTORY.eng Install Install.eng LICENSES LICENSES.eng README README.eng'
+patchfiles='FD-3.00-version.h.patch'
 compress=txz
 ##############################################################
 
@@ -200,12 +200,12 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
     if [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
         CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
@@ -237,14 +237,24 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-      make install-jinfo DESTDIR=$P
-    fi
+
+
+    mkdir -p $P/usr/bin
+    install -s -m 755 fd $P/usr/bin
+    ( cd $P/usr/bin ; ln -sf fd fdsh )
+    mkdir -p $P/usr/share/man/ja_JP.eucJP/man1
+    install -m 644 fd.1 $P/usr/share/man/ja_JP.eucJP/man1
+    ( cd $P/usr/share/man/ja_JP.eucJP/man1 ; ln -sf fd.1 fdsh.1 )
+    mkdir -p $P/usr/share/man/man1
+    install -m 644 fd_e.man $P/usr/share/man/man1/fd.1
+    ( cd $P/usr/share/man/man1 ; ln -sf fd.1 fdsh.1 )
+    mkdir -p $P/etc
+    sed "s/#SORTTYPE=0/SORTTYPE=1/" _fdrc > $P/etc/fd2rc
+    install -m 644 fd-unicd.tbl $P/usr/bin
+    install -m 644 fd-dict.tbl $P/usr/bin
+    install -m 644 fd-cat.ja $P/usr/bin
+    install -m 644 fd-cat.C $P/usr/bin
+
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
