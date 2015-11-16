@@ -5,11 +5,11 @@ vers=2.9.2
 url="ftp://xmlsoft.org/libxml2/libxml2-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
-build=P3
+build=P4
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static --with-history'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles='xmlcaltalog-bugfix.patch CVE-2015-1819.patch'
+patchfiles='xmlcaltalog-bugfix.patch CVE-2015-1819.patch CVE-2015-7942-1.patch CVE-2015-7942-2.patch'
 compress=txz
 ##############################################################
 
