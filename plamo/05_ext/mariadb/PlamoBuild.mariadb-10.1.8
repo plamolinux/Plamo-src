@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.46/source/mariadb-5.5.46.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.8/source/mariadb-10.1.8.46.tar.gz'
 pkgbase=mariadb
-vers=5.5.46
+vers=10.1.8
 arch=`uname -m`
 # arch=i586
-build=P1
-src=mariadb-5.5.46
+build=P2
+src=mariadb-10.1.8
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
 DOCS='COPYING INSTALL-SOURCE INSTALL-WIN-SOURCE README'
-patchfiles=''
+patchfiles='patch-a'
 compress=txz
 ##############################################################
 
@@ -148,7 +148,7 @@ if [ $opt_config -eq 1 ] ; then
           export LDFLAGS='-Wl,--as-needed' 
           # export CC="gcc -isystem /usr/include $target" 
           # export CXX="g++ -isystem /usr/include $target"
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/mysql -DINSTALL_LIBDIR:STRING=${libdir} -DINSTALL_PLUGINDIR:STRING=${libdir}/plugin  ${OPT_CONFIG} $S
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/mariadb -DINSTALL_LIBDIR:STRING=${libdir} -DINSTALL_PLUGINDIR:STRING=${libdir}/plugin -DINSTALL_MANDIR:STRING=/usr/share/man ${OPT_CONFIG} $S
       fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
@@ -193,7 +193,7 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-    for archive in $P/opt/mysql/${libdir}/*.a ; do
+    for archive in $P/opt/mariadb/${libdir}/*.a ; do
 	echo "strip $archive with -g "
 	strip -g $archive
     done
@@ -204,32 +204,39 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $docdir/$src
 
   mkdir -p $P/etc/profile.d
-  cat <<'EOF' > $P/etc/profile.d/mysql.csh
-# path for MySQL
+  cat <<'EOF' > $P/etc/profile.d/mariadb.csh
+# path for MariaDB
 if ($?PATH) then
-    set path = ( $path /opt/mysql/bin )
+    set path = ( $path /opt/mariadb/bin )
 else
-    set path = ( /bin /usr/bin /opt/mysql/bin )
+    set path = ( /bin /usr/bin /opt/mariadb/bin )
 endif
 EOF
-  cat <<'EOF' > $P/etc/profile.d/mysql.sh
-# path for MySQL
+  cat <<'EOF' > $P/etc/profile.d/mariadb.sh
+# path for MariDB
 if [ "$PATH.x" != ".x" ]; then
-    PATH=$PATH:/opt/mysql/bin
+    PATH=$PATH:/opt/mariadb/bin
 else
-    PATH=/bin:/usr/bin:/opt/mysql/bin
+    PATH=/bin:/usr/bin:/opt/mariadb/bin
 fi
 EOF
 
-  mkdir -p $P/usr/share/info
-  mv $P/opt/mysql/docs/mysql.info $P/usr/share/info/
-  gzip $P/usr/share/info/mysql.info
   #cp libmysqld/work/libmysqld.so.0.0.1 $P/opt/mysql/${libdir}
   #( pushd $P/opt/mysql/${libdir} ; ln -sf libmysqld.so.0.0.1 libmysqld.so.0.0 ;
   #    ln -sf libmysqld.so.0.0 libmysqld.so.0 ; ln -sf libmysqld.so.0.0 libmysqld.so )
+  (cd $P/opt; ln -s mariadb mysql)
 
   mkdir -p $P/install
   cat <<"EOF" > $P/install/initpkg
+ldchk=`cat /etc/ld.so.conf | grep mariadb`
+if [ "$ldchk.x" = ".x" ]; then
+    cat /etc/ld.so.conf >> /etc/ld.so.conf.mariadb
+    mv /etc/ld.so.conf.mariadb /etc/ld.so.conf
+    ldconfig
+fi
+if [ -f /etc/ld.so.conf.mariadb ]; then
+    rm /etc/ld.so.conf.mariadb
+fi
 grp=`cat /etc/group | grep mysql`
 if [ "$grp.x" = ".x" ]; then
     groupadd -g 40 mysql
@@ -238,22 +245,26 @@ usr=`cat /etc/passwd | grep mysql`
 if [ "$usr.x" = ".x" ]; then
     useradd -g mysql -u 33 mysql
 fi
-cd /opt/mysql
+cd /opt/mariadb
 chown -R mysql .
 chgrp -R mysql .
 ./scripts/mysql_install_db --user=mysql
 chown -R root .
 chown -R mysql data
-cp ./support-files/my-small.cnf /etc/my.cnf
+if [ ! -f /etc/my.cnf ]; then
+    cp ./support-files/my-small.cnf /etc/my.cnf
+fi
 EOF
 
   mkdir -p $P/etc/rc.d/init.d/
-  install -m 644 support-files/mysql.server $P/etc/rc.d/init.d/mysql
-  sed -i -e "s|^basedir=|basedir=/opt/mysql|" -e "s|^datadir=|datadir=/opt/mysql/data|" $P/etc/rc.d/init.d/mysql
+  install -m 644 support-files/mysql.server $P/etc/rc.d/init.d/mariadb
+  sed -i -e "s|^basedir=|basedir=/opt/mariadb|" -e "s|^datadir=|datadir=/opt/mariadb/data|" $P/etc/rc.d/init.d/mariadb
+
+  (cd $P; ln -s mariadb mysql)
 
   if [ -d $W/work2 ]; then rm -rf $W/work2 ; fi
-  mkdir -p $W/work2/opt/mysql/
-  mv $P/opt/mysql/{mysql-test,sql-bench} $W/work2/opt/mysql
+  mkdir -p $W/work2/opt/mariadb/
+  mv $P/opt/mariadb/{mysql-test,sql-bench} $W/work2/opt/mariadb
 
 # remove locales except ja
 # 
@@ -267,6 +278,10 @@ EOF
     popd
   fi
 
+  cat <<EOF > $P/etc/ld.so.conf.mariadb
+/opt/mariadb/${libdir}
+EOF
+  
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
