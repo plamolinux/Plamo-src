@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://www.freedesktop.org/software/polkit/releases/polkit-0.112.tar.gz'
 pkgbase=polkit
-vers=0.112
+vers=0.113
+url="http://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 arch=`uname -m`
-build=P3
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static --with-polkitd-user=polkituser --enable-introspection'
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
-#patchfiles='polkit-0.107-fall-back-to-uid0-if-no-admin-users-are-available.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
