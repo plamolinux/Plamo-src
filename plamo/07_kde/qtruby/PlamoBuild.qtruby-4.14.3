@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ne.jp/X/kde/stable/4.14.3/src/qtruby-4.14.3.tar.xz'
 pkgbase=qtruby
 vers=4.14.3
+url="http://ftp.ne.jp/X/kde/stable/${vers}/src/qtruby-${vers}.tar.xz"
 arch=`uname -m`
-# arch=i686
-build=P1
-src=qtruby-4.14.3
+build=P2
+src=qtruby-${vers}
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL README TODO'
-patchfiles=''
+patchfiles='fix_ruby_requires.diff'
 compress=txz
 ##############################################################
 
@@ -73,13 +72,12 @@ compress_all() {
 }  
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -145,11 +143,11 @@ if [ $opt_config -eq 1 ] ; then
 
    cd $B
        if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+         export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
        fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
