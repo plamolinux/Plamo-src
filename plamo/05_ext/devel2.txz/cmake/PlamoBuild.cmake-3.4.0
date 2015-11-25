@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz'
 pkgbase=cmake
-vers=2.8.12.2
-arch=x86_64
-# arch=i586
+vers=3.4.0
+url="http://www.cmake.org/files/v${vers%.*}/cmake-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=cmake-2.8.12.2
+src=cmake-${vers}
 OPT_CONFIG=''
-DOCS='ChangeLog.manual ChangeLog.txt Copyright.txt Readme.txt'
+DOCS='CONTRIBUTING.rst Copyright.txt Licenses/LGPLv2.1.txt Licenses/README.rst README.rst'
 patchfiles=''
 compress=txz
 ##############################################################
