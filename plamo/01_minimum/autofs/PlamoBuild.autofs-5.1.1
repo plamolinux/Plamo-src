@@ -1,14 +1,15 @@
 #!/bin/sh
 
 ######################################################################
-url="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-5.0.7.tar.bz2
-    http://plamo.linet.gr.jp/~tamuki/src/autofs-5.0.5-heimdal.patch.gz"
 pkgbase=autofs
-vers=5.0.7
-arch=`uname -m | sed 's/i.86/i586/'`
-build=P2
+vers=5.1.1
+url="http://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-${vers}.tar.xz"
+verify=${url/xz/sign}
+arch=`uname -m`
+build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--with-confdir=/etc --without-openldap"
+patchfiles="autofs_init_sleep.patch"
 DOCS="CHANGELOG COPYING COPYRIGHT CREDITS INSTALL README*"
 ######################################################################
 
@@ -188,11 +189,28 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    sign=${i##*/}
+    archive=${sign/sign/xz}
+    xz -dc $archive | gpg --verify $sign -
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -201,9 +219,12 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  gunzip -c $W/autofs-5.0.5-heimdal.patch.gz | patch -Np1 -i -
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
+    for patch in $patchfiles
+    do
+      patch -p1 < $W/$patch
+    done
     if [ -f Makefile ] ; then
       make clean
     fi
