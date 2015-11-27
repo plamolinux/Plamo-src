@@ -1,13 +1,13 @@
 #!/bin/sh
 
 ######################################################################
-url="https://linuxcontainers.org/downloads/lxc-1.0.5.tar.gz
+url="https://linuxcontainers.org/downloads/lxc-1.0.7.tar.gz
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=1.0.5
-arch=`uname -m | sed 's/i.86/i586/'`
+vers=1.0.7
+arch=`uname -m`
 build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var"
@@ -173,7 +173,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
