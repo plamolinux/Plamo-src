@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/libpng/libpng-1.4.13.tar.xz' 
-apngpatchurl='http://jaist.dl.sourceforge.net/project/libpng-apng/libpng14/1.4.13/libpng-1.4.13-apng.patch.gz'
 pkgbase=libpng14
-vers=1.4.13
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=1.4.16
+url="http://downloads.sourceforge.net/libpng/libpng-${vers}.tar.xz" 
+apngpatchurl="http://jaist.dl.sourceforge.net/project/libpng-apng/libpng14/${vers}/libpng-${vers}-apng.patch.gz"
+arch=`uname -m`
 build=P1
 src=libpng-${vers}
 OPT_CONFIG='--disable-static'
