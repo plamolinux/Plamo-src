@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://download.librdf.org/source/redland-bindings-1.0.16.1.tar.gz'
 pkgbase=redland_bindings
-vers=1.0.16.1
-arch=x86_64
-# arch=i586
+vers=1.0.17.1
+url="http://download.librdf.org/source/redland-bindings-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=redland-bindings-1.0.16.1
+src=redland-bindings-${vers}
 OPT_CONFIG='--enable-release --with-perl --with-python --with-php --with-lua --with-ruby'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 INSTALL INSTALL.html LICENSE-2.0.txt LICENSE.html LICENSE.txt NEWS NEWS.html README README.html RELEASE.html TODO TODO.html'
 patchfiles=''
