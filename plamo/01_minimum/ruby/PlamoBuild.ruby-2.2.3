@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase=ruby
-vers=2.0.0_p647
-url="http://cache.ruby-lang.org/pub/ruby/2.0/ruby-${vers/_/-}.tar.gz"
+vers=2.2.3
+url="http://cache.ruby-lang.org/pub/ruby/${vers%.*}/ruby-${vers/_/-}.tar.gz"
 arch=`uname -m`
 build=P1
 src=ruby-${vers/_/-}
