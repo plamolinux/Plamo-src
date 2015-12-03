@@ -1,0 +1,1337 @@
+Author: David Palacio <dpalacio@uninorte.edu.co>
+Last-Update: 2011-06-30
+Forwarded: no
+
+--- a/examples/designer/calculatorbuilder/main.rb
++++ b/examples/designer/calculatorbuilder/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 	
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_calculatorbuilder.rb'
+ require 'calculatorform.rb'
+ 
+--- a/examples/designer/calculatorform/main.rb
++++ b/examples/designer/calculatorform/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 	
+-require 'Qt'
++require 'Qt4'
+ require 'calculatorform.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/desktop/screenshot/main.rb
++++ b/examples/desktop/screenshot/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'screenshot.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/desktop/systray/main.rb
++++ b/examples/desktop/systray/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_systray.rb'
+ require 'window.rb'
+ 
+--- a/examples/dialogs/complexwizard/main.rb
++++ b/examples/dialogs/complexwizard/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'licensewizard.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/configdialog/main.rb
++++ b/examples/dialogs/configdialog/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'configdialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/extension/main.rb
++++ b/examples/dialogs/extension/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'finddialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/findfiles/main.rb
++++ b/examples/dialogs/findfiles/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/simplewizard/main.rb
++++ b/examples/dialogs/simplewizard/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'classwizard.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/standarddialogs/main.rb
++++ b/examples/dialogs/standarddialogs/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/dialogs/tabdialog/main.rb
++++ b/examples/dialogs/tabdialog/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'tabdialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/draganddrop/draggableicons/main.rb
++++ b/examples/draganddrop/draggableicons/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dragwidget.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/draganddrop/draggabletext/main.rb
++++ b/examples/draganddrop/draggabletext/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dragwidget.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/draganddrop/dropsite/main.rb
++++ b/examples/draganddrop/dropsite/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dropsitewindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/draganddrop/fridgemagnets/main.rb
++++ b/examples/draganddrop/fridgemagnets/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dragwidget.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/draganddrop/puzzle/main.rb
++++ b/examples/draganddrop/puzzle/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/graphicsview/collidingmice/main.rb
++++ b/examples/graphicsview/collidingmice/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+     
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_mice.rb'
+ require 'mouse.rb'
+ 
+--- a/examples/graphicsview/dragdroprobot/main.rb
++++ b/examples/graphicsview/dragdroprobot/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+     
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_robot.rb'
+ require 'coloritem.rb'
+ require 'robot.rb'
+--- a/examples/itemviews/chart/main.rb
++++ b/examples/itemviews/chart/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_chart.rb'
+ require 'mainwindow.rb'
+ 
+--- a/examples/itemviews/dirview/main.rb
++++ b/examples/itemviews/dirview/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 	
+-require 'Qt'
++require 'Qt4'
+ 	
+ app = Qt::Application.new(ARGV)
+ 	
+--- a/examples/itemviews/pixelator/main.rb
++++ b/examples/itemviews/pixelator/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_images.rb'
+ require 'mainwindow.rb'
+ 
+--- a/examples/itemviews/puzzle/main.rb
++++ b/examples/itemviews/puzzle/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/itemviews/simpledommodel/main.rb
++++ b/examples/itemviews/simpledommodel/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/itemviews/simpletreemodel/main.rb
++++ b/examples/itemviews/simpletreemodel/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'qrc_simpletreemodel.rb'
+ require 'treemodel.rb'
+ 
+--- a/examples/itemviews/sortingmodel/main.rb
++++ b/examples/itemviews/sortingmodel/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'treemodel.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/itemviews/spinboxdelegate/main.rb
++++ b/examples/itemviews/spinboxdelegate/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 	
+-require 'Qt'
++require 'Qt4'
+ require 'spinboxdelegate.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/killerfilter/killerfilter.rb
++++ b/examples/killerfilter/killerfilter.rb
+@@ -2,7 +2,7 @@
+ 
+ # This is the EventFilter example from Chapter 16 of 'Programming with Qt'
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ class KillerFilter < Qt::Object
+ 
+--- a/examples/layouts/basiclayouts/main.rb
++++ b/examples/layouts/basiclayouts/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/layouts/borderlayout/main.rb
++++ b/examples/layouts/borderlayout/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/layouts/flowlayouts/main.rb
++++ b/examples/layouts/flowlayouts/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/application/main.rb
++++ b/examples/mainwindows/application/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/dockwidgets/main.rb
++++ b/examples/mainwindows/dockwidgets/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/mdi/main.rb
++++ b/examples/mainwindows/mdi/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/menus/main.rb
++++ b/examples/mainwindows/menus/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/recentfiles/main.rb
++++ b/examples/mainwindows/recentfiles/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/mainwindows/sdi/main.rb
++++ b/examples/mainwindows/sdi/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/broadcastreceiver/main.rb
++++ b/examples/network/broadcastreceiver/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'receiver.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/broadcastsender/main.rb
++++ b/examples/network/broadcastsender/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'sender.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/fortuneclient/main.rb
++++ b/examples/network/fortuneclient/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'client.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/fortuneserver/main.rb
++++ b/examples/network/fortuneserver/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'server.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/ftp/main.rb
++++ b/examples/network/ftp/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'ftpwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/http/main.rb
++++ b/examples/network/http/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'httpwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/network/loopback/main.rb
++++ b/examples/network/loopback/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/opengl/grabber/main.rb
++++ b/examples/opengl/grabber/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/opengl/hellogl/main.rb
++++ b/examples/opengl/hellogl/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/opengl/textures/main.rb
++++ b/examples/opengl/textures/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/painting/basicdrawing/main.rb
++++ b/examples/painting/basicdrawing/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/painting/concentriccircles/main.rb
++++ b/examples/painting/concentriccircles/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/painting/fontsampler/main.rb
++++ b/examples/painting/fontsampler/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/painting/imagecomposition/main.rb
++++ b/examples/painting/imagecomposition/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'imagecomposer.rb'
+ require 'qrc_imagecomposition.rb'
+ 
+--- a/examples/painting/painterpaths/main.rb
++++ b/examples/painting/painterpaths/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/painting/svgviewer/main.rb
++++ b/examples/painting/svgviewer/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ require 'qrc_svgviewer.rb'
+ 
+--- a/examples/painting/transformations/main.rb
++++ b/examples/painting/transformations/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/passivepopup/passivepopup.rb
++++ b/examples/passivepopup/passivepopup.rb
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env ruby
+ 
+-require 'Qt'
++require 'Qt4'
+  
+ class PassiveWindow < Qt::Frame
+ 	MARGIN = 20
+--- a/examples/qdbus/chat/chat.rb
++++ b/examples/qdbus/chat/chat.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+     
+-require 'Qt'
++require 'Qt4'
+ require 'chat_interface.rb'
+ require 'chat_adaptor.rb'
+ 
+--- a/examples/qdbus/complexpingpong/complexping.rb
++++ b/examples/qdbus/complexpingpong/complexping.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+     
+-require 'Qt'
++require 'Qt4'
+ require 'ping-common.rb'
+    
+ class Ping < Qt::Object
+--- a/examples/qdbus/complexpingpong/complexpong.rb
++++ b/examples/qdbus/complexpingpong/complexpong.rb
+@@ -25,7 +25,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'ping-common.rb'
+ 
+ class Pong < Qt::DBusAbstractAdaptor
+--- a/examples/qdbus/listnames/listnames.rb
++++ b/examples/qdbus/listnames/listnames.rb
+@@ -24,7 +24,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+     
+-require 'Qt'
++require 'Qt4'
+ 
+ def method1()
+     qDebug("Method 1:")
+--- a/examples/qdbus/pingpong/ping.rb
++++ b/examples/qdbus/pingpong/ping.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'ping-common.rb'
+ 	
+ app = Qt::CoreApplication.new(ARGV)
+--- a/examples/qdbus/pingpong/pong.rb
++++ b/examples/qdbus/pingpong/pong.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'ping-common.rb'
+ 
+ class Pong < Qt::Object
+--- a/examples/qdbus/remotecontrolledcar/car/main.rb
++++ b/examples/qdbus/remotecontrolledcar/car/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'car.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/qdbus/remotecontrolledcar/controller/main.rb
++++ b/examples/qdbus/remotecontrolledcar/controller/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'controller.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/qtscribble/scribble.rb
++++ b/examples/qtscribble/scribble.rb
+@@ -5,7 +5,7 @@
+  # window knows how to redraw itself.
+  #
+ 
+-require 'Qt'
++require 'Qt4'
+ 	
+ 	class ScribbleArea < Qt::Widget
+ 	
+--- a/examples/richtext/calendar/main.rb
++++ b/examples/richtext/calendar/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/richtext/orderform/main.rb
++++ b/examples/richtext/orderform/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/richtext/syntaxhighlighter/main.rb
++++ b/examples/richtext/syntaxhighlighter/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/ruboids/ruboids/CameraDialog.rb
++++ b/examples/ruboids/ruboids/CameraDialog.rb
+@@ -5,7 +5,7 @@
+ # http://www.ruby-lang.org/en/LICENSE.txt.
+ #
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'World'
+ require 'Camera'
+ 
+--- a/examples/ruboids/ruboids/Canvas.rb
++++ b/examples/ruboids/ruboids/Canvas.rb
+@@ -5,7 +5,7 @@
+ # http://www.ruby-lang.org/en/LICENSE.txt.
+ #
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'opengl'
+ require 'World'
+ require 'Cloud'
+--- a/examples/ruboids/ruboids/CloudView.rb
++++ b/examples/ruboids/ruboids/CloudView.rb
+@@ -5,7 +5,7 @@
+ # http://www.ruby-lang.org/en/LICENSE.txt.
+ #
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'View'
+ require 'Cloud'
+ require 'Params'
+--- a/examples/ruboids/ruboids/World.rb
++++ b/examples/ruboids/ruboids/World.rb
+@@ -6,7 +6,7 @@
+ #
+ 
+ require 'singleton'
+-require 'Qt'
++require 'Qt4'
+ require 'Params'
+ require 'Cloud'
+ require 'Flock'
+--- a/examples/ruboids/ruboids/WorldWindow.rb
++++ b/examples/ruboids/ruboids/WorldWindow.rb
+@@ -5,7 +5,7 @@
+ # http://www.ruby-lang.org/en/LICENSE.txt.
+ #
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'Canvas'
+ require 'CameraDialog'
+ 
+--- a/examples/ruboids/ruboids/ruboids.rb
++++ b/examples/ruboids/ruboids/ruboids.rb
+@@ -6,7 +6,7 @@
+ # http://www.ruby-lang.org/en/LICENSE.txt.
+ #
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'World'
+ require 'WorldWindow'
+ require 'Canvas'
+--- a/examples/textedit/textedit.rb
++++ b/examples/textedit/textedit.rb
+@@ -1,6 +1,6 @@
+ #!/usr/bin/ruby -w
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'rexml/document'
+ 
+ require '../base/rui.rb'
+--- a/examples/tutorial/t1/t1.rb
++++ b/examples/tutorial/t1/t1.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ a = Qt::Application.new(ARGV)
+ hello = Qt::PushButton.new('Hello World!', nil)
+--- a/examples/tutorial/t10/cannon.rb
++++ b/examples/tutorial/t10/cannon.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class CannonField < Qt::Widget
+     signals 'angleChanged(int)', 'forceChanged(int)'
+--- a/examples/tutorial/t10/lcdrange.rb
++++ b/examples/tutorial/t10/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+     signals 'valueChanged(int)'
+--- a/examples/tutorial/t10/t10.rb
++++ b/examples/tutorial/t10/t10.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/tutorial/t11/cannon.rb
++++ b/examples/tutorial/t11/cannon.rb
+@@ -1,5 +1,5 @@
+ include Math
+-require 'Qt'
++require 'Qt4'
+ 
+ class CannonField < Qt::Widget
+     
+--- a/examples/tutorial/t11/lcdrange.rb
++++ b/examples/tutorial/t11/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+     signals 'valueChanged(int)'
+--- a/examples/tutorial/t11/t11.rb
++++ b/examples/tutorial/t11/t11.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/tutorial/t12/cannon.rb
++++ b/examples/tutorial/t12/cannon.rb
+@@ -1,5 +1,5 @@
+ include Math
+-require 'Qt'
++require 'Qt4'
+ 
+ class CannonField < Qt::Widget
+     
+--- a/examples/tutorial/t12/lcdrange.rb
++++ b/examples/tutorial/t12/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ require 'pp'
+ 
+ class LCDRange < Qt::Widget
+--- a/examples/tutorial/t12/t12.rb
++++ b/examples/tutorial/t12/t12.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/tutorial/t13/cannon.rb
++++ b/examples/tutorial/t13/cannon.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ include Math
+ 
+ class CannonField < Qt::Widget
+--- a/examples/tutorial/t13/gamebrd.rb
++++ b/examples/tutorial/t13/gamebrd.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/tutorial/t13/lcdrange.rb
++++ b/examples/tutorial/t13/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+     signals 'valueChanged(int)'
+--- a/examples/tutorial/t13/t13.rb
++++ b/examples/tutorial/t13/t13.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'gamebrd.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/tutorial/t14/t14.rb
++++ b/examples/tutorial/t14/t14.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'gamebrd.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/tutorial/t2/t2.rb
++++ b/examples/tutorial/t2/t2.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt';
++require 'Qt4';
+ 
+ a = Qt::Application.new(ARGV)
+ 
+--- a/examples/tutorial/t3/t3.rb
++++ b/examples/tutorial/t3/t3.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ app = Qt::Application.new(ARGV)
+ 
+--- a/examples/tutorial/t4/t4.rb
++++ b/examples/tutorial/t4/t4.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ class MyWidget < Qt::Widget
+ 
+--- a/examples/tutorial/t5/t5.rb
++++ b/examples/tutorial/t5/t5.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ class MyWidget < Qt::Widget
+ 
+--- a/examples/tutorial/t6/t6.rb
++++ b/examples/tutorial/t6/t6.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+ 
+--- a/examples/tutorial/t7/lcdrange.rb
++++ b/examples/tutorial/t7/lcdrange.rb
+@@ -1,5 +1,5 @@
+ #!/usr/bin/ruby -w
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+     signals 'valueChanged(int)'
+--- a/examples/tutorial/t7/t7.rb
++++ b/examples/tutorial/t7/t7.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ 
+ class MyWidget < Qt::Widget
+--- a/examples/tutorial/t8/cannon.rb
++++ b/examples/tutorial/t8/cannon.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class CannonField < Qt::Widget
+ 	signals 'angleChanged(int)'
+--- a/examples/tutorial/t8/lcdrange.rb
++++ b/examples/tutorial/t8/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+ 	signals 'valueChanged(int)'
+--- a/examples/tutorial/t8/t8.rb
++++ b/examples/tutorial/t8/t8.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/tutorial/t9/cannon.rb
++++ b/examples/tutorial/t9/cannon.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class CannonField < Qt::Widget
+     signals 'angleChanged(int)'
+--- a/examples/tutorial/t9/lcdrange.rb
++++ b/examples/tutorial/t9/lcdrange.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class LCDRange < Qt::Widget
+     signals 'valueChanged(int)'
+--- a/examples/tutorial/t9/t9.rb
++++ b/examples/tutorial/t9/t9.rb
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env ruby
+ $VERBOSE = true; $:.unshift File.dirname($0)
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'lcdrange.rb'
+ require 'cannon.rb'
+ 
+--- a/examples/widgets/analogclock/analogclock.rb
++++ b/examples/widgets/analogclock/analogclock.rb
+@@ -25,7 +25,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ # an analog clock widget using an internal Qt::Timer
+ class AnalogClock < Qt::Widget
+--- a/examples/widgets/analogclock/main.rb
++++ b/examples/widgets/analogclock/main.rb
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env ruby
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'analogclock.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/calculator/main.rb
++++ b/examples/widgets/calculator/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'calculator.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/charactermap/main.rb
++++ b/examples/widgets/charactermap/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/digitalclock/digitalclock.rb
++++ b/examples/widgets/digitalclock/digitalclock.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class DigitalClock < Qt::LCDNumber
+ 
+--- a/examples/widgets/digitalclock/main.rb
++++ b/examples/widgets/digitalclock/main.rb
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env ruby
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'digitalclock.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/groupbox/main.rb
++++ b/examples/widgets/groupbox/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/icons/main.rb
++++ b/examples/widgets/icons/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/imageviewer/main.rb
++++ b/examples/widgets/imageviewer/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'imageviewer.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/lineedits/main.rb
++++ b/examples/widgets/lineedits/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/movie/main.rb
++++ b/examples/widgets/movie/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'movieplayer.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/screenshot/main.rb
++++ b/examples/widgets/screenshot/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'screenshot.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/scribble/main.rb
++++ b/examples/widgets/scribble/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/sliders/main.rb
++++ b/examples/widgets/sliders/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/spinboxes/main.rb
++++ b/examples/widgets/spinboxes/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'window.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/tetrix/main.rb
++++ b/examples/widgets/tetrix/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'tetrixwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/tooltips/main.rb
++++ b/examples/widgets/tooltips/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'sortingbox.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/wiggly/main.rb
++++ b/examples/widgets/wiggly/main.rb
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env ruby
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'dialog.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/widgets/windowflags/main.rb
++++ b/examples/widgets/windowflags/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'controllerwindow.rb'
+ 
+ app = Qt::Application.new(ARGV)
+--- a/examples/xml/dombookmarks/main.rb
++++ b/examples/xml/dombookmarks/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ $KCODE = 'u'
+--- a/examples/xml/saxbookmarks/main.rb
++++ b/examples/xml/saxbookmarks/main.rb
+@@ -23,7 +23,7 @@
+ ** Translated to QtRuby by Richard Dale
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'mainwindow.rb'
+ 
+ $KCODE = 'u'
+--- a/rails_support/active_item_model.rb
++++ b/rails_support/active_item_model.rb
+@@ -16,7 +16,7 @@ Written by Richard Dale and Silvio Fonse
+ 
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ 
+ #require "active_record"
+ #require "active_support"
+--- a/rails_support/active_table_model.rb
++++ b/rails_support/active_table_model.rb
+@@ -15,7 +15,7 @@ Written by Richard Dale and Silvio Fonse
+ 
+ =end
+ 
+-require 'Qt'
++require 'Qt4'
+ require 'date'
+ 
+ class ActiveTableModel < Qt::AbstractTableModel
+--- a/test/opoverloading.rb
++++ b/test/opoverloading.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ 
+ class Qt::Point
+    def to_s
+--- a/test/unittests.rb
++++ b/test/unittests.rb
+@@ -1,4 +1,4 @@
+-require 'Qt'
++require 'Qt4'
+ require 'test/unit'
+ 
+ class TestQtRuby < Test::Unit::TestCase
