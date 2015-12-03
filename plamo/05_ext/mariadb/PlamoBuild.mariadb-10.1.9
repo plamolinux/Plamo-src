@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.8/source/mariadb-10.1.8.46.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.9/source/mariadb-10.1.9.tar.gz'
 pkgbase=mariadb
-vers=10.1.8
+vers=10.1.9
 arch=`uname -m`
-# arch=i586
-build=P2
-src=mariadb-10.1.8
+build=P1
+src=mariadb-10.1.9
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
-DOCS='COPYING INSTALL-SOURCE INSTALL-WIN-SOURCE README'
+DOCS='COPYING COPYING.LESSER COPYING.thirdparty CREDITS EXCEPTIONS-CLIENT INSTALL-SOURCE INSTALL-WIN-SOURCE KNOWN_BUGS.txt README'
 patchfiles='patch-a'
 compress=txz
 ##############################################################
@@ -224,6 +223,7 @@ EOF
   #cp libmysqld/work/libmysqld.so.0.0.1 $P/opt/mysql/${libdir}
   #( pushd $P/opt/mysql/${libdir} ; ln -sf libmysqld.so.0.0.1 libmysqld.so.0.0 ;
   #    ln -sf libmysqld.so.0.0 libmysqld.so.0 ; ln -sf libmysqld.so.0.0 libmysqld.so )
+
   (cd $P/opt; ln -s mariadb mysql)
 
   mkdir -p $P/install
@@ -259,8 +259,6 @@ EOF
   mkdir -p $P/etc/rc.d/init.d/
   install -m 644 support-files/mysql.server $P/etc/rc.d/init.d/mariadb
   sed -i -e "s|^basedir=|basedir=/opt/mariadb|" -e "s|^datadir=|datadir=/opt/mariadb/data|" $P/etc/rc.d/init.d/mariadb
-
-  (cd $P; ln -s mariadb mysql)
 
   if [ -d $W/work2 ]; then rm -rf $W/work2 ; fi
   mkdir -p $W/work2/opt/mariadb/
@@ -332,7 +330,7 @@ y
 EOF
 
   cd $W/work2
-  /sbin/makepkg ../mariadb_testsuits-$vers-$arch-P1.txz <<EOF
+  /sbin/makepkg ../mariadb_testsuits-$vers-$arch-$build.txz <<EOF
 y
 1
 EOF
