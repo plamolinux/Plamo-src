@@ -5,12 +5,12 @@ vers=9.9.8
 url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers/_/-}
 OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no'
 DOCS='HISTORY README'
 mainconf="named.conf"
-configs='localhost.rev master.localhost named.root'
+configs='localhost.rev master.localhost'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -222,7 +222,7 @@ if [ $opt_download -eq 1 ] ; then
     esac
   done
   rm -f named.root
-  wget ftp://ftp.internic.net/domain/named.root
+  wget http://www.internic.net/domain/named.root
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -289,7 +289,7 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
   cp $W/$mainconf $P/etc/$mainconf.new
   mkdir -p $P/var/named
-  for conf in $configs ; do
+  for conf in $configs named.root ; do
       cp $W/$conf $P/var/named/$conf.new
   done
 
@@ -301,13 +301,17 @@ else
   mv /etc/named.conf.new /etc/named.conf
 fi
 
-for chk in localhost.rev master.localhost named.root ; do
+for chk in localhost.rev master.localhost ; do
   if [ -f /var/named/$chk ]; then
       rm /var/named/$chk.new
   else
       mv /var/named/$chk.new /var/named/$chk
   fi
 done
+
+if [ ! -f /var/named/named.root ]; then
+  mv /var/named/named.root.new /var/named/named.root
+fi
 
 # if [ ! -f /etc/rndc.key ]; then
 #    /usr/sbin/rndc-confgen -a
