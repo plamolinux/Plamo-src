@@ -1,16 +1,16 @@
 #!/bin/sh
 
 ######################################################################
-url="https://linuxcontainers.org/downloads/lxc-1.0.7.tar.gz
+url="https://linuxcontainers.org/downloads/lxc-1.1.5.tar.gz
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/cgroups-mount
-    https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/lxc-net
     https://raw.github.com/plamolinux/Plamo-src/master/contrib/Virtualization/lxc/README.plamo"
 pkgbase=lxc
-vers=1.0.7
+vers=1.1.5
 arch=`uname -m`
 build=P1
 src=$pkgbase-$vers
-OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var"
+OPT_CONFIG="--sysconfdir=/etc --localstatedir=/var
+    --with-runtime-path=/var/run"
 DOCS="INSTALL NEWS README AUTHORS ChangeLog COPYING CONTRIBUTING
     MAINTAINERS"
 ######################################################################
@@ -189,7 +189,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget --no-check-certificate $i ; fi
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -203,16 +203,10 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
+  # This is a workaround until it gets merged upstream.
   cd $B
-  cat <<- "EOF" | patch config/etc/default.conf.unknown
-	0a1,6
-	> # If you use /etc/rc.d/init.d/lxc-net, enable following 3 lines.
-	> #lxc.network.type=veth
-	> #lxc.network.link=lxcbr0
-	> #lxc.network.flags=up
-	> # else if you make configure yourself, make appropriate changes for
-	> # following lines.
-	EOF
+  cp -p configure configure.orig
+  sed '/oracleserver/s@)@|plamo&@' configure.orig > configure
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -253,9 +247,15 @@ if [ $opt_package -eq 1 ] ; then
     fi
   done
   touch $P/usr/$libdir/python*/site-packages/_lxc.cpython-33m.so
-  install -d $P/etc/rc.d/init.d
+  mv {$P/etc/rc.d/init.d/,$C/zz_}lxc-net
+  mv {$P/etc/rc.d/init.d/,$C/zzz_}lxc
+  mv $C/{zz_lxc-net,zzz_lxc} $P/etc/rc.d/init.d
   install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
-  install -m 644 $W/lxc-net $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/sysconfig/lxc-net
+	#USE_LXC_BRIDGE="true"
+	EOF
+  # This is a workaround until aaa_base is updated.
+  install -d $P/var/lib/misc
   sed -i "s@\(/usr/share/doc/\)lxc@\1$src@g" \
       $mandir/{,ja/}man5/lxc.container.conf.5 $mandir/{,ja/}man7/lxc.7
   re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
@@ -321,8 +321,11 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/bash_completion.d | tail -n+2`
   tar rvpf $pkg.tar -C $P etc/lxc
   tar rvpf $pkg.tar -C $P `cd $P ; find etc/rc.d/init.d | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find etc/sysconfig | tail -n+2`
   tar rvpf $pkg.tar -C $P var/lib/lxc
   tar rvpf $pkg.tar -C $P var/cache/lxc
+  # This is a workaround until aaa_base is updated.
+  tar rvpf $pkg.tar -C $P var/lib/misc
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
