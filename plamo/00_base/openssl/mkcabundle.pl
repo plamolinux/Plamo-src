@@ -4,10 +4,9 @@
 # Run as ./mkcabundle.pl > ca-bundle.crt
 #
 
-my $cvsroot = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-my $certdata = 'mozilla/security/nss/lib/ckfw/builtins/certdata.txt';
+my $certdata = 'https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt';
 
-open(IN, "cvs -d $cvsroot co -p $certdata|")
+open(IN, "curl $certdata|")
     || die "could not check out certdata.txt";
 
 my $incert = 0;
