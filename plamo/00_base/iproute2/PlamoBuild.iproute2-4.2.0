@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-3.12.0.tar.xz'
 pkgbase=iproute2
-vers=3.12.0
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=4.2.0
+url="https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-${vers}.tar.xz"
+arch=`uname -m`
 build=P1
-src=iproute2-3.12.0
+src=iproute2-${vers}
 OPT_CONFIG=''
 DOCS='COPYING README README.decnet README.devel README.distribution README.iproute2+tc README.lnstat'
 patchfiles=''
@@ -215,7 +215,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3 DESTDIR=
+      make -j3 DESTDIR= LIBDIR=/usr/${libdir}
     fi
   done
 fi
@@ -236,7 +236,7 @@ if [ $opt_package -eq 1 ] ; then
     done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P SBINDIR=/sbin MANDIR=/usr/share/man DOCDIR=/usr/share/doc/${src}
+      make install DESTDIR=$P SBINDIR=/sbin LIBDIR=/usr/${libdir} MANDIR=/usr/share/man DOCDIR=/usr/share/doc/${src}
     fi
   done
 ######################################################################
