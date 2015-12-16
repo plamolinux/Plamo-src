@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=httpd
-vers=2.4.16
+vers=2.4.18
 url="http://www.apache.org/dist/httpd/httpd-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
@@ -237,6 +237,10 @@ if [ $opt_package -eq 1 ] ; then
   cp ${B[i]}/build/rpm/httpd.logrotate $P/etc/logrotate.d/
   mv $P/etc/httpd/httpd.conf $P/etc/httpd/httpd.conf.dist
   mv $P/etc/httpd/extra $P/etc/httpd/extra.dist
+  for d in htdocs icons error cgi-bin
+  do
+    mv $P/srv/httpd/$d $P/srv/httpd/$d.dist
+  done
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
   MYHOST=\`cat /etc/HOSTNAME\`
@@ -257,6 +261,12 @@ fi
 if [ -d /var/www ]; then
   echo "Caution!: datadir was changed to /srv (previously /var/www)"
 fi
+for d in htdocs icons error cgi-bin
+do
+  if [ ! -d /srv/httpd/\$d ]; then
+    ( cd /srv/httpd ; mv \$d.dist \$d )
+  fi
+done
 EOF
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
