@@ -310,18 +310,18 @@ for chk in localhost.rev master.localhost ; do
 done
 
 if [ -f /var/named/named.root ]; then
-  if diff /var/named/named.root{.internic,} >/dev/null 2>&1; then
-    mv /var/named/named.root{,.old}
-    cp /var/named/named.root{.new,}
+  if diff /var/named/named.root.internic /var/named/named.root >/dev/null 2>&1; then
+    mv /var/named/named.root /var/named/named.root.old
+    cp /var/named/named.root.new /var/named/named.root
     echo "New root hint file has been installed. Old one has been moved to /var/named/named.root.old."
   else
     echo "You might have to update root hint file. Updated root hint file is installed to /var/named/named.root.internic."
   fi
 else
-  cp /var/named/named.root{.new,}
+  cp /var/named/named.root.new /var/named/named.root
   echo "Root hint file has been installed."
 fi
-mv /var/named/named.root.{new,internic}
+mv /var/named/named.root.new /var/named/named.root.internic
 
 # if [ ! -f /etc/rndc.key ]; then
 #    /usr/sbin/rndc-confgen -a
