@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase=bind
-vers=9.9.8
+vers=9.9.8_P2
 url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
-build=P2
+build=P1
 src=${pkgbase}-${vers/_/-}
 OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no'
 DOCS='HISTORY README'
@@ -309,16 +309,25 @@ for chk in localhost.rev master.localhost ; do
   fi
 done
 
-if [ ! -f /var/named/named.root ]; then
-  mv /var/named/named.root.new /var/named/named.root
+if [ -f /var/named/named.root ]; then
+  if diff /var/named/named.root{.internic,} >/dev/null 2>&1; then
+    mv /var/named/named.root{,.old}
+    cp /var/named/named.root{.new,}
+    echo "New root hint file has been installed. Old one has been moved to /var/named/named.root.old."
+  else
+    echo "You might have to update root hint file. Updated root hint file is installed to /var/named/named.root.internic."
+  fi
+else
+  cp /var/named/named.root{.new,}
+  echo "Root hint file has been installed."
 fi
+mv /var/named/named.root.{new,internic}
 
 # if [ ! -f /etc/rndc.key ]; then
 #    /usr/sbin/rndc-confgen -a
 # fi
 
 EOF
-
 
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
