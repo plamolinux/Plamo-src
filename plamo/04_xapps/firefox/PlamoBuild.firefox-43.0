@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=42.0
+vers=43.0
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -269,6 +269,8 @@ ac_add_options --enable-strip
 ac_add_options --disable-install-strip
 ac_add_options --disable-static
 ac_add_options --enable-shared
+
+ac_add_options --enable-default-toolkit=cairo-gtk3
 
 ## Directory
 ac_add_options --prefix=/usr
