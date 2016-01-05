@@ -5,10 +5,10 @@ url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
 pkgbase=coreutils
 vers=8.23
 arch=`uname -m`
-build=P2
+build=P3
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-install-program=arch
-    --enable-no-install-program=kill,uptime,su --without-gmp"
+    --enable-no-install-program=uptime,kill --without-gmp"
 DOCS="ChangeLog-2005 COPYING INSTALL ABOUT-NLS ChangeLog-2007 NEWS
     README ChangeLog-2006 ChangeLog-2008 THANKS-to-translators
     ChangeLog AUTHORS TODO THANKS"
@@ -172,7 +172,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
