@@ -249,7 +249,7 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/4/install
   cat <<EOF >> $P/4/install/initpkg
 if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive ]; then
-  $prefix/texinit.sh
+  sh $prefix/texinit.sh
 else
   echo "必要なパッケージが揃っていません．texlive_texmf[123],ptexlive をインストールした後に $prefix/texinit.sh を実行してください．"
 fi
