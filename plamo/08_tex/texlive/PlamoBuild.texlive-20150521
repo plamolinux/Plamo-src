@@ -274,6 +274,10 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/$PREFIX/tlpkg/TeXLive
   install -m444 ../texk/tests/TeXLive/* $P/$PREFIX/tlpkg/TeXLive/
 
+  mkdir -p $P/$PREFIX/texmf-dist/web2c
+  install -m644 $W/updmap.cfg $P/$PREFIX/texmf-dist/web2c
+  install -m644 $W/updmap-hdr.cfg $P/$PREFIX/texmf-dist/web2c
+
   # インストール後処理
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
@@ -290,6 +294,7 @@ PATH=$PREFIX/bin/$TEXARCH:\$PATH
 export PATH
 
 if ! grep "$PREFIX/lib" /etc/ld.so.conf ; then
+  echo "ld.so.conf に $PREFIX/lib を追加中 (for texlive)"
   echo "$PREFIX/lib" >> /etc/ld.so.conf
 fi
 
@@ -297,13 +302,21 @@ if [ ! -d $PREFIX/../texmf-local ]; then
   mkdir -p $PREFIX/../texmf-local
 fi
 
+# make links
 texlinks -v -f $PREFIX/texmf-dist/web2c/fmtutil.cnf -e "" $PREFIX/bin/$TEXARCH
 
+# set system fontdir
 sed -i -e 's|^OSFONTDIR.*$|OSFONTDIR = /usr/share/fonts|' $PREFIX/texmf-dist/web2c/texmf.cnf
 
+# initialize
 mktexlsr
 fmtutil-sys --all
 mtxrun --generate
+
+# setup Japanese fonts
+kanji-config-updmap-sys ipaex
+echo "TeXLive の日本語フォントの設定を行いました: "
+kanji-config-updmap-sys status
 
 PATH=\$SAVEPATH
 EOF
