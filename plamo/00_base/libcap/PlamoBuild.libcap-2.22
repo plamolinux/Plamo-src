@@ -1,17 +1,44 @@
 #!/bin/sh
-##############################################################
-url='http://ftp.de.debian.org/debian/pool/main/libc/libcap2/libcap2_2.22.orig.tar.gz'
+
+######################################################################
+url="http://ftp.de.debian.org/debian/pool/main/libc/libcap2/libcap2_2.22.orig.tar.gz"
 pkgbase=libcap
 vers=2.22
-arch=x86_64
-# arch=i586
-build=P1
-src=libcap-2.22
-OPT_CONFIG=''
-DOCS='CHANGELOG License README'
-patchfiles=''
-compress=txz
-##############################################################
+arch=`uname -m`
+build=P2
+src=$pkgbase-$vers
+OPT_CONFIG=""
+DOCS="CHANGELOG License README"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
@@ -25,7 +52,7 @@ strip_bindir() {
     for i in * ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
          echo "stripping -p $i"
          strip -p $i
       fi
@@ -41,7 +68,7 @@ strip_libdir() {
     for i in *.so *.so.* *.a ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
         if [ $i != ${i%.a} ] ; then
           echo -n "ranlib and "
           touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
@@ -58,7 +85,6 @@ gzip_dir() {
   if [ -d $1 ] ; then (
     cd $1
     files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -88,13 +114,11 @@ gzip_one() {
 }
 
 compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
 }
 
 prune_symlink() {
@@ -105,8 +129,7 @@ prune_symlink() {
     for i in `find ${1#$P/} -type l` ; do
       target=`readlink $i`
       echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
     done
     COUNT=1
     LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
@@ -130,39 +153,25 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+fscheck
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-else
-    target="-m32"
-    libdir="lib"
-fi
-
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -190,30 +199,26 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
-
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
+    if [ -f Makefile ] ; then
+      make clean
     fi
-    sed -i "/^lib=/s:=.*:=lib64:" Make.Rules
-    echo "No configure in this package. Proceed to build."
-    opt_build=1
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3 CC="gcc $target" LD="gcc -shared $target " 
+      make
     fi
   done
 fi
@@ -224,45 +229,26 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make CC="gcc $target" LD="gcc -shared $target " install DESTDIR=$P
+      make -i install DESTDIR=$P
     fi
-    mkdir -p $P/usr/lib64
-    mv $P/lib64/libcap.a $P/usr/lib64
-    rm $P/lib64/libcap.so
-    ( cd $P/usr/lib64 ; ln -sf ../../lib64/libcap.so.2 libcap.so )
   done
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-# remove locales except ja
-# 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
-
+  install -d $P/usr/$libdir
+  mv $P/$libdir/libcap.a $P/usr/$libdir
+  rm $P/$libdir/libcap.so
+  ln -s /$libdir/libcap.so.2 $P/usr/$libdir/libcap.so
   touch $W/i.et
   cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
   compress
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
+  strip_libdir $P/$libdir/security
+  touch -t `date '+%m%d0900'` $P/$libdir/security
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -280,30 +266,18 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
   convert
-######################################################################
-# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
-#   記述します(prune_symlink を使います)。
-# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
-#   します(こだわりを求めないなら単に makepkg でも良いです)。
-######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
+  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find $libdir -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include/sys | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
 fi
