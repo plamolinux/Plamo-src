@@ -185,7 +185,7 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  if [ ! -f $archive ] ; then wget $i ; fi
+  if [ ! -f $archive ] ; then wget $url ; fi
   if [ ! -d $extdir ]; then
       tar xvpf ${archive}
   fi
