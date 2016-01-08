@@ -1,30 +1,30 @@
 #!/bin/sh
 ##############################################################
-url='http://tutimura.ath.cx/~nob/tex/ptexlive/ptexlive-20100711.tar.gz'
-url_texlive='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-source.tar.xz'
-url_texmf='ftp://tug.org/historic/systems/texlive/2009/texlive-20091107-texmf.tar.xz'
-pkgbase=ptexlive
-vers=20100711
-arch=`uname -m`
-build=P9
-src=ptexlive-20100711
-texlivesrc=texlive-20091107-source
-prefix=/opt/texlive/2009
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-else
-    target="-m32"
-    libdir="lib"
-fi
-OPT_CONFIG="--disable-native-texlive-build --enable-mktextex-default --with-banner-add='PlamoLinux' --with-system-icu --with-fontconfig-libdir=/usr/${libdir} --with-system-libgs --with-system-zlib --with-x --with-system-xpdf --enable-multiplatform --build=${arch}-gnu-linux --with-system-libpng --with-libpng-includes=/usr/include/libping14"
-DOCS='ChangeLog ChangeLog.2007 ChangeLog.2008 LICENSE README README.en'
-patchfiles='pdftoepdf.patch xdvi.patch poppler-0.20.patch'
-ptexlivepatch='ptexlive-makescript.patch font-search.patch'
+pkgbase=texlive_texmf
+vers=20150523
+url="ftp://tug.org/historic/systems/texlive/${vers:0:4}/texlive-${vers}-texmf.tar.xz"
+arch=noarch
+build=P1
+src=texlive-${vers}-texmf
+prefix=/opt/texlive/2015
+OPT_CONFIG=''
+DOCS=''
+PKG1='README ls-R asymptote bibtex chktex context pbibtex psutils scripts source tex tex4ht texconfig texdoc texdoctk ttf2pk xdvi xindy'
+PKG2='dvips fonts hbf2gf makeindex metafont metapost mft omega'
+PKG3='doc/latex'
+PKG4='doc/aleph doc/amstex doc/asymptote doc/bg5conv doc/bibtex doc/bibtex8
+doc/bibtexu doc/cef5conv doc/cefconv doc/cefsconv doc/chktex doc/context
+doc/cstex doc/dvipdfm doc/dvipdfmx doc/dvipng doc/dvips doc/eplain doc/etex
+doc/extconv doc/fonts doc/generic doc/hbf2gf doc/info doc/kpathsea doc/luatex
+doc/man doc/metapost doc/mex doc/omega doc/otherformats doc/pdftex doc/plain
+doc/pmxchords doc/ptex doc/sjisconv doc/support doc/tetex doc/texdoc doc/texlive
+doc/texworks doc/tpic2pdftex doc/ttf2pk doc/uptex doc/vlna doc/web2c doc/xetex
+doc/xindy'
 compress=txz
 ##############################################################
 
 install2() {
+  echo "=== install2 (${2%/*}) ==="
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
@@ -157,12 +157,11 @@ for i in `seq 0 $((${#src[@]} - 1))` ; do
   fi      
 done
 P=$W/work ; C=$W/pivot
-infodir=$P/usr/share/info
-mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
-docdir=$P/usr/share/doc
+
 myname=`basename $0`
-pkg=$pkgbase-$vers-$arch-$build
+
+archive=${url##*/}
+extdir=${archive%%.*}
 
 if [ $arch = "x86_64" ]; then
     target="-m64"
@@ -186,68 +185,23 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  for i in $url $url_texmf $url_texlive ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $url $url_texlive ; do
-    tar xvpf ${i##*/}
-  done
-  texmf=${url_texmf##*/}
-  if [ ! -d ${texmf%%.*} ] ; then
-    tar xvpf ${texmf}
+  if [ ! -f $archive ] ; then wget $i ; fi
+  if [ ! -d $extdir ]; then
+      tar xvpf ${archive}
   fi
 fi
 if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
-  done
-  rm -rf $texlivesrc ; tar xvf ${url_texlive##*/}
 ######################################################################
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  cd $W/${texlivesrc}
-  echo $PWD
+  cd $extdir
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    for patch in $ptexlivepatch ; do
-      patch -p1 < $W/$patch
-    done
-    texmf=${url_texmf##*/}
-    sed -i 's/20091011/20091107/' common.sh
-    cat <<EOF > ptexlive.cfg
-TEXLIVE_VERSION=2009
-TEXLIVE_DIR=$W/${texmf%%.*}
-ISO_DIR=/mnt
-TMP_PREFIX=`pwd`/build
-make_option -j 3
-export CXXFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
-export CFLAGS="-isystem /usr/include ${target} -I/usr/include/libpng14"
-export LDFLAGS="-Wl,--as-needed -L/usr/lib64 -lpng14"
-export PKG_CONFIG_PATH="/usr/${libdir}/pkgconfig:/usr/share/pkgconfig"
-TEXSRC_EXTRACTED=$W/$texlivesrc
-SRC_TAR=$W/$texlivesrc.tar.xz
-STRIP=yes
-EOF
-    for c in $OPT_CONFIG ; do
-      echo "conf_option $c" >> ptexlive.cfg
-    done
-  done
 fi
 if [ $opt_build -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    make stage1
-    make stage2
-    make stage3
-    make stage4
-    make stage5
-    make stage5o
-    make stage7y
-  done
+  echo "ビルドするものはありません"
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -259,138 +213,70 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    mkdir -p $P/$prefix
-    ( cd $W/${texlivesrc}/inst && tar cf - bin lib include texmf ) \
-        | ( cd $P/$prefix && tar xf - )
+  mkdir -p $P/{1,2,3,4}/$prefix
+
+  # Part.1
+  echo "Part.1"
+  for d in $PKG1 ; do
+    ( cd $W/$extdir && tar cf - texmf-dist/$d ) \
+        | ( cd $P/1/$prefix && tar xf - )
+  done
+
+  # Part.2
+  echo "Part.2"
+  for d in $PKG2 ; do
+    ( cd $W/$extdir && tar cf - texmf-dist/$d ) \
+        | ( cd $P/2/$prefix && tar xf - )
+  done
+
+  # Part.3
+  echo "Part.3"
+  for d in $PKG3 ; do
+    ( cd $W/$extdir && tar cf - texmf-dist/$d ) \
+        | ( cd $P/3/$prefix && tar xf - )
+  done
+
+  # Part.4
+  echo "Part.4"
+  for d in $PKG4 ; do
+    ( cd $W/$extdir && tar cf - texmf-dist/$d ) \
+        | ( cd $P/4/$prefix && tar xf - )
   done
 
   chown -R root:root $P/*
-  arch=`ls ${texlivesrc}/inst/bin/`
-  echo "ARCH is $arch"
 
-  # xbb コマンド生成
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-ln -sf $prefix/bin/$arch/dvipdfmx $prefix/bin/$arch/xbb
-
-if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive_texmf4 ]; then
-  $prefix/texinit.sh
+  # exec texinit.sh after installation
+  mkdir -p $P/4/install
+  cat <<EOF >> $P/4/install/initpkg
+if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive ]; then
+  sh $prefix/texinit.sh
 else
-  echo "必要なパッケージが揃っていません．texlive_texmf[1234] をインストールした後に $prefix/texinit.sh を実行してください．"
+  echo "必要なパッケージが揃っていません．texlive_texmf[123],ptexlive をインストールした後に $prefix/texinit.sh を実行してください．"
 fi
 EOF
-
-  # texlive 環境初期化スクリプト
-  cat <<EOF >> $P/$prefix/texinit.sh
-SAVEPATH=\$PATH
-PATH=${prefix}/bin/${arch}:\$PATH
-TEXMFMAIN=${prefix}/texmf
-export PATH TEXMFMAIN
-
-${prefix}/bin/${arch}/mktexlsr
-${prefix}/bin/${arch}/updmap-sys
-${prefix}/bin/${arch}/mktexlsr $prefix/texmf-var
-${prefix}/bin/${arch}/fmtutil-sys --all
-sed -i -e 's|^OSFONTDIR.*$|OSFONTDIR = /usr/share/fonts|' ${prefix}/texmf/web2c/texmf.cnf
-
-PATH=\$SAVEPATH
-unset TEXMFMAIN
-EOF
-  chmod 755 $P/$prefix/texinit.sh
-
-  mkdir -p $P/etc/profile.d
-  cat <<EOF > $P/etc/profile.d/texlive.sh
-# PATH
-PATH=\$PATH:$prefix/bin/$arch
-## tex文書読み込み時のフィルタ
-#export PTEX_IN_FILTER="nkf -e"
-## tex文書のコード (実行時の--kanjiオプションと同じ)
-#export PTEX_KANJI_ENC=euc 
-EOF
-  cat <<EOF > $P/etc/profile.d/texlive.csh
-## texlive のパス設定
-set path = ( \$path $prefix/bin/$arch )
-## /usr/share/fonts/ 以外に OS フォントがある場合設定
-#setenv OSFONTDIR /usr/share/fonts
-## tex文書読み込み時のフィルタ
-#setenv PTEX_IN_FILTER "nkf -e"
-## tex文書のコード (実行時の--kanjiオプションと同じ)
-#setenv PTEX_KANJI_ENC euc
-EOF
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
-
-# remove locales except ja
-# 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
 
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
-  compress
+
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
-  done
+  docdir=$P/1/usr/share/doc
+  mkdir -p $docdir/$src/
+  install $myname $docdir/$src
+  touch -t `date '+%m%d0900'` $docdir/$src/$myname
+  gzip_one $docdir/$src/$myname
 
-  for patch in $patchfiles $ptexlivepatch ; do
+  for patch in $patchfiles ; do
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
-  convert
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
@@ -402,10 +288,14 @@ EOF
 # tar rvpf $pkg.tar -C $P usr/share/doc/$src
 # touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
 # mv $pkg.tar.gz $pkg.tgz
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
+for i in 1 2 3 4
+do
+  cd $P/$i
+  pkg=$pkgbase$i-$vers-$arch-$build
+  /sbin/makepkg $W/$pkg.$compress <<EOF
 y
 1
 EOF
+done
 
 fi
