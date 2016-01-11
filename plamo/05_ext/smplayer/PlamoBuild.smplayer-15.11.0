@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 
-url='http://downloads.sourceforge.net/project/smplayer/SMPlayer/14.9.0/smplayer-14.9.0.tar.bz2'
+url='http://sourceforge.net/projects/smplayer/files/SMPlayer/15.11.0/smplayer-15.11.0.tar.bz2'
 pkgbase=smplayer
-vers=14.9.0
+vers=15.11.0
 arch=`uname -m`
 build=P1
-src=smplayer-14.9.0
+src=smplayer-15.11.0
 OPT_CONFIG=''
 DOCS='Changelog *.txt'
 patchfiles=''
