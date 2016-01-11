@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/project/smplayer/SMPlayer-themes/14.9.0/smplayer-themes-14.9.0.tar.bz2'
+url='http://sourceforge.net/projects/smplayer/files/SMPlayer-themes/15.12.0/smplayer-themes-15.12.0.tar.bz2'
 pkgbase=smplayer_themes
-vers=14.9.0
+vers=15.12.0
 arch=noarch
 build=P1
-src=smplayer-themes-14.9.0
+src=smplayer-themes-15.12.0
 OPT_CONFIG=''
 DOCS='COPYING_CC-BY-2.5.txt COPYING_CC-BY-SA-2.5.txt COPYING_CC-BY-SA-3.0.txt COPYING_GPL.txt COPYING_LGPL.txt Changelog README.txt'
 patchfiles=''
