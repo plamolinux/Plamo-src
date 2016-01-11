@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/giflib/giflib-5.1.0.tar.bz2'
+url='http://downloads.sourceforge.net/giflib/giflib-5.1.2.tar.bz2'
 pkgbase=giflib
-vers=5.1.0
-arch=x86_64
+vers=5.1.2
+arch=`uname -m`
 # arch=i586
-build=P2
-src=giflib-5.1.0
+build=P1
+src=giflib-5.1.2
 OPT_CONFIG='--disable-static'
 DOCS='AUTHORS BUGS COPYING ChangeLog INSTALL NEWS README TODO build.asc history.asc'
 patchfiles=''
