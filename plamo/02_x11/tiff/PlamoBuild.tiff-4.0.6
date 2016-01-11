@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase=tiff
-vers=4.0.3
+vers=4.0.6
 url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${vers}.tar.gz"
 arch=`uname -m`
-build=P3
+build=P1
 src=tiff-${vers}
 OPT_CONFIG='--disable-static --with-x  --enable-cxx'
 DOCS='ChangeLog HOWTO-RELEASE README README.vms RELEASE-DATE TODO'
-patchfiles='cve-2013-4231.patch bfriesen.2805.patch CVE-2014-8127-1.patch CVE-2014-8127-2.patch CVE-2014-8127-3.patch CVE-2014-8127-4.patch CVE-2014-8128-1.patch CVE-2014-8128-2.patch CVE-2014-8128-3.patch CVE-2014-8129.patch CVE-2014-9655.patch'
+patchfiles=
 compress=txz
 ##############################################################
 
