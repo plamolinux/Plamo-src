@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase=tiff
-vers=4.0.3
-url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${vers}.tar.gz"
+pkgbase=libjpeg_turbo
+vers=1.4.2
+url="http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${vers}.tar.gz"
 arch=`uname -m`
-build=P3
-src=tiff-${vers}
-OPT_CONFIG='--disable-static --with-x  --enable-cxx'
-DOCS='ChangeLog HOWTO-RELEASE README README.vms RELEASE-DATE TODO'
-patchfiles='cve-2013-4231.patch bfriesen.2805.patch CVE-2014-8127-1.patch CVE-2014-8127-2.patch CVE-2014-8127-3.patch CVE-2014-8127-4.patch CVE-2014-8128-1.patch CVE-2014-8128-2.patch CVE-2014-8128-3.patch CVE-2014-8129.patch CVE-2014-9655.patch'
+build=P1
+src=libjpeg-turbo-${vers}
+OPT_CONFIG='--disable-static -with-jpeg8'
+DOCS='BUILDING.txt ChangeLog.txt README README-turbo.txt coderules.txt jconfig.txt libjpeg.txt release structure.txt usage.txt wizard.txt'
+patchfiles=
 compress=txz
 ##############################################################
 
@@ -117,9 +117,9 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -188,40 +188,6 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
-
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
