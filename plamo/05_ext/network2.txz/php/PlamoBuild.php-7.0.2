@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=7.0.1
+vers=7.0.2
 url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
-OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --with-libzip --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared --enable-opcache=shared --enable-opcache-file"
+OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mysql --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --with-libzip --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared --enable-opcache=shared --enable-opcache-file --with-openssl=shared"
 if [ $arch == 'x86_64' ]; then
   OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
 fi
