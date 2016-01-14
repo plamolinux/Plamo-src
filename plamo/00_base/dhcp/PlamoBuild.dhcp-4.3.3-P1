@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.isc.org/isc/dhcp/4.2.7/dhcp-4.2.7.tar.gz'
-verify=$url.asc
 pkgbase=dhcp
-vers=4.2.7
-arch=`uname -m | sed -e 's/i.86/i586/'`
+vers=4.3.3_P1
+url="http://ftp.isc.org/isc/dhcp/${vers/_/-}/dhcp-${vers/_/-}.tar.gz"
+verify=$url.asc
+arch=`uname -m`
 build=P1
-src=dhcp-4.2.7
+src=dhcp-${vers/_/-}
 OPT_CONFIG=''
 DOCS='LICENSE README'
-patchfiles='dhcp-4.2.0-scripts.patch udp_checksum_offloading dhcp-ffff-checksum.patch'
+#patchfiles='dhcp-4.2.0-scripts.patch udp_checksum_offloading dhcp-ffff-checksum.patch'
+patchfiles='dhcp-4.2.0-scripts.patch'
 compress=txz
 ##############################################################
 
