@@ -5,7 +5,7 @@ url="http://jaist.dl.sourceforge.net/sourceforge/e2fsprogs/e2fsprogs-1.42.12.tar
 pkgbase=e2fsprogs
 vers=1.42.12
 arch=`uname -m`
-build=P1
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-elf-shlibs --disable-libuuid --disable-libblkid
     --disable-fsck --disable-uuidd --with-root-prefix=\"\""
@@ -171,7 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -275,7 +275,8 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find $libdir | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/include -maxdepth 1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name e2fsprogs.mo`
   tar rvpf $pkg.tar -C $P usr/share/et usr/share/ss
