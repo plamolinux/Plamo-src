@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=openssh
-vers=7.1p1
+vers=7.1p2
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
