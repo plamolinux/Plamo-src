@@ -1,0 +1,642 @@
+#!/bin/sh
+#
+# adduser script for use with shadow passwords and useradd command.
+# by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
+#
+# Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
+# Time-stamp: <2006-02-03 21:46:55 kojima>
+# Time-stamp: <2011-01-05 01:24:06 plamo>
+# Time-stamp: <2011-07-25 19:03:24 karma>
+# Time-stamp: <2011-10-08 13:32:46 tamuki>
+# Time-stamp: <2011-12-07 00:22:20 kojima>
+# Time-stamp: <2016-01-22 19:55:16 kojima>
+
+DEFAULT_GROUP=users
+DEFAULT_AGID=audio,dialout,video,cdrom,kvm,pulse,pulse-access,mlocate,libvirt
+DEFAULT_HOME_DIR=/home
+DEFAULT_SHELL=/bin/bash
+DEFAULT_HOME_DIR_MODE=711
+
+######################################################################
+
+backup_oldfile() {
+  DIR=$1
+  FILE=${2##*/}
+  if [ $FILE != $SKELDIR/Default ] ; then
+    if [ -f $DIR/$FILE ] ; then
+      if [ -f $DIR/$FILE.old ] ; then
+        backup_oldfile $DIR $FILE.old
+        FILE=${2##*/}
+      fi
+      mv $DIR/$FILE $DIR/$FILE.old
+    elif [ -d $DIR/$FILE ] ; then
+      if [ -d $DIR/$FILE.org ] ; then
+        backup_oldfile $DIR $FILE.org
+        FILE=${2##*/}
+      fi
+      mv $DIR/$FILE $DIR/$FILE.org
+    fi
+  fi
+}
+
+######################################################################
+
+msg_login_name() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "新しいユーザのログイン名を指定してください(8 文字以内)。 []: "
+  else
+    echo -n "Login name for new user (8 characters or less) []: "
+  fi
+}
+
+msg_err_login_name() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "残念ながらログイン名を指定せずには進めません。。"
+  else
+    echo "Come on, man, you can't leave the login field empty..."
+  fi
+}
+
+msg_user_id() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のユーザ ID は？ [自動登録の場合は 1000 番台になります]: "
+  else
+    echo -n "User ID for $LOGIN [defaults to next available]: "
+  fi
+}
+
+msg_grp_name() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN が属するグループは？ [$DEFAULT_GROUP]: "
+  else
+    echo -n "Initial group for $LOGIN [$DEFAULT_GROUP]: "
+  fi
+}
+
+msg_add_gid() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$LOGIN は他のグループにも属しますか？"
+    echo "  (デフォルト設定に追加する場合 --> add:<group1>,<group2>,..."
+    echo "   他のどのグループにも属さない場合 --> none)"
+    echo -n "  [$DEFAULT_AGID]: "
+  else
+    echo "Additional group for $LOGIN"
+    echo "  (add to the default setting --> add:<group1>,<group2>,..."
+    echo "   no additional group --> none)"
+    echo -n "  [$DEFAULT_AGID]: "
+  fi
+}
+
+msg_home_dir() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のホームディレクトリは？ [$DEFAULT_HOME_DIR/$LOGIN]: "
+  else
+    echo -n "$LOGIN's home directory [$DEFAULT_HOME_DIR/$LOGIN]: "
+  fi
+}
+
+msg_shell() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN が使うシェルは？ [$DEFAULT_SHELL]: "
+  else
+    echo -n "$LOGIN's shell [$DEFAULT_SHELL]: "
+  fi
+}
+
+msg_locale() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "日本語 locale の設定"
+    echo "1 : ja_JP.eucJP(従来通り)"
+    echo "2 : ja_JP.UTF-8(今風)"
+    echo -n "$LOGIN はどちらの locale を使いますか？ [1]: "
+  else
+    echo "Japanese locale setting"
+    echo "1 : ja_JP.eucJP (traditional)"
+    echo "2 : ja_JP.UTF-8 (modern)"
+    echo -n "$LOGIN's locale? [1]: "
+  fi
+}
+
+msg_w_manager() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    n=0 ; echo "ウィンドウマネージャ設定"
+    if [ -x /usr/bin/afterstep ] ; then
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : AfterStep(NextStep 風)"
+    fi
+    if [ -x /usr/bin/qvwm ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Qvwm(Windows 95/98/2000 風)"
+    fi
+    if [ -x /usr/bin/twm ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : Twm(ごくシンプル)"
+    fi
+    if [ -x /usr/bin/startxfce4 ] ; then
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop(お勧め)"
+    fi
+    if [ -x /opt/kde/bin/startkde ] ; then
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : KDE Desktop(便利だけどやや重い)"
+    fi
+    if [ -x /usr/bin/mate-session ] ; then
+      n=$((n + 1)) ; IWM[$n]=6 ; echo "$n : MATE Desktop(GNOME2 の進化版)"
+    fi
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
+    DWM=$i ; echo -n "$LOGIN が使う WM は？ [$DWM]: "
+  else
+    n=0 ; echo "Window Manager setting"
+    if [ -x /usr/bin/afterstep ] ; then
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : AfterStep (NextStep like)"
+    fi
+    if [ -x /usr/bin/qvwm ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Qvwm (Windows 95/98/2000 like)"
+    fi
+    if [ -x /usr/bin/twm ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : Twm (too simple)"
+    fi
+    if [ -x /usr/bin/startxfce4 ] ; then
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop (recommended)"
+    fi
+    if [ -x /opt/kde/bin/startkde ] ; then
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : KDE Desktop (useful, but somewhat heavy)"
+    fi
+    if [ -x /usr/bin/mate-session ] ; then
+      n=$((n + 1)) ; IWM[$n]=6 ; echo "$n : MATE Desktop (advanced GNOME2)"
+    fi
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
+    DWM=$i ; echo -n "$LOGIN's WM? [$DWM]: "
+  fi
+}
+
+msg_trad_im_input() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "日本語入力設定(伝統的な IM と SKK 利用時のみ有効)"
+    echo "1 : ローマ字入力"
+    echo "2 : かな入力"
+    echo "3 : NICOLA(親指シフト)入力"
+    echo -n "$LOGIN はローマ字，かな入力，NICOLA 入力のどれを使いますか？ [1]: "
+  else
+    echo "Japanese input method (traditional IM and SKK only)"
+    echo "1 : Roma"
+    echo "2 : Kana (Japanese keyboard only)"
+    echo "3 : NICOLA (Japanese keyboard only)"
+    echo -n "Which is $LOGIN's method, roma, kana or NICOLA? [1]: "
+  fi
+}
+
+msg_use_newgen_im() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "uim/SCIM/ibus の選択"
+    [ -x /usr/bin/uim-xim ]     && echo "1 : uim"
+    [ -x /usr/bin/scim ]        && echo "2 : SCIM"
+    [ -x /usr/bin/ibus-daemon ] && echo "3 : ibus"
+    echo "0 : 今は uim/SCIM/ibus を使用しない"
+    echo -n "$LOGIN は伝統的な IM の代わりに新世代 IM を使いますか？ [1]: "
+  else
+    echo "uim/SCIM/ibus"
+    [ -x /usr/bin/uim-xim ]     && echo "1 : uim"
+    [ -x /usr/bin/scim ]        && echo "2 : SCIM"
+    [ -x /usr/bin/ibus-daemon ] && echo "3 : ibus"
+    echo "0 : No, I don't want to use uim/SCIM/ibus for now"
+    echo -n "Does $LOGIN want to use new IMs instead of the traditional IM? [1]: "
+  fi
+}
+
+msg_visual_bell() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN はビジュアルベルを使いますか？ (Emacs，kterm などで有効) [y/N]: "
+  else
+    echo -n "Does $LOGIN want to use visual bell? (for Emacs, kterm, etc.) [y/N]: "
+  fi
+}
+
+msg_font_size() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "標準の X(非 Xfce/KDE/MATE)環境フォントサイズ設定"
+    echo "(AfterStep，Qvwm 環境に適用されます)"
+    echo "12，14，16，18 の偶数値を指定してください。"
+  else
+    echo "Font size settings for the standard X11 environments"
+    echo "(AfterStep and Qvwm environments)"
+    echo "Choose 12, 14, 16 or 18."
+  fi
+}
+
+msg_font_size_ui() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "ユーザインタフェースのフォントサイズ [12]: "
+  else
+    echo -n "User interface [12]: "
+  fi
+}
+
+msg_font_size_term() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "端末・テキストエリアのフォントサイズ [14]: "
+  else
+    echo -n "Terminal and text area [14]: "
+  fi
+}
+
+msg_font_size_editor() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "エディタ(Emacs)のフォントサイズ [16]: "
+  else
+    echo -n "Editor (Emacs) [16]: "
+  fi
+}
+
+msg_expiry_date() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のアカウントの有効期限は？ (YYYY-MM-DD) []: "
+  else
+    echo -n "$LOGIN's account expiry date (YYYY-MM-DD) []: "
+  fi
+}
+
+msg_conf() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "さて，実際に必要なエントリを作成します。データはこれでいいですか？"
+  else
+    echo "OK, I'm about to make a new account.  Here's what you entered so far:"
+  fi
+  echo
+}
+
+msg_overwrite() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$HME は存在します。$HME/.tcshrc や $HME/.login は"
+    echo "Plamo のデフォルトの設定に書き換えられますが構いませんか？ [y/N]"
+    echo "以前のファイルは $HME/.tcshrc.old のようにバックアップを作成"
+    echo "して保存します(.*.old がすでにあれば，問答無用で上書きします;-)。"
+  else
+    echo "$HME exists. $HME/.tcshrc or $HME/.login will be"
+    echo "overwritten by Plamo's default configuration files.  OK? [y/N]"
+  fi
+}
+
+msg_conf2() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "登録を中止したい場合は Ctrl-C を押してください。このデータで良い場合は"
+    echo "Enter を押していただければ，アカウントを作成します。"
+  else
+    echo "This is it... if you want to bail out, hit Control-C.  Otherwise, press"
+    echo "ENTER to go ahead and make the account."
+  fi
+}
+
+msg_creating() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "新規アカウント作成中..."
+  else
+    echo "Making new account..."
+  fi
+}
+
+msg_last() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$SKELDIR/Default 以下の各種設定ファイルをホームディレクトリにコピーしました。"
+    echo "登録が完了しました。"
+    echo
+    echo "今，作成した新規ユーザでコンソールからログインし，startx すれば，日本語 X 環境が"
+    echo "利用できます。"
+  else
+    echo "Done..."
+  fi
+}
+
+wait_press_enter() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "[Enterキーを押してください]"
+  else
+    echo -n "[Press Enter]"
+  fi
+  read FOO
+}
+
+######################################################################
+
+SKELDIR=/etc/template
+
+if [ -n "$1" ] ; then
+  if [ "${1::2}" == "ja" ] ; then ANS="y" ; fi
+else
+  if [ "$TERM" == "linux" ] ; then
+    echo "Can you read Japanese chars on this term? [y/N]"
+    read ANS
+    if [ "$ANS" == "Y" -o "$ANS" == "y" ] ; then ANS="y" ; fi
+  else
+    echo "Can you read Japanese chars on this term? [Y/n]"
+    read ANS
+    if [ "$ANS" != "N" -a "$ANS" != "n" ] ; then ANS="y" ; fi
+  fi
+fi
+
+if [ "$ANS" == "y" ] ; then
+  echo "Japanese mode"
+  LNG="JAPANESE"
+else
+  echo "No Japanese mode"
+  LNG=""
+fi
+
+#新しいユーザのログイン名を指定してください(8 文字以内)。
+msg_login_name
+read LOGIN
+if [ -z "$LOGIN" ] ; then
+  #残念ながらログイン名を指定せずには進めません。。
+  msg_err_login_name
+  exit
+fi
+
+#$LOGIN のユーザ ID は？
+msg_user_id
+read USERID
+if [ -z "$USERID" ] ; then
+  GUID=""
+else
+  GUID="-u $USERID"
+fi
+
+#$LOGIN が属するグループは？
+msg_grp_name
+read GROUPID
+if [ -z "$GROUPID" ] ; then
+  GROUPID="$DEFAULT_GROUP"
+fi
+GGID="-g $GROUPID"
+
+#$LOGIN は他のグループにも属しますか？
+msg_add_gid
+read AGID
+if [ -z "$AGID" ] ; then
+  AGID="$DEFAULT_AGID"
+elif [ "${AGID:0:4}" == "add:" ] ; then
+  AGID="$DEFAULT_AGID,${AGID#*:}"
+fi
+if [ "$AGID" == "none" ] ; then
+  GAGID=""
+else
+  GAGID="-G $AGID"
+fi
+
+#$LOGIN のホームディレクトリは？
+msg_home_dir
+read HME
+if [ -z "$HME" ] ; then
+  HME="$DEFAULT_HOME_DIR/$LOGIN"
+fi
+GHME="-d $HME"
+
+#$LOGIN が使うシェルは？
+msg_shell
+read SHL
+if [ -z "$SHL" ] ; then
+  SHL="$DEFAULT_SHELL"
+fi
+GSHL="-s $SHL"
+
+#日本語 locale の設定
+msg_locale
+read LOC
+if [ -z "$LOC" ] ; then
+  LOC=1
+elif [ "$LOC" -lt 1 ] ; then
+  LOC=1
+elif [ "$LOC" -gt 2 ] ; then
+  LOC=1
+fi
+
+#ウィンドウマネージャ設定
+msg_w_manager
+read WM
+if [ -z "$WM" ] ; then
+  WM=$DWM
+elif [ "$WM" -lt 1 ] ; then
+  WM=$DWM
+elif [ "$WM" -gt "$NWM" ] ; then
+  WM=$DWM
+fi
+
+#日本語入力設定(伝統的な IM と SKK 利用時のみ有効)
+msg_trad_im_input
+read TRAD_IM_INPUT
+if [ -z "$TRAD_IM_INPUT" ] ; then
+  TRAD_IM_INPUT=1
+elif [ "$TRAD_IM_INPUT" -lt 1 ] ; then
+  TRAD_IM_INPUT=1
+elif [ "$TRAD_IM_INPUT" -gt 3 ] ; then
+  TRAD_IM_INPUT=1
+fi
+
+#uim/SCIM/ibus の選択
+msg_use_newgen_im
+read USE_NEWGEN_IM
+if [ -z "$USE_NEWGEN_IM" ] ; then
+  USE_NEWGEN_IM=1
+elif [ "$USE_NEWGEN_IM" -lt 0 ] ; then
+  USE_NEWGEN_IM=1
+elif [ "$USE_NEWGEN_IM" -gt 3 ] ; then
+  USE_NEWGEN_IM=1
+fi
+
+#$LOGIN はビジュアルベルを使いますか？ (Emacs，kterm などで有効)
+msg_visual_bell
+read VISUALBELL
+if [ "$VISUALBELL" == "Y" ] ; then
+  VISUALBELL="y"
+fi
+
+#標準の X(非 Xfce/KDE/MATE)環境フォントサイズ設定
+msg_font_size
+#ユーザインタフェースのフォントサイズ
+msg_font_size_ui
+read FSIZE_UI
+if [ -z "$FSIZE_UI" ] ; then
+  FSIZE_UI=12
+fi
+#端末・テキストエリアのフォントサイズ
+msg_font_size_term
+read FSIZE_TERM
+if [ -z "$FSIZE_TERM" ] ; then
+  FSIZE_TERM=14
+fi
+#エディタ(Emacs)のフォントサイズ
+msg_font_size_editor
+read FSIZE_EDITOR
+if [ -z "$FSIZE_EDITOR" ] ; then
+  FSIZE_EDITOR=16
+fi
+
+#$LOGIN のアカウントの有効期限は？ (YYYY-MM-DD)
+msg_expiry_date
+read EXP
+GEXP="-e $EXP"
+if [ -z "$EXP" ] ; then
+  GEXP=""
+fi
+
+#さて，実際に必要なエントリを作成します。データはこれでいいですか？
+msg_conf
+echo New login name: $LOGIN
+if [ -z "$GUID" ] ; then
+  echo New UID: [Next available]
+else
+  echo New UID: $USERID
+fi
+echo Initial group: $GROUPID
+if [ -z "$GAGID" ] ; then
+  echo Additional groups: [none]
+else
+  echo Additional groups: $AGID
+fi
+echo Home directory: $HME
+echo Shell: $SHL
+if [ -z "$GEXP" ] ; then
+  echo Expiry date: [no expiration]
+else
+  echo Expiry date: $EXP
+fi
+
+if [ -d $HME ] ; then
+  #$HME は存在します。$HME/.tcshrc や $HME/.login は
+  #Plamo のデフォルトの設定に書き換えられますが構いませんか？
+  msg_overwrite
+  read ANS
+  if [ -z $ANS ] ; then
+    ANS="N"
+  fi
+  if [ "$ANS" != "Y" -a "$ANS" != "y" ] ; then
+    exit -1
+  fi
+fi
+
+#登録を中止したい場合は Ctrl-C を押してください。このデータで良い場合は
+#Enter を押していただけば，アカウントを作成します。
+msg_conf2
+read FOO
+
+# mkdefaultenv.sh は /etc/template/Default 以下をすべて削除し，
+# /etc/template/Source から /etc/template/Default を再作成します。
+echo -n "Executing $SKELDIR/mkdefaultenv.sh $SKELDIR/Source "
+echo -n "$LOC $FSIZE_UI $FSIZE_TERM $FSIZE_EDITOR ..."
+$SKELDIR/mkdefaultenv.sh $SKELDIR/Source \
+    $LOC $FSIZE_UI $FSIZE_TERM $FSIZE_EDITOR 1> /dev/null
+echo " OK"
+
+if [ "${IWM[WM]}" -eq 1 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="step"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 2 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="qvwm"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 3 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="twm"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 5 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="kde"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 6 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="mate"\)/\1/' $SKELDIR/Default/.xinitrc
+fi
+
+if [ "$TRAD_IM_INPUT" -eq 1 ] ; then
+  sed -i -e 's/\[ -x.*uim/#&/;s/#\(.*CC\)/\1/;s/#\(\[ -[fx].*kinput2\)/\1/' \
+      -e 's/XM.*uim/#&/;s/#\(XM.*kinput2\)/\1/' \
+      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i 's/\*in.*uim/!&/;s/!\(\*in.*kinput2\)/\1/' \
+      $SKELDIR/Default/.Xdefaults
+elif [ "$TRAD_IM_INPUT" -eq 2 ] ; then
+  sed -i -e 's/\[ -x.*uim/#&/;s/#\(.*CC\)/\1/;s/#\(\[ -[fx].*kinput2\)/\1/' \
+      -e 's/XM.*uim/#&/;s/#\(XM.*kinput2\)/\1/' \
+      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i -e 's/\*in.*uim/!&/;s/!\(\*in.*kinput2\)/\1/' \
+      -e 's/!\(Emacs\*useXim\)/\1/' $SKELDIR/Default/.Xdefaults
+  sed -i -e 's/(setq canna-input-method "roma")/;&/' \
+      -e 's/;\((setq canna-input-method "kana")\)/\1/' \
+      $SKELDIR/Default/.canna
+  sed -i -e 's/;\((setq skk-use-kana-keyboard t)\)/\1/' \
+      -e "s/;\((setq skk-kanagaki-keyboard-type '106-jis)\)/\1/" \
+      $SKELDIR/Default/.skk
+elif [ "$TRAD_IM_INPUT" -eq 3 ] ; then
+  sed -i -e 's/\[ -x.*uim/#&/;s/#\(\[ -x.*nicola\)/\1/' \
+      -e 's/XM.*uim/#&/;s/#\(XM.*nicola\)/\1/' \
+      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i 's/\*in.*uim/!&/;s/!\(\*in.*nicola\)/\1/' \
+      $SKELDIR/Default/.Xdefaults
+  sed -i -e 's/;\((setq skk-use-kana-keyboard t)\)/\1/' \
+      -e "s/;\((setq skk-kanagaki-keyboard-type 'nicola-jis)\)/\1/" \
+      $SKELDIR/Default/.skk
+fi
+
+if [ "$USE_NEWGEN_IM" -eq 1 ] ; then
+  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
+      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*uim\)/\1/' \
+      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*uim\)/\1/' \
+      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*uim\)/\1/;s/#\(GTK.*uim\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*uim\)/\1/' \
+      $SKELDIR/Default/.Xdefaults
+elif [ "$USE_NEWGEN_IM" -eq 2 ] ; then
+  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
+      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*scim\)/\1/' \
+      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*SCIM\)/\1/' \
+      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*scim\)/\1/;s/#\(GTK.*scim\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*SCIM\)/\1/' \
+      $SKELDIR/Default/.Xdefaults
+elif [ "$USE_NEWGEN_IM" -eq 3 ] ; then
+  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
+      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*ibus\)/\1/' \
+      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*ibus\)/\1/' \
+      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*ibus\)/\1/;s/#\(GTK.*ibus\)/\1/' \
+      $SKELDIR/Default/.xinitrc
+  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*ibus\)/\1/' \
+      $SKELDIR/Default/.Xdefaults
+fi
+
+if [ "$VISUALBELL" == "y" ] ; then
+  sed -i 's/;\((setq visible-bell t)\)/\1/' \
+      $SKELDIR/Default/.emacs.d/site-start.d/behavior.el
+  sed -i 's/!\(.*\*visualBell\)/\1/' $SKELDIR/Default/.Xdefaults
+fi
+
+#新規アカウント作成中...
+msg_creating
+
+if [ -d $HME ] ; then # backup old files
+  find $SKELDIR/Default -maxdepth 1 -exec backup_oldfile $HME {} \;
+fi
+
+useradd $GHME -m $GEXP $GGID $GAGID $GSHL $GUID $LOGIN
+chmod $DEFAULT_HOME_DIR_MODE $HME
+
+if [ -x /usr/sbin/sendmail ] ; then
+  if [ ! -f /usr/spool/mail/$LOGIN ] ; then
+    cat $SKELDIR/mime-mail.sample > /usr/spool/mail/$LOGIN
+    chown $LOGIN.mail /usr/spool/mail/$LOGIN
+    chmod 660 /usr/spool/mail/$LOGIN
+  fi
+fi
+
+echo
+chfn $LOGIN
+echo
+passwd $LOGIN
+
+#$SKELDIR/Default 以下の各種設定ファイルをホームディレクトリにコピーしました。
+#登録が完了しました。
+msg_last
+if [ -n "$DISPLAY" ] ; then
+  echo
+  wait_press_enter
+fi
