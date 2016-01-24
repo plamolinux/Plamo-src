@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://www.jwz.org/xscreensaver/xscreensaver-5.19.tar.gz'
+url='http://www.jwz.org/xscreensaver/xscreensaver-5.34.tar.gz'
 pkgbase=xscreensaver
-vers=5.19
-arch=x86_64
-# arch=i586
+vers=5.34
+arch=`uname -m`
 build=P1
-src=xscreensaver-5.19
+src=xscreensaver-5.34
 OPT_CONFIG='--with-pam --with-shadow --with-gtk --with-gl --with-pixbuf --with-xpm --with-jpeg'
 DOCS='INSTALL README README.VMS README.hacking'
 patchfiles=''
