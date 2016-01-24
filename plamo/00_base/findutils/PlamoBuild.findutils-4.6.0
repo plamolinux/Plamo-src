@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.gnu.org/pub/gnu/findutils/findutils-4.4.2.tar.gz'
+url='http://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz'
 pkgbase=findutils
-vers=4.4.2
-arch=x86_64
-# arch=i586
-build=P2
-src=findutils-4.4.2
+vers=4.6.0
+arch=`uname -m`
+build=P1
+src=findutils-4.6.0
 OPT_CONFIG=''
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-hacking THANKS TODO tool-versions.txt'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2013 INSTALL NEWS README README-alpha README-hacking THANKS TODO tool-versions.txt'
 patchfiles=''
 compress=txz
 ##############################################################
