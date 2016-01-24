@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.astron.com/pub/tcsh/tcsh-6.17.00.tar.gz'
+url='ftp://ftp.astron.com/pub/tcsh/tcsh-6.19.00.tar.gz'
 pkgbase=tcsh
-vers=6.17.00
-arch=x86_64
-# arch=i586
+vers=6.19.00
+arch=`uname -m`
 build=P1
-src=tcsh-6.17.00
+src=tcsh-6.19.00
 OPT_CONFIG=''
 DOCS='BUGS Copyright FAQ Fixes NewThings Ported README README.imake WishList Y2K'
 patchfiles=''
