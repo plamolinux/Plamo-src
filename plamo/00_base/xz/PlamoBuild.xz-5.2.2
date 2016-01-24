@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://tukaani.org/xz/xz-5.0.3.tar.xz'
+url='http://tukaani.org/xz/xz-5.2.2.tar.xz'
 pkgbase=xz
-vers=5.0.3
-arch=x86_64
-# arch=i586
-build=P4
-src=xz-5.0.3
+vers=5.2.2
+arch=`uname -m`
+build=P1
+src=xz-5.2.2
 OPT_CONFIG='--disable-static'
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 ChangeLog INSTALL INSTALL.generic NEWS README THANKS TODO'
+DOCS='ABOUT-NLS AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 ChangeLog INSTALL INSTALL.generic NEWS PACKAGERS README THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -121,6 +120,7 @@ if [ $opt_download -eq 1 ] ; then
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
