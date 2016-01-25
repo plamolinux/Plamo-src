@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://www.jwz.org/xscreensaver/xscreensaver-5.19.tar.gz'
-pkgbase=xscreensaver
-vers=5.19
-arch=x86_64
-# arch=i586
+url='http://tukaani.org/xz/xz-5.2.2.tar.xz'
+pkgbase=xz
+vers=5.2.2
+arch=`uname -m`
 build=P1
-src=xscreensaver-5.19
-OPT_CONFIG='--with-pam --with-shadow --with-gtk --with-gl --with-pixbuf --with-xpm --with-jpeg'
-DOCS='INSTALL README README.VMS README.hacking'
+src=xz-5.2.2
+OPT_CONFIG='--disable-static'
+DOCS='ABOUT-NLS AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 ChangeLog INSTALL INSTALL.generic NEWS PACKAGERS README THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -17,40 +16,20 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_bindir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in * ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
-         echo "stripping -p $i"
-         strip -p $i
+strip_all() {
+  for chk in `find . ` ; do
+    chk_elf=`file $chk | grep ELF`
+    if [ "$chk_elf.x" != ".x" ]; then
+      chk_lib=`echo $chk | grep lib`
+      if [ "$chk_lib.x" != ".x" ]; then
+         echo "stripping $chk with -g "
+         strip -g $chk
+      else
+         echo "stripping $chk"
+         strip $chk
       fi
-    done
-  ) fi
-}
-
-strip_libdir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in *.so *.so.* *.a ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
-        if [ $i != ${i%.a} ] ; then
-          echo -n "ranlib and "
-          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
-        fi
-        echo "stripping -gp $i"
-        strip -gp $i
-      fi
-    done
-  ) fi
+    fi
+  done
 }
 
 gzip_dir() {
@@ -87,56 +66,10 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
-  for i in $P/opt/kde/lib{,64} ; do strip_libdir $i ; done
-  for i in $P/opt/kde/bin ; do strip_bindir $i ; done
-  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
-  gzip_dir $infodir
-  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
-}
-
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
-}
+compress_all() {
+  cd $P
+  strip_all
+}  
 
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
@@ -244,43 +177,27 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make install install_prefix=$P
+      make install DESTDIR=$P
     fi
+    # adjust binary location
+    # 厳密に /bin/xz にしようとすると liblzma.so.xx の位置が
+    # 悩ましくなるので，symlink で誤魔化しているだけ
+    mkdir -p $P/bin
+    cd $P/bin 
+    for link in unxz xz lzma unlzma ; do
+	ln -sf ../usr/bin/$link $link
+    done
+
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $P/etc/pam.d
-  install driver/xscreensaver.pam $P/etc/pam.d/xscreensaver
-
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
+  # for library compatibility
+  ( cd $P/usr/${libdir} ; ln -sf liblzma.so.5 liblzma.so.0 )
 
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
 
 # remove locales except ja
 # 
@@ -294,15 +211,18 @@ EOF
     popd
   fi
 
-  touch $W/i.et
-  cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
-  compress
+######################################################################
+# path に lib があるバイナリは strip -g, ないバイナリは strip する
+######################################################################
+  cd $P
+  compress_all
+
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
+  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -313,7 +233,6 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -325,11 +244,6 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
-  convert
-
 ############################################################
 #   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
 #   紛れこみがちなので
@@ -339,7 +253,6 @@ EOF
   if [ "$chk_me.x" != ".x" ]; then
       chown -R root.root $P/usr/share/doc
   fi
-
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

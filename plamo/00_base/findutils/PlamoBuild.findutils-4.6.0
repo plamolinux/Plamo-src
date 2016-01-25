@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://tukaani.org/xz/xz-5.0.3.tar.xz'
-pkgbase=xz
-vers=5.0.3
-arch=x86_64
-# arch=i586
-build=P4
-src=xz-5.0.3
-OPT_CONFIG='--disable-static'
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 ChangeLog INSTALL INSTALL.generic NEWS README THANKS TODO'
+url='http://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz'
+pkgbase=findutils
+vers=4.6.0
+arch=`uname -m`
+build=P1
+src=findutils-4.6.0
+OPT_CONFIG=''
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2013 INSTALL NEWS README README-alpha README-hacking THANKS TODO tool-versions.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -177,46 +176,63 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-    # adjust binary location
-    # 厳密に /bin/xz にしようとすると liblzma.so.xx の位置が
-    # 悩ましくなるので，symlink で誤魔化しているだけ
-    mkdir -p $P/bin
-    cd $P/bin 
-    for link in unxz xz lzma unlzma ; do
-	ln -sf ../usr/bin/$link $link
-    done
-
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  # for library compatibility
-  ( cd $P/usr/${libdir} ; ln -sf liblzma.so.5 liblzma.so.0 )
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+      done
+  fi
 
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
+  for loc_dir in `find $P -name locale` ; do
+      pushd $loc_dir
+      for loc in * ; do
+          if [ "$loc" != "ja" ]; then
+              rm -rf $loc
+          fi
+      done
+      popd
+   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
-
+  if [ -d $P/usr/share/man ]; then
+      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+          gzip_dir $mdir
+      done
+  fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -244,6 +260,7 @@ if [ $opt_package -eq 1 ] ; then
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+
 ############################################################
 #   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
 #   紛れこみがちなので
@@ -253,6 +270,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ "$chk_me.x" != ".x" ]; then
       chown -R root.root $P/usr/share/doc
   fi
+
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
@@ -264,6 +282,13 @@ if [ $opt_package -eq 1 ] ; then
 # tar rvpf $pkg.tar -C $P usr/share/doc/$src
 # touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
 # mv $pkg.tar.gz $pkg.tgz
+
+  # updatedb/locate はmlocateパッケージを使うので削除する
+  rm -f $P/usr/bin/{locate,updatedb}
+  rm -rf $P/usr/libexec
+  rm -rf $P/usr/share/man/man1/{locate,updatedb}.1.gz
+  rm -rf $P/usr/share/man/man5
+
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
 y
