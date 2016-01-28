@@ -1,32 +1,50 @@
-#!/bin/sh -x
-##############################################################
-url='http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-4.8.5/gcc-4.8.5.tar.gz'
+#!/bin/sh
+
+######################################################################
+url="http://ftp.gnu.org/gnu/gcc/gcc-4.8.5/gcc-4.8.5.tar.bz2
+    https://patchwork.ozlabs.org/patch/342434/mbox"
 pkgbase=gcc
 vers=4.8.5
 arch=`uname -m`
-build=P1
-src=gcc-4.8.5
-if [ "$arch" = "x86_64" ]; then
-    OPT_CONFIG='--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --libexecdir=/usr/lib64 
-   --enable-languages=c,c++,fortran,go,lto --enable-shared --enable-threads=posix  --enable-__cxa_atexit 
-   --enable-clocale=gnu --enable-gnu-unique-object --enable-linker-build-id --enable-cloog-backend=isl 
-   --enable-lto --enable-plugin --enable-install-libiberty --enable-clocale=gnu 
-   --disable-libunwind-exceptions --disable-libstdcxx-pch --disable-werror
-   --disable-multilib --with-system-zlib --with-linker-hash-style=gnu '
-else
-    OPT_CONFIG='--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --libexecdir=/usr/lib
-   --enable-languages=c,c++,fortran,go,lto --enable-shared --enable-threads=posix  --enable-__cxa_atexit 
-   --enable-clocale=gnu --enable-gnu-unique-object --enable-linker-build-id --enable-cloog-backend=isl 
-   --enable-lto --enable-plugin --enable-install-libiberty --enable-clocale=gnu 
-   --disable-libunwind-exceptions --disable-libstdcxx-pch --disable-werror
-   --disable-multilib --with-system-zlib --with-linker-hash-style=gnu'
-fi
-DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
-patchfiles='gcc-4.8-filename-output.patch'
-# both from Arch Linux
-# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/gcc-4.8-filename-output.patch?h=packages/gcc
-compress=txz
-##############################################################'
+build=P2
+src=$pkgbase-$vers
+OPT_CONFIG="--disable-werror --disable-multilib --enable-install-libiberty
+    --enable-__cxa_atexit --enable-threads=posix --enable-shared
+    --enable-languages=c,c++,fortran,go --enable-gnu-unique-object
+    --enable-linker-build-id --enable-plugin --with-system-zlib
+    --with-linker-hash-style=gnu --enable-clocale=gnu --disable-libstdcxx-pch"
+DOCS="COPYING ChangeLog ABOUT-NLS NEWS COPYING3.LIB ChangeLog.tree-ssa
+    COPYING3 COPYING.RUNTIME README COPYING.LIB MAINTAINERS"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
@@ -35,12 +53,12 @@ install2() {
 strip_bindir() {
   echo "compressing in $1"
   if [ -d $1 ] ; then (
-    shopt -s nullglob
+    shopt -s extglob nullglob
     cd $1
-    for i in * ; do
+    for i in `echo !(*.so|*.so.*|*.a|*.o)` ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
          echo "stripping -p $i"
          strip -p $i
       fi
@@ -56,7 +74,7 @@ strip_libdir() {
     for i in *.so *.so.* *.a ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
         if [ $i != ${i%.a} ] ; then
           echo -n "ranlib and "
           touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
@@ -73,7 +91,6 @@ gzip_dir() {
   if [ -d $1 ] ; then (
     cd $1
     files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -103,13 +120,11 @@ gzip_one() {
 }
 
 compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
 }
 
 prune_symlink() {
@@ -120,8 +135,7 @@ prune_symlink() {
     for i in `find ${1#$P/} -type l` ; do
       target=`readlink $i`
       echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
     done
     COUNT=1
     LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
@@ -145,40 +159,25 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+fscheck
 W=`pwd`
-WD=/home/kojima/Build
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
-P=$W/work ; C=$W/pivot ; P2=$W/work2
+P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-else
-    target="-m32"
-    libdir="lib"
-fi
-
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -191,8 +190,13 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
+  alt=gcc-4.8-filename-output.patch
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ${i##*/} == mbox ] ; then
+      [ ! -f $alt ] && wget $i -O $alt
+    elif [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -204,47 +208,25 @@ if [ $opt_download -eq 1 ] ; then
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    # if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p $B
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
-
-  if [ ! -f $W/ecj-latest.jar ]; then
-      wget wget ftp://sourceware.org/pub/java/ecj-latest.jar
-  fi
-
-  cd $src
-  for patch in $patchfiles ; do
-      if [ ! -f .${patch} ]; then
-	  patch -p1 < $W/$patch
-	  touch .${patch}
-      fi
-  done
-  cd ..
-
-    #if [ -f autogen.sh ] ; then
-    #  sh ./autogen.sh
-    #fi
-
-  sed -i 's/install_to_$(INSTALL_DEST) //' $src/libiberty/Makefile.in
-  sed -i -e /autogen/d -e /check.sh/d $src/fixincludes/Makefile.in
-  mv -v $src/libmudflap/testsuite/libmudflap.c++/pass41-frag.cxx{,.disable}
-
+  cd $B
+  patch -Np0 -i $W/gcc-4.8-filename-output.patch
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-
-    if [ -x $W/$src/configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       # export CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target "
-       $W/$src/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]} \
+          --libexecdir=/usr/$libdir \
+          --build=$arch-pc-linux-gnu`[ $arch == armv7l ] && echo eabi` \
+          --host=$arch-pc-linux-gnu`[ $arch == armv7l ] && echo eabi`
     fi
   done
 fi
@@ -252,8 +234,7 @@ if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j4
+      make
     fi
   done
 fi
@@ -269,58 +250,50 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-    mkdir -p $P/${libdir}
-    ( cd $P/${libdir} ; ln -sf ../usr/bin/cpp . )
-    ( cd $P/usr/bin ; ln -sf gcc cc )
-    chk_me=`whoami | grep root`
-    if [ "$chk_me.x" != ".x" ] ;then
-	chown -R root.root $P/*
-    fi
-#    for lib in $compatlibs ; do
-#	chk=${lib%_32}
-#	if [ "$chk" != "libstdc++.a" ]; then
-#	    cp $W/$lib $P/usr/lib64/libstdc++.a
-#	else
-#	    cp $W/$lib $P/usr/lib/libstdc++.a
-#	fi
-#    done
   done
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-
-# remove locales except ja
-# 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
-
+  ln -s gcc $P/usr/bin/cc
+  install -d $P/$libdir
+  ln -s /usr/bin/cpp $P/$libdir
+  mv $P/usr/$libdir/lib{iberty.a,gcc_s.so{.1,}} $C
+  mv $C/lib{iberty.a,gcc_s.so{.1,}} $P/usr/$libdir
+  rm -f $P/usr/bin/{*g++,*c++,*gfortran,*gccgo}
+  mv $P/usr/bin/{gcov,cpp,gcc,$arch-*-gcc-$vers,gcc-{ar,nm}} $C
+  mv $P/usr/bin/{$arch-*-gcc{,-ar,-nm},gcc-ranlib,$arch-*-gcc-ranlib,cc} $C
+  mv $C/{gcov,cpp,gcc,$arch-*-gcc-$vers,gcc-{ar,nm}} $P/usr/bin
+  mv $C/{$arch-*-gcc{,-ar,-nm},gcc-ranlib,$arch-*-gcc-ranlib,cc} $P/usr/bin
+  gcclibdir=$P/usr/$libdir/gcc/$arch-pc-linux-gnu
+  gcclibdir+=`[ $arch == armv7l ] && echo eabi`/$vers
+  rm -rf $gcclibdir/{finclude,cc1plus,f951,go1,lib{caf,gfortran}*}
+  mv $gcclibdir/{cc1,lto1,collect2,include*,lto-wrapper,plugin} $C
+  mv $gcclibdir/{lib{gcc{_eh,},gcov}.a,crt{begin,end,prec,fastmath}*} $C
+  mv $C/{cc1,lto1,collect2,include*,lto-wrapper,plugin} $gcclibdir
+  mv $C/{lib{gcc{_eh,},gcov}.a,crt{begin,end,prec,fastmath}*} $gcclibdir
+  rm -rf $P/usr/$libdir/{lib{{sup,std}c++,asan,tsan,gfortran,gobegin,go.}*,go}
+  mv $P/usr/$libdir/libmudflap{{,th}.{so{.0{.0.0,},},la},{,th}.a} $C
+  mv $P/usr/$libdir/libssp{.so{.0{.0.0,},},{,_*}.la,{,_*}.a} $C
+  mv $P/usr/$libdir/libquadmath.{so{.0{.0.0,},},{la,a}} $C
+  mv $P/usr/$libdir/libatomic.{so{.1{.0.0,},},{la,a}} $C
+  mv $P/usr/$libdir/lib{gomp,itm}.{spec,so{.1{.0.0,},},{la,a}} $C
+  mv $C/libmudflap{{,th}.{so{.0{.0.0,},},la},{,th}.a} $P/usr/$libdir
+  mv $C/libssp{.so{.0{.0.0,},},{,_*}.la,{,_*}.a} $P/usr/$libdir
+  mv $C/libquadmath.{so{.0{.0.0,},},{la,a}} $P/usr/$libdir
+  mv $C/libatomic.{so{.1{.0.0,},},{la,a}} $P/usr/$libdir
+  mv $C/lib{gomp,itm}.{spec,so{.1{.0.0,},},{la,a}} $P/usr/$libdir
+  chown -R root.root $gcclibdir/include{,-fixed}
+  touch $gcclibdir/include/*.h
+  find $gcclibdir/include-fixed -exec touch {} \;
   touch $W/i.et
   cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
   compress
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
-  for i in cc1 cc1plus collect2 f951 lto1 ; do
-      strip $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/$i
-  done
-  strip -g $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/libgcc.a
-  # strip -g $P/usr/${libdir}/gcc/x86_64-unknown-linux-gnu/$vers/32/libgcc.a
-
+  strip_bindir $gcclibdir/install-tools
+  strip_bindir $gcclibdir
+  strip_bindir $gcclibdir/plugin
+  strip_libdir $gcclibdir
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -338,151 +311,22 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
-  if [ -d $P2 ]; then
-      rm -rf $P2
-  fi
-
-  mkdir -p $P2
-  mv $P/* $P2
-
-# for libgcc
-  echo "building libgcc"
-  pkgbase=libgcc
-  if [ -d $P ]; then rm -rf $P ; fi
-  pkg=$pkgbase-$vers-$arch-$build
-  mkdir -p $P/usr/${libdir}
-  for i in libgcc_s.so* libstdc++.so.6* ; do
-      cp -a $P2/usr/${libdir}/$i $P/usr/${libdir}
-      rm $P/usr/${libdir}/*gdb.py
-  done
-  pushd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
-# for GCC-core
-  echo "building gcc-core"
-  if [ -d $P ]; then rm -rf $P ; fi
-  pkgbase=gcc
-  pkg=$pkgbase-$vers-$arch-$build
-  mkdir -p $P/usr/bin $P/usr/${libdir}
-  for i in cpp cc gcc gccbug gcov ${arch}-pc-linux-gnu-gcc ${arch}-pc-linux-gnu-gcc-$vers ; do
-      mv $P2/usr/bin/$i $P/usr/bin
-  done
-  # wrappers for LTO. 
-  # need --enable-plugins at binutils configuration
-  for i in ar nm ranlib ; do
-      mv $P2/usr/bin/gcc-$i $P/usr/bin
-      mv $P2/usr/bin/${arch}-pc-linux-gnu-gcc-$i $P/usr/bin
-  done
-
-  mkdir -p $P/lib
-  ( cd $P/lib ; ln -sf ../usr/bin/cpp cpp )
-  mv $P2/usr/${libdir}/gcc $P/usr/${libdir}
-  mv $P2/usr/${libdir}/libgcc* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libgomp* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libmudflap* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libssp* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libatomic* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libitm* $P/usr/${libdir}/
-
-  mkdir -p $P/usr/share/{doc,info,man,locale}
-  mkdir -p $P/usr/share/man/man{1,7}
-  mkdir -p $P/usr/share/doc/gcc-$vers
-  mv $P2/usr/share/doc/gcc-$vers/* $P/usr/share/doc/gcc-$vers
-  for i in cpp cppinternals gcc gccinstall gccint libgomp libitm ; do
-      mv $P2/usr/share/info/$i.info.gz $P/usr/share/info
-  done
-  mv $P2/usr/share/locale/* $P/usr/share/locale
-  for i in cpp gcc gcov ; do
-      mv $P2/usr/share/man/man1/$i.1.gz $P/usr/share/man/man1
-  done
-  for i in fsf-funding gfdl gpl ; do
-      mv $P2/usr/share/man/man7/$i.7.gz $P/usr/share/man/man7
-  done
-
   convert
-  pushd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-# for g++
-  echo "building gcc-g++"
-  popd
-  pkgbase=g++
-  pkg=$pkgbase-$vers-$arch-$build
-  if [ -d $P ]; then rm -rf $P ; fi
-  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/include $P/usr/share
-  for i in c++ g++ ${arch}-pc-linux-gnu-c++ ${arch}-pc-linux-gnu-g++ ; do
-      mv $P2/usr/bin/$i $P/usr/bin
-  done
-  mkdir -p $P/usr/share/gdb/auto-load
-  mv $P2/usr/${libdir}/libstdc++.so.*-gdb.py $P/usr/share/gdb/auto-load
-  mv $P2/usr/${libdir}/libstdc++* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libsupc++* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libasan* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libtsan* $P/usr/${libdir}/
-  mv $P2/usr/include/c++ $P/usr/include
-  mv $P2/usr/share/gcc-${vers} $P/usr/share/
-
-  mkdir -p $P/usr/share/man/man1
-  mv $P2/usr/share/man/man1/g++.1.gz $P/usr/share/man/man1
-  convert
-  pushd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
-# for fortran
-  echo "building gcc-fortran"
-  popd
-  pkgbase=gfortran
-  pkg=$pkgbase-$vers-$arch-$build
-  if [ -d $P ]; then rm -rf $P ; fi
-  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/share/man/man1 $P/usr/share/info
-  mv $P2/usr/bin/{gfortran,${arch}-pc-linux-gnu-gfortran} $P/usr/bin
-  mv $P2/usr/${libdir}/libgfortran* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/libquadmath* $P/usr/${libdir}/
-  mv $P2/usr/share/info/gfortran.info.gz $P/usr/share/info/
-  mv $P2/usr/share/info/libquadmath.info.gz $P/usr/share/info/
-  mv $P2/usr/share/man/man1/gfortran.1.gz $P/usr/share/man/man1/
-
-  convert
-  pushd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
-
-# for GCC GO
-  echo "building gcc-go"
-  popd
-  pkgbase=gcc_go
-  pkg=$pkgbase-$vers-$arch-$build
-  if [ -d $P ]; then rm -rf $P ; fi
-  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/share/man/man1 $P/usr/share/info
-  mv $P2/usr/bin/{gccgo,${arch}-pc-linux-gnu-gccgo} $P/usr/bin
-  mv $P2/usr/${libdir}/libgo* $P/usr/${libdir}/
-  mv $P2/usr/${libdir}/go $P/usr/${libdir}/
-  mv $P2/usr/share/info/gccgo.info.gz $P/usr/share/info/
-  mv $P2/usr/share/man/man1/gccgo.1.gz $P/usr/share/man/man1
-
-
-  convert
-  pushd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
-
+  touch -t `date '+%m%d0900'` $gcclibdir{/install-tools,,/plugin}
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find $libdir | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P \
+      `cd $P ; find usr/share/locale -name "*.mo" ! -name "libstdc++.*"`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info \
+      ! -name "gfortran.*" ! -name "gccgo.*" | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 \
+      ! -name "g++.*" ! -name "gfortran.*" ! -name "gccgo.*" | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
 fi
