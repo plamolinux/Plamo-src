@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase=libpng
-vers=1.6.19
-url="http://downloads.sourceforge.net/libpng/libpng-${vers}.tar.xz"
-apngpatchurl="http://jaist.dl.sourceforge.net/project/libpng-apng/libpng16/${vers}/libpng-${vers}-apng.patch.gz"
+pkgbase=libpng14
+vers=1.4.19
+url="http://downloads.sourceforge.net/libpng/libpng-${vers}.tar.xz" 
+apngpatchurl="http://jaist.dl.sourceforge.net/project/libpng-apng/libpng14/${vers}/libpng-${vers}-apng.patch.gz"
 arch=`uname -m`
 build=P1
-src=${pkgbase}-${vers}
+src=libpng-${vers}
 OPT_CONFIG='--disable-static'
-DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+DOCS='INSTALL LICENSE README TODO'
 apngpatch=`basename ${apngpatchurl##*/} .gz`
 patchfiles=""
 compress=txz
@@ -201,6 +201,12 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
+  rm -rf $P/usr/share
+  rm -rf $P/usr/bin/libpng-config
+  rm -rf $P/usr/${libdir}/libpng.so
+  rm -rf $P/usr/${libdir}/libpng.la
+  rm -rf $P/usr/${libdir}/pkgconfig/libpng.pc
+  rm -rf $P/usr/include/*.h
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
