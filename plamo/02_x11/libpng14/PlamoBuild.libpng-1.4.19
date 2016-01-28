@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libpng14
-vers=1.4.16
+vers=1.4.19
 url="http://downloads.sourceforge.net/libpng/libpng-${vers}.tar.xz" 
 apngpatchurl="http://jaist.dl.sourceforge.net/project/libpng-apng/libpng14/${vers}/libpng-${vers}-apng.patch.gz"
 arch=`uname -m`
