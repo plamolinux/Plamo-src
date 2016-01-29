@@ -1,0 +1,12 @@
+diff -uNr libmtp-1.1.10.orig/src/music-players.h libmtp-1.1.10/src/music-players.h
+--- libmtp-1.1.10.orig/src/music-players.h	2015-10-04 20:31:37.000000000 +0900
++++ libmtp-1.1.10/src/music-players.h	2016-01-28 20:48:15.245717414 +0900
+@@ -1747,6 +1747,8 @@
+       DEVICE_FLAG_NONE },
+   { "SONY", 0x0fce, "Xperia Z2 Tablet MTP", 0x01b1,
+       DEVICE_FLAGS_ANDROID_BUGS },
++  { "SONY", 0x0fce, "Xperia ZL2 MTP", 0x01b3,
++      DEVICE_FLAG_NONE },
+   { "SONY", 0x0fce, "Xperia Z Ultra MTP", 0x01b6,
+       DEVICE_FLAGS_ANDROID_BUGS },
+   { "SONY", 0x0fce, "Xperia M2 Aqua MTP", 0x01b8,
