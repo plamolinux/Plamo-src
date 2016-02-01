@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=openssl
-vers=1.0.1q
+vers=1.0.1r
 url="http://www.openssl.org/source/openssl-${vers}.tar.gz"
 arch=`uname -m`
-build=P2
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
