@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.11/source/mariadb-10.1.11.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.10/source/mariadb-10.1.10.tar.gz'
 pkgbase=mariadb
-vers=10.1.11
+vers=10.1.10
 arch=`uname -m`
 build=P1
-src=mariadb-10.1.11
+src=mariadb-10.1.10
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
 DOCS='COPYING COPYING.LESSER COPYING.thirdparty CREDITS EXCEPTIONS-CLIENT INSTALL-SOURCE INSTALL-WIN-SOURCE KNOWN_BUGS.txt README'
 patchfiles='patch-b'
