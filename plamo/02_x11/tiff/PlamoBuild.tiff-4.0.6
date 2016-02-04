@@ -4,11 +4,14 @@ pkgbase=tiff
 vers=4.0.6
 url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-${vers}.tar.gz"
 arch=`uname -m`
-build=P1
+build=P2
 src=tiff-${vers}
 OPT_CONFIG='--disable-static --with-x  --enable-cxx'
 DOCS='ChangeLog HOWTO-RELEASE README README.vms RELEASE-DATE TODO'
-patchfiles=
+patchfiles=" \
+01-CVE-2015-8665_and_CVE-2015-8683.patch \
+02-fix_potential_out-of-bound_writes_in_decode_functions.patch \
+03-fix_potential_out-of-bound_write_in_NeXTDecode.patch"
 compress=txz
 ##############################################################
 
