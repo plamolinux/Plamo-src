@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.9/source/mariadb-10.1.9.tar.gz'
+url='ftp://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.1.11/source/mariadb-10.1.11.tar.gz'
 pkgbase=mariadb
-vers=10.1.9
+vers=10.1.11
 arch=`uname -m`
 build=P1
-src=mariadb-10.1.9
+src=mariadb-10.1.11
 OPT_CONFIG="-DWITH_EMBEDDED_SERVER:BOOL=ON"
 DOCS='COPYING COPYING.LESSER COPYING.thirdparty CREDITS EXCEPTIONS-CLIENT INSTALL-SOURCE INSTALL-WIN-SOURCE KNOWN_BUGS.txt README'
-patchfiles='patch-a'
+patchfiles='patch-b'
 compress=txz
 ##############################################################
 
@@ -160,7 +160,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make -j6
     fi
 
     # mkdir -p libmysqld/work
