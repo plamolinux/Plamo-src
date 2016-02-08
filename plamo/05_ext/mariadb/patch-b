@@ -1,0 +1,26 @@
+diff -Nrc mariadb-10.1.11.orig/storage/tokudb/PerconaFT/cmake_modules/TokuSetupCompiler.cmake mariadb-10.1.11/storage/tokudb/PerconaFT/cmake_modules/TokuSetupCompiler.cmake
+*** mariadb-10.1.11.orig/storage/tokudb/PerconaFT/cmake_modules/TokuSetupCompiler.cmake	2016-01-28 21:12:55.000000000 +0900
+--- mariadb-10.1.11/storage/tokudb/PerconaFT/cmake_modules/TokuSetupCompiler.cmake	2016-02-05 02:05:54.998358829 +0900
+***************
+*** 65,71 ****
+    -Wno-error=missing-format-attribute
+    -Wno-error=address-of-array-temporary
+    -Wno-error=tautological-constant-out-of-range-compare
+-   -Wno-ignored-attributes
+    -Wno-error=extern-c-compat
+    -fno-rtti
+    -fno-exceptions
+--- 65,70 ----
+***************
+*** 131,140 ****
+  ## set warnings
+  set_cflags_if_supported(
+    -Wextra
+-   -Wbad-function-cast
+    -Wno-missing-noreturn
+-   -Wstrict-prototypes
+-   -Wmissing-prototypes
+    -Wmissing-declarations
+    -Wpointer-arith
+    -Wmissing-format-attribute
+--- 130,136 ----
