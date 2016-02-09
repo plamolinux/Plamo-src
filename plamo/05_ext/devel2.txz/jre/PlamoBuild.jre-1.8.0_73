@@ -1,6 +1,6 @@
 #!/bin/sh
 
-java_vers=1.8.0_45
+java_vers=1.8.0_73
 build=P1
 arch=`uname -m`
 fallbackfont="/usr/share/fonts/TrueType/VL-PGothic-Regular.ttf"
