@@ -1,15 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://cairographics.org/releases/pixman-0.32.4.tar.gz'
-verify='http://cairographics.org/releases/pixman-0.32.4.tar.gz.sha1'
 pkgbase=pixman
-vers=0.32.4
+vers=0.32.8
+url="http://cairographics.org/releases/pixman-${vers}.tar.gz"
+verify=${url}.sha1
 commitid=
-# arch=x86_64
-# arch=i586
-arch=`uname -m | sed -e 's/i.86/i586/'`
+arch=`uname -m`
 build=P1
-src=pixman-0.32.4
+src=pixman-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
