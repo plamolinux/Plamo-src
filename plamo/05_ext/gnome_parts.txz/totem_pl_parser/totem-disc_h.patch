@@ -1,0 +1,22 @@
+diff -uNr totem-pl-parser-3.10.6.orig/plparse/Makefile.am totem-pl-parser-3.10.6/plparse/Makefile.am
+--- totem-pl-parser-3.10.6.orig/plparse/Makefile.am	2015-06-12 06:14:46.000000000 +0900
++++ totem-pl-parser-3.10.6/plparse/Makefile.am	2016-02-15 21:05:04.192699402 +0900
+@@ -21,6 +21,7 @@
+ 	totem-pl-parser-features.h		\
+ 	totem-pl-parser.h			\
+ 	totem-pl-playlist.h			\
++	totem-disc.h				\
+ 	totem-pl-parser-mini.h
+ 
+ plparser_sources =				\
+diff -uNr totem-pl-parser-3.10.6.orig/plparse/Makefile.in totem-pl-parser-3.10.6/plparse/Makefile.in
+--- totem-pl-parser-3.10.6.orig/plparse/Makefile.in	2015-12-15 23:51:36.000000000 +0900
++++ totem-pl-parser-3.10.6/plparse/Makefile.in	2016-02-15 21:05:25.610416851 +0900
+@@ -527,6 +527,7 @@
+ 	totem-pl-parser-features.h		\
+ 	totem-pl-parser.h			\
+ 	totem-pl-playlist.h			\
++	totem-disc.h				\
+ 	totem-pl-parser-mini.h
+ 
+ plparser_sources = \
