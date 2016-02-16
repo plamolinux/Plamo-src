@@ -248,6 +248,11 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  mkdir -p $P/install
+  cat << EOF >> $P/install/initpkg
+/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+touch /usr/share/glib-2.0/schemas/gschemas.compiled
+EOF
   mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
     mkdir -p $P/install
