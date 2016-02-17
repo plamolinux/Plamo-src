@@ -1,12 +1,11 @@
-#!/bin/sh -x
+#!/bin/sh
 ##############################################################
-url='http://ftp.ne.jp/GNU/glibc/glibc-2.20.tar.xz'
 pkgbase=glibc
 vers=2.20
-arch=x86_64
-# arch=i686
-build=P1
-src=glibc-2.20
+url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
+arch=`uname -m`
+build=P2
+src=glibc-${vers}
 if [ "$arch" = "x86_64" ]; then
     OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.32 --libexecdir=/usr/lib64/glibc --localedir=/usr/share/locale --enable-tls'
 else
@@ -26,7 +25,7 @@ DOCS='COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 Change
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.19-fhs-1.patch
 
-patchfiles='glibc-2.19-fhs-1.patch glibc-2.20-do_ftell_wide-memleak.patch glibc-2.20-getifaddrs_internal-segfault.patch glibc-2.20-linux-3.16-additions.patch'
+patchfiles='glibc-2.19-fhs-1.patch glibc-2.20-do_ftell_wide-memleak.patch glibc-2.20-getifaddrs_internal-segfault.patch glibc-2.20-linux-3.16-additions.patch CVE-2015-7547.patch CVE-2015-8776.patch CVE-2015-8778.patch CVE-2015-8779.patch'
 
 compress=txz
 ##############################################################
@@ -158,7 +157,7 @@ convert() {
 }
 
 W=`pwd`
-WD=/home/kojima/Build
+WD=$W
 for i in `seq 0 $((${#src[@]} - 1))` ; do
     S[$i]=$W/${src[$i]} 
     if [ $arch = "x86_64" ]; then
