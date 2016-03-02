@@ -2,11 +2,11 @@
 
 ######################################################################
 url="https://github.com/shadow-maint/shadow.git
-    http://plamo.linet.gr.jp/~tamuki/src/shadow-adduser-20141229"
+    http://plamo.linet.gr.jp/~tamuki/src/shadow-adduser-20160122"
 pkgbase=shadow
 vers=git_20130908
 arch=`uname -m`
-build=P3
+build=P4
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
     --with-libcrack"
@@ -368,7 +368,7 @@ if [ $opt_package -eq 1 ] ; then
       make install DESTDIR=$P
     fi
   done
-  install $W/shadow-adduser-20141229 $P/usr/sbin/adduser
+  install $W/shadow-adduser-20160122 $P/usr/sbin/adduser
   install -d $mandir/ja_JP.eucJP/man{1,5,8}
   for i in `cd $mandir/ja ; find . -type f` ; do
     nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i

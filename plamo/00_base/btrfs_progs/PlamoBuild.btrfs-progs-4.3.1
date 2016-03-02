@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/project/lsb/lsb_release/1.4/lsb-release-1.4.tar.gz'
-pkgbase=lsb_release
-vers=1.4
-plamo_vers=6.1
-arch=noarch
-build=P5
-src=lsb-release-1.4
-OPT_CONFIG=''
-DOCS='ChangeLog INSTALL README lsb-release.template lsb_release lsb_release.examples'
+url='git://git.kernel.org/pub/scm/linux/kernel/git/kdave/btrfs-progs.git'
+pkgbase=btrfs_progs
+vers=4.3.1
+arch=`uname -m`
+build=P1
+src=btrfs-progs
+OPT_CONFIG='';
+DOCS='COPYING INSTALL'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,12 +72,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -139,12 +139,37 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    echo "no need to configure. proceed to build"
-    opt_build=1
+    if [ -f autogen.sh ] ; then
+       sh ./autogen.sh
+    fi
+
+    if [ -f setup.py ]; then
+        python ./setup.py config        
+    elif [ -f Makefile.PL ]; then
+        perl ./Makefile.PL
+    elif [ -x configure ] ; then
+       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+       export CC="gcc -isystem /usr/include $target" 
+       export CXX="g++ -isystem /usr/include $target "
+       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
-    make
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f setup.py ]; then
+        python setup.py build
+    elif [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
+    fi
+  done
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -158,13 +183,16 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    mkdir -p $P/etc
-    echo "Plamo Linux release ${plamo_vers}" >> $P/etc/plamo-release
-
-    mkdir -p $P/usr/share/man/man1
-    mkdir -p $P/usr/bin
-    install -m 644 lsb_release.1.gz $P/usr/share/man/man1/lsb_release.1.gz
-    install -m 755 lsb_release $P/usr/bin/lsb_release
+    if [ -f setup.py ]; then
+        python setup.py install --root $P
+    elif [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
+    rm $P/usr/${libdir}/libbtrfs.a
+    mkdir $P/sbin
+    ( cd $P/sbin ; ln -sf ../usr/bin/btrfs btrfs )
+    mv $P/usr/bin/fsck.btrfs $P/sbin
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。

@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/project/lsb/lsb_release/1.4/lsb-release-1.4.tar.gz'
-pkgbase=lsb_release
-vers=1.4
-plamo_vers=6.1
-arch=noarch
-build=P5
-src=lsb-release-1.4
+url='http://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-22.tar.xz'
+pkgbase=kmod
+vers=22
+arch=`uname -m`
+build=P2
+src=kmod-22
 OPT_CONFIG=''
-DOCS='ChangeLog INSTALL README lsb-release.template lsb_release lsb_release.examples'
+DOCS='COPYING NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -118,7 +117,7 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
-    gz) tar xvpzf ${i##*/} ;;
+    xz) tar xvpf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
     *) tar xvpf ${i##*/} ;;
     esac
@@ -139,12 +138,31 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    echo "no need to configure. proceed to build"
-    opt_build=1
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+      if [ -x configure ] ; then
+         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+         export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
+         ./configure --prefix=/usr --bindir=/bin --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
-    make
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make -j3
+    fi
+  done
 fi
 if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
@@ -158,19 +176,51 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    mkdir -p $P/etc
-    echo "Plamo Linux release ${plamo_vers}" >> $P/etc/plamo-release
-
-    mkdir -p $P/usr/share/man/man1
+    if [ -f Makefile ] ; then
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
+    fi
+    mkdir -p $P/sbin
+    for target in depmod insmod modinfo modprobe rmmod; do
+        ( cd $P/sbin ; ln -sf ../bin/kmod $target )
+    done
     mkdir -p $P/usr/bin
-    install -m 644 lsb_release.1.gz $P/usr/share/man/man1/lsb_release.1.gz
-    install -m 755 lsb_release $P/usr/bin/lsb_release
+    ( cd $P/usr/bin ; ln -sf ../../bin/kmod lsmod )
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
+  mkdir -p $P/etc/modprobe.d
 
+  cat << "EOF" > $P/etc/modprobe.d/plamo-default.conf.new
+# sample modprobe.conf entries
+#
+# alias 定義をしておけば modprobe eth0 で必要なモジュールをロード可能
+# alias eth0 skge
+#
+# モジュールをロードする際のオプションは option 定義で指定可能
+# options sb io=0x220 irq=7 dma=1 dma15=5 mpu_io=0x330
+# options skge debug=16
+#
+# install 定義はそのモジュールを組み込む際の動作を指定する。
+# ロードして欲しくないモジュールはこういう風に指定すればいい
+# install intel_rng /bin/true
+# install rng_core_rng /bin/true
+# install ieee1394 /bin/true
+# install ohci1394 /bin/true
+
+install usblp /bin/true
+EOF
+
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+if [ ! -f /etc/modprobe.d/plamo-default.conf ]; then
+    mv /etc/modprobe.d/plamo-default.conf.new /etc/modprobe.d/plamo-default.conf
+fi
+
+EOF
+  
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do

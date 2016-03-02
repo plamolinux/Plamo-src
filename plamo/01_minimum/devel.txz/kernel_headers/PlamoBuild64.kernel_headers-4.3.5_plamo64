@@ -1,14 +1,22 @@
-#!/bin/sh
+#!/bin/sh -x
 
 ######################################################################
-url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-13.tar.bz2"
-pkgbase=kmod
-vers=13
-arch=x86_64
-build=P3
-src=$pkgbase-$vers
-OPT_CONFIG="--bindir=/bin --sysconfdir=/etc --disable-shared"
-DOCS="README COPYING NEWS TODO"
+url="https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.3.5.tar.xz
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-20151107-4.3.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/UNICON/vd_unicon-kernel-fonts-20140614.patch.bz2
+    git://github.com/sfjro/aufs4-standalone.git
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/4.3-panic_beep.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/mcp/4.3-morse_code_panics.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/toi/tuxonice-for-linux-4.3.4-2016-01-24.patch.bz2
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/ovlfs/overlayfs-allow_unprivileged_mounts.patch
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/kernelsrc_patches/config-4.3.5-plamo64"
+pkgbase=kernel_headers
+vers=4.3.5_plamo64
+arch=i386
+build=P1
+src=linux-4.3.5
+OPT_CONFIG=""
+DOCS=""
 ######################################################################
 
 fscheck() {
@@ -184,13 +192,19 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    case ${i##*.} in
+    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; fi ;;
+    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
+    esac
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    xz) tar xvpJf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout origin/aufs4.3 ; git reset --hard e106b45 ) ;;
     esac
   done
 fi
@@ -198,6 +212,21 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
+  cd $B
+  patch -Np1 -i $W/vd_unicon-kernel-20151107-4.3.patch
+  bunzip2 -c $W/vd_unicon-kernel-fonts-20140614.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/aufs4-standalone/aufs4-kbuild.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-base.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-mmap.patch
+  patch -Np1 -i $W/aufs4-standalone/aufs4-standalone.patch
+  cp -av $W/aufs4-standalone/Documentation .
+  cp -av $W/aufs4-standalone/fs .
+  cp -pv $W/aufs4-standalone/include/uapi/linux/aufs_type.h include/uapi/linux
+  patch -Np1 -i $W/4.3-panic_beep.patch
+  patch -Np1 -i $W/4.3-morse_code_panics.patch
+  bunzip2 -c $W/tuxonice-for-linux-4.3.4-2016-01-24.patch.bz2 | patch -Np1 -i -
+  patch -Np1 -i $W/overlayfs-allow_unprivileged_mounts.patch
+  cp -p $W/config-4.3.5-plamo64 .config
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
@@ -216,7 +245,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
+    false && if [ -f Makefile ] ; then
       make
     fi
   done
@@ -234,43 +263,16 @@ if [ $opt_package -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      make install DESTDIR=$P
+      make headers_install INSTALL_HDR_PATH=$P/usr
     fi
   done
-  install -d $P/sbin
-  for i in insmod modprobe {rm,dep}mod ; do
-    ln -s /bin/kmod $P/sbin/$i
-  done
-  install -d $P/usr/bin
-  for i in lsmod modinfo ; do
-    ln -s /bin/kmod $P/usr/bin/$i
-  done
+  find $P/usr/include \( -name ".install" -o -name "..install.cmd" \) \
+      -exec rm {} \;
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
-  install -d $P/etc/modprobe.d
-  cat <<- "EOF" > $P/etc/modprobe.d/plamo-default.conf
-	# sample modprobe.conf entries
-	#
-	# alias 定義をしておけば modprobe eth0 で必要なモジュールをロード可能
-	# alias eth0 skge
-	#
-	# モジュールをロードする際のオプションは option 定義で指定可能
-	# options sb io=0x220 irq=7 dma=1 dma15=5 mpu_io=0x330
-	# options skge debug=16
-	#
-	# install 定義はそのモジュールを組み込む際の動作を指定する。
-	# ロードして欲しくないモジュールはこういう風に指定すればいい
-	# install intel_rng /bin/true
-	# install rng_core_rng /bin/true
-	# install ieee1394 /bin/true
-	# install ohci1394 /bin/true
-	
-	install usblp /bin/true
-	EOF
-  touch -t `date '+%m%d0900'` $P/etc/modprobe.d{,/plamo-default.conf}
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -279,6 +281,7 @@ if [ $opt_package -eq 1 ] ; then
         gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
       done
     done
+    install -d $docdir/$src
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
       touch -t `date '+%m%d0900'` $docdir/$src/$myname
@@ -289,16 +292,8 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64 ! -name pkgconfig | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
-  tar rvpf $pkg.tar -C $P etc/modprobe.d
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/include -maxdepth 1 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
-  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans
