@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-menus-1.10.0.tar.xz'
-pkgbase=mate_menus
-vers=1.10.0
-arch=x86_64
-#arch=i686
-build=P1
-src=mate-menus-1.10.0
+url='http://pub.mate-desktop.org/releases/1.10/mate-utils-1.10.4.tar.xz'
+pkgbase=mate_utils
+vers=1.10.4
+arch=`uname -m`
+build=P2
+src=mate-utils-1.10.4
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog NEWS README'
+DOCS='AUTHORS COPYING COPYING.docs COPYING.libs ChangeLog NEWS README THANKS'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -212,8 +211,9 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -O2" 
 #         export CC="gcc -isystem /usr/include $target" 
-#         export CXX="g++ -isystem /usr/include $target "
+         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -283,6 +283,12 @@ mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
+update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
+update-desktop-database /usr/share/applications > /dev/null 2>&1
+touch /usr/share/applications/mimeinfo.cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
+touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
 

@@ -1,16 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/atril-1.10.2.tar.xz'
-pkgbase=atril
-vers=1.10.2
+url='http://pub.mate-desktop.org/releases/1.10/mate-user-share-1.10.1.tar.xz'
+pkgbase=mate_user_share
+vers=1.10.1
 arch=`uname -m`
-build=P1
-src=atril-1.10.2
-OPT_CONFIG='--enable-pixbuf --enable-comics --enable-epub --enable-xps'
-#OPT_CONFIG='--enable-gtk-doc-html=no --enable-djvu=no --disable-epub'
-DOCS='AUTHORS COPYING ChangeLog NEWS README TODO'
+build=P2
+src=mate-user-share-1.10.1
+OPT_CONFIG=''
+DOCS='AUTHORS COPYING ChangeLog MAINTAINERS NEWS README'
 patchfiles=''
-#patchfiles='gsetting.patch'
 compress=txz
 ##############################################################
 
@@ -213,8 +211,6 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -O2" 
-#         export CPPFLAGS="-I/usr/include/libxml2/libxml"
 #         export CC="gcc -isystem /usr/include $target" 
 #         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
@@ -287,6 +283,7 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1

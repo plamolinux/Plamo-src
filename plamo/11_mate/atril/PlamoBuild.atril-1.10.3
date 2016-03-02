@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-utils-1.10.3.tar.xz'
-pkgbase=mate_utils
+url='http://pub.mate-desktop.org/releases/1.10/atril-1.10.3.tar.xz'
+pkgbase=atril
 vers=1.10.3
 arch=`uname -m`
-build=P1
-src=mate-utils-1.10.3
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.docs COPYING.libs ChangeLog NEWS README THANKS'
+build=P3
+src=atril-1.10.3
+OPT_CONFIG='--enable-pixbuf --enable-comics --enable-xps'
+DOCS='AUTHORS COPYING ChangeLog NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -212,8 +212,9 @@ if [ $opt_config -eq 1 ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
          export CC="gcc -O2" 
+#         export CPPFLAGS="-I/usr/include/libxml2/libxml"
 #         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
+#         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -284,6 +285,7 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
@@ -298,6 +300,18 @@ EOF
     for loc in * ; do
         if [ "$loc" != "ja" ]; then
             rm -rf $P/usr/share/locale/$loc
+        fi
+    done
+    popd
+  fi
+
+# remove help except ja & C
+ 
+  if [ -d $P/usr/share/help ]; then
+    pushd $P/usr/share/help  
+    for hlp in * ; do
+        if [ "$hlp" != "ja" -a "$hlp" != "C" ]; then
+           rm -rf $P/usr/share/help/$hlp
         fi
     done
     popd

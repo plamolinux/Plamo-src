@@ -1,13 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-icon-theme-faenza-1.10.0.tar.xz'
+url='http://pub.mate-desktop.org/releases/1.10/mate-icon-theme-faenza-1.10.1.tar.xz'
 pkgbase=mate_icon_theme_faenza
-vers=1.10.0
-#arch=x86_64
-#arch=i586
+vers=1.10.1
 arch=noarch
-build=P1
-src=mate-icon-theme-faenza-1.10.0
+build=P2
+src=mate-icon-theme-faenza-1.10.1
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog NEWS README'
 patchfiles=''
@@ -260,7 +258,9 @@ mkdir -p $docdir/$src
 mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 update-mime-database /usr/share/mime >/dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications >/dev/null 2>&1
+touch /usr/share/applications/mimeinfo.cache
 EOF
 
   mkdir -p $docdir/$src

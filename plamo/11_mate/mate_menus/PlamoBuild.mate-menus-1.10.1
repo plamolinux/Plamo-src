@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-user-share-1.10.0.tar.xz'
-pkgbase=mate_user_share
-vers=1.10.0
-arch=x86_64
-#arch=i586
+url='http://pub.mate-desktop.org/releases/1.10/mate-menus-1.10.1.tar.xz'
+pkgbase=mate_menus
+vers=1.10.1
+arch=`uname -m`
 build=P1
-src=mate-user-share-1.10.0
+src=mate-menus-1.10.1
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog MAINTAINERS NEWS README'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -283,11 +282,6 @@ mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
-update-mime-database /usr/share/mime > /dev/null 2>&1
-update-desktop-database /usr/share/applications > /dev/null 2>&1
-touch /usr/share/applications/mimeinfo.cache
-gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
-touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
 

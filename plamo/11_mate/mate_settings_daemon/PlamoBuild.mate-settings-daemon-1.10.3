@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-polkit-1.10.2.tar.xz'
-pkgbase=mate_polkit
-vers=1.10.2
+url='http://pub.mate-desktop.org/releases/1.10/mate-settings-daemon-1.10.3.tar.xz'
+pkgbase=mate_settings_daemon
+vers=1.10.3
 arch=`uname -m`
-build=P1
-src=mate-polkit-1.10.2
+build=P2
+src=mate-settings-daemon-1.10.3
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog HACKING NEWS README'
-patchfiles='polkit-ja_po.patch'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -210,8 +210,8 @@ if [ $opt_config -eq 1 ] ; then
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-#         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -O2" 
+         export LDFLAGS='-Wl,--as-needed' 
+#         export CC="gcc -isystem /usr/include $target" 
 #         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
@@ -225,7 +225,7 @@ if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-#      export LDFLAGS='-Wl,--as-needed'
+      export LDFLAGS='-Wl,--as-needed'
       make -j3
     fi
   done
@@ -246,7 +246,7 @@ if [ $opt_package -eq 1 ] ; then
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
     if [ -f Makefile ] ; then
-#      export LDFLAGS='-Wl,--as-needed'
+      export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
   done
@@ -282,8 +282,22 @@ mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
+update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
+update-desktop-database /usr/share/applications > /dev/null 2>&1
+touch /usr/share/applications/mimeinfo.cache
+gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
+touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
+
+# speedup mate start
+if [ -f $P/usr/share/MateConf/gsettings/mate-settings-daemon.convert ]; then   
+  pushd $P/usr/share/MateConf/gsettings
+  mkdir test
+  mv mate-settings-daemon.convert test/    
+  popd
+fi
 
 # remove locales except ja
 # 

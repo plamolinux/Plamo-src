@@ -4,12 +4,9 @@ url='http://pub.mate-desktop.org/releases/1.10/mate-user-guide-1.10.1.tar.xz'
 verify=
 pkgbase=mate_user_guide
 vers=1.10.1
-commitid=
-# arch=x86_64
 # arch=i586
-#arch=`uname -m | sed -e 's/i.86/i686/'`
 arch=noarch
-build=P1
+build=P2
 src=mate-user-guide-1.10.1
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
@@ -201,7 +198,7 @@ done
 if [ -x configure ] ; then
 export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
 export LDFLAGS='-Wl,--as-needed'
-#export CFLAGS="-isystem /usr/include $target"
+#export CFLAGS="-isystem /usr/include $target "
 #export CPPFLAGS="-isystem /usr/include $target "
 ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
 fi
@@ -267,6 +264,15 @@ EOF
 done
 fi
 
+#%% begin initialize $pkg
+mkdir -p $P/install
+cat << EOF >> $P/install/initpkg
+update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
+update-desktop-database /usr/share/applications > /dev/null 2>&1
+touch /usr/share/applications/mimeinfo.cache
+EOF
+#%% end
 
 # remove locales except ja
 #
@@ -279,6 +285,18 @@ fi
 done
 popd
 done
+
+# remove help except ja & C
+ 
+  if [ -d $P/usr/share/help ]; then
+    pushd $P/usr/share/help  
+    for hlp in * ; do
+        if [ "$hlp" != "ja" -a "$hlp" != "C" ]; then
+           rm -rf $P/usr/share/help/$hlp
+        fi
+    done
+    popd
+  fi
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する

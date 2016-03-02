@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/libmatemixer-1.10.0.tar.xz'
-pkgbase=libmatemixer
-vers=1.10.0
-arch=x86_64
-#arch=i686
+url='http://pub.mate-desktop.org/releases/1.10/libmatekbd-1.10.1.tar.xz'
+pkgbase=libmatekbd
+vers=1.10.1
+arch=`uname -m`
 build=P1
-src=libmatemixer-1.10.0
+src=libmatekbd-1.10.1
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog NEWS README'
 patchfiles=''
@@ -208,7 +207,7 @@ if [ $opt_config -eq 1 ] ; then
 #     if [ -f autogen.sh ] ; then
 #       sh ./autogen.sh
 #     fi
-#
+
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
@@ -278,13 +277,14 @@ EOF
       done
   fi
 
-#%% begin initialize $pkg
+
+# update gschema.compiled
+if [ -d $P/usr/share/glib-2.0/schemas ]; then
 mkdir -p $P/install
-cat << EOF >> $P/install/initpkg
-glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
-touch /usr/share/glib-2.0/schemas/gschemas.compiled
-EOF
-#%% end
+echo "/usr/bin/glib-compile-schemas  /usr/share/glib-2.0/schemas >/dev/null 2>&1
+" >> $P/install/initpkg
+echo "touch /usr/share/glib-2.0/schemas/gschemas.compiled" >> $P/install/initpkg
+fi
 
 # remove locales except ja
 # 

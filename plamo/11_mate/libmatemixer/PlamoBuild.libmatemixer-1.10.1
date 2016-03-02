@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-media-1.10.0.tar.xz'
-pkgbase=mate_media
-vers=1.10.0
-arch=x86_64
-#arch=i686
-build=P1
-src=mate-media-1.10.0
+url='http://pub.mate-desktop.org/releases/1.10/libmatemixer-1.10.1.tar.xz'
+pkgbase=libmatemixer
+vers=1.10.1
+arch=`uname -m`
+build=P2
+src=libmatemixer-1.10.1
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING-DOCS COPYING.gst-mixer ChangeLog NEWS NEWS.GNOME README'
+DOCS='AUTHORS COPYING ChangeLog NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -139,12 +138,13 @@ convert() {
 }
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -186,7 +186,7 @@ if [ $opt_download -eq 1 ] ; then
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
@@ -208,12 +208,12 @@ if [ $opt_config -eq 1 ] ; then
 #     if [ -f autogen.sh ] ; then
 #       sh ./autogen.sh
 #     fi
-
+#
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
+#         export CC="gcc -isystem /usr/include $target" 
+#         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -283,11 +283,6 @@ mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
-update-mime-database /usr/share/mime > /dev/null 2>&1
-update-desktop-database /usr/share/applications > /dev/null 2>&1
-touch /usr/share/applications/mimeinfo.cache
-gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
-touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
 

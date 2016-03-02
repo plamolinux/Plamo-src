@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/mate-settings-daemon-1.10.2.tar.xz'
-pkgbase=mate_settings_daemon
+url='http://pub.mate-desktop.org/releases/1.10/mate-terminal-1.10.2.tar.xz'
+pkgbase=mate_terminal
 vers=1.10.2
 arch=`uname -m`
-build=P1
-src=mate-settings-daemon-1.10.2
+build=P2
+src=mate-terminal-1.10.2
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog NEWS README'
+DOCS='AUTHORS COPYING ChangeLog HACKING NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -211,8 +211,9 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
+         export CC="gcc -O2 -fPIC" 
 #         export CC="gcc -isystem /usr/include $target" 
-#         export CXX="g++ -isystem /usr/include $target "
+         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -283,20 +284,13 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
 touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
-
-# speedup mate start
-if [ -f $P/usr/share/MateConf/gsettings/mate-settings-daemon.convert ]; then   
-  pushd $P/usr/share/MateConf/gsettings
-  mkdir test
-  mv mate-settings-daemon.convert test/    
-  popd
-fi
 
 # remove locales except ja
 # 

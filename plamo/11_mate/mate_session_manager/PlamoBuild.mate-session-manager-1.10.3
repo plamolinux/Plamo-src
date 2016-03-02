@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/caja-dropbox-1.10.0.tar.xz'
-pkgbase=caja_dropbox
-vers=1.10.0
-arch=x86_64
-#arch=i686
-build=P1
-src=caja-dropbox-1.10.0
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog NEWS README'
+url='http://pub.mate-desktop.org/releases/1.10/mate-session-manager-1.10.3.tar.xz'
+pkgbase=mate_session_manager
+vers=1.10.3
+arch=`uname -m`
+build=P3
+src=mate-session-manager-1.10.3
+OPT_CONFIG='--enable-upower --without-systemd'
+DOCS='AUTHORS COPYING ChangeLog HACKING MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -205,14 +204,14 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-     if [ -f autogen.sh ] ; then
-       sh ./autogen.sh
-     fi
+#     if [ -f autogen.sh ] ; then
+#       sh ./autogen.sh
+#     fi
 
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
+         export CC="gcc -isystem /usr/include $target " 
          export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
@@ -254,7 +253,16 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
+
+# runlevel4 起動メニュー用
+mkdir -p $P/etc/X11/xinit
+install -m 0755 $W/xinitrc.mate-session $P/etc/X11/xinit/xinitrc.mate-session
+mkdir -p $P/opt/kde/share/apps/kdm/sessions
+if [ -f $P/usr/share/xsessions/mate.desktop ];then
+ cp $P/usr/share/xsessions/mate.desktop $P/opt/kde/share/apps/kdm/sessions/
+fi
+
+mkdir -p $docdir/$src
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
       for omf in $P/usr/share/omf/* ; do
@@ -278,10 +286,14 @@ EOF
       done
   fi
 
+
 #%% begin initialize $pkg
 mkdir -p $P/install
 cat << EOF >> $P/install/initpkg
+glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
+touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
@@ -332,6 +344,8 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+cp $W/xinitrc.mate-session $docdir/$src/xinitrc.mate-session
+gzip_one $docdir/$src/xinitrc.mate-session
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################

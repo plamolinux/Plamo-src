@@ -4,7 +4,7 @@ url='http://pub.mate-desktop.org/releases/1.10/caja-1.10.4.tar.xz'
 pkgbase=caja
 vers=1.10.4
 arch=`uname -m`
-build=P1
+build=P2
 src=caja-1.10.4
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING INSTALL COPYING.EXTENSIONS COPYING.LIB ChangeLog HACKING MAINTAINERS NEWS README README.commits THANKS TODO'
@@ -283,6 +283,7 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1

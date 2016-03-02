@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://pub.mate-desktop.org/releases/1.10/marco-1.10.2.tar.xz'
-pkgbase=marco
-vers=1.10.2
+url='http://pub.mate-desktop.org/releases/1.10/mate-applets-1.10.4.tar.xz'
+pkgbase=mate_applets
+vers=1.10.4
 arch=`uname -m`
-build=P1
-src=marco-1.10.2
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog HACKING NEWS README rationales.txt'
+build=P2
+src=mate-applets-1.10.4
+OPT_CONFIG='--disable-cpufreq --enable-frequency-selector=no'
+DOCS='AUTHORS COPYING COPYING-DOCS ChangeLog INSTALL NEWS NEWS.GNOME README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -211,8 +211,8 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-#         export CC="gcc -isystem /usr/include $target" 
-#         export CXX="g++ -isystem /usr/include $target "
+         export CC="gcc -isystem /usr/include $target" 
+         export CXX="g++ -isystem /usr/include $target "
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
@@ -283,12 +283,14 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1
 touch /usr/share/icons/hicolor/icon-theme.cache
 EOF
 #%% end
+
 
 # remove locales except ja
 # 
