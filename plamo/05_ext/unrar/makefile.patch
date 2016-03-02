@@ -1,0 +1,50 @@
+diff -Nrc unrar.orig/makefile unrar/makefile
+*** unrar.orig/makefile	2014-01-31 23:50:15.000000000 +0900
+--- unrar/makefile	2016-02-05 04:34:34.614452279 +0900
+***************
+*** 3,9 ****
+  
+  # Linux using GCC
+  CXX=g++
+! CXXFLAGS=-O2
+  LIBFLAGS=-fPIC
+  DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DRAR_SMP
+  STRIP=strip
+--- 3,9 ----
+  
+  # Linux using GCC
+  CXX=g++
+! CXXFLAGS=$(target) -O2 -fPIC
+  LIBFLAGS=-fPIC
+  DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DRAR_SMP
+  STRIP=strip
+***************
+*** 136,148 ****
+  	$(LINK) -shared -o libunrar.so $(LDFLAGS) $(OBJECTS) $(LIB_OBJ)
+  
+  install-unrar:
+! 			install -D unrar $(DESTDIR)/bin/unrar
+  
+  uninstall-unrar:
+! 			rm -f $(DESTDIR)/bin/unrar
+  
+  install-lib:
+! 		install libunrar.so $(DESTDIR)/lib
+  
+  uninstall-lib:
+  		rm -f $(DESTDIR)/lib/libunrar.so
+--- 136,149 ----
+  	$(LINK) -shared -o libunrar.so $(LDFLAGS) $(OBJECTS) $(LIB_OBJ)
+  
+  install-unrar:
+! 			install -D unrar $(DESTDIR)/usr/bin/unrar
+  
+  uninstall-unrar:
+! 			rm -f $(DESTDIR)/usr/bin/unrar
+  
+  install-lib:
+! 		mkdir -p $(DESTDIR)/usr/$(libdir)
+! 		install libunrar.so $(DESTDIR)/usr/$(libdir)
+  
+  uninstall-lib:
+  		rm -f $(DESTDIR)/lib/libunrar.so
