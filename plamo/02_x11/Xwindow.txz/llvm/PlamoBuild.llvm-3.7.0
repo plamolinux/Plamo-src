@@ -1,13 +1,23 @@
 #!/bin/sh
 ##############################################################
-url=' https://github.com/i-rinat/libvdpau-va-gl/releases/download/v0.3.4/libvdpau-va-gl-0.3.4.tar.gz'
-pkgbase=libvdpau_va_gl
-vers=0.3.4
+url='http://llvm.org/releases/3.7.0/llvm-3.7.0.src.tar.xz
+ http://llvm.org/releases/3.7.0/cfe-3.7.0.src.tar.xz
+ http://llvm.org/releases/3.7.0/compiler-rt-3.7.0.src.tar.xz'
+pkgbase=llvm
+vers=3.7.0
 arch=`uname -m`
-build=P6
-src=libvdpau-va-gl-0.3.4
-OPT_CONFIG='-DCMAKE_BUILD_TYPE=Release'
-DOCS='COPYING COPYING.GPLv3 COPYING.LGPLv3 ChangeLog README.md'
+build=P1
+src=llvm-3.7.0
+# these configs translated into cmake style
+# OPT_CONFIG='--enable-libffi  
+#            --enable-optimized
+#            --enable-shared   
+#            --enable-targets=all
+#            --disable-assertions
+#            --disable-debug-runtime
+#            --disable-expensive-checks
+#            --enable-experimental-targets=R600'
+DOCS='CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT LLVMBuild.txt README.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,14 +83,14 @@ compress_all() {
 
 W=`pwd`
 WD=/tmp
-for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
-done
+#WD=/home/kojima/Build
+S[$i]=$W/${src[$i]}
+if [ "$arch" = "x86_64" ]; then
+    B=$WD/build
+else
+    B=$WD/build32
+fi
+
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
@@ -89,7 +99,7 @@ docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
-if [ $arch = "x86_64" ]; then
+if [ "$arch" = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
     suffix="64"
@@ -116,54 +126,91 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  for i in $url ; do
-    case ${i##*.} in
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
-    esac
-  done
+  tar xvf llvm-${vers}.src.tar.xz
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p ${B[$i]}
-  done
+    # build 以下に一度ソースコードを展開して，パッチ等を当てた上で，
+    # 実際のビルドはbuild/build_stage 以下で行う
+    if [ ! -f $B/LLVMBuild.txt ]; then
+	if [ -d $B ]; then rm -rf $B ; fi
+	mkdir -p $B
+	cp -av llvm-${vers}.src/* $B
+	cd $B
+
+	tar xvf $W/cfe-${vers}.src.tar.xz -C tools
+	mv tools/cfe-${vers}.src tools/clang
+
+	tar xvf $W/compiler-rt-${vers}.src.tar.xz -C projects
+	mv projects/compiler-rt-${vers}.src projects/compiler-rt
+
+	for patch in $patchfiles ; do
+	    patch -p1 < $W/$patch
+	done
+
+	sed -r "/ifeq.*CompilerTargetArch/s#i386#i686#g" -i projects/compiler-rt/make/platform/clang_linux.mk
+    fi
+
 ######################################################################
 # * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
 #   記述します。
 ######################################################################
-  for i in `seq 0 $((${#S[@]} - 1))` ; do
-    cd $S
-    for patch in $patchfiles ; do
-       if [ ! -f ".$patch" ]; then
-           patch -p1 < $W/$patch
-           touch ".$patch"
-       fi
-    done
 
-   cd $B
-       if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-          export LDFLAGS='-Wl,--as-needed' 
-          export CC="gcc -isystem /usr/include $target" 
-          export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-       fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
-  done
+    cd $B
+    if [ -d build_stage ]; then
+	rm -rf build_stage
+    fi
+    mkdir build_stage ; cd build_stage
+
+    if [ -x /usr/bin/clang-${vers%.0} ]; then
+	export CC='clang -v '
+	export CXX='clang++ -v --std=c++11 -stdlib=libc++ -lc++abi'
+    else
+	export CC="gcc"
+	export CXX="g++"
+    fi
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    if [ "$arch" = "x86_64" ]; then
+          HOST_TRIPLE='x86_64-pc-linux-gnu'
+    else
+          HOST_TRIPLE='i686-pc-linux-gnu'
+    fi 
+
+
+    cmake -G "Unix Makefiles" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DLLVM_LIBDIR_SUFFIX=${suffix} \
+	-DCLANG_RESOURCE_DIR=../${libdir}/clang/${vers} \
+	-DLLVM_REQUIRES_RTTI=ON \
+	-DLLVM_ENABLE_TIMESTAMPS=OFF \
+	-DLLVM_ENABLE_ASSERTIONS=OFF \
+	-DLLVM_ENABLE_PIC=ON \
+	-DLLVM_BINUTILS_INCDIR=/usr/include \
+	-DLLVM_TARGETS_TO_BUILD=all \
+	-DLLVM_ENABLE_CXX1Y=ON \
+	-DLLVM_ENABLE_LIBCXX=ON \
+	-DLLVM_HOST_TRIPLE=$HOST_TRIPLE \
+	..
+
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+    cd ${B[$i]}/build_stage
+    if [ -f Makefile ] ; then
+      # export LDFLAGS='-Wl,--as-needed'
+      make -j3 REQUIRES_RTTI=1 VERBOSE=1
+    fi
+    if [ -x /usr/bin/sphinx-build ]; then
+	cd ..
+	make -C docs -f Makefile.sphinx man
     fi
   done
 fi
@@ -178,30 +225,40 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
+    cd ${B[$i]}/build_stage
+    if [ -f Makefile ] ; then
+      # export LDFLAGS='-Wl,--as-needed'
+      make -j1 install DESTDIR=$P
     fi
+    rm $P/usr/${libdir}/LLVMHello*
+    rm $P/usr/${libdir}/BugpointPasses.*
+    rm $P/usr/${libdir}/libgtest*
+    # sanitizer/msan_interface.h は Clangパッケージになっているので、
+    # LLVMをライブラリとして使いたい場合は使えない
+    # 3.4 ではデフォルトでコメントアウトされていた。
+    # sed -i -e "s@#define HAVE_SANITIZER_MSAN_INTERFACE_H 1@/* #define HAVE_SANITIZER_MSAN_INTERFACE_H 1 */@" $P/usr/include/llvm/Config/llvm-config.h
   done
+
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
+  for file in $P/usr/${libdir}/lib{clang,LLVM,LTO,profile_rt}*.a ;   do
+      test -f $file && chmod -v 644 $file
+  done
 
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+  mkdir -p $P/usr/share/man/man1
+  install -v -m644 ../docs/_build/man/* $P/usr/share/man/man1/
+
+  cd ..  # tools/clang/tools/scan-{build,view} は build_stage/ には無い
+  install -v -dm755 $P/usr/${libdir}/clang-analyzer 
+  for prog in scan-build scan-view ;  do
+      cp -rfv tools/clang/tools/$prog $P/usr/${libdir}/clang-analyzer/
+      ( cd $P/usr/bin ;  ln -sfv ../${libdir}/clang-analyzer/$prog/$prog $prog )
+  done
+  ( cd $P ; ln -sfv /usr/bin/clang ./usr/${libdir}/clang-analyzer/scan-build/ )
+  mv -v $P/usr/${libdir}/clang-analyzer/scan-build/scan-build.1 $P/usr/share/man/man1/
+
+  mkdir -p $docdir/$src
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
@@ -263,7 +320,37 @@ if [ $opt_package -eq 1 ] ; then
 # touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
 # mv $pkg.tar.gz $pkg.tgz
   cd $P
+  # make clang into another package
+  if [ -d ../clang-work ]; then
+      rm -rf ../clang-work
+  fi
+  mkdir -p  ../clang-work/usr
+  for i in bin include ${libdir} ; do
+      mkdir -p ../clang-work/usr/$i
+  done
+
+  for i in clang-${vers%.*} clang-check clang-format git-clang-format ; do
+      mv -v usr/bin/$i ../clang-work/usr/bin
+  done
+  for i in clang clang-analyzer libLTO.so libprofile_rt.so libclang* ; do
+      mv -v usr/${libdir}/$i ../clang-work/usr/${libdir}
+  done
+  for i in clang clang-c ; do
+      mv usr/include/$i ../clang-work/usr/include/
+  done
+  mkdir -p ../clang-work/install
+  cat <<"EOF" > ../clang-work/install/initpkg
+# llvmパッケージだけではsanitizer/msan_interface.hを使わないようにしたので、
+# clangを入れると使えるようにする
+sed -i -e "/HAVE_SANITIZER_MSAN/s@/\* @@" -e "/HAVE_SANITIZER_MSAN/s@ \*/@@"  /usr/include/llvm/Config/llvm-config.h
+EOF
+
   /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+  cd $W/clang-work
+  /sbin/makepkg ../clang-${vers}-${arch}-${build}.$compress <<EOF
 y
 1
 EOF
