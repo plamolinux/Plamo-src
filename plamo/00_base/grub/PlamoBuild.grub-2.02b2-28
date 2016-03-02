@@ -6,13 +6,13 @@ url='http://ftp.de.debian.org/debian/pool/main/g/grub2/grub2_2.02~beta2.orig.tar
 pkgbase=grub
 vers=2.02b2_28
 arch=`uname -m`
-build=P7
+build=P11
 src=grub-2.02~beta2
 OPT_CONFIG="--disable-werror --disable-grub-mount"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
 # patchfiles='grub_label.patch grub-install-prefix_drive.patch'
 patchfiles='grub2_2.02~beta2-28.debian.tar.xz'
-files='grubconfig grubconfig_mbr grubconfig_efi setup.bootloader'
+files='grubconfig grubconfig_mbr grubconfig_efi setup.bootloader grub_partuuid.sh'
 compress=txz
 ##############################################################
 
@@ -207,7 +207,7 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     tar xvJf $W/$patchfiles
-for patchi in $(cat debian/patches/series)
+for patchi in $(cat debian/patches/series | grep -v dpkg_version_comparison.patch )
 do
     patch -p1 < debian/patches/$patchi
     if [ $? -ne 0 ]; then
@@ -295,7 +295,8 @@ EOF
   mkdir -p $P/sbin
   cp $W/grubconfig $W/grubconfig{_efi,_mbr} $P/sbin
   chmod +x $P/sbin/grubconfig*
-
+  cp $W/grub_partuuid.sh $P/sbin
+  chmod +x $P/sbin/grub_partuuid.sh
 
 # remove locales except ja
 # 

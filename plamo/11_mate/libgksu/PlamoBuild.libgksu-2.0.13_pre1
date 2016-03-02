@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='http://ftp.de.debian.org/debian/pool/main/libg/libgksu/libgksu_2.0.13~pre1.orig.tar.gz'
+url='http://ftp.de.debian.org/debian/pool/main/libg/libgksu/libgksu_2.0.13~pre1.orig.tar.gz
+http://ftp.de.debian.org/debian/pool/main/libg/libgksu/libgksu_2.0.13~pre1-8.debian.tar.xz'
 pkgbase=libgksu
 vers=2.0.13_pre1
 arch=`uname -m`
-build=P3
+build=P4
 src=libgksu-2.0.12
 OPT_CONFIG='--disable-schemas-install --disable-static --disable-nls'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL'
-patchfiles='02_format-security.patch 28_ld_no_as_needed.patch'
-# http://ftp.de.debian.org/debian/pool/main/libg/libgksu/libgksu_2.0.13~pre1-6.debian.tar.gz
+patchfiles='01_tcdrain_kfreebsd.patch 02_format-security.patch 03_makefile_spaces.patch 04_automake.patch 05_ja.patch 06_unguarded_child_stderr.patch 23_correct_colormap_get.patch 99_intltool.patch'
 compress=txz
 ##############################################################
 
@@ -73,12 +73,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -136,8 +137,9 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+       patch -p1 < $W/debian/patches/$patch
     done
+    patch -p1 < $W/libgksu_Makefile.in.patch
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
@@ -196,7 +198,7 @@ if [ $opt_package -eq 1 ] ; then
 if [ $arch = "x86_64" ]; then
    mkdir -p $P/usr/lib/libgksu
    mkdir -p $P/install
-   cat << EOF >> $P/install/initpkg
+   cat << EOF > $P/install/initpkg
    ln -sf /usr/lib64/libgksu/gksu-run-helper /usr/lib/libgksu/gksu-run-helper
 EOF
 fi
@@ -247,7 +249,7 @@ fi
   done
 
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
+      cp $W/debian/patches/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
 

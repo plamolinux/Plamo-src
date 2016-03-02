@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-url='https://github.com/i-rinat/libvdpau-va-gl/archive/v0.3.4.tar.gz'
+url=' https://github.com/i-rinat/libvdpau-va-gl/releases/download/v0.3.4/libvdpau-va-gl-0.3.4.tar.gz'
 pkgbase=libvdpau_va_gl
 vers=0.3.4
 arch=`uname -m`
-build=P5
+build=P6
 src=libvdpau-va-gl-0.3.4
-OPT_CONFIG=''
+OPT_CONFIG='-DCMAKE_BUILD_TYPE=Release'
 DOCS='COPYING COPYING.GPLv3 COPYING.LGPLv3 ChangeLog README.md'
 patchfiles=''
 compress=txz
@@ -144,11 +144,11 @@ if [ $opt_config -eq 1 ] ; then
 
    cd $B
        if [ -f $S/CMakeLists.txt ]; then
-          export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
           export LDFLAGS='-Wl,--as-needed' 
           export CC="gcc -isystem /usr/include $target" 
           export CXX="g++ -isystem /usr/include $target "
-       cmake -DCMAKE_INSTALL_PREFIX:PATH=/usre -DLIB_INSTALL_DIR:PATH=/usr/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+       cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
        fi
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"

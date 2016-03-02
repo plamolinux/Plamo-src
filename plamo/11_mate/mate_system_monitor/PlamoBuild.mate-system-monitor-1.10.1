@@ -5,7 +5,7 @@ pkgbase=mate_system_monitor
 vers=1.10.1
 arch=x86_64
 #arch=i686
-build=P1
+build=P2
 src=mate-system-monitor-1.10.1
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog NEWS README TODO'
@@ -284,6 +284,7 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1

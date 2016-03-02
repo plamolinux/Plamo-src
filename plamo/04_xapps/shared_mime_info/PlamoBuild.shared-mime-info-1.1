@@ -5,7 +5,7 @@ pkgbase=shared_mime_info
 vers=1.1
 arch=x86_64
 # arch=i586
-build=P1
+build=P2
 src=shared-mime-info-1.1
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog HACKING NEWS README'
@@ -253,6 +253,7 @@ if [ $opt_package -eq 1 ] ; then
   cat <<"EOF" > $P/install/initpkg
 echo "updating mime database"
 /usr/bin/update-mime-database /usr/share/mime
+touch /usr/share/mime/mime.cache
 EOF
 # remove locales except ja
 # 

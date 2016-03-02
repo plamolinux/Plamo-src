@@ -1,0 +1,43 @@
+diff -Naur mesa-10.5.2/src/mapi/entry_x86-64_tls.h mesa-10.5.2.tpg/src/mapi/entry_x86-64_tls.h
+--- ./src/mapi/entry_x86-64_tls.h 2015-03-28 18:20:39.000000000 +0000
++++ ./src/mapi/entry_x86-64_tls.h 2015-04-06 20:36:37.819884382 +0000
+@@ -62,8 +62,8 @@
+ {
+ }
+ 
+-static char
+-x86_64_entry_start[];
++extern char
++x86_64_entry_start[] __attribute__((visibility("hidden")));
+ 
+ mapi_func
+ entry_get_public(int slot)
+diff -Naur mesa-10.5.2/src/mapi/entry_x86_tls.h mesa-10.5.2.tpg/src/mapi/entry_x86_tls.h
+--- ./src/mapi/entry_x86_tls.h 2015-03-28 18:20:39.000000000 +0000
++++ ./src/mapi/entry_x86_tls.h 2015-04-06 20:35:36.726238196 +0000
+@@ -72,8 +72,8 @@
+ extern unsigned long
+ x86_current_tls();
+ 
+-static char x86_entry_start[];
+-static char x86_entry_end[];
++extern char x86_entry_start[] __attribute__((visibility("hidden")));
++extern char x86_entry_end[] __attribute__((visibility("hidden")));
+ 
+ void
+ entry_patch_public(void)
+diff -Naur mesa-10.5.2/src/mapi/entry_x86_tsd.h mesa-10.5.2.tpg/src/mapi/entry_x86_tsd.h
+--- ./src/mapi/entry_x86_tsd.h 2015-03-28 18:20:39.000000000 +0000
++++ ./src/mapi/entry_x86_tsd.h 2015-04-06 20:34:56.415152047 +0000
+@@ -59,8 +59,8 @@
+ #include <string.h>
+ #include "u_execmem.h"
+ 
+-static const char x86_entry_start[];
+-static const char x86_entry_end[];
++extern const char x86_entry_start[] __attribute__((visibility("hidden")));
++extern const char x86_entry_end[] __attribute__((visibility("hidden")));
+ 
+ void
+ entry_patch_public(void)
+

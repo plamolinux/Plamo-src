@@ -4,7 +4,7 @@ url='http://pub.mate-desktop.org/releases/1.10/mate-themes-gtk3.14-1.10.5.xz'
 pkgbase=mate_themes
 vers=1.10.5
 arch=noarch
-build=P1
+build=P2
 src=mate-themes-gtk3.14-1.10.5
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
@@ -283,6 +283,7 @@ cat << EOF >> $P/install/initpkg
 glib-compile-schemas /usr/share/glib-2.0/schemas > /dev/null 2>&1
 touch /usr/share/glib-2.0/schemas/gschemas.compiled
 update-mime-database /usr/share/mime > /dev/null 2>&1
+touch /usr/share/mime/mime.cache
 update-desktop-database /usr/share/applications > /dev/null 2>&1
 touch /usr/share/applications/mimeinfo.cache
 gtk-update-icon-cache -f /usr/share/icons/hicolor > /dev/null 2>&1

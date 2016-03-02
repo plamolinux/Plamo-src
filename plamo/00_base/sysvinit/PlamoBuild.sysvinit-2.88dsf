@@ -2,11 +2,11 @@
 
 ######################################################################
 url="http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2
-    ftp://plamo.linet.gr.jp/pub/Plamo-test/for-5.0/plamo-rc-scripts/plamo-rc-scripts-20151013.tgz"
+    ftp://plamo.linet.gr.jp/pub/Plamo-test/for-5.0/plamo-rc-scripts/plamo-rc-scripts-20160208.tgz"
 pkgbase=sysvinit
 vers=2.88dsf
 arch=`uname -m`
-build=P14
+build=P15
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="doc/bootlogd.README doc/Install doc/Changelog doc/Propaganda
@@ -245,17 +245,22 @@ if [ $opt_package -eq 1 ] ; then
 	#!/bin/sh
 	
 	root="`cat /proc/cmdline | sed -n 's@.*\<root\>=\([^ ]*\).*@\1@p'`"
-	if [ -n "`echo $root | grep "/dev/"`" ] ; then
-	  # root=/dev/sdb1 (grub)
-	  root_part=`echo $root | sed 's@/dev/@@'`
+	if grep -q "^PARTUUID=" <<< $root ; then
+	  # root=PARTUUID=<your partition UUID>
+	  root_part=`blkid | tr -d '"' | grep $root | cut -d: -f1 | sed 's@/dev/@@'`
 	else
-	  # root=821 (lilo)
-	  maj=$((`printf "%d" 0x$root` / 256)) ; min=$((`printf "%d" 0x$root` % 256))
-	  root_part=`cat /proc/partitions | sed -n "/ $maj *$min /s@.* \([^ ]*\)@\1@p"`
+	  if grep -q "^/dev/" <<< $root ; then
+	    # root=/dev/sda1 (grub)
+	    root_part=${root#/dev/}
+	  else
+	    # root=801 (lilo)
+	    maj=$((`printf "%d" 0x$root` / 256))
+	    min=$((`printf "%d" 0x$root` % 256))
+	    root_part=`cat /proc/partitions \
+	        | sed -n "/ $maj *$min /s@.* \([^ ]*\)@\1@p"`
+	  fi
 	fi
-	( cd /dev ; rm -rf root )
-	( cd /dev ; ln -sf $root_part root )
-	exit 0
+	ln -sf $root_part /dev/root
 	EOF
   chmod 755 $P/sbin/link_rootdev.sh
   touch $W/i.et
