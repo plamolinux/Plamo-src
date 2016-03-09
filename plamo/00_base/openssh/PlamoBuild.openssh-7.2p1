@@ -282,6 +282,8 @@ if [ $opt_package -eq 1 ] ; then
     if [ "$chk_me.x" != ".x" ]; then
 	chown root:sys $P/var/lib/sshd
     fi
+
+    ( cd $P/usr/bin ; ln -s ./ssh slogin )
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
