@@ -1,14 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase=openssh
-vers=7.1p2
-url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
+pkgbase=bind
+vers=9.9.8_P4
+url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
 build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG='--with-privsep-user=sshd --with-privsep-path=/var/lib/sshd --sysconfdir=/etc/ssh --localstatedir=/var --with-pam --with-md5-passwords'
-DOCS='ChangeLog INSTALL README README.dns README.platform README.privsep README.tun TODO'
+src=${pkgbase}-${vers/_/-}
+OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no'
+DOCS='HISTORY README'
+mainconf="named.conf"
+configs='localhost.rev master.localhost'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -190,7 +192,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
   done
   for i in $verify ; do
     if [ ! -f ${i##*/} ] ; then
@@ -217,6 +221,8 @@ if [ $opt_download -eq 1 ] ; then
     bz2) tar xvpjf ${i##*/} ;;
     esac
   done
+  rm -f named.root
+  wget http://www.internic.net/domain/named.root
 fi
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -229,7 +235,7 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p0 < $W/$patch
+       patch -p1 < $W/$patch
     done
 
     if [ -f autogen.sh ] ; then
@@ -240,7 +246,7 @@ if [ $opt_config -eq 1 ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
         CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
-          ./configure --prefix=/usr --libdir=/usr/${libdir} --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -264,6 +270,7 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
+
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
@@ -276,39 +283,51 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-
-# /var/lib/sshd を root:sys に
-    chk_me=`whoami | grep root`
-    if [ "$chk_me.x" != ".x" ]; then
-	chown root:sys $P/var/lib/sshd
-    fi
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/ssh/sshd_config ]; then
-  cd /etc/ssh ; cp sshd_config.new sshd_config
-fi
-if [ ! -f /etc/ssh/ssh_config ]; then
-  cd /etc/ssh ; cp ssh_config.new ssh_config
-fi
-EOF
+  cp $W/$mainconf $P/etc/$mainconf.new
+  mkdir -p $P/var/named
+  for conf in $configs named.root ; do
+      cp $W/$conf $P/var/named/$conf.new
+  done
 
-  mkdir -p $P/etc/pam.d
-  cp contrib/sshd.pam.generic $P/etc/pam.d/sshd
-  if [ $arch = "x86_64" ]; then
-    sed -i 's@/lib/@/lib64/@' $P/etc/pam.d/sshd
+mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+if [ -f /etc/named.conf ]; then
+  rm /etc/named.conf.new
+else 
+  mv /etc/named.conf.new /etc/named.conf
+fi
+
+for chk in localhost.rev master.localhost ; do
+  if [ -f /var/named/$chk ]; then
+      rm /var/named/$chk.new
+  else
+      mv /var/named/$chk.new /var/named/$chk
   fi
+done
 
-  sed -i -e "s/#PermitUserEnvironment no/PermitUserEnvironment yes/" -e "s/#UsePAM no/UsePAM yes/" $P/etc/ssh/sshd_config
-  chmod 644 $P/etc/ssh/sshd_config
-  mv $P/etc/ssh/sshd_config $P/etc/ssh/sshd_config.new
-  mv $P/etc/ssh/ssh_config $P/etc/ssh/ssh_config.new
+if [ -f /var/named/named.root ]; then
+  if diff /var/named/named.root.internic /var/named/named.root >/dev/null 2>&1; then
+    mv /var/named/named.root /var/named/named.root.old
+    cp /var/named/named.root.new /var/named/named.root
+    echo "New root hint file has been installed. Old one has been moved to /var/named/named.root.old."
+  else
+    echo "You might have to update root hint file. Updated root hint file is installed to /var/named/named.root.internic."
+  fi
+else
+  cp /var/named/named.root.new /var/named/named.root
+  echo "Root hint file has been installed."
+fi
+mv /var/named/named.root.new /var/named/named.root.internic
 
-  install -v -m755 contrib/ssh-copy-id $P/usr/bin
-  install -v -m644 contrib/ssh-copy-id.1 $mandir/man1
+# if [ ! -f /etc/rndc.key ]; then
+#    /usr/sbin/rndc-confgen -a
+# fi
+
+EOF
 
   if [ -d $P/usr/share/omf ]; then
       mkdir -p $P/install
@@ -376,6 +395,10 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+  for conf in $mainconf $configs ; do
+      cp $W/$conf $docdir/$src
+  done
+
 ######################################################################
 # * ドキュメントツリーの調整が必要な場合はここに記述します。
 ######################################################################
