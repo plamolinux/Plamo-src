@@ -287,7 +287,8 @@ ac_add_options --with-system-bz2
 # libpng-1.6
 ac_add_options --with-system-png
 ac_add_options --with-system-libevent
-ac_add_options --with-system-libvpx
+# libvpx-1.3 is too old
+#ac_add_options --with-system-libvpx
 #ac_add_options --enable-system-hunspell
 ac_add_options --enable-system-sqlite
 ac_add_options --enable-system-ffi
@@ -297,14 +298,16 @@ ac_add_options --with-pthreads
 ## Features
 ac_add_options --enable-safe-browsing
 ac_add_options --enable-startup-notification
-ac_add_options --enable-gio
-ac_add_options --enable-webm
-ac_add_options --disable-dbus
+#ac_add_options --enable-gio
+#ac_add_options --enable-webm
+#ac_add_options --disable-dbus
 ac_add_options --disable-necko-wifi
-ac_add_options --enable-canvas
+#ac_add_options --enable-canvas
+ac_add_options --enable-pulseaudio
+ac_add_options --disable-gstreamer
 # disable feature
-ac_add_options --disable-gnomevfs
-ac_add_options --disable-gnomeui
+#ac_add_options --disable-gnomevfs
+#ac_add_options --disable-gnomeui
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
