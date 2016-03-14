@@ -1,16 +1,49 @@
 #!/bin/sh
-##############################################################
+
+######################################################################
+url="http://www.openssl.org/source/openssl-1.0.1s.tar.gz
+    https://github.com/plamolinux/Plamo-src/raw/master/plamo/00_base/openssl/openssl-1.0.1p-fix_parallel_build-1.patch
+    https://github.com/plamolinux/Plamo-src/raw/master/plamo/00_base/openssl/mkcabundle.pl"
 pkgbase=openssl
 vers=1.0.1s
-url="http://www.openssl.org/source/openssl-${vers}.tar.gz"
 arch=`uname -m`
-build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG=''
-DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE doc/*'
-patchfiles='openssl-1.0.1p-fix_parallel_build-1.patch'
-compress=txz
-##############################################################
+build=P2
+src=$pkgbase-$vers
+OPT_CONFIG=""
+DOCS="ACKNOWLEDGMENTS CHANGES CHANGES.SSLeay CONTRIBUTING FAQ INSTALL
+    INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS
+    INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS PROBLEMS README
+    README.ASN1 README.ENGINE"
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
@@ -24,7 +57,7 @@ strip_bindir() {
     for i in * ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
          echo "stripping -p $i"
          strip -p $i
       fi
@@ -40,7 +73,7 @@ strip_libdir() {
     for i in *.so *.so.* *.a ; do
       echo "$i"
       if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
         if [ $i != ${i%.a} ] ; then
           echo -n "ranlib and "
           touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
@@ -57,7 +90,6 @@ gzip_dir() {
   if [ -d $1 ] ; then (
     cd $1
     files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -87,13 +119,11 @@ gzip_one() {
 }
 
 compress() {
-  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
-  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
 }
 
 prune_symlink() {
@@ -104,8 +134,7 @@ prune_symlink() {
     for i in `find ${1#$P/} -type l` ; do
       target=`readlink $i`
       echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
     done
     COUNT=1
     LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
@@ -129,39 +158,25 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
+fscheck
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-else
-    target="-m32"
-    libdir="lib"
-fi
-
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -177,11 +192,9 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-
-  # get CA cert
-  rm -f $W/ca-bundle.crt
-  $W/mkcabundle.pl > $W/ca-bundle.crt
-
+  if [ ! -f ca-bundle.crt ] ; then
+    ./mkcabundle.pl > ca-bundle.crt
+  fi
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -194,39 +207,36 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
-######################################################################
-# * ./configure を行う前に適用したい設定やパッチなどがある場合はここに
-#   記述します。
-######################################################################
+  cd $B
+  patch -Np1 -i $W/openssl-1.0.1p-fix_parallel_build-1.patch
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
-
-    export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    export LC_ALL=C
-    # export CFLAGS="gcc -isystem /usr/include $target"
-    # export CPPFLAGS="g++ -isystem /usr/include $target"
-    # export CC="clang"
-    export CC="gcc"
-    if [ $arch = 'x86_64' ]; then
-      ./Configure shared zlib-dynamic enable-ssl2 --prefix=/usr --openssldir=/etc/ssl linux-x86_64
-    else
-      ./Configure shared zlib-dynamic enable-ssl2 --prefix=/usr --openssldir=/etc/ssl linux-elf
+    if [ -f Makefile ] ; then
+      make clean
     fi
-    sed -i 's# libcrypto.a##;s# libssl.a##' Makefile
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+          --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
   done
+  case $arch in
+  i686) sys=elf ;;
+  x86_64) sys=x86_64 ;;
+  armv7l) sys=armv4 ;;
+  esac
+  ./Configure linux-$sys --prefix=/usr --openssldir=/etc/ssl \
+      shared zlib-dynamic enable-ssl2
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      export CC="gcc"
       make depend
-      make PERL=/usr/bin/perl LIBDIR=${libdir}
+      make
     fi
   done
 fi
@@ -237,47 +247,26 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
-
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      LC_ALL=C make INSTALL_PREFIX=$P PERL=/usr/bin/perl MANDIR=/usr/share/man LIBDIR=${libdir} MANSUFFIX=ssl install
+      make install MANDIR=/usr/share/man MANSUFFIX=ssl INSTALL_PREFIX=$P
     fi
-    ( cd $P/usr/share ; ln -sf ../../etc/ssl ssl )
-    cp -v -r certs $P/etc/ssl
   done
-  # CA 証明書ファイル生成スクリプトと証明書ファイルのコピー
-  install -m0755 $W/mkcabundle.pl $P/etc/ssl/mkcabundle.pl
-  install -m0644 $W/ca-bundle.crt $P/etc/ssl/certs/ca-bundle.crt
-######################################################################
-# * make install でコピーされないファイルがある場合はここに記述します。
-######################################################################
-
-# remove locales except ja
-# 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
-
+  install $W/mkcabundle.pl $P/etc/ssl
+  cp -r certs $P/etc/ssl
+  install -m 644 $W/ca-bundle.crt $P/etc/ssl/certs
+  ln -s /etc/ssl $P/usr/share
   touch $W/i.et
   cd $W
-  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
   compress
-######################################################################
-# * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
-#   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
-# * 他のアーカイブから追加したいファイルがある場合はここに記述します。
-######################################################################
+  strip_libdir $P/usr/$libdir/engines
+  touch -t `date '+%m%d0900'` $P/usr/$libdir/engines
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -295,30 +284,26 @@ if [ $opt_package -eq 1 ] ; then
     fi
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
-
-  for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
-  done
-######################################################################
-# * ドキュメントツリーの調整が必要な場合はここに記述します。
-######################################################################
+  touch -t `date '+%m%d0900'` $docdir/$src
   convert
-######################################################################
-# * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
-#   記述します(prune_symlink を使います)。
-# * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
-#   します(こだわりを求めないなら単に makepkg でも良いです)。
-######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
+  prune_symlink $P/etc/ssl/certs/demo
+  prune_symlink $P/usr/share
+  touch -t `date '+%m%d0900'` $P/etc/ssl/certs/demo
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/$libdir/engines
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 -type f`
+  tar rvpf $pkg.tar -C $P usr/include/openssl
+  tar rvpf $pkg.tar -C $P etc/ssl
+  tar rvpf $pkg.tar -C $P usr/share/ssl
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
+  tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
+  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+  mv $pkg.tar.xz $pkg.txz
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
 fi
