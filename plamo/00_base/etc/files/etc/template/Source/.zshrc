@@ -2,6 +2,7 @@
 #  Plamo Linux ユーザ設定ファイルサンプル .zshrc
 #                       Chisato Yamauchi (cyamauch@phyas.aichi-edu.ac.jp)
 #                            Time-stamp: <2005-02-02 20:10:01 cyamauch>
+#                            Time-stamp: <2016-01-22 19:52:16 kojima>
 
 #if [ $SHLVL = 1 ] ; then
 #  PATH="$PATH:." ;
@@ -13,12 +14,21 @@
 #else
 #  LANG=ja_JP.eucJP
 #fi
-LANG=ja_JP.eucJP
-export LANG
+#LANG=ja_JP.eucJP
+#export LANG
 
 # JISで表示できない端末はEUCにする
-if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
+#if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
+#  JLESSCHARSET=japanese-euc
+#fi
+
+if [ "$TERM" = "linux" ] ; then
+  LANG=ja_JP.eucJP
   JLESSCHARSET=japanese-euc
+  OUTPUT_CHARSET=EUC-JP
+  export LANG JLESSCHARSET OUTPUT_CHARSET
+else
+  source $HOME/.set_lang_bsh @LOCALE@
 fi
 
 # less で行番号をつけ，終了後に画面を残す
@@ -30,13 +40,13 @@ PAGER='less'
 export LESS EDITOR PAGER
 
 # for Python 2.7
-PYTHONPATH=/usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
+#PYTHONPATH=/usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
 
 HISTFILE=$HOME/.zhistory
 
 # color-ls
 # 色設定等は ~/.dir_colors
-if which dircolors >& /dev/null; then
+if [ -x /usr/bin/dircolors ]; then
   eval `dircolors -b ~/.dir_colors`
   LS_OPTIONS=(--color=auto -F -T 0 -N) ;
 else
@@ -101,30 +111,30 @@ kterm|xterm|rxvt|dtterm|vt100)
     #function pwd () { builtin pwd ; mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]" ; }
     function su () { mkrmhmpwd ; termtitle "$HN""su $*($RMHMPWD)" ;
 	command su $* ;
-	mkrmhmpwd ; 
+	mkrmhmpwd ;
         termtitle "$HN""[$RMHMPWD]" ; }
     function rsh () {
-	termtitle "$HN""rsh $*" 
-	command rsh $* 
-	mkrmhmpwd ; 
+	termtitle "$HN""rsh $*"
+	command rsh $*
+	mkrmhmpwd ;
 	termtitle "$HN""[$RMHMPWD]"
     }
-    function rlogin () { 
-	termtitle "$HN""rlogin $*" 
-	command rlogin $* 
-	mkrmhmpwd ; 
+    function rlogin () {
+	termtitle "$HN""rlogin $*"
+	command rlogin $*
+	mkrmhmpwd ;
 	termtitle "$HN""[$RMHMPWD]"
     }
-    function telnet () { 
-	termtitle "$HN""telnet $*" 
-	command telnet $* 
-	mkrmhmpwd ; 
+    function telnet () {
+	termtitle "$HN""telnet $*"
+	command telnet $*
+	mkrmhmpwd ;
 	termtitle "$HN""[$RMHMPWD]"
     }
-    function ssh () { 
-	termtitle "$HN""ssh $*" 
-	command ssh $* 
-	mkrmhmpwd ; 
+    function ssh () {
+	termtitle "$HN""ssh $*"
+	command ssh $*
+	mkrmhmpwd ;
 	termtitle "$HN""[$RMHMPWD]"
     }
 #    mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]"

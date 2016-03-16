@@ -1,0 +1,10 @@
+\e[B	forw-line
+\e[A	back-line
+\e[D	left-scroll
+\e[C	right-scroll
+\e[H	goto-line
+\e[F	goto-end
+\e[1~	goto-line
+\e[4~	goto-end
+\e[7~	goto-line
+\e[8~	goto-end

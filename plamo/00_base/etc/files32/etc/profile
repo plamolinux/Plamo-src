@@ -1,0 +1,86 @@
+# /etc/profile: This file contains system-wide defaults used by
+# all Bourne (and related) shells.
+
+# Set the values for some environment variables:
+MINICOM="-c on"
+# MANPATH=/usr/share/man:/usr/local/man
+HOSTNAME="`cat /etc/HOSTNAME`"
+JLESSCHARSET=japanese-euc
+LESSOPEN="|lesspipe.sh %s"
+LESS="-M"
+JSERVER=localhost
+TZ=/etc/localtime
+OUTPUT_CHARSET=EUC-JP 
+LANG=ja_JP.eucJP
+PKG_CONFIG_PATH=/usr/lib/pkgconfig
+export MINICOM MANPATH HOSTNAME LESSOPEN
+export JLESSCHARSET LESS JSERVER TZ OUTPUT_CHARSET LANG PKG_CONFIG_PATH
+
+#MOZILLA_HOME=/usr/local/netscape
+#export MOZILLA_HOME
+
+# Set the default system $PATH:
+if [ $UID = 0 ] ; then
+  PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
+  PATH="$PATH:/usr/games/bin:/usr/games"
+else
+  PATH="/usr/local/bin:/bin:/usr/bin:/usr/games/bin:/usr/games"
+fi
+if [ $SHLVL = 1 ] ; then
+  if [ -d /etc/profile.d ]; then
+     for i in /etc/profile.d/*.sh ; do
+         . $i
+     done
+  fi
+fi
+
+## for JAVA
+#JAVA_HOME=/usr/local/j2sdk1.4.0
+#export JAVA_HOME
+#CLASSPATH=.:$JAVA_HOME/lib/tools.jar
+#export CLASSPATH
+#if [ $SHLVL = 1 ] ; then
+#  PATH="$PATH:$JAVA_HOME/jre/bin:$JAVA_HOME/bin"
+#fi
+
+# I had problems using 'eval tset' instead of 'TERM=', but you might want to 
+# try it anyway. I think with the right /etc/termcap it would work great.
+# eval `tset -sQ "$TERM"`
+if [ "$TERM" = "" -o "$TERM" = "unknown" ]; then
+ TERM=linux
+fi
+
+# Set a default shell prompt:
+#PS1='`hostname`:`pwd`# '
+if [ "$SHELL" = "/bin/pdksh" -o "$SHELL" = "/bin/ksh" ]; then
+ PS1="! $ "
+elif [ "$SHELL" = "/bin/zsh" -o "$SHELL" = "/usr/bin/zsh" ]; then
+ PS1="%m:%~%# "
+elif [ "$SHELL" = "/bin/ash" ]; then
+ PS1="$ "
+else
+ PS1='\h:\w\$ '
+fi
+PS2='> '
+ignoreeof=10
+export PATH DISPLAY LESS TERM PS1 PS2 ignoreeof
+
+# Default umask.  A umask of 022 prevents new files from being created group
+# and world writable.
+umask 022
+
+# Set up the LS_COLORS and LS_OPTIONS environment variables for color ls:
+if [ "$SHELL" = "/bin/ash" ]; then
+ eval `dircolors -s`
+else
+ eval `dircolors -b`
+fi
+
+# Notify user of incoming mail.  This can be overridden in the user's
+# local startup file (~/.bash.login or whatever, depending on the shell)
+#if [ -x /usr/bin/biff ]; then
+# biff y
+#fi
+#echo
+#/usr/games/bin/fortune
+#echo

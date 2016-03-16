@@ -6,6 +6,7 @@
 #                           Time-stamp: <2009-06-18 15:07:14 kojima>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
+#                           Time-stamp: <2016-01-22 12:49:27 kojima>
 
 # startx，xdm から実行されるファイルです。
 
@@ -14,7 +15,7 @@
 #WM="twm"
 WM="xfce"
 #WM="kde"
-#WM="gnome"
+#WM="mate"
 
 unset TERM
 
@@ -34,8 +35,10 @@ elif [ $WM == "qvwm" ] ; then
       qvbanner /usr/share/qvwm/images/logo.xpm &
 fi
 
-LANG=ja_JP.eucJP
-export LANG
+#LANG=ja_JP.eucJP
+#export LANG
+
+source $HOME/.set_lang_bsh @LOCALE@
 
 #PATH=$HOME/bin:$PATH
 
@@ -70,13 +73,6 @@ fi
 # ユーザのホームディレクトリに font を置く場合にはこのようにします。
 #xset +fp $HOME/lib64/fonts
 
-if [ $WM == "gnome" ] ; then
-  GDK_USE_XFT=1
-else
-  GDK_USE_XFT=0
-fi
-export GDK_USE_XFT
-
 # 漢字入力システム kinput2 の起動
 #CC_DEF_PATH=$HOME/.kinput2/ccdef
 #export CC_DEF_PATH
@@ -94,9 +90,9 @@ export GDK_USE_XFT
 
 # 多言語入力メソッドフレームワーク uim の起動
 [ -x /usr/bin/uim-xim ] && uim-xim &
-[ -x /usr/bin/uim-toolbar-gtk -a $WM != "kde" -a $WM != "gnome" ] && uim-toolbar-gtk &
+[ -x /usr/bin/uim-toolbar-gtk -a $WM != "kde" -a $WM != "mate" ] && uim-toolbar-gtk &
 [ -x /usr/bin/uim-toolbar-qt4 -a $WM == "kde" ] && uim-toolbar-qt4 &
-[ -x /usr/bin/uim-toolbar-gtk-systray -a $WM == "gnome" ] && uim-toolbar-gtk-systray &
+[ -x /usr/bin/uim-toolbar-gtk-systray -a $WM == "mate" ] && uim-toolbar-gtk-systray &
 
 # 多言語入力環境 SCIM の起動
 #[ -x /usr/bin/scim ] && /usr/bin/scim -d
@@ -112,6 +108,9 @@ export GDK_USE_XFT
 #XMODIFIERS="@im=nicolatter"
 # jmode を使う場合はこちら
 #XMODIFIERS="@im=jmode"
+# 上記を使う場合はこちらも
+#QT_IM_MODULE=xim
+#GTK_IM_MODULE=xim
 # uim を使う場合はこちら
 XMODIFIERS="@im=uim"
 QT_IM_MODULE=uim
@@ -199,7 +198,7 @@ fi
 
 # unclutter は一定時間動かないカーソルを隠すプログラムです。
 #unclutter &
-if [ $WM != "xfce" -a $WM != "kde" -a $WM != "gnome" ] ; then
+if [ $WM != "xfce" -a $WM != "kde" -a $WM != "mate" ] ; then
   unclutter &
 fi
 
@@ -273,8 +272,8 @@ case $WM in
 "kde")
   exec $LAUNCH startkde
   ;;
-"gnome")
-  exec $LAUNCH gnome-session
+"mate")
+  exec $LAUNCH mate-session
   ;;
 esac
 

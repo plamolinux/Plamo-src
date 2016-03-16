@@ -2,27 +2,37 @@
 #  Plamo Linux ユーザ設定ファイルサンプル for tcsh
 #                       Chisato Yamauchi (cyamauch@phyas.aichi-edu.ac.jp)
 #                            Time-stamp: <2005-02-02 20:07:05 cyamauch>
+#                            Time-stamp: <2016-01-22 17:21:41 kojima>
 
 umask 022
 limit coredumpsize 0
 
 # 端末によって日本語表示する/しないの切り替え
-setenv LANG ja_JP.eucJP
-if ! ${?TERM} setenv TERM dumb
+#setenv LANG ja_JP.eucJP
+#if ! ${?TERM} setenv TERM dumb
 #if ( "x.${TERM}" == "x.linux" ) then
 #  setenv LANG C
-endif
+#endif
 
 # if ( $SHLVL == 1 ) then
 #   set path=( $path . )
 # endif
 
-set dspmbyte = euc
+#set dspmbyte = euc
 set echo_style = both
 
 # JISで表示できない端末はEUCにする
-if ( "x.${TERM}" == "x.xterm" || "x.${TERM}" == "x.dtterm" ) then
+#if ( "x.${TERM}" == "x.xterm" || "x.${TERM}" == "x.dtterm" ) then
+#  setenv JLESSCHARSET japanese-euc
+#endif
+
+if ("$TERM" == "linux") then
+  setenv LANG ja_JP.eucJP
   setenv JLESSCHARSET japanese-euc
+  setenv OUTPUT_CHARSET EUC-JP
+  set dspmbyte=euc
+else
+  source $HOME/.set_lang_csh @LOCALE@
 endif
 
 # less で行番号をつけ，終了後に画面を残す
@@ -33,7 +43,7 @@ setenv EDITOR 'vi'
 setenv PAGER 'less'
 
 # for Python 2.7
-setenv PYTHONPATH /usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
+#setenv PYTHONPATH /usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
 
 # NetNews のサーバを指定してください
 # setenv NNTPSERVER news.hoge.hoge.ac.jp
@@ -65,10 +75,10 @@ if ($?prompt) then
          "x.${TERM}" == "x.vt100" ) then
 	switch( "${TERM}" )
 	case "vt*":
-	    setenv HN "" 
+	    setenv HN ""
 	    breaksw
 	default:
-	    setenv HN "${HOST}:" 
+	    setenv HN "${HOST}:"
 	    breaksw
 	endsw
 	alias getrmhmpwd 'setenv TTL_TMP_VAL `echo "/$HOME"|/usr/bin/sed -e "s/\//\\\//g"` ; setenv RMHMPWD `echo "/$PWD"|/usr/bin/sed -e "s/$TTL_TMP_VAL/\\\~/g"` ; if ( "/$RMHMPWD" == "//$PWD" ) setenv RMHMPWD "$PWD"'
@@ -78,8 +88,8 @@ if ($?prompt) then
 	alias cd 'cd \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	alias pushd 'pushd \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	alias popd 'popd \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
-	alias su 'getrmhmpwd ; setenv TERMTITLE "'$HN'su \!*($RMHMPWD)" ; termtitle ; /bin/su \!* ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'	
-	alias telnet 'setenv TERMTITLE "'$HN'telnet \!*" ; termtitle ; /usr/bin/telnet \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'	
+	alias su 'getrmhmpwd ; setenv TERMTITLE "'$HN'su \!*($RMHMPWD)" ; termtitle ; /bin/su \!* ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
+	alias telnet 'setenv TERMTITLE "'$HN'telnet \!*" ; termtitle ; /usr/bin/telnet \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	alias rlogin 'setenv TERMTITLE "'$HN'rlogin \!*" ; termtitle ; /usr/bin/rlogin \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	alias rsh 'setenv TERMTITLE "'$HN'rsh \!*" ; termtitle ; /usr/bin/rsh \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	unalias ssh
