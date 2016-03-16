@@ -1,0 +1,486 @@
+#
+# .sjrk
+#
+# artrec@tk2.nmt.ne.jp
+# 2001.09.02 仕様上の理由から、ローマ字変換は1対1がいい。
+# 1998.12.19 sj3/sjx流に、ヴぁヴぃヴヴぇヴぉ、にしないといろいろ問題が起きる
+
+# このファイルは
+# $Id: sjrk.EUC,v 2.1 1992/12/18 03:54:02 nao Exp $
+#       ローマ字かな変換規則定義ファイル(CcWnn エミュレート用)
+# をもとに
+# $Id: sjrk.iroha.EUC,v 2.0 1992/02/13 21:00:37 nao Exp $
+#       ローマ字かな変換規則定義ファイル(Iroha エミュレート用)
+# と、
+# $Id: sjrk.sjx.EUC,v 2.0 1992/02/13 21:00:39 nao Exp $
+#       ローマ字かな変換規則定義ファイル(sjx エミュレート用)
+# を参考に変更したものです。
+
+#	(区切りは space か htab)
+#[in_romaji]	[out_kana]	[out_romaji]
+c		c
+l		l
+
+a		あ
+i		い
+u		う
+e		え
+o		お
+
+ka		か
+ki		き
+ku		く
+ke		け
+ko		こ
+
+kya		きゃ
+kyu		きゅ
+kyo		きょ
+
+sa		さ
+si		し
+su		す
+se		せ
+so		そ
+
+sha		しゃ
+shi		し
+shu		しゅ
+she		しぇ
+sho		しょ
+
+sya		しゃ
+syi		しぃ
+syu		しゅ
+sye		しぇ
+syo		しょ
+
+ta		た
+#ti		ち
+ti		てぃ
+tu		つ
+te		て
+to		と
+
+tha		てゃ
+thi		てぃ
+thu		てゅ
+the		てぇ
+tho		てょ
+
+cha		ちゃ
+chi		ち
+chu		ちゅ
+che		ちぇ
+cho		ちょ
+#cya		ちゃ
+#cyi		ちぃ
+#cyu		ちゅ
+#cye		ちぇ
+#cyo		ちょ
+ce		ちぇ
+
+tsa		つぁ
+tsi		つぃ
+tsu		つ
+tse		つぇ
+tso		つぉ
+
+na		な
+ni		に
+nu		ぬ
+ne		ね
+no		の
+
+nya		にゃ
+nyi		にぃ
+nyu		にゅ
+nye		にぇ
+nyo		にょ
+
+ha		は
+hi		ひ
+hu		ふ
+he		へ
+ho		ほ
+
+hya		ひゃ
+hyi		ひぃ
+hyu		ひゅ
+hye		ひぇ
+hyo		ひょ
+
+fa		ふぁ
+fi		ふぃ
+fu		ふ
+fe		ふぇ
+fo		ふぉ
+
+fya		ふゃ
+fyu		ふゅ
+fyo		ふょ
+
+fwa		ふゎ
+fwu		ふぅ
+
+ma		ま
+mi		み
+mu		む
+me		め
+mo		も
+
+mya		みゃ
+myi		みぃ
+myu		みゅ
+mye		みぇ
+myo		みょ
+
+ya		や
+yu		ゆ
+ye		いぇ
+yo		よ
+
+ra		ら
+ri		り
+ru		る
+re		れ
+ro		ろ
+
+la		ら
+li		り
+lu		る
+le		れ
+lo		ろ
+
+rya		りゃ
+ryi		りぃ
+ryu		りゅ
+rye		りぇ
+ryo		りょ
+
+wa		わ
+#wi		ゐ
+wi		うぃ
+#we		ゑ
+we		うぇ
+wo		を
+
+ga		が
+gi		ぎ
+gu		ぐ
+ge		げ
+go		ご
+
+gya		ぎゃ
+gyi		ぎぃ
+gyu		ぎゅ
+gye		ぎぇ
+gyo		ぎょ
+
+gwa		ぐぁ
+gwi		ぐぃ
+gwu		ぐぅ
+gwe		ぐぇ
+gwo		ぐぉ
+
+za		ざ
+zi		じ	
+zu		ず
+ze		ぜ
+zo		ぞ
+
+zyi		じぃ
+
+ja		じゃ
+ji		じ
+ju		じゅ
+je		じぇ
+jo		じょ
+jya		じゃ
+jyi		じぃ
+jyu		じゅ
+jye		じぇ
+jyo		じょ
+
+da		だ
+di		ぢ
+du		づ
+de		で
+do		ど
+
+dya		ぢゃ
+dyi		ぢぃ
+dyu		ぢゅ
+dye		ぢぇ
+dyo		ぢょ
+
+dha		でゃ
+dhi		でぃ
+dhu		でゅ
+dhe		でぇ
+dho		でょ
+
+ba		ば
+bi		び
+bu		ぶ
+be		べ
+bo		ぼ
+
+bya		びゃ
+byi		びぃ
+byu		びゅ
+bye		びぇ
+byo		びょ
+
+va		ヴぁ
+vi		ヴぃ
+vu		ヴ
+ve		ヴぇ
+vo		ヴぉ
+
+# 以下5行は辞書登録時に問題を起こす。 
+# 小さいカタカナ(カタカナ拗音)は読み文字列に使用できない。
+#va		ヴァ
+#vi		ヴィ
+#vu		ヴ			
+#ve		ヴェ
+#vo		ヴォ
+
+# 以下5行はかんな式だがsj3では問題を起こす
+#va              う゛ぁ
+#vi              う゛ぃ
+#vu              う゛
+#ve              う゛ぇ
+#vo              う゛ぉ
+
+wha		うゎ
+whi		うぃ
+whu		うぅ
+whe		うぇ
+who		うぉ
+
+pa		ぱ
+pi		ぴ
+pu		ぷ
+pe		ぺ
+po		ぽ
+
+pya		ぴゃ
+pyi		ぴぃ
+pyu		ぴゅ
+pye		ぴぇ
+pyo		ぴょ
+
+qa		くぁ
+qi		くぃ
+qu		く
+qe		くぇ
+qo		くぉ
+
+# 「ん」の取扱
+# iroha流
+n		ん
+nn		ん
+#n'		ん
+#nn		ん		n
+#mn		ん
+# wnn流
+#nn		ん
+#n'		ん
+#n		ん
+#N		ん
+#NN		ん
+
+kk		っ		k
+ss		っ		s
+tt		っ		t
+hh		っ		h
+mm		っ		m
+yy		っ		y
+rr		っ		r
+ll		っ		l
+ww		っ		w
+gg		っ		g
+zz		っ		z
+dd		っ		d
+bb		っ		b
+pp		っ		p
+cc		っ		c
+ff		っ		f
+jj		っ		j
+vv		っ		v
+qq		っ		q
+#xx		っ		x
+
+xa		ぁ
+xi		ぃ
+xu		ぅ
+xe		ぇ
+xo		ぉ
+xya		ゃ
+xyi		ぃ
+xyu		ゅ
+xye		ぇ
+xyo		ょ
+xtu		っ
+xtsu		っ
+xwa		ゎ
+xwi		ゐ
+xwe		ゑ
+xwo		を
+xka		ヵ
+xca		ヵ
+xke		ヶ
+
+# lはlittleの意味のつもり
+#la		ぁ
+#li		ぃ
+#lu		ぅ
+#le		ぇ
+#lo		ぉ
+#lya		ゃ
+#lyi		ぃ
+#lyu		ゅ
+#lye		ぇ
+#lyo		ょ
+#ltu		っ
+#ltsu		っ
+#lwa		ゎ
+#lwi		ゐ
+#lwe		ゑ
+#lwo		を
+#lka		ヵ
+#lca		ヵ
+#lke		ヶ
+
+-		ー
+xx		ー
+
+# qは無条件入力の意味のつもり xも同じ意味
+# zは記号入力のつもり(egg流)
+q-		-
+
+#,		、
+q,		,
+
+#.		。
+q.		.
+
+[		「
+q[		[
+
+]		」
+q]		]
+
+# egg流記号
+z/		・
+z\\		￥
+zX		:-)
+z1		○
+z!		●
+z.		。
+z,		、
+#Z.		…
+
+# 自己流
+z-		−
+z0		０
+z1		１
+z2		２
+z3		３
+z4		４
+z5		５
+z6		６
+z7		７
+z8		８
+z9		９
+#zT		〒
+$AR	ArtRecords
+
+#SONY	ソニー
+Sony	Sony
+News	News
+Record	Record
+Video	Video
+Audio	Audio
+Picture	Picture
+
+Japan	Japan
+
+Unix	Unix
+Net	Net
+Free 	Free
+Open	Open
+Mac	Mac
+Windows	Windows
+Linux	Linux
+
+Perl	Perl
+Java	Java
+Script	Script
+
+Kinput2	Kinput2
+Mule	Mule
+Emacs	Emacs
+XEmacs	XEmacs
+Xemacs	Xemacs
+Egg	Egg
+Wnn	Wnn
+Canna	Canna
+Kterm	Kterm
+Mozilla	Mozilla
+
+Date	Date
+Subject	Subject
+To	To
+From	From
+
+Sun	Sun
+Mon	Mon
+Tue	Tue
+Wed	Wed
+Thu	Thu
+Fri	Fri
+Sat	Sat
+
+Jan	Jan
+Feb	Feb
+Mar	Mar
+Apr	Apr
+May	May
+Jun	Jun
+Jul	Jul
+Aug	Aug
+Sep	Sep
+Oct	Oct
+Nov	Nov
+Dec	Dec
+
+# 大文字はそのまま通すから以下設定の必要なし。
+#Q	Q
+#W	W
+#E	E
+#R	R
+#T	T
+#Y	Y
+#U	U
+#I	I
+#O	O
+#P	P
+#A	A
+#S	S
+#D	D
+#F	F
+#G	G
+#H	H
+#J	J
+#K	K
+#L	L
+#Z	Z
+#X	X
+#C	C
+#V	V
+#B	B
+#N	N
+#M	M
+

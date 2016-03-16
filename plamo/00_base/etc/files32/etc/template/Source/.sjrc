@@ -1,0 +1,766 @@
+###################################################################
+#  Plamo Linux ユーザ設定ファイルサンプル for sj3
+#                            Time-stamp: <2003-02-01 12:07:00 cyamauch>
+#
+# .sjrc for kinput2
+#
+#	artrec@tk2.nmt.ne.jp
+#	2002.10.28
+#	2002.01.29
+#	2001.10.10
+
+# 同じ場所に置いてるカスタマイズ済み .sjrk, .sjhk と
+# 必ず併せて使ってください。
+# デフォルトの .sjrk, .sjhk では問題がおきます。
+
+# キーバインドについて
+#
+# できるだけegg-sj3風にしています。
+# ・egg-sj3と違うところ
+#		変換後(Cモード)のC-kは
+#			部分確定(flushbefore)しません
+#				(flushbeforeファンクションに問題があるから)
+#			カーソル以降消去(delafter)もしません。
+#				(変換中のミスタッチC-kが悲しいから)
+#			ちなみにegg-sj3で変換後のC-kは、
+#				カレント文節が先頭のときは無変換(unconvert)
+#				それ以外のときは部分確定(unconvert)
+#				つまり文節の位置によりC-kの動作が変わります。
+#				設定だけではそこまで真似られません。
+#				できるだけeggに近付けるなら
+#				変換後(Cモード)のC-kは無変換(unconvert)かな。
+#		変換後(Cモード)のC-cは
+#			カレント文節編集(edit)になります。これはcanna風です。
+#				この状態でのC-kはカーソル移行消去です。
+#			ちなみにegg-sj3では変換後のC-cは
+#				無変換(unconvert)です。
+#		変換後(Cモード)のC-dは
+#			カレント文節を削除します。
+#			ちなみにegg-sj3では変換後のC-dはnot defined
+# ・canna風なところ
+#		変換前(Iモード)のC-n,C-pで文字種変更
+#		ちなみにegg-sj3では変換前のC-n,C-p,Down,Upはnot definedです。
+# ・カーソルキーは文節編集、文節選択、文節伸縮、候補選択のときだけ使えます。
+#		kinput2をオンにしたままカーソルキーで動き回ったりすると
+#		nviが落ちるからです。jvimでも怪しいです。
+# ・qで英数入力モード(egg-self-insert-command)にはなりません。
+#		kinput2で英数入力モードって意味無いし
+#		英数入力にはkinput2自体をオフにすればいいわけですから。
+#		あえて英数入力モードにするにはM-C-lです。
+#
+# space		変換
+# C-l		確定
+# C-m		改行
+# C-i/C-o	文節伸ばし/縮め
+# C-f/C-b	カーソル/文節移動
+# C-n/C-p	文字種変更(N|Iモード),候補選択(C|Sモード)
+# C-t/C-v	単語登録/削除(Cモード)
+# C-g		キャンセル(すべてのモード)
+# C-c		文節編集(Cモード),キャンセル(I|S|Dモード)
+# C-k		カーソルから後ろを消去(Iモード)
+# C-d		文字|文節の削除
+# C-a		あたまへ移動
+# C-e		おしりへ移動
+# M-h|M-j	ひらがな化
+# M-k		カタカナ化
+# M-l		英数化
+# M-q		全角英数化
+# M-C-h|M-C-j	ひらがな入力モード
+# M-C-k		カタカナ入力モード
+# M-C-l		英数入力モード
+# M-C-q		全角英数入力モード
+# M-C-y		EUCコード入力モード(N|Iモード)
+# C-_		JISコード入力モード(N|Iモード)
+# C-^|F1|Ins	記号入力(N|Iモード)
+# 
+# くわしくはこのファイルを見てください。
+
+# 環境変数SJRCで、設定ファイル名を指定してください。
+# .xinitrcなどで
+#	export SJRC=".sjrc.kinput2"
+# とか、
+#	export SJRC=".sjrc.sjx.EUC"
+# とすれば、.sjrcの使い分けができます。
+
+# このファイルは、
+# $Id: sjrc.EUC,v 2.5 1993/01/28 09:58:43 nao Exp $
+#       CcWnn エミュレート用 sjrc
+#   93/01/18    support for Kana Keyboard
+#                       minmin@astec.co.jp
+# をベースに、
+# $Id: sjrc.iroha.EUC,v 2.2 1993/01/06 11:04:24 nao Exp $
+#       Canna version 1.2 エミュレート用 sjrc
+# と、
+# $Id: sjrc.sjx.EUC,v 2.2 1993/01/06 11:04:39 nao Exp $
+#       sj3/sjx エミュレート用 sjrc
+# を参考にカスタマイズしたものです。
+
+# モードを表す記号の一覧
+#
+# N NoInputMode 入力文字が無い状態
+# I InputMode   未変換の状態
+# C ConvedMode  変換後の状態
+# S SelectMode  候補一覧表の状態
+# D DictMode    辞書登録の状態
+# O C|Sと同じ
+# F I|Cと同じ
+# A N|I|C|S|Dと同じ(ぜんぶ)
+
+# [注意]
+# 2001.10.09
+# Modifierにshiftを書くときはKeySymを大文字にしないとだめ
+# 逆に言うと、入力にshiftを伴うようなKeySym(大文字とか^とか_)は
+# Modifierにshiftを書く必要がある
+# たとえばC-M-S-fのバインドを記述するとき
+# × .ki2key.bell	c|m|s	f
+# × .ki2key.bell	c|m	F
+# 〇 .ki2key.bell	c|m|s	F
+# たとえばC-_のバインドを記述するとき
+# × .ki2key.symbol	c		_
+# 〇 .ki2key.symbol	c|s		_
+
+#function		Modifier/Mode		KeySym		InputSame
+.ki2key.start		s|N|I|C|S|D		space
+.ki2key.start		c|N|I|C|S|D		space
+.ki2key.null		N			space
+.ki2key.convert		I|C			space
+.ki2key.forward		S|D			space
+
+.ki2key.start		N|I|C|S|D		Zenkaku_Hankaku
+.ki2key.start		m|N|I|C|S|D		Zenkaku_Hankaku
+.ki2key.start		s|N|I|C|S|D		Zenkaku_Hankaku
+.ki2key.start		N|I|C|S|D		Kanji
+.ki2key.start		m|N|I|C|S|D		Kanji
+.ki2key.start		s|N|I|C|S|D		Kanji
+.ki2key.convert		I|C			Henkan_Mode
+.ki2key.forward		S|D			Henkan_Mode
+
+# Escapeでkinput2をoffにできるようにするのは便利だけど
+# なれちゃうとほかのIMEの環境でEscapeでIMEを切ろうとしてしまって困る.
+.ki2key.start		N|I|C			Escape
+.ki2key.cancel		S|D			Escape
+
+.ki2key.cancel		s|c|m|N|I|C|S|D		BackSpace
+.ki2key.cancel		s|c|N|I|C|S|D		BackSpace
+.ki2key.cancel		s|m|N|I|C|S|D		BackSpace
+.ki2key.cancel		c|m|N|I|C|S|D		BackSpace
+.ki2key.cancel		m|N|I|C|S|D		BackSpace
+.ki2key.cancel		c|N|I|C|S|D		BackSpace
+.ki2key.cancel		s|N|I|C|S|D		BackSpace
+#.ki2key.cancel		N			BackSpace
+.ki2key.backspace	I			BackSpace
+.ki2key.unconvert	C			BackSpace
+.ki2key.cancel		S			BackSpace
+.ki2key.backspace	D			BackSpace
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		I
+.ki2key.bell		s|c|N|I|C|S|D		I
+.ki2key.bell		s|m|N|I|C|S|D		I
+.ki2key.bell		c|m|N|I|C|S|D		i
+.ki2key.bell		m|N|I|C|S|D		i
+.ki2key.bell		c|N|I			i
+.ki2key.shrink		c|C|S|D			i
+
+.ki2key.shrink		C			i
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		O
+.ki2key.bell		s|c|N|I|C|S|D		O
+.ki2key.bell		s|m|N|I|C|S|D		O
+.ki2key.bell		c|m|N|I|C|S|D		o
+.ki2key.bell		m|N|I|C|S|D		o
+.ki2key.bell		c|N|I			o
+.ki2key.expand		c|C|S|D			o
+
+.ki2key.expand		C			o
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		B
+.ki2key.bell		s|c|N|I|C|S|D		B
+.ki2key.bell		s|m|N|I|C|S|D		B
+.ki2key.bell		c|m|N|I|C|S|D		b
+.ki2key.bell		m|N|I|C|S|D		b
+.ki2key.bell		c|N			b
+.ki2key.backward	c|I|C|S			b
+.ki2key.bell		c|D			b
+
+.ki2key.backward	C|S			b
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		F
+.ki2key.bell		s|c|N|I|C|S|D		F
+.ki2key.bell		s|m|N|I|C|S|D		F
+.ki2key.bell		c|m|N|I|C|S|D		f
+.ki2key.bell		m|N|I|C|S|D		f
+.ki2key.bell		c|N			f
+.ki2key.forward		c|I|C|S			f
+.ki2key.bell		c|D			f
+
+.ki2key.forward		C|S			f
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		N
+.ki2key.bell		s|c|N|I|C|S|D		N
+.ki2key.bell		s|m|N|I|C|S|D		N
+.ki2key.bell		c|m|N|I|C|S|D		n
+.ki2key.nextmode	m|N|I|C			n
+.ki2key.bell		m|S|D			n
+#.ki2key.hiragana	c|N			n
+#.ki2key.nextmode	c|I			n
+.ki2key.bell	c|N			n
+.ki2key.bell	c|I			n
+.ki2key.next		c|C			n
+.ki2key.down		c|S			n
+.ki2key.bell		c|D			n
+
+.ki2key.next		C			n
+.ki2key.down		S			n
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		P
+.ki2key.bell		s|c|N|I|C|S|D		P
+.ki2key.bell		s|m|N|I|C|S|D		P
+.ki2key.bell		c|m|N|I|C|S|D		p
+.ki2key.prevmode	m|N|I|C			p
+.ki2key.bell		m|S|D			p
+.ki2key.zkatakana	c|N			p
+.ki2key.prevmode	c|I			p
+.ki2key.prev		c|C			p
+.ki2key.up		c|S			p
+.ki2key.bell		c|D			p
+
+.ki2key.prev		C			p
+.ki2key.up		S			p
+
+
+.ki2key.bell		c|N|S|D			d
+.ki2key.delete		c|I|C			d
+
+.ki2key.delete		C			d
+
+
+.ki2key.bell		c|N|D			a
+.ki2key.top		c|I|C|S			a
+
+.ki2key.top		C|S			a
+
+
+.ki2key.bell		c|N|D			e
+.ki2key.bottom		c|I|C|S			e
+
+.ki2key.bottom		C|S			e
+
+
+.ki2key.return		c|N			m
+.ki2key.fix		c|I|C			m
+.ki2key.return		c|S|D			m
+
+.ki2key.fix		C			m
+.ki2key.return		S			m
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		H
+.ki2key.hiragana	s|c|N|I			H
+.ki2key.bell		s|c|C|S|D		H
+.ki2key.bell		s|m|N|I|C|S|D		H
+.ki2key.hiragana	c|m|N|I			h
+.ki2key.bell		c|m|C|S|D		h
+.ki2key.bell		m|N			h
+.ki2key.tohiragana	m|I|C			h
+.ki2key.tohiragana	m|S|D			h
+.ki2key.null		c|N			h
+.ki2key.backspace	c|I|D			h
+.ki2key.unconvert	c|C			h
+.ki2key.bell		c|S			h
+
+#.ki2key.tohiragana	C			h
+#.ki2key.unconvert	C			h
+.ki2key.backward	C|S			h
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		J
+.ki2key.hiragana	s|c|N|I			J
+.ki2key.bell		s|c|C|S|D		J
+.ki2key.bell		s|m|N|I|C|S|D		J
+.ki2key.hiragana	c|m|N|I			j
+.ki2key.bell		c|m|C|S|D		j
+.ki2key.bell		m|N			j
+.ki2key.tohiragana	m|I|C			j
+.ki2key.tohiragana	m|S|D			j
+#.ki2key.bell		c|N			j
+#.ki2key.null		c|N			j
+.ki2key.fix		c|I|C			j
+#.ki2key.return		c|S|D			j
+.ki2key.bell		c|S|D			j
+
+#.ki2key.tohiragana	C			j
+.ki2key.next		C			j
+.ki2key.down		S			j
+
+.ki2key.bell		s|c|m|N|I|C|S|D		K
+.ki2key.zkatakana	s|c|N|I			K
+.ki2key.bell		s|c|C|S|D		K
+.ki2key.bell		s|m|N|I|C|S|D		K
+.ki2key.zkatakana	c|m|N|I			k
+.ki2key.bell		c|m|C|S|D		k
+.ki2key.bell		m|N			k
+.ki2key.tozkatakana	m|I|C			k
+.ki2key.tozkatakana	m|S|D			k
+.ki2key.bell		c|N			k
+.ki2key.delafter	c|I			k
+.ki2key.cancel		c|S|D			k
+.ki2key.bell		c|C			k
+#.ki2key.unconvert	c|C			k
+#.ki2key.delafter	c|C			k
+#.ki2key.flushbefore	c|C			k
+
+#.ki2key.tozkatakana	C			k
+.ki2key.prev	C			k
+.ki2key.up		S			k
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		L
+.ki2key.halpha		s|c|N|I			L
+.ki2key.bell		s|c|C|S|D		L
+.ki2key.bell		s|m|N|I|C|S|D		L
+.ki2key.halpha		c|m|N|I			l
+.ki2key.bell		c|m|C|S|D		l
+.ki2key.bell		m|N			l
+.ki2key.tohalpha	m|I|C			l
+.ki2key.tohalpha	m|S|D			l
+.ki2key.return		c|N			l
+.ki2key.fix		c|I|C			l
+.ki2key.return		c|S|D			l
+
+#.ki2key.tohalpha	C			l
+.ki2key.forward	C|S			l
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		Q
+.ki2key.zalpha		s|c|N|I			Q
+.ki2key.bell		s|c|C|S|D		Q
+.ki2key.bell		s|m|N|I|C|S|D		Q
+.ki2key.zalpha		c|m|N|I			q
+.ki2key.bell		c|m|C|S|D		q
+.ki2key.bell		m|N			q
+.ki2key.tozalpha	m|I|C|S|D		q
+.ki2key.quote		c|N|I			q
+.ki2key.start		N			q
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		Y
+.ki2key.bell		s|c|N|I|C|S|D		Y
+.ki2key.bell		s|m|N|I|C|S|D		Y
+.ki2key.euc		c|m|N|I			y
+.ki2key.bell		c|m|C|S|D		y
+.ki2key.bell		m|N|I|C|S|D		y
+.ki2key.bell		c|N|I|C|S|D		y
+
+.ki2key.tozkatakana	C			y
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		U
+.ki2key.bell		s|c|N|I|C|S|D		U
+.ki2key.bell		s|m|N|I|C|S|D		U
+.ki2key.bell		c|m|N|I|C|S|D		u
+.ki2key.bell		m|N|I|C|S|D		u
+.ki2key.bell		c|N|I|C|S|D		u
+
+.ki2key.tohiragana		C		u
+
+
+.ki2key.bell		c|N			g
+.ki2key.bell		c|I			g
+.ki2key.unconvert	c|C			g
+.ki2key.cancel		c|S|D			g
+
+.ki2key.unconvert	C			g
+.ki2key.cancel		S			g
+
+
+.ki2key.bell		c|N			c
+.ki2key.cancel		c|I|S|D			c
+#.ki2key.unconvert	c|C			c
+.ki2key.edit		c|C			c
+
+
+.ki2key.bell		c|I|S|D			t
+.ki2key.toroku		c|C			t
+
+.ki2key.toroku		C			t
+
+
+.ki2key.bell		c|I|S|D			v
+.ki2key.syoukyo		c|C			v
+
+.ki2key.syoukyo		C			v
+
+
+.ki2key.bell		c|N			w
+.ki2key.convert		c|I|C			w
+.ki2key.forward		c|S|D			w
+
+.ki2key.convert		C			w
+
+
+.ki2key.bell		c|N|I|C|S|D		x
+.ki2key.bell		c|N|I|C|S|D		s
+.ki2key.bell		c|N|I|C|S|D		r
+.ki2key.bell		c|N|I|C|S|D		z
+
+
+.ki2key.bell		s|c|m|N|I|C|S|D		Return
+.ki2key.bell		s|c|N|I|C|S|D		Return
+.ki2key.bell		s|m|N|I|C|S|D		Return
+.ki2key.bell		c|m|N|I|C|S|D		Return
+.ki2key.bell		m|N|I|C|S|D		Return
+.ki2key.bell		c|N|I|C|S|D		Return
+.ki2key.bell		s|N|I|C|S|D		Return
+#.ki2key.bell		N|I|C|S|D		Return
+# 020601: S|DモードでのReturnは禁止. C-mで決定すること
+# 021031: kinput2のバグ: Dモードでの function return や fix が
+# kinput2 in free(): warning: junk pointer, too high to make sense
+# を発生させる。
+# kinput2起動後初めての辞書登録時に普通名詞や地名を選んだときに起きる!?
+# 名前や名字を選ぶと起きない。
+# なんか変数初期化できてない?
+#.ki2key.return		N			Return
+.ki2key.fix			I|C			Return
+.ki2key.return		S|D			Return
+#.ki2key.bell		S|D			Return
+#.ki2key.fix		S|D			Return
+
+.ki2key.bell		s|c|m|N|I|C|S|D		Delete
+.ki2key.bell		s|c|N|I|C|S|D		Delete
+.ki2key.bell		s|m|N|I|C|S|D		Delete
+.ki2key.bell		c|m|N|I|C|S|D		Delete
+.ki2key.bell		m|N|I|C|S|D		Delete
+.ki2key.bell		c|N|I|C|S|D		Delete
+.ki2key.bell		s|N|I|C|S|D		Delete
+.ki2key.bell		N|S|D			Delete
+.ki2key.delete		I			Delete
+.ki2key.bell		C			Delete
+
+.ki2key.bell		s|c|m|N|I|C|S|D		Tab
+.ki2key.bell		s|c|N|I|C|S|D		Tab
+.ki2key.bell		s|m|N|I|C|S|D		Tab
+.ki2key.bell		c|m|N|I|C|S|D		Tab
+.ki2key.bell		m|N|I|C|S|D		Tab
+.ki2key.bell		c|N|I|C|S|D		Tab
+.ki2key.bell		s|N|I|C|S|D		Tab
+.ki2key.null		N			Tab
+.ki2key.bell		I|C|S|D			Tab
+
+.ki2key.bell		c|N|I|C|S|D		Up
+.ki2key.bell		s|N|I|S|D		Up
+.ki2key.prev		s|C			Up
+.ki2key.bell		N|I|S|D			Up
+.ki2key.prev		C			Up
+
+.ki2key.bell		c|N|I|C|S|D		Down
+.ki2key.bell		s|N|I|S|D		Down
+.ki2key.next		s|C			Down
+.ki2key.bell		N|I|S|D			Down
+.ki2key.next		C			Down
+
+.ki2key.bell		c|N|I|C|S|D		Left
+.ki2key.bell		s|N|I|S|D		Left
+.ki2key.shrink		s|C			Left
+.ki2key.bell		N|D			Left
+.ki2key.backward	I|C|S			Left
+
+.ki2key.bell		c|N|I|C|S|D		Right
+.ki2key.bell		s|N|I|S|D		Right
+.ki2key.expand		s|C			Right
+.ki2key.bell		N|D			Right
+.ki2key.forward		I|C|S			Right
+
+.ki2key.zkatakana	s|N			Hiragana_Katakana
+.ki2key.tozkatakana	s|I|C|S|D		Hiragana_Katakana
+.ki2key.hiragana	N			Hiragana_Katakana
+.ki2key.tohiragana	I|C|S|D			Hiragana_Katakana
+
+.ki2key.start		s|N|I|C|S|D		Muhenkan
+.ki2key.halpha		N|I			Muhenkan
+.ki2key.start		N|I|C			Muhenkan
+.ki2key.bell		S|D			Muhenkan
+
+.ki2key.jis		s|c|N|I			underscore
+.ki2key.bell		s|c|C|S|D		underscore
+
+.ki2key.symbol		s|c|N|I			asciicircum
+.ki2key.bell		s|c|C|S|D		asciicircum
+
+.ki2key.symbol		N|I			Insert
+.ki2key.bell		C|S|D			Insert
+
+.ki2key.symbol		N|I			F1
+.ki2key.register	C			F1
+.ki2key.bell		S|D			F1
+.ki2key.syoukyo		s|C			F1
+
+.ki2key.start		c|N			bracketleft
+.ki2key.bell		c|I|C|S|D		bracketleft
+
+.ki2key.start		c|N|I|C|S|D		semicolon
+
+.ki2key.null		s|N			exclam
+.ki2key.null		s|N			at
+.ki2key.null		s|N			numbersign
+.ki2key.null		s|N			dollar
+.ki2key.null		s|N			percent
+.ki2key.null		s|N			asciicircum
+.ki2key.null		s|N			ampersand
+.ki2key.null		s|N			asterisk
+.ki2key.null		s|N			parenleft
+.ki2key.null		s|N			parenright
+.ki2key.null		s|N			underscore
+.ki2key.null		s|N			plus
+.ki2key.null		s|N			bar
+.ki2key.null		s|N			asciitilde
+# .ki2key.null		N			1
+# .ki2key.null		N			2
+# .ki2key.null		N			3
+# .ki2key.null		N			4
+# .ki2key.null		N			5
+# .ki2key.null		N			6
+# .ki2key.null		N			7
+# .ki2key.null		N			8
+# .ki2key.null		N			9
+# .ki2key.null		N			0
+.ki2key.null		N			minus
+.ki2key.null		N			equal
+.ki2key.null		N			backslash
+.ki2key.null		N			grave
+
+.ki2key.null		s|N			braceleft
+.ki2key.null		s|N			braceright
+#.ki2key.null		N			bracketleft
+#.ki2key.null		N			bracketright
+.ki2key.null		s|N			colon
+.ki2key.null		s|N			quotedbl
+.ki2key.null		N			semicolon
+.ki2key.null		N			apostrophe
+.ki2key.null		s|N			less
+.ki2key.null		s|N			greater
+.ki2key.null		s|N			question
+#.ki2key.null		N			comma
+#.ki2key.null		N			period
+.ki2key.null		N			slash
+
+#	01.12.22
+# .ki2key.halpha		s|N|I			Q	Q
+# .ki2key.halpha		s|N|I			W	W
+# .ki2key.halpha		s|N|I			E	E
+# .ki2key.halpha		s|N|I			R	R
+# .ki2key.halpha		s|N|I			T	T
+# .ki2key.halpha		s|N|I			Y	Y
+# .ki2key.halpha		s|N|I			U	U
+# .ki2key.halpha		s|N|I			I	I
+# .ki2key.halpha		s|N|I			O	O
+# .ki2key.halpha		s|N|I			P	P
+# .ki2key.halpha		s|N|I			A	A
+# .ki2key.halpha		s|N|I			S	S
+# .ki2key.halpha		s|N|I			D	D
+# .ki2key.halpha		s|N|I			F	F
+# .ki2key.halpha		s|N|I			G	G
+# .ki2key.halpha		s|N|I			H	H
+# .ki2key.halpha		s|N|I			J	J
+# .ki2key.halpha		s|N|I			K	K
+# .ki2key.halpha		s|N|I			L	L
+# .ki2key.halpha		s|N|I			Z	Z
+# .ki2key.halpha		s|N|I			X	X
+# .ki2key.halpha		s|N|I			C	C
+# .ki2key.halpha		s|N|I			V	V
+# .ki2key.halpha		s|N|I			B	B
+# .ki2key.halpha		s|N|I			N	N
+# .ki2key.halpha		s|N|I			M	M
+
+.guide.register		辞書登録
+.guide.eliminate	辞書抹消
+.guide.kanji		変換済
+.guide.edit		編集中
+.guide.candidate	候補選択
+.guide.symbol		記号選択
+.guide.hinsi		品詞選択
+.guide.quote		直接入力
+
+.InitialMode		hiragana.zkatakana.zalpha
+.sj3serv		localhost
+.BackDisplay		off
+
+.BeginConversionLast	off
+
+#.FlushInConversion	none
+
+.FlushSelectConversion	off
+.MuhenkanSegment	all
+.DeleteChangeSegment	all
+
+#.FlushChangeSegment	all
+#.FlushChangeSegment	off
+
+.MuhenkanCursorLast	on
+
+#.EditCursorLastx	on
+#.FlushCursorLast	on
+
+.DisplayModeChange	on
+.InputSameTime		off
+.PrintMode		hiragana.zkatakana.halpha
+.LastDoubleConversion	on
+
+#
+# C-kの問題(delaferとflushbeforeの問題)
+#
+# I|Cモード時のC-kは、プログラム内部でのデフォルトのキーバインドの場合、
+# delaferファンクションになっています。
+# カレント文節以降を削除し、ひとつ前の文節がカレントになります。
+# C-kとしては自然な機能だと思いますが、
+# EggやCannaでの変換中のC-kの動作とはかなり違います。
+# EggやCannaでは、カレント文節より前を確定し、
+# カレント文節以降をかなに戻すような動作になります。
+# muleのeggで言うと、フェンスモードのC-kは henkan-kakutei-before-point です。
+# C-kにflushbeforeファンクションを割り当てるとEgg/Canna風になります。
+# ですが、カレント文節が先頭のとき、flushbeforeの動作が変です。
+# 不具合っぽくて気持ち悪いので、flushbeforeはやめておきます。
+# デフォルトのバインドを活かして、C-kをdelaferにする場合は、
+# 絶対に.FlushInConversionをnoneかoffにしてください。
+# onにしてるとkinput2が落ちます。
+#
+
+#
+# .FlushInConversion
+#
+#	ConvedMode で文字入力のキーを押したときの動作の指定
+#
+# [value] on|off|none|edit
+# on   変換中の文字列を確定して新たな文字列の入力に移る
+# off  最後の文節の次の文節として入力
+# none 無視します
+# edit カレント文節を無変換状態(InputMode)にして
+#      .EditCursorLast で指定されたカーソル位置に文字入力します。
+# [default] on
+# [NEWS/Canna] on
+# [CcWnn] off
+#
+# [注意]
+# Cモードでdelafterファンクションを使うような設定をする場合は、
+# (内部デフォルトのバインドでのC-kはそうなっています)
+# 絶対に.FlushInConversionをデフォルトのonのままにしないでください。
+# onにしてるとCモードでのdelaferでkinput2が落ちます。
+# noneにするのが自然です。
+# offにする意味はあんまりないと思う。
+# onのままにするならCモードのC-kは、
+# egg風にflushafterにしてしまうか(でもflushafterはバグっぽいのが気になる)
+# bellにしてしまうのが無難。
+
+# ソースのkinput2-v3/doc/sj3defより抜粋
+
+#delafter[NoInputMode/DictMode] 無視します
+#        [InputMode/ConvedMode] テキストカーソルのある位置から後ろの
+#            カレント文節、またはカレント文節を含めたそれ以降の変換中の
+#            文字列を消去します
+#        [SelectMode] 選択動作をせずに選択表示をポップダウンして
+#            変換候補選択のときは ConvedMode に、記号選択のときは NoInputMode
+#            か InputMode に、品詞選択のときは DictMode(読み入力モード)に戻り、
+#            それぞれのモードでの動作を行います
+#        ● 消去する範囲をカレント文節以降全ての文字列にするか、
+#            カレント文節中のテキストカーソルよりあとの部分に
+#            するかは後述の .KillBySegment の指定で決まります
+#        ● 文節単位で最後の文節を消去した後にカレント文節を
+#            １つ前に移動するかどうかは後述の .DeleteLastMove の指定
+#            で決まります
+
+#flushbefore[NoInputMode/DictMode] 無視します
+#        [InputMode/ConvedMode] カレント文節のテキストカーソルより
+#            前の変換中の文字列を部分確定します
+#        [SelectMode] 選択を中断してそれぞれ、候補選択の場合は
+#            ConvedMode に記号選択のときは NoInputMode/InputMode に
+#            品詞選択の場合は DictMode に戻り、それぞれの変換モードのときの
+#            動作をします。
+#        ●部分確定する前に無変換状態ににするか、また、無変換状態ににする
+#            領域は後述の .FlushChangeSegment の指定で決まります
+#        ●無変換後のテキストカーソルの位置は .FlushCursorLast の指定で
+#            決まります
+#        ●モード表示を変更するかどうかは後述の .DisplayModeChange
+#            の指定で決まります
+
+#    21. ConvedMode で文字入力のキーを押したときの動作の指定
+#
+#[format] .FlushInConversion [on/off/none/edit]
+#[default value] on
+#
+#        ConvedMode で文字入力のキーが押されたとき、
+#        また、記号選択でファンクション
+#        Select/Return/fix(kettei.flush) の操作が行われたとき、
+#        もしくは InputMode の時で .MoveBySegment の指定が InputMode
+#        に対して文節単位に移動するように指定されていて、
+#        文字入力のキーが押されたとき、
+#        変換中の文字列を確定するかどうかを指定します。
+#
+#        on の時は変換中の文字列を確定して新たな文字列の
+#        入力に移ります。off の時は最後の文節の次の文節として入力されます。
+#        none の時は無視します。edit の時はカレント文節を無変換
+#        状態(InputMode)にして .EditCursorLast で指定された
+#        カーソル位置に文字入力します。
+#        例えば NEWS-OS の sj2/sj3/sjx や Canna の動作は on、
+#        CcWnn の動作は off です。
+
+#    27. 部分確定時に無変換状態にする文節の指定
+#
+#[format] .FlushChangeSegment [one/all/off]
+#[default value] one
+#
+#        flushbefore のファンクションを呼び出したときに
+#        カレント文節もしくはそれ以降の文節を無変換状態(InputMode)に
+#        戻すかを指定します。
+#        one の時はカレント文節（現在反転している文節）を、all の時は
+#        カレント文節以降の全ての文節を、文節を無変換状態にしてから
+#        部分確定の動作を行います。all を指定したときは
+#        mobebyseg が InputMode で on の時でも文字入力可能な
+#        状態（入力開始時と同じ）にします。
+#        off の時はカレント文節の無辺感度憂さはしませんが、
+#        カレント文節が文字入力可能な（反転していない）状態で
+#        テキストカーソルが文節の端にないときにテキストカーソル
+#        より前の部分を確定します。
+#
+#        例えば Canna の動作は all です。
+
+#    33. 文字／文節消去のファンクションが呼ばれたときの消去単位指定
+#
+#[format] .KillBySegment [on/off].[on/off]
+#[default value] off.on
+#
+#        delafter のファンクションが呼ばれたときに
+#        文節単位で（カレント文節以降の全ての文節を）消去するか、
+#        文字単位で（カレント文節内のカーソル位置以降の文字列消去するか
+#        を指定します。
+#
+#        value の第１フィールドには InputMode の時の動作を
+#        第２フィールドには ConvedMode の時の動作を指定します。
+#        これらのフィールドが on の時は文節単位で、
+#        off の時は文字単位で消去します。
+#
+#        文字入力可能な状態（反転していない）で on の時は
+#        テキストカーソル以降の文字列を全て消去し、off の時は
+#        テキストカーソル以降のカレント文節内の文字列を
+#        消去します。文字入力可能でない状態で on の時は
+#        カレントカーソルを含む以降の文字列を全て消去し、
+#        off の時はカレント文節を消去します。
+#
+#        例えば、Canna の動作はデフォルト同じです。
+#
+
+#    36. 部分確定するファンクションが呼ばれたときに無変換状態にするときの
+#        テキストカーソル位置指定
+#
+#[format] .FlushCursorLast [on/off]
+#[default value] off
+#
+#        flushbefore のファンクションが呼ばれて、前述の
+#        .FlushChangeSegment が off でないときのテキストカーソルの
+#        位置を指定します。on の時は無変換状態にした文字列の最後に、
+#        off の時は無変換状態にした文字列の最初にテキストカーソルが
+#        移動します。例えば Canna の動作はデフォルトと同じです。

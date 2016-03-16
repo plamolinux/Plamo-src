@@ -1,0 +1,8 @@
+#
+# /etc/environment - Environments for the ssh.
+#
+#                            Time-stamp: <2001-05-15 14:01:18 cyamauch>
+
+PATH=/usr/local/bin:/bin:/usr/bin
+HZ=100
+

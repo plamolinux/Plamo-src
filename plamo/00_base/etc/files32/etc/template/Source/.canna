@@ -1,0 +1,258 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Plamo Linux ユーザ設定ファイルサンプル for canna
+;;                           Time-stamp: <2003-07-26 20:28:06 cyamauch>
+
+;;
+;; ローマ時入力/かな入力の設定
+;;
+;; ローマ時入力の場合
+(setq canna-input-method "roma")
+;; かな入力の場合
+;(setq canna-input-method "kana")
+
+;;
+;; 辞書の設定
+;;
+(use-dictionary
+ "gcanna"
+ "gcannaf"
+;; "iroha"
+ "fuzokugo"
+ "hojomwd"
+ "hojoswd"
+ "keishiki"
+ "chimei"
+ :bushu "bushu"
+ :user "user"
+)
+
+;;
+;; キーバインド，シンボルの設定
+;;
+;; シンボルの定義
+(if (equal canna-input-method "kana")
+  (progn
+    ;; かな入力の場合
+    (setq romkana-table "kana.cbp")
+    (defsymbol ?~ "を")
+    (defsymbol ?[ "゜" "［")
+    (defsymbol ?@ "゛" "＠")
+    (defsymbol ?* "ヶ" "＊")
+    (defsymbol ?` "¢" "‘" "＄")
+    (defsymbol ?P "『" "P")
+    (defsymbol ?+ "』" "＋")
+    (defsymbol ?= "£" "＝")
+    (defsymbol ?? "・" "？" "／" "÷")
+    (defsymbol ?< "、" "，")
+    (defsymbol ?> "。" "．")
+    (defsymbol ?| "¬" "｜")
+    (defsymbol ?! "！" "!")
+    (defsymbol ?\" "”" "\"")
+  ) (progn
+    ;; ローマ時入力の場合
+    (setq romkana-table "default.cbp")
+    (defsymbol
+      ?[ "「" "『" "[" "［" "〔" "｛"
+      ?] "」" "』" "]" "］" "〕" "｝" )
+    (defsymbol
+      ?( "(" "（" "【"
+      ?) ")" "）" "】" )
+    (defsymbol
+      ?{ "『" "｛" "{"
+      ?} "』" "｝" "}" )
+    (defsymbol
+      ?< "＜" "<" "〈" "《"
+      ?> "＞" ">" "〉" "》" )
+    (defsymbol ?- "ー" "−" "-")
+    (defsymbol ?/ "／" "/" "÷" "・")
+    (defsymbol ?+ "＋" "+")
+    (defsymbol ?* "＊" "*" "×")
+    (defsymbol ?= "＝" "=")
+    (defsymbol ?? "？" "?")
+    (defsymbol ?! "！" "!")
+    (defsymbol ?\" "”" "\"")
+    (defsymbol ?# "＃" "#")
+    (defsymbol ?$ "＄" "$")
+    (defsymbol ?% "％" "%")
+    (defsymbol ?& "＆" "&")
+    (defsymbol ?' "’" "'")
+    (defsymbol ?` "‘" "`")
+    (defsymbol ?~ "￣" "~")
+    (defsymbol ?^ "＾" "^")
+    (defsymbol ?: "：" ":")
+    (defsymbol ?; "；" ";")
+    (defsymbol ?| "｜" "|")
+    ;; 一般向き(縦書き用)
+    (defsymbol
+      ?. "。" "." "．"
+      ?, "、" "," "，")
+    ;; 一般向き(横書き用)
+    ;(defsymbol
+    ;  ?. "。" "." "．"
+    ;  ?, "，" "," "、")
+    ;; 理系論文向き
+    ;(defsymbol
+    ;  ?. "．" "." "。"
+    ;  ?, "，" "," "、")
+  )
+)
+
+;; キーバインド
+(set-key 'empty-mode "\F10"	'kigou-mode)
+(set-key 'kigou-mode "\F10"	'quit)
+;(set-key 'kigou-mode "\Escape"	'quit)
+
+(set-key 'empty-mode "\F12"	'extend-mode)
+(set-key 'ichiran-mode "\F12"	'quit)
+;(set-key 'ichiran-mode "\Escape"	'quit)
+
+(set-key 'yomi-mode "\F2" '(zenkaku hiragana henkan))
+(set-key 'yomi-mode "\F6" 'hiragana)
+(set-key 'yomi-mode "\F7" 'katakana)
+(set-key 'yomi-mode "\F8" '(katakana hankaku))
+(set-key 'yomi-mode "\F9" '(zenkaku romaji))
+(set-key 'yomi-mode "\F10" '(romaji hankaku))
+(set-key 'yomi-mode "\Rollup" '(zenkaku hiragana henkan))
+(set-key 'yomi-mode "\Rolldown" '(zenkaku hiragana henkan))
+(set-key 'tankouho-mode "\F2" 'henkan)
+(set-key 'tankouho-mode "\F6" 'hiragana)
+(set-key 'tankouho-mode "\F7" 'katakana)
+(set-key 'tankouho-mode "\F8" '(katakana hankaku))
+(set-key 'tankouho-mode "\F9" '(zenkaku romaji))
+(set-key 'tankouho-mode "\F10" '(romaji hankaku))
+(set-key 'tankouho-mode "\Rollup" 'henkan)
+(set-key 'tankouho-mode "\Rolldown" 'henkan)  
+(set-key 'shinshuku-mode "\F2" '(zenkaku hiragana henkan))
+(set-key 'shinshuku-mode "\F6" 'hiragana)
+(set-key 'shinshuku-mode "\F7" 'katakana)
+(set-key 'shinshuku-mode "\F8" '(katakana hankaku))
+(set-key 'shinshuku-mode "\F9" '(zenkaku romaji))
+(set-key 'shinshuku-mode "\F10" '(romaji hankaku))
+(set-key 'mojishu-mode "\F2" '(zenkaku hiragana henkan))
+(set-key 'mojishu-mode "\F6" 'hiragana)
+(set-key 'mojishu-mode "\F7" 'katakana)
+(set-key 'mojishu-mode "\F8" '(katakana hankaku))
+(set-key 'mojishu-mode "\F9" '(zenkaku romaji))
+(set-key 'mojishu-mode "\F10" '(romaji hankaku))
+(set-key 'ichiran-mode "\F2" 'henkan)
+(set-key 'ichiran-mode "\F6" 'hiragana)
+(set-key 'ichiran-mode "\F7" 'katakana)
+(set-key 'ichiran-mode "\F8" '(katakana hankaku))
+(set-key 'ichiran-mode "\F9" '(zenkaku romaji))
+(set-key 'ichiran-mode "\F10" '(romaji hankaku))
+(set-key 'ichiran-mode "\Rollup" 'previous)
+(set-key 'ichiran-mode "\Rolldown" 'next)
+
+;; クライアントごとの設定
+;; (ここは Plamo 独自なので注意)
+(cond ((equal (getenv "CONVERSIONCLIENT") "kinput2")
+  ;; Key bind for kinput2
+  (if (equal canna-input-method "kana")
+    (progn
+      (defsymbol ?_ "ろ")
+      (defsymbol ?\\ "ー")
+    ) (progn
+      (defsymbol ?_ "＿" "_" "＼" "\\")
+      (defsymbol ?\\ "￥" "＼" "\\")
+    )
+  )
+  (global-set-key "\Escape" 'quit)
+  (global-set-key "\Delete" 'delete-next)
+  (set-key 'empty-mode "\F6" '(base-zenkaku base-hiragana))
+  (set-key 'empty-mode "\F7" '(base-zenkaku base-katakana))
+  (set-key 'empty-mode "\F8" '(base-katakana base-hankaku))
+  (set-key 'empty-mode "\Hiragana" 'base-hiragana)
+  (set-key 'empty-mode "\Katakana" 'base-katakana)
+  (set-key 'empty-mode "\Nfer" 'base-hiragana)
+  (set-key 'empty-mode "\S-Nfer" 'base-eisu)
+  (set-key 'yomi-mode "\Hiragana" 'hiragana)
+  (set-key 'yomi-mode "\Katakana" 'katakana)
+  (set-key 'tankouho-mode "\Hiragana" 'hiragana)
+  (set-key 'tankouho-mode "\Katakana" 'katakana)
+  (set-key 'shinshuku-mode "\Hiragana" 'hiragana)
+  (set-key 'shinshuku-mode "\Katakana" 'katakana)
+  (set-key 'mojishu-mode "\Hiragana" 'hiragana)
+  (set-key 'mojishu-mode "\Katakana" 'katakana)
+  (set-key 'ichiran-mode "\Hiragana" 'hiragana)
+  (set-key 'ichiran-mode "\Katakana" 'katakana)
+  ;; kinput2 の Ctrl + o を無効にする
+  ;(global-unbind-key-function 'japanese-mode)
+  ;(global-unbind-key-function 'alpha-mode)
+  ; for Exceed
+  (global-set-key "\Hankakuzenkaku" 'henkan)
+) ((equal (getenv "CONVERSIONCLIENT") "nicolatter")
+  ;; Key bind for nicolatter
+  (global-set-key ":" 'delete-previous)
+  (global-set-key "]" 'quit)
+  (set-mode-display 'alpha-mode "[英数]")
+  (set-key 'henkan-nyuuryoku-mode "\C-n" 'zen-alpha-kakutei-mode)
+  (set-key 'zen-alpha-kakutei-mode "\C-n" 'henkan-nyuuryoku-mode)
+;; 以下の設定は .emacs で可能。
+;) ((equal (getenv "CONVERSIONCLIENT") "mule_on_x")
+;  ;; Key bind for emacs on X
+;  (global-set-key "\Delete" 'delete-previous)
+;  (global-set-key "\Backspace" 'delete-next)
+) ((equal (getenv "CONVERSIONCLIENT") "mule_on_term")
+  ;; Key bind for emacs on terminal
+  (global-set-key "\Delete" 'delete-next)
+  (global-set-key "\C-d" 'delete-next)
+  (global-set-key "\Backspace" 'delete-previous)
+  (global-set-key "\C-h" 'delete-previous)
+  (global-set-key "\C-r" 'delete-previous)
+  ;; Delete key
+  (global-set-key "\Escape[3~" 'delete-next)
+;  (global-set-key "\Escape[4~" 'delete-next)
+  ;; Cursor key
+  (global-set-key "\Escape[D" 'backward)
+  (global-set-key "\Escape[C" 'forward)
+  (global-set-key "\Escape[A" 'previous)
+  (global-set-key "\Escape[B" 'next)
+  (global-set-key "\EscapeOD" 'backward)
+  (global-set-key "\EscapeOC" 'forward)
+  (global-set-key "\EscapeOA" 'previous)
+  (global-set-key "\EscapeOB" 'next)
+  ;; PageUp, PageDown key
+  (global-set-key "\Escape[5~" 'previous)
+  (global-set-key "\Escape[6~" 'next)
+))
+
+;;
+;; 動作の設定
+;;
+;; 次の文字を入力し始めたら自動的に確定
+(setq chikuji-continue nil)
+(setq renbun-continue nil)
+(setq mojishu-continue nil)
+
+; 候補表示時に文節の区切りに空白をいれる
+;(setq bunsetsu-kugiri t)
+
+; 入力中の読み全体をリバース表示する
+;(setq reverse-widely t)
+
+; 頻度学習をしない
+;(setq gakushu nil)
+
+; 文節の右端で→キーで全体が確定
+;(setq kakutei-if-end-of-bunsetsu t)
+
+; 一覧から選択後は次の文節に移動
+(setq stay-after-validate nil)
+
+; 読み入力中のBackSpaceでローマ字にバラす
+(setq break-into-roman t)
+
+; 何回の変換キーで候補一覧表示を行うか。
+(setq n-henkan-for-ichiran 2)
+
+; 逐次変換をする
+;(setq auto t)
+
+; 逐次変換をする時の未確定文節の個数
+(setq n-kouho-bunsetsu 16)
+
+; ローマ字かな変換でイリーガルなローマ字を捨てる
+;(setq abandon-illegal-phonogram t)
+
+; 一覧の時も次の入力を認めない
+;(setq allow-next-input nil)

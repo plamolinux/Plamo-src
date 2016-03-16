@@ -1,6 +1,7 @@
 ###################################################################
 #  Plamo Linux ユーザ設定ファイルサンプル for bash
 #                            Time-stamp: <2005-02-02 20:09:17 cyamauch>
+#                            Time-stamp: <2016-01-22 17:19:56 kojima>
 
 # prevent illegal line wrapping
 shopt -s checkwinsize
@@ -26,12 +27,21 @@ IGNOREEOF=3
 #else
 #  LANG=ja_JP.eucJP
 #fi
-LANG=ja_JP.eucJP
-export LANG
+#LANG=ja_JP.eucJP
+#export LANG
 
 # JISで表示できない端末はEUCにする
-if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
+#if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
+#  JLESSCHARSET=japanese-euc
+#fi
+
+if [ "$TERM" == "linux" ] ; then
+  LANG=ja_JP.eucJP
   JLESSCHARSET=japanese-euc
+  OUTPUT_CHARSET=EUC-JP
+  export LANG JLESSCHARSET OUTPUT_CHARSET
+else
+  source $HOME/.set_lang_bsh @LOCALE@
 fi
 
 # less で行番号をつけ，終了後に画面を残す
@@ -43,8 +53,8 @@ PAGER='less'
 export LESS EDITOR PAGER
 
 # for Python 2.7
-PYTHONPATH=/usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
-export PYTHONPATH
+#PYTHONPATH=/usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
+#export PYTHONPATH
 
 # if [ $SHLVL = 1 ] ; then
 #   PATH="$PATH:." ;
@@ -142,28 +152,28 @@ kterm|xterm|rxvt|dtterm|vt100|screen)
     #function pwd () { builtin pwd ; mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]" ; }
     function su () { mkrmhmpwd ; termtitle "$HN""su $*($RMHMPWD)" ;
 	if [ "$1" = "-c" ] ; then command su -c "$2";
-	elif [ "$2" = "-c" ] ; then command su $1 -c "$3" 
+	elif [ "$2" = "-c" ] ; then command su $1 -c "$3"
 	elif [ "$3" = "-c" ] ; then command su - $2 -c "$4"
 	else command su $* ; fi
 	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]" ; }
     function rsh () {
-	termtitle "$HN""rsh $*" 
-	command rsh $* 
+	termtitle "$HN""rsh $*"
+	command rsh $*
 	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]"
     }
-    function rlogin () { 
-	termtitle "$HN""rlogin $*" 
-	command rlogin $* 
-	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]" 
-    }
-    function telnet () { 
-	termtitle "$HN""telnet $*" 
-	command telnet $* 
+    function rlogin () {
+	termtitle "$HN""rlogin $*"
+	command rlogin $*
 	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]"
     }
-    function ssh () { 
-	termtitle "$HN""ssh $*" 
-	command ssh $* 
+    function telnet () {
+	termtitle "$HN""telnet $*"
+	command telnet $*
+	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]"
+    }
+    function ssh () {
+	termtitle "$HN""ssh $*"
+	command ssh $*
 	mkrmhmpwd ; termtitle "$HN""[$RMHMPWD]"
     }
     function screen () {
@@ -180,11 +190,11 @@ case "$TERM" in
 kterm|sun)
     stty erase '^H'
 #   ~/.inputrc で設定済
-#   bind '"\C-?": delete-char' 
+#   bind '"\C-?": delete-char'
     ;;
 #vt*)
 #    stty erase '^H'
-#    bind '"\C-?": delete-char' 
+#    bind '"\C-?": delete-char'
 #    ;;
 esac
 stty werase '^W'
