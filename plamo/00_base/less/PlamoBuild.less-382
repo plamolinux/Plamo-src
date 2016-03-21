@@ -8,11 +8,11 @@ url="ftp://ftp.jp.freebsd.org/pub/FreeBSD/ports/distfiles/less-382.tar.gz
     ftp://ftp.jp.freebsd.org/pub/FreeBSD/ports/distfiles/less-382-iso260-261.patch.gz
     ftp://ftp.jp.freebsd.org/pub/FreeBSD/ports/distfiles/less-382-iso261-262.patch.gz
     ftp://ftp.jp.freebsd.org/pub/FreeBSD/ports/distfiles/less-382-iso262.ext03.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/less-382-def_priority.patch.gz"
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/less/less-382-def_priority.patch.gz"
 pkgbase=less
 vers=382
-arch=`uname -m | sed 's/i.86/i586/'`
-build=P2
+arch=`uname -m`
+build=P3
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="COPYING INSTALL LICENSE NEWS README"
@@ -176,7 +176,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i586) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
