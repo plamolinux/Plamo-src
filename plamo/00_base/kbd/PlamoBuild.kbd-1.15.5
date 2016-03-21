@@ -2,13 +2,13 @@
 
 ######################################################################
 url="ftp://ftp.altlinux.org/pub/people/legion/kbd/kbd-1.15.5.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/kbd-1.15-backspace-1.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/kbd-1.15-plamo-compat.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/kbd-1.15.5-revert_loadkeys_analize.patch.gz"
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15-backspace-1.patch.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15-plamo-compat.patch.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15.5-revert_loadkeys_analize.patch.gz"
 pkgbase=kbd
 vers=1.15.5
-arch=x86_64
-build=P2
+arch=`uname -m`
+build=P3
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="INSTALL ChangeLog NEWS AUTHORS CREDITS COPYING ABOUT-NLS README"
@@ -118,7 +118,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -156,7 +156,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -172,6 +172,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -214,7 +215,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
