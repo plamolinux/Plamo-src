@@ -2,30 +2,30 @@
 
 ######################################################################
 url="ftp://ftp.linux.org.uk/pub/linux/Networking/netkit/netkit-combo-0.17.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/biff+comsat-0.17.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/biff+comsat.offset.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/biff+comsat.badutmp.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/bsd-finger_0.17-13.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/linux-ftpd_0.17-29.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-bootparamd_0.17-9.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-ftp_0.17-19.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-ntalk_0.17-14.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/routed.18.candidate.final.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-routed-0.17.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-rsh_0.17-14.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-rusers_0.17-7.1.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-rwall_0.17-6.2.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-rwho_0.17-12.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-telnet_0.17-36.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-tftp_0.17-17.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-timed-0.17.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netwrite-0.17.diff.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-combo-0.17-diffs.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/netkit-combo-0.17-tirpc.patch.gz"
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/biff+comsat-0.17.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/biff+comsat.offset.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/biff+comsat.badutmp.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/bsd-finger_0.17-13.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/linux-ftpd_0.17-29.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-bootparamd_0.17-9.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-ftp_0.17-19.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-ntalk_0.17-14.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/routed.18.candidate.final.patch.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-routed-0.17.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-rsh_0.17-14.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-rusers_0.17-7.1.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-rwall_0.17-6.2.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-rwho_0.17-12.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-telnet_0.17-36.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-tftp_0.17-17.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-timed-0.17.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netwrite-0.17.diff.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-combo-0.17-diffs.patch.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/netkit_combo/netkit-combo-0.17-tirpc.patch.gz"
 pkgbase=netkit_combo
 vers=0.17
-arch=x86_64
-build=P3
+arch=`uname -m`
+build=P7
 src=netkit-combo-$vers
 OPT_CONFIG=""
 DOCS="README
@@ -152,7 +152,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -190,7 +190,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -206,6 +206,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -266,8 +267,6 @@ if [ $opt_config -eq 1 ] ; then
   gunzip -c $W/netkit-tftp_0.17-17.diff.gz | patch -Np1 -i -
   cd $B/netkit-telnet
   gunzip -c $W/netkit-telnet_0.17-36.diff.gz | patch -Np1 -i -
-  cp -p telnetd/Makefile{,.orig}
-  sed 's@/lib@/lib64@g' telnetd/Makefile.orig > telnetd/Makefile
   cd $B/netkit-timed
   gunzip -c $W/netkit-timed-0.17.diff.gz | patch -Np1 -i -
   cd $B/netwrite
@@ -314,8 +313,8 @@ if [ $opt_package -eq 1 ] ; then
       make -i install
     fi
   done
-  install -d $P/usr/lib64
-  ln -s ../sbin/telnetlogin $P/usr/lib64
+  install -d $P/usr/$libdir
+  ln -s ../sbin/telnetlogin $P/usr/$libdir
   touch $W/i.et
   cd $W
   find $P ! -type l -newer i.st ! -newer i.et \
@@ -351,7 +350,7 @@ if [ $opt_package -eq 1 ] ; then
   tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
