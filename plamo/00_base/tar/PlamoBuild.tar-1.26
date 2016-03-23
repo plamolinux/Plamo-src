@@ -2,13 +2,13 @@
 
 ######################################################################
 url="http://ftp.gnu.org/gnu/tar/tar-1.26.tar.gz
-    http://plamo.linet.gr.jp/~tamuki/src/tar-1.23-tartime.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/tar-1.23-txz.patch.gz
-    http://plamo.linet.gr.jp/~tamuki/src/tar-1.26-no-gets.patch.gz"
+    ftp://plamo.linet.gr.jp/Plamo-src/plamo/00_base/tar/tar-1.23-tartime.patch.gz
+    ftp://plamo.linet.gr.jp/Plamo-src/plamo/00_base/tar/tar-1.23-txz.patch.gz
+    ftp://plamo.linet.gr.jp/Plamo-src/plamo/00_base/tar/tar-1.26-no-gets.patch.gz"
 pkgbase=tar
 vers=1.26
-arch=x86_64
-build=P1
+arch=`uname -m`
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="NEWS TODO README THANKS ChangeLog.1 AUTHORS INSTALL ABOUT-NLS
@@ -119,7 +119,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -157,7 +157,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -173,6 +173,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -215,7 +216,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
