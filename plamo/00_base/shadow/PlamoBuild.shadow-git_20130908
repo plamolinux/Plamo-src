@@ -2,11 +2,11 @@
 
 ######################################################################
 url="https://github.com/shadow-maint/shadow.git
-    http://plamo.linet.gr.jp/~tamuki/src/shadow-adduser-20160122"
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/shadow/shadow-adduser-20160122"
 pkgbase=shadow
 vers=git_20130908
 arch=`uname -m`
-build=P4
+build=P5
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
     --with-libcrack"
@@ -171,7 +171,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
