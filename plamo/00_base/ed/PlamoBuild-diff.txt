@@ -1,0 +1,44 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/ed/PlamoBuild.ed-1.5	2015-12-29 20:36:35.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://gnu.raffsoftware.com/ed/ed-1.5.tar.gz"
++pkgbase=ed
++vers=1.5
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README TODO"
+ ######################################################################
+ 
+ fscheck() {
+@@ -238,6 +238,7 @@
+       make install DESTDIR=$P
+     fi
+   done
++  touch $P/usr/bin/*
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -260,10 +261,13 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  touch -t `date '+%m%d0900'` $docdir/$src
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

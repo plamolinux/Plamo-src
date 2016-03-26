@@ -1,0 +1,44 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/gzip/PlamoBuild.gzip-1.6	2016-01-05 21:07:54.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/gnu/gzip/gzip-1.6.tar.gz"
++pkgbase=gzip
++vers=1.6
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--bindir=/bin"
++DOCS="INSTALL NEWS README AUTHORS COPYING THANKS TODO ChangeLog-2007
++    README-release ChangeLog"
+ ######################################################################
+ 
+ fscheck() {
+@@ -238,6 +239,8 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/usr/bin
++  mv $P/bin/z{cmp,diff,{e,f}grep,force,grep,less,more,new} $P/usr/bin
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,7 +264,9 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

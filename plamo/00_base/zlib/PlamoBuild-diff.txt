@@ -1,0 +1,53 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/zlib/PlamoBuild.zlib-1.2.8	2016-01-19 20:31:31.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://zlib.net/zlib-1.2.8.tar.gz"
++pkgbase=zlib
++vers=1.2.8
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="ChangeLog `echo doc/{algorithm,rfc195{0,1,2},txtvsbin}.txt`
++    FAQ INDEX README"
+ ######################################################################
+ 
+ fscheck() {
+@@ -209,8 +210,7 @@
+     fi
+     if [ -x configure ] ; then
+       ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+-          --infodir='${prefix}'/share/info \
+-          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
++          ${OPT_CONFIG[$i]}
+     fi
+   done
+ fi
+@@ -260,10 +260,17 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  cp -a $S/examples $docdir/$src
++  chown -R root.root $docdir/$src/examples
++  mv $docdir/$src/{examples,{FAQ,INDEX,README,$myname}.gz} $C
++  mv $C/{examples,{FAQ,INDEX,README,$myname}.gz} $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

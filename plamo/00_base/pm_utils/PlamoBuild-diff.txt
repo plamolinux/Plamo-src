@@ -1,0 +1,39 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/pm_utils/PlamoBuild.pm_utils-1.4.1	2016-01-15 15:19:53.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://pm-utils.freedesktop.org/releases/pm-utils-1.4.1.tar.gz"
++pkgbase=pm_utils
++vers=1.4.1
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P3
++src=pm-utils-$vers
++OPT_CONFIG="--sysconfdir=/etc"
++DOCS="README* AUTHORS COPYING ChangeLog INSTALL NEWS TODO pm/HOWTO*"
+ ######################################################################
+ 
+ fscheck() {
+@@ -262,8 +262,14 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/$libdir/pm-utils
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/pm
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

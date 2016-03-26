@@ -1,0 +1,61 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/hibernate_script/PlamoBuild.hibernate_script-2.0	2016-01-07 13:18:05.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
+-arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++url="http://tuxonice.net/files/hibernate-script-2.0.tar.gz"
++pkgbase=hibernate_script
++vers=2.0
++arch=noarch
++build=P4
++src=hibernate-script-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="COPYING SCRIPTLET-API README.xfs README CHANGELOG"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +199,9 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p install.sh{,.orig}
++  sed -i '/MAN_DIR=/s@man@share/man@g' install.sh
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +241,11 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/etc/logrotate.d
++  export PREFIX=/usr
++  export BASE_DIR=$P
++  ./install.sh
++  chown -R root.root $P/usr/share/hibernate
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,8 +269,12 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/share/hibernate
++  tar rvpf $pkg.tar -C $P etc/hibernate
++  tar rvpf $pkg.tar -C $P `cd $P ; find etc/logrotate.d | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

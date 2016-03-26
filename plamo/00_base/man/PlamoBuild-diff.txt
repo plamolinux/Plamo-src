@@ -1,0 +1,95 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/man/PlamoBuild.man-1.6g	2016-01-13 21:15:05.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.ibiblio.org/pub/Linux/apps/doctools/man/man-1.6g.tar.gz"
++pkgbase=man
++vers=1.6g
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="COPYING README README.HP README.GNU-WIN32 INSTALL TODO LSM
++    README.IRIX HISTORY"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +200,24 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p src/man.conf.in{,.orig}
++  cat <<- "EOF" | patch src/man.conf.in
++	43c43,45
++	< MANPATH	/usr/X11R6/man
++	---
++	> MANPATH	/opt/kde/share/man
++	> MANPATH	/opt/mysql/man
++	> MANPATH	/opt/texlive/2009/texmf/doc/man
++	67,69c69,71
++	< MANPATH_MAP	/usr/X11R6/bin		/usr/X11R6/man
++	< MANPATH_MAP	/usr/bin/X11		/usr/X11R6/man
++	< MANPATH_MAP	/usr/bin/mh		/usr/share/man
++	---
++	> MANPATH_MAP	/opt/kde/bin		/opt/kde/share/man
++	> MANPATH_MAP	/opt/mysql/bin		/opt/mysql/man
++	> MANPATH_MAP	/opt/texlive		/opt/texlive/2009/texmf/doc/man
++	EOF
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -208,9 +227,7 @@
+       rm -rf config.cache config.log
+     fi
+     if [ -x configure ] ; then
+-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+-          --infodir='${prefix}'/share/info \
+-          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
++      ./configure -confdir /etc +fhs +lang all
+     fi
+   done
+ fi
+@@ -238,11 +255,17 @@
+       make install DESTDIR=$P
+     fi
+   done
++  mv $mandir/{ja,ja_JP.eucJP}
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  for i in bg cs da de el es fi fr hr it ja_JP.eucJP ko nl pl pt ro sl ; do
++    gzip_dir $mandir/$i/man1
++    gzip_dir $mandir/$i/man5
++    gzip_dir $mandir/$i/man8
++  done
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -262,7 +285,17 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/man.conf
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "man"`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
++  for i in bg cs da de el es fi fr hr it ja_JP.eucJP ko nl pl pt ro sl ; do
++    tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/$i/man1 | tail -n+2`
++    tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/$i/man5 | tail -n+2`
++    tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/$i/man8 | tail -n+2`
++  done
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

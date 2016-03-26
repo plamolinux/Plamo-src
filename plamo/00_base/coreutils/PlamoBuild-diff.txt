@@ -1,0 +1,78 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/coreutils/PlamoBuild.coreutils-8.23	2016-01-05 21:08:59.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
++pkgbase=coreutils
++vers=8.23
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--enable-install-program=arch
++    --enable-no-install-program=uptime,kill --without-gmp"
++DOCS="ChangeLog-2005 COPYING INSTALL ABOUT-NLS ChangeLog-2007 NEWS
++    README ChangeLog-2006 ChangeLog-2008 THANKS-to-translators
++    ChangeLog AUTHORS TODO THANKS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -192,6 +195,7 @@
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    xz) tar xvpJf ${i##*/} ;;
+     esac
+   done
+ fi
+@@ -199,6 +203,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p po/Makevars{,.orig}
++  sed 's@EXTRA_LOCALE_CATEGORIES@#&@g' po/Makevars.orig > po/Makevars
++  cp -p src/copy.c{,.orig}
++  sed 's@FASTREAD@NONE@g' src/copy.c.orig > src/copy.c
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +247,13 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/{sbin,bin}
++  mv $P/usr/bin/sleep $P/sbin ; ln -s /sbin/sleep $P/usr/bin
++  for i in chroot stty df cat chgrp chmod chown cp cut date dd dircolors \
++      du echo false head ln ls mkdir mkfifo mknod mv pwd rm rmdir shred \
++      sync touch true uname ; do
++    mv $P/usr/bin/$i $P/bin ; ln -s /bin/$i $P/usr/bin
++  done
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +277,16 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  prune_symlink $P/usr/share/locale
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/libexec/coreutils
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

@@ -1,0 +1,114 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/lilo/PlamoBuild.lilo-24.2	2016-03-23 07:18:35.000000000 +0900
+@@ -1,14 +1,20 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://lilo.alioth.debian.org/ftp/sources/lilo-24.2.tar.gz
++    ftp://ftp.internat.freebsd.org/pub/FreeBSD/distfiles/Dev86src-0.16.18.tar.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/lilo/dev86-0.16.17-x86_64.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/lilo/dev86-0.16.17-copt.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/lilo/plamo_liloconfig.tar.gz"
++pkgbase=lilo
++vers=24.2
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="`echo readme/README.{bitmaps,common.problems,disk,nokeyboard}`
++    `echo readme/{README.{pseudo,volumeID,raid1},INCOMPAT,README}`
++    NEWS CHANGELOG TODO README COPYING CHANGELOG_old TOOLS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +205,21 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p checkit checkit.orig
++  sed 's@^gcc @LANG=C gcc @g' checkit.orig > checkit
++  cp -p diagnose/Makefile diagnose/Makefile.orig
++  cat <<- "EOF" | patch diagnose/Makefile
++	36c36
++	< 	@if [ -x /usr/bin/bcc -o -x /usr/local/bin/bcc ]; then echo Okay; \
++	---
++	> 	@if which bcc; then echo Okay; \
++	EOF
++  cd $W/dev86-0.16.18
++  gunzip -c $W/dev86-0.16.17-x86_64.patch.gz | patch -Np1 -i -
++  gunzip -c $W/dev86-0.16.17-copt.patch.gz | patch -Np1 -i -
++  make PREFIX=$W/dev86 install
++  PATH="$W/dev86/bin:$PATH"
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -218,7 +239,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make
++      make -i alles diagnostic
+     fi
+   done
+ fi
+@@ -238,11 +259,23 @@
+       make install DESTDIR=$P
+     fi
+   done
++  mv $P/sbin/lilo{.static,}
++  rm $P/usr/sbin/liloconfig
++  rm $P/boot/{debian{,-de,lilo},coffee}.{bmp,dat}
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  for i in {{,e}lilo,{,e}osldr}config ; do
++    cp -p plamo_liloconfig/sbin/$i $P/sbin ; chown root.root $P/sbin/$i
++  done
++  ln -s liloconfig $P/sbin/liloconfig-color
++  install -d $P/var/log/setup
++  for i in {,e}text.lilohelp {,e}setup.bootloader ; do
++    cp -p plamo_liloconfig/var/log/setup/$i $P/var/log/setup
++    chown root.root $P/var/log/setup/$i
++  done
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,10 +293,28 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  mkdir $docdir/$src/sample
++  for i in sample/lilo.{old-{raid,special},example}.conf \
++      images/{{inside,onlyblue,tuxlogo}_16c.dat,README} ; do
++    cp -p $S/$i $docdir/$src/sample
++  done
++  touch -r $S/sample $docdir/$src/sample
++  cp -a $S/doc $docdir/$src
++  chown -R root.root $docdir/$src/{sample,doc}
++  mv $docdir/$src/{readme,sample,{NEWS,CHANGELOG,TODO,README}.gz} $C
++  mv $docdir/$src/{{COPYING,CHANGELOG_old,TOOLS}.gz,doc,$myname.gz} $C
++  mv $C/{readme,sample,{NEWS,CHANGELOG,TODO,README}.gz} $docdir/$src
++  mv $C/{{COPYING,CHANGELOG_old,TOOLS}.gz,doc,$myname.gz} $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find boot | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find var/log/setup | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

@@ -1,0 +1,84 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/dhcp/PlamoBuild.dhcp-4.3.3	2016-01-25 13:06:29.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.isc.org/isc/dhcp/4.3.3/dhcp-4.3.3.tar.gz"
++pkgbase=dhcp
++vers=4.3.3
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--sysconfdir=/etc"
++DOCS="LICENSE README RELNOTES"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +199,15 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p client/scripts/linux{,.orig}
++  cat <<- "EOF" > client/scripts/linux
++	24a25,26
++	> PATH=/sbin/:$PATH
++	> 
++	EOF
++  cp -p client/dhclient.conf.example{,.orig}
++  sed -i '/^script/s@etc@sbin@g' client/dhclient.conf.example
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +247,9 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/sbin
++  install client/scripts/linux $P/sbin/dhclient-script
++  install -d $P/var/db
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +273,33 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  install -d $P/install
++  cat <<- "EOF" > $P/install/doinst.sh
++	dhc_config() {
++	  if [ -f etc/$1.conf ] ; then
++	    rm etc/$1.conf.example
++	  else
++	    mv etc/$1.conf.example /tmp
++	    mv /tmp/$1.conf.example etc/$1.conf
++	  fi
++	}
++	
++	for i in dhclient dhcpd ; do dhc_config $i ; done
++	EOF
++  touch -t `date '+%m%d0900'` $P/install/doinst.sh
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include -maxdepth 1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find etc | tail -n+2`
++  tar rvpf $pkg.tar -C $P var/db
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

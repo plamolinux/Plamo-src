@@ -1,0 +1,94 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/net_tools/PlamoBuild.net_tools-1.60	2016-01-14 11:49:19.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://downloads.sourceforge.net/net-tools/net-tools-1.60.tar.bz2
++    http://simosnet.com/livecdroom/source/solydxk/main/n/net-tools/net-tools_1.60-24.1.diff.gz"
++pkgbase=net_tools
++vers=1.60
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++build=P2
++src=net-tools-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="ABOUT-NLS COPYING INSTALLING README README.ipv6 TODO"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +200,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/net-tools_1.60-24.1.diff.gz | patch -Np1 -i -
++  for i in `cat debian/patches/series` ; do
++    patch -Np1 -i debian/patches/$i
++  done
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -213,6 +219,33 @@
+           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+   done
++  yes "" | make config
++  cp -p config.h{,.orig}
++  cat <<- "EOF" | patch config.h
++	22c22
++	< #define I18N 0
++	---
++	> #define I18N 1
++	52,53c52,53
++	< #define HAVE_HWSTRIP 1
++	< #define HAVE_HWTR 1
++	---
++	> #define HAVE_HWSTRIP 0
++	> #define HAVE_HWTR 0
++	EOF
++  cp -p config.make{,.orig}
++  cat <<- "EOF" | patch config.make
++	1c1
++	< # I18N=0
++	---
++	> I18N=1
++	19,20c19,20
++	< HAVE_HWSTRIP=1
++	< HAVE_HWTR=1
++	---
++	> # HAVE_HWSTRIP=0
++	> # HAVE_HWTR=0
++	EOF
+ fi
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+@@ -235,7 +268,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install BASEDIR=$P
+     fi
+   done
+   touch $W/i.et
+@@ -261,9 +294,13 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

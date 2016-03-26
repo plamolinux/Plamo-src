@@ -1,0 +1,66 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/mlocate/PlamoBuild.mlocate-0.24	2016-01-13 22:53:23.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="https://fedorahosted.org/releases/m/l/mlocate/mlocate-0.24.tar.xz"
++pkgbase=mlocate
++vers=0.24
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--localstatedir=/var"
++DOCS="README ChangeLog NEWS INSTALL AUTHORS ABOUT-NLS COPYING"
+ ######################################################################
+ 
+ fscheck() {
+@@ -192,6 +192,7 @@
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    xz) tar xvpJf ${i##*/} ;;
+     esac
+   done
+ fi
+@@ -238,6 +239,20 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/etc
++  cat <<- "EOF" > $P/etc/updatedb.conf
++	PRUNEFS="sysfs selinuxfs usbdevfs devpts NFS nfs nfs4 afs sfs proc
++	    smbfs cifs autofs auto iso9660 udf"
++	PRUNEPATHS="/tmp /usr/tmp /var/tmp /afs /net /sfs /selinux /udev
++	    /mnt/floppy /media"
++	EOF
++  install -d $P/etc/cron.daily
++  cat <<- "EOF" > $P/etc/cron.daily/mlocate
++	#!/bin/sh
++	renice +19 -p $$ > /dev/null 2>&1
++	updatedb
++	EOF
++  chmod 755 $P/etc/cron.daily/mlocate
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -262,7 +277,13 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "*.mo"`
++  tar rvpf $pkg.tar -C $P var/mlocate
++  tar rvpf $pkg.tar -C $P etc/updatedb.conf
++  tar rvpf $pkg.tar -C $P etc/cron.daily/mlocate
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

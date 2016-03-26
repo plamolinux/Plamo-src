@@ -1,0 +1,49 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/traceroute/PlamoBuild.traceroute-2.0.18	2016-01-21 20:26:50.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://downloads.sourceforge.net/traceroute/traceroute-2.0.18.tar.gz"
++pkgbase=traceroute
++vers=2.0.18
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="COPYING.LIB CREDITS ChangeLog COPYING VERSION TODO README"
+ ######################################################################
+ 
+ fscheck() {
+@@ -218,7 +218,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make
++      make prefix=/usr
+     fi
+   done
+ fi
+@@ -235,7 +235,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install DESTDIR=$P prefix=/usr
+     fi
+   done
+   touch $W/i.et
+@@ -262,7 +262,7 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

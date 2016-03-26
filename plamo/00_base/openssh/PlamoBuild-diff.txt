@@ -1,0 +1,91 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/openssh/PlamoBuild.openssh-7.2p2	2016-03-17 19:06:05.000000000 +0900
+@@ -1,14 +1,18 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.2p2.tar.gz"
++pkgbase=openssh
++vers=7.2p2
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--sysconfdir=/etc/ssh --localstatedir=/var --with-pam
++    --with-privsep-user=sshd --with-privsep-path=/var/lib/sshd
++    --with-md5-passwords"
++DOCS="CREDITS INSTALL LICENCE OVERVIEW PROTOCOL PROTOCOL.agent
++    `echo PROTOCOL.{certkeys,chacha20poly1305,key,krl,mux}`
++    README `echo README.{dns,platform,privsep,tun}` TODO ChangeLog"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +203,14 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p sshd_config{,.orig}
++  sed -i -e 's@^#\(UsePAM\) no$@\1 yes@g' \
++      -e 's@^#\(PermitUserEnvironment\) no$@\1 yes@g' sshd_config
++  if [ $arch == x86_64 ] ; then
++    cp -p contrib/sshd.pam.generic{,.orig}
++    sed -i 's@/lib@/lib64@' contrib/sshd.pam.generic
++  fi
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +250,16 @@
+       make install DESTDIR=$P
+     fi
+   done
++  ln -s ssh $P/usr/bin/slogin
++  ln -s ssh.1 $mandir/man1/slogin.1
++  chgrp sys $P/var/lib/sshd
++  mv $P/etc/ssh/ssh_config{,.new} ; mv $P/etc/ssh/sshd_config{,.new}
++  mv $P/etc/ssh/{ssh{,d}_config.new,moduli} $C
++  mv $C/{ssh{,d}_config.new,moduli} $P/etc/ssh
++  install -d $P/etc/pam.d
++  install -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
++  install contrib/ssh-copy-id $P/usr/bin
++  install -m 644 contrib/ssh-copy-id.1 $mandir/man1
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +283,31 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
++  cat <<- "EOF" >> $P/install/doinst.sh
++	
++	ssh_config() {
++	  if [ -f etc/ssh/${1}_config ] ; then
++	    rm etc/${1}_config.new
++	  else
++	    mv etc/${1}_config.new /tmp
++	    mv /tmp/${1}_config.new etc/${1}_config
++	  fi
++	}
++	
++	for i in ssh sshd ; do ssh_config $i ; done
++	EOF
++  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
++  tar rvpf $pkg.tar -C $P var/lib/sshd
++  tar rvpf $pkg.tar -C $P etc/ssh
++  tar rvpf $pkg.tar -C $P `cd $P ; find etc/pam.d | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

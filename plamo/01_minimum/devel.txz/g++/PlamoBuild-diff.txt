@@ -1,0 +1,132 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/01_minimum/devel.txz/g++/PlamoBuild.g++-4.8.5	2016-01-28 13:42:18.000000000 +0900
+@@ -1,14 +1,20 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/gnu/gcc/gcc-4.8.5/gcc-4.8.5.tar.bz2
++    https://patchwork.ozlabs.org/patch/342434/mbox"
++pkgbase=g++
++vers=4.8.5
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P2
++src=gcc-$vers
++OPT_CONFIG="--disable-werror --disable-multilib --enable-install-libiberty
++    --enable-__cxa_atexit --enable-threads=posix --enable-shared
++    --enable-languages=c,c++,fortran,go --enable-gnu-unique-object
++    --enable-linker-build-id --enable-plugin --with-system-zlib
++    --with-linker-hash-style=gnu --enable-clocale=gnu --disable-libstdcxx-pch"
++DOCS="COPYING ChangeLog ABOUT-NLS NEWS COPYING3.LIB ChangeLog.tree-ssa
++    COPYING3 COPYING.RUNTIME README COPYING.LIB MAINTAINERS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -47,9 +53,9 @@
+ strip_bindir() {
+   echo "compressing in $1"
+   if [ -d $1 ] ; then (
+-    shopt -s nullglob
++    shopt -s extglob nullglob
+     cd $1
+-    for i in * ; do
++    for i in `echo !(*.so|*.so.*|*.a|*.o)` ; do
+       echo "$i"
+       if [ -h $i ] ; then continue ; fi
+       if [ -n "`file $i | grep "not stripped"`" ] ; then
+@@ -184,8 +190,13 @@
+   done
+ fi
+ if [ $opt_download -eq 1 ] ; then
++  alt=gcc-4.8-filename-output.patch
+   for i in $url ; do
+-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
++    if [ ${i##*/} == mbox ] ; then
++      [ ! -f $alt ] && wget $i -O $alt
++    elif [ ! -f ${i##*/} ] ; then
++      wget $i
++    fi
+   done
+   for i in $url ; do
+     case ${i##*.} in
+@@ -199,6 +210,8 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  patch -Np0 -i $W/gcc-4.8-filename-output.patch
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -210,7 +223,10 @@
+     if [ -x configure ] ; then
+       ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+           --infodir='${prefix}'/share/info \
+-          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
++          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]} \
++          --libexecdir=/usr/$libdir \
++          --build=$arch-pc-linux-gnu`[ $arch == armv7l ] && echo eabi` \
++          --host=$arch-pc-linux-gnu`[ $arch == armv7l ] && echo eabi`
+     fi
+   done
+ fi
+@@ -238,11 +254,32 @@
+       make install DESTDIR=$P
+     fi
+   done
++  mv $P/usr/bin/{,$arch-*-}{g,c}++ $C
++  rm -f $P/usr/bin/*
++  mv $C/{,$arch-*-}{g,c}++ $P/usr/bin
++  gcclibdir=$P/usr/$libdir/gcc/$arch-pc-linux-gnu
++  gcclibdir+=`[ $arch == armv7l ] && echo eabi`/$vers
++  mv $gcclibdir/cc1plus $C
++  rm -rf $gcclibdir/*
++  mv $C/cc1plus $gcclibdir
++  mv $P/usr/$libdir/libsupc++.{la,a} $C
++  mv $P/usr/$libdir/libstdc++.{so{.6{.0.19,},},{la,a}} $C
++  mv $P/usr/$libdir/libstdc++.so.6.0.19-gdb.py $C
++  mv $P/usr/$libdir/libasan_preinit.o $C
++  mv $P/usr/$libdir/lib{a,t}san.{so{.0{.0.0,},},{la,a}} $C
++  rm -rf $P/usr/$libdir/{lib*,go}
++  mv $C/libsupc++.{la,a} $P/usr/$libdir
++  mv $C/libstdc++.{so{.6{.0.19,},},{la,a}} $P/usr/$libdir
++  mv $C/libstdc++.so.6.0.19-gdb.py $P/usr/$libdir
++  mv $C/libasan_preinit.o $P/usr/$libdir
++  mv $C/lib{a,t}san.{so{.0{.0.0,},},{la,a}} $P/usr/$libdir
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_bindir $gcclibdir
++  touch -t `date '+%m%d0900'` $gcclibdir
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -261,9 +298,19 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
++  install -d $P/usr/share/gdb/auto-load/usr/$libdir
++  mv $P/usr/$libdir/libstdc++.so.*-gdb.py \
++      $P/usr/share/gdb/auto-load/usr/$libdir
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -type f`
++  tar rvpf $pkg.tar -C $P \
++      `cd $P ; find usr/share/gdb/auto-load/usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/c++
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "libstdc++.mo"`
++  tar rvpf $pkg.tar -C $P usr/share/gcc-$vers
++  tar rvpf $pkg.tar -C $P usr/share/man/man1/g++.1.gz
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

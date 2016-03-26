@@ -1,0 +1,35 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/sysfsutils/PlamoBuild.sysfsutils-2.1.0	2016-01-16 16:05:05.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://downloads.sourceforge.net/linux-diag/sysfsutils-2.1.0.tar.gz"
++pkgbase=sysfsutils
++vers=2.1.0
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="TODO NEWS INSTALL README COPYING CREDITS AUTHORS
++    docs/libsysfs.txt ChangeLog"
+ ######################################################################
+ 
+ fscheck() {
+@@ -262,8 +263,11 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/sysfs
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

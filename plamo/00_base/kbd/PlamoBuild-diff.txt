@@ -1,0 +1,68 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/kbd/PlamoBuild.kbd-1.15.5	2016-03-21 18:25:25.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="ftp://ftp.altlinux.org/pub/people/legion/kbd/kbd-1.15.5.tar.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15-backspace-1.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15-plamo-compat.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/kbd/kbd-1.15.5-revert_loadkeys_analize.patch.gz"
++pkgbase=kbd
++vers=1.15.5
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="INSTALL ChangeLog NEWS AUTHORS CREDITS COPYING ABOUT-NLS README"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +202,10 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/kbd-1.15-backspace-1.patch.gz | patch -Np1 -i -
++  gunzip -c $W/kbd-1.15-plamo-compat.patch.gz | patch -Np1 -i -
++  gunzip -c $W/kbd-1.15.5-revert_loadkeys_analize.patch.gz | patch -Np1 -i -
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +245,11 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/bin
++  for i in dumpkeys loadkeys setfont kbd_mode openvt ; do
++    mv $P/usr/bin/$i $P/bin
++    ln -s /bin/$i $P/usr/bin/$i
++  done
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +273,18 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  prune_symlink $P/usr/share/keymaps
++  touch -t `date '+%m%d0900'` $P/usr/share/keymaps
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/share/console{fonts,trans}
++  tar rvpf $pkg.tar -C $P usr/share/{uni,key}maps
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name kbd.mo`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

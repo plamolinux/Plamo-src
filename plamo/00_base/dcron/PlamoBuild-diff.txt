@@ -1,0 +1,123 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/dcron/PlamoBuild.dcron-4.5	2015-12-27 22:56:24.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.jimpryor.net/linux/releases/dcron-4.5.tar.gz"
++pkgbase=dcron
++vers=4.5
+ arch=`uname -m`
+-build=P1
++build=P4
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="README CHANGELOG CHANGELOG.working"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +199,49 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p extra/crond.rc{,.orig}
++  cat <<- "EOF" | patch extra/crond.rc
++	3,5c3,5
++	< . /etc/rc.conf
++	< . /etc/rc.d/functions
++	< . /etc/conf.d/crond
++	---
++	> #. /etc/rc.conf
++	> #. /etc/rc.d/functions
++	> #. /etc/conf.d/crond
++	10c10
++	< 	stat_busy "Starting Cron Daemon"
++	---
++	> 	echo "Starting Cron Daemon"
++	15c15
++	< 	if [[ -z $PID ]] && env -i PATH="/sbin:/usr/sbin:/bin:/usr/bin" /usr/sbin/crond $CROND_ARGS; then
++	---
++	> 	if [[ -z $PID ]] && env -i PATH="/sbin:/usr/sbin:/bin:/usr/bin" /usr/sbin/crond -S -l info; then
++	19,20c19
++	< 		add_daemon crond
++	< 		stat_done
++	---
++	> 		echo "crond started"
++	22c21
++	< 		stat_fail
++	---
++	> 		echo "crond failed to start"
++	28c27
++	< 	stat_busy "Stopping Cron Daemon"
++	---
++	> 	echo "Stopping Cron Daemon"
++	30,31c29,30
++	< 		rm_daemon crond
++	< 		stat_done
++	---
++	> 		rm -f /var/run/crond.pid
++	> 		echo "crond stopped"
++	33c32
++	< 		stat_fail
++	---
++	> 		echo "crond failed to stop"
++	EOF
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -218,7 +261,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make
++      make PREFIX=/usr
+     fi
+   done
+ fi
+@@ -235,9 +278,25 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make -i install DESTDIR=$P
+     fi
+   done
++  install extra/run-cron $P/usr/sbin
++  install extra/prune-cronstamps $P/etc/cron.d
++  install -m 600 extra/root.crontab $P/var/spool/cron/crontabs/root
++  cat <<- "EOF" > $P/var/spool/cron/crontabs/nobody
++	# This updates the database for 'locate' every day:
++	40 4 * * * updatedb 1> /dev/null 2> /dev/null
++	EOF
++  chmod 600 $P/var/spool/cron/crontabs/nobody
++  chown nobody.nogroup $P/var/spool/cron/crontabs/nobody
++  install -d $P/etc/cron.{hourly,daily,weekly,monthly}
++  cat <<- "EOF" >> $P/etc/cron.daily/logrotate
++	logrotate /etc/logrotate.conf
++	EOF
++  chmod 755 $P/etc/cron.daily/logrotate
++  install -d $P/etc/rc.d/init.d
++  install -m 744 extra/crond.rc $P/etc/rc.d/init.d/crond
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,8 +320,13 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/cron.{d,hourly,daily,weekly,monthly}
++  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/crond
++  tar rvpf $pkg.tar -C $P var/spool/cron
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

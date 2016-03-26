@@ -1,0 +1,74 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/iputils/PlamoBuild.iputils-s20101006	2016-03-21 18:20:06.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.skbuff.net/iputils/iputils-s20101006.tar.bz2
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/iputils/iputils-s20101006-fixes-1.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/iputils/iputils-s20100418-doc-1.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/iputils/iputils-s20101006-Makefile.patch.gz"
++pkgbase=iputils
++vers=s20101006
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="INSTALL RELNOTES"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +202,12 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/iputils-s20101006-fixes-1.patch.gz | patch -Np1 -i -
++  gunzip -c $W/iputils-s20100418-doc-1.patch.gz | patch -Np1 -i -
++  gunzip -c $W/iputils-s20101006-Makefile.patch.gz | patch -Np1 -i -
++  cp -p Makefile{,.orig}
++  sed -i "s|@LIBDIR@|/usr/$libdir|" Makefile
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -219,6 +228,7 @@
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+       make
++      make man
+     fi
+   done
+ fi
+@@ -238,6 +248,14 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/{bin,usr/{sbin,bin}}
++  install ping{,6} $P/bin
++  chmod +s $P/bin/ping{,6}
++  install arping clockdiff tracepath{,6} $P/usr/sbin
++  install traceroute6 $P/usr/bin
++  chmod +s $P/usr/bin/traceroute6
++  install -d $P/usr/share/man/man8
++  install -m 644 doc/*.8 $P/usr/share/man/man8
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,8 +279,10 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

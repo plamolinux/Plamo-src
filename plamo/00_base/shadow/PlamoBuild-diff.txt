@@ -1,0 +1,248 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/shadow/PlamoBuild.shadow-git_20130908	2016-03-23 16:42:56.000000000 +0900
+@@ -1,14 +1,16 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="https://github.com/shadow-maint/shadow.git
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/shadow/shadow-adduser-20160122"
++pkgbase=shadow
++vers=git_20130908
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P5
++src=$pkgbase
++OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
++    --with-libcrack"
++DOCS="COPYING ChangeLog NEWS README TODO"
+ ######################################################################
+ 
+ fscheck() {
+@@ -185,13 +187,20 @@
+ fi
+ if [ $opt_download -eq 1 ] ; then
+   for i in $url ; do
+-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
++    case ${i##*.} in
++    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; else
++        ( cd `basename ${i##*/} .git` ; git pull origin master ) ; fi ;;
++    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
++    esac
+   done
+   for i in $url ; do
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    git) ( cd `basename ${i##*/} .git`
++        git checkout origin/master ; git reset --hard 578947e
++        git set-file-times ) ;;
+     esac
+   done
+ fi
+@@ -199,6 +208,127 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p etc/pam.d/chfn etc/pam.d/chfn.orig
++  cat <<- "EOF" | patch etc/pam.d/chfn
++	2a3
++	> auth		include		system-auth
++	EOF
++  cp -p etc/pam.d/chsh etc/pam.d/chsh.orig
++  cat <<- "EOF" | patch etc/pam.d/chsh
++	2a3
++	> auth		include		system-auth
++	EOF
++  cp -p etc/pam.d/login etc/pam.d/login.orig
++  cat <<- "EOF" | patch etc/pam.d/login
++	7c7
++	< session		required	pam_selinux.so close
++	---
++	> #session		required	pam_selinux.so close
++	10,11c10,13
++	< session		optional	pam_console.so
++	< session		required	pam_selinux.so open
++	---
++	> session		optional	pam_unix.so
++	> #session		required	pam_selinux.so open
++	> session		required	pam_lastlog.so
++	> session		optional	pam_ck_connector.so nox11
++	EOF
++  cp -p etc/pam.d/su etc/pam.d/su.orig
++  cat <<- "EOF" | patch etc/pam.d/su
++	6c6
++	< auth		required	pam_wheel.so use_uid
++	---
++	> #auth		required	pam_wheel.so use_uid
++	10c10
++	< session		required	pam_selinux.so close
++	---
++	> #session		required	pam_selinux.so close
++	12c12
++	< session		required	pam_selinux.so open multiple
++	---
++	> #session		required	pam_selinux.so open multiple
++	EOF
++  cp -p etc/pam.d/chage etc/pam.d/chage.orig
++  cat <<- "EOF" | patch etc/pam.d/chage
++	2a3
++	> auth		include		system-auth
++	EOF
++  cp -p etc/useradd etc/useradd.orig
++  sed '/^GROUP=/s@1000@100@g' etc/useradd.orig \
++      | sed '/^CREATE_MAIL_SPOOL=/s@yes@no@g' > etc/useradd
++  cp -p etc/login.defs etc/login.defs.orig
++  cat <<- "EOF" | patch etc/login.defs
++	17c17
++	< FAILLOG_ENAB		yes
++	---
++	> #FAILLOG_ENAB		yes
++	32c32
++	< LASTLOG_ENAB		yes
++	---
++	> #LASTLOG_ENAB		yes
++	40c40
++	< MAIL_CHECK_ENAB		yes
++	---
++	> #MAIL_CHECK_ENAB		yes
++	45c45
++	< OBSCURE_CHECKS_ENAB	yes
++	---
++	> #OBSCURE_CHECKS_ENAB	yes
++	50c50
++	< PORTTIME_CHECKS_ENAB	yes
++	---
++	> #PORTTIME_CHECKS_ENAB	yes
++	55c55
++	< QUOTAS_ENAB		yes
++	---
++	> #QUOTAS_ENAB		yes
++	81c81
++	< MOTD_FILE	/etc/motd
++	---
++	> #MOTD_FILE	/etc/motd
++	99c99
++	< FTMP_FILE	/var/log/btmp
++	---
++	> #FTMP_FILE	/var/log/btmp
++	106c106
++	< NOLOGINS_FILE	/etc/nologin
++	---
++	> #NOLOGINS_FILE	/etc/nologin
++	144c144
++	< ENV_HZ		HZ=100
++	---
++	> #ENV_HZ		HZ=100
++	205c205
++	< PASS_MIN_LEN	5
++	---
++	> #PASS_MIN_LEN	5
++	214c214
++	< SU_WHEEL_ONLY	no
++	---
++	> #SU_WHEEL_ONLY	no
++	219c219
++	< CRACKLIB_DICTPATH	/var/cache/cracklib/cracklib_dict
++	---
++	> #CRACKLIB_DICTPATH	/var/cache/cracklib/cracklib_dict
++	260c260
++	< PASS_CHANGE_TRIES	5
++	---
++	> #PASS_CHANGE_TRIES	5
++	265c265
++	< PASS_ALWAYS_WARN	yes
++	---
++	> #PASS_ALWAYS_WARN	yes
++	277c277
++	< CHFN_AUTH		yes
++	---
++	> #CHFN_AUTH		yes
++	359c359
++	< ENVIRON_FILE	/etc/environment
++	---
++	> #ENVIRON_FILE	/etc/environment
++	EOF
++  ./autogen.sh
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,11 +368,23 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install $W/shadow-adduser-20160122 $P/usr/sbin/adduser
++  install -d $mandir/ja_JP.eucJP/man{1,5,8}
++  for i in `cd $mandir/ja ; find . -type f` ; do
++    nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
++  done
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  for loc in cs da de fi fr hu id it ja_JP.eucJP ko pl pt_BR ru sv tr \
++      zh_CN zh_TW ; do
++    gzip_dir $P/usr/share/man/$loc/man1
++    gzip_dir $P/usr/share/man/$loc/man3
++    gzip_dir $P/usr/share/man/$loc/man5
++    gzip_dir $P/usr/share/man/$loc/man8
++  done
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,10 +402,47 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  touch -t `date '+%m%d0900'` $docdir/$src
+   convert
++  cat <<- EOF >> $P/install/doinst.sh
++	#%% begin initialize $pkg
++	EOF
++  cat <<- "EOF" >> $P/install/doinst.sh
++	if [ -z "`grep "^root:" /etc/shadow | cut -d: -f2`" ] ; then
++	  echo "root(システム管理者)のパスワードを設定してください。"
++	  until passwd root ; do
++	    echo "root(システム管理者)のパスワードを設定してください。"
++	  done
++	  echo "rootのパスワードの設定が完了しました。"
++	fi
++	#%% end
++	EOF
++  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/pam.d
++  tar rvpf $pkg.tar -C $P etc/login.defs
++  tar rvpf $pkg.tar -C $P etc/default
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name shadow.mo`
++  for loc in cs da de fi fr hu id it ja_JP.eucJP ko pl pt_BR ru sv tr \
++      zh_CN zh_TW ; do
++    [ -d $P/usr/share/man/$loc/man1 ] && tar rvpf $pkg.tar -C $P \
++        `cd $P ; find usr/share/man/$loc/man1 | tail -n+2`
++    [ -d $P/usr/share/man/$loc/man3 ] && tar rvpf $pkg.tar -C $P \
++        `cd $P ; find usr/share/man/$loc/man3 | tail -n+2`
++    [ -d $P/usr/share/man/$loc/man5 ] && tar rvpf $pkg.tar -C $P \
++        `cd $P ; find usr/share/man/$loc/man5 | tail -n+2`
++    [ -d $P/usr/share/man/$loc/man8 ] && tar rvpf $pkg.tar -C $P \
++        `cd $P ; find usr/share/man/$loc/man8 | tail -n+2`
++  done
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

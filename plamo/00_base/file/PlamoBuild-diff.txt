@@ -1,0 +1,22 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/file/PlamoBuild.file-5.22	2015-12-28 16:05:57.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="ftp://ftp.astron.com/pub/file/file-5.22.tar.gz"
++pkgbase=file
++vers=5.22
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README TODO MAINT"
+ ######################################################################
+ 
+ fscheck() {

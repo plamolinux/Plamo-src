@@ -1,0 +1,146 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/nvi/PlamoBuild.nvi-1.79	2016-03-26 22:31:27.703769823 +0900
+@@ -1,14 +1,24 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.tar.gz/765e2153f5fc4f21793f2edc2647305a/nvi-1.79.tar.gz
++    http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.m17n-20040401.diff.gz/851650ced51697b3b08400fa75621c97/nvi-1.79.m17n-20040401.diff.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/nvi/nvi-1.79-64bit_breakage.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/nvi/nvi-1.79-DESTDIR.patch.gz"
++pkgbase=nvi
++vers=1.79
+ arch=`uname -m`
+-build=P1
++build=P6
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--enable-multibyte=euc-jp"
++DOCS="LAYOUT README FAQ
++    `echo docs/USD.doc/{edit/edittut,vi.ref/vi.ref}.ps`
++    `echo docs/USD.doc/vitut/{vitut,summary,viapwh}.ps`
++    `echo docs/USD.doc/exref/{exref,summary}.ps`
++    `echo docs/{ev,features,interp/interp,TODO,help}`
++    `echo docs/internals/{gdb.script,structures,autowrite,quoting}`
++    `echo docs/internals/{input,context,openmode,cscope.NOTES}`
++    docs/changelog docs/tutorial/* `echo build/README{,.LynxOS}` LICENSE"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,8 +209,16 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  chmod -R u+w .
++  gunzip -c $W/nvi-1.79.m17n-20040401.diff.gz | patch -Np0 -i -
++  gunzip -c $W/nvi-1.79-64bit_breakage.patch.gz | patch -Np1 -i -
++  gunzip -c $W/nvi-1.79-DESTDIR.patch.gz | patch -Np1 -i -
++  cp -p build/configure{,.orig}
++  sed '/^LDFLAGS=/s@$LDFLAGS@${LDFLAGS-"-lncurses"}@g' build/configure.orig \
++      > build/configure
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+-    cd ${B[$i]}
++    cd ${B[$i]}/build
+     if [ -f Makefile ] ; then
+       make clean
+     fi
+@@ -216,7 +234,7 @@
+ fi
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+-    cd ${B[$i]}
++    cd ${B[$i]}/build
+     if [ -f Makefile ] ; then
+       make
+     fi
+@@ -233,16 +251,63 @@
+   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+   touch $W/i.st ; sleep 1
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+-    cd ${B[$i]}
++    cd ${B[$i]}/build
+     if [ -f Makefile ] ; then
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/usr/libexec
++  mv $P/usr/bin/{vi,ex,view} $P/usr/libexec
++  cat <<- "EOF" > $P/usr/bin/vi
++	#!/bin/sh
++	
++	optend=0 ; optarg=0 ; nargv=()
++	for arg in "$@" ; do
++	  file=0
++	  if [ $optend -eq 1 ] ; then
++	    file=1
++	  elif [ $optarg -eq 1 ] ; then
++	    optarg=0
++	  elif [ "${arg:0:1}" == "-" ] ; then
++	    if [ "$arg" == "--" ] ; then
++	      optend=1
++	    elif [ `expr length "$(expr "$arg" : ".*\([ctw].*\)")"` -eq 1 ] ; then
++	      optarg=1
++	    fi
++	  elif [ "${arg:0:1}" != "+" ] ; then
++	    file=1
++	  fi
++	  if [ $file -eq 1 ] ; then
++	    if [ -f "$arg" ] ; then
++	      if [ `nkf -g "$arg"` == UTF-8 ] ; then
++	        temp=`mktemp /tmp/vi.XXXXXX`
++	        nkf -e "$arg" > $temp
++	        touch -r "$arg" $temp
++	        arg=$temp
++	      fi
++	    fi
++	  fi
++	  nargv=("${nargv[@]}" "$arg")
++	done
++	/usr/libexec/${0##*/} "${nargv[@]}"
++	i=0
++	for arg in "$@" ; do
++	  if [ "$arg" != "${nargv[$i]}" ] ; then
++	    [ ${nargv[$i]} -nt "$arg" ] && nkf -w ${nargv[$i]} > "$arg"
++	    rm ${nargv[$i]}
++	  fi
++	  let ++i
++	done
++	EOF
++  chmod 755 $P/usr/bin/vi
++  ln $P/usr/bin/{vi,ex}
++  ln $P/usr/bin/{vi,view}
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  gzip_dir $mandir/cat1
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,8 +325,20 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  chmod 755 $docdir/$src/docs/tutorial/vi.tut.csh.gz
++  cp -a $B/docs.m17n $docdir/$src
++  chown -R root.root $docdir/$src/docs.m17n
++  find $docdir/$src/docs.m17n -exec touch -t `date '+%m%d0900'` {} \;
++  gzip_dir $docdir/$src/docs.m17n
++  touch -t `date '+%m%d0900'` $docdir/$src/docs.m17n
++  mv $docdir/$src/{docs.m17n,$myname.gz} $C
++  mv $C/{docs.m17n,$myname.gz} $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/share/vi
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/cat1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

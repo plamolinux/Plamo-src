@@ -1,0 +1,77 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/linux_firmware/PlamoBuild.linux_firmware-git_20160112	2016-01-26 12:06:22.000000000 +0900
+@@ -1,14 +1,28 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
+-arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
++pkgbase=linux_firmware
++vers=git_20160112
++arch=noarch
++build=P2
++src=linux-firmware
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="GPL-3 `echo LICENCE.{Abilis,IntcSST2,Marvell,OLPC}` LICENSE.radeon
++    `echo LICENCE.{agere,atheros_firmware,broadcom_bcm43xx,ca0132}`
++    `echo LICENCE.{chelsio_firmware,cw1200}` README LICENCE.ene_firmware
++    `echo LICENCE.{fw_sst_0f28,go7007,i2400m,ibt_firmware,it913x}`
++    `echo LICENCE.{iwlwifi_firmware,adsp_sst}` WHENCE LICENCE.mwl8335
++    `echo LICENCE.{myri10ge_firmware,phanfw,qla2xxx,r8a779x_usb3}`
++    `echo LICENCE.{ralink-firmware.txt,ralink_a_mediatek_company_firmware}`
++    `echo LICENCE.{rtlwifi_firmware.txt,siano,tda7706-firmware.txt}`
++    `echo LICENCE.{ti-connectivity,ueagle-atm4-firmware,via_vt6656,wl1251}`
++    `echo LICENCE.{xc4000,xc5000,xc5000c}` `echo LICENSE.{amd-ucode,dib0700}`
++    `echo TDA7706_OM_{v2.5.1,v3.0.2}_boot.txt` `echo LICENCE.{cavium,e100}`
++    `echo LICENCE.{kaweth,moxa,nvidia,open-ath9k-htc-firmware,qat_firmware}`
++    `echo LICENCE.{qla1280,ti-keystone}`
++    `echo LICENSE.{QualcommAtheros_{ar3k,ath10k},amdgpu,atmel,hfi1_firmware}`
++    LICENSE.i915"
+ ######################################################################
+ 
+ fscheck() {
+@@ -185,13 +199,20 @@
+ fi
+ if [ $opt_download -eq 1 ] ; then
+   for i in $url ; do
+-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
++    case ${i##*.} in
++    git) if [ ! -d `basename ${i##*/} .git` ] ; then git clone $i ; else
++        ( cd `basename ${i##*/} .git` ; git pull origin master ) ; fi ;;
++    *) if [ ! -f ${i##*/} ] ; then wget $i ; fi ;;
++    esac
+   done
+   for i in $url ; do
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    git) ( cd `basename ${i##*/} .git`
++        git checkout origin/master ; git reset --hard 40e9ae8
++        git set-file-times ) ;;
+     esac
+   done
+ fi
+@@ -260,10 +281,14 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  touch -t `date '+%m%d0900'` $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  for i in . cxgb4 libertas ti-connectivity ; do
++    touch -t `date '+%m%d0900'` $P/lib/firmware/$i
++  done
++  tar cvpf $pkg.tar -C $P lib/firmware
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

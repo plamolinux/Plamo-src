@@ -1,0 +1,83 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/groff/PlamoBuild.groff-1.18.1.1	2016-03-20 22:37:30.000000000 +0900
+@@ -1,14 +1,18 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/gnu/groff/old/groff-1.18.1.1.tar.gz
++    https://launchpad.net/ubuntu/+archive/primary/+files/groff_1.18.1.1-20.diff.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/groff/groff-1.18.1.1-fix-minus-char.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/groff/groff-1.18.1.1-polyfill_fix.patch.gz"
++pkgbase=groff
++vers=1.18.1.1
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--enable-multibyte"
++DOCS="BUG-REPORT COPYING ChangeLog FDL INSTALL* MANIFEST MORE.STUFF
++     NEWS PROBLEMS PROJECTS README* REVISION TODO VERSION"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +203,10 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/groff_1.18.1.1-20.diff.gz | patch -Np1 -i -
++  gunzip -c $W/groff-1.18.1.1-fix-minus-char.patch.gz | patch -Np1 -i -
++  gunzip -c $W/groff-1.18.1.1-polyfill_fix.patch.gz | patch -Np1 -i -
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -235,9 +243,15 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      install -d $P/usr
++      make install prefix=$P/usr
+     fi
+   done
++  gdocdir=$docdir/groff/1.18.1
++  dt=`LANG=C date '+%a %b %e 09:00:00 %Y'`
++  sed -i "s/\(CreationDate:\).*$/\1 $dt/g" $gdocdir/{examples/,}*.ps
++  sed -i "s/\(CreationDate:\).*\(-->\)/\1 $dt \2/g" \
++      $gdocdir/{examples,html}/*.html
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -260,9 +274,27 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  mv $gdocdir/{html,examples,me{ref,intro}.me,pic.ms} $docdir/$src
++  mv $gdocdir/{me{ref,intro},pic}.ps $docdir/$src
++  mv $docdir/$src/{html,examples,me{ref,intro}.me,pic.ms} $C
++  mv $docdir/$src/{me{ref,intro},pic}.ps $C
++  mv $docdir/$src/{BUG-REPORT,COPYING,ChangeLog,FDL,INSTALL*}.gz $C
++  mv $docdir/$src/{MANIFEST,MORE.STUFF,NEWS,PROBLEMS,PROJECTS}.gz $C
++  mv $docdir/$src/{README*,REVISION,TODO,VERSION,$myname}.gz $C
++  mv $C/{html,examples,me{ref,intro}.me,pic.ms} $docdir/$src
++  mv $C/{me{ref,intro},pic}.ps $docdir/$src
++  mv $C/{BUG-REPORT,COPYING,ChangeLog,FDL,INSTALL*}.gz $docdir/$src
++  mv $C/{MANIFEST,MORE.STUFF,NEWS,PROBLEMS,PROJECTS}.gz $docdir/$src
++  mv $C/{README*,REVISION,TODO,VERSION,$myname}.gz $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/$libdir/groff
++  tar rvpf $pkg.tar -C $P usr/share/groff
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

@@ -1,0 +1,76 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/bzip2/PlamoBuild.bzip2-1.0.6	2016-03-20 21:14:04.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
++pkgbase=bzip2
++vers=1.0.6
+ arch=`uname -m`
+-build=P1
++build=P4
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="LICENSE README README.COMPILATION.PROBLEMS README.XML.STUFF
++    CHANGES"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +200,10 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p Makefile{,.orig}
++  sed -i -e 's@\<lib\>@$(LIBDIR)@g' -e 's@\<man\>@share/&@g' \
++      -e '/ln/s@$(PREFIX)/bin/@@' Makefile
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -218,6 +223,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
++      make -f Makefile-libbz2_so
+       make
+     fi
+   done
+@@ -235,9 +241,16 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install PREFIX=$P/usr LIBDIR=$libdir
+     fi
+   done
++  install -d $P/bin
++  install bzip2-shared $P/bin/bzip2
++  ln -sf /bin/bzip2 $P/usr/bin
++  install -d $P/$libdir
++  install libbz2.so.$vers $P/$libdir
++  ln -s libbz2.so.$vers $P/$libdir/libbz2.so.${vers%.*}
++  ln -s /$libdir/libbz2.so.$vers $P/usr/$libdir/libbz2.so
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +274,14 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find $libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

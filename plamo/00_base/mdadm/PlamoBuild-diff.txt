@@ -1,0 +1,50 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/mdadm/PlamoBuild.mdadm-3.2.3	2016-01-13 21:44:34.000000000 +0900
+@@ -1,14 +1,18 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.kernel.org/pub/linux/utils/raid/mdadm/mdadm-3.2.3.tar.bz2"
++pkgbase=mdadm
++vers=3.2.3
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="mdmon-design.txt COPYING ANNOUNCE-3.0.3 ANNOUNCE-3.1.2 TODO
++    ANNOUNCE-3.0.2 ANNOUNCE-3.1.1 INSTALL ANNOUNCE-3.2.2 ANNOUNCE-3.2.3
++    ANNOUNCE-3.2.1 ANNOUNCE-3.1 README.initramfs ANNOUNCE-3.1.3
++    ANNOUNCE-3.0.1 ANNOUNCE-3.1.4 ANNOUNCE-3.1.5 ChangeLog ANNOUNCE-3.0
++    external-reshape-design.txt ANNOUNCE-3.2"
+ ######################################################################
+ 
+ fscheck() {
+@@ -238,6 +242,8 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/etc
++  install -m 644 mdadm.conf-example $P/etc/mdadm.conf
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,8 +267,12 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find lib/udev/rules.d | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/mdadm.conf
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man4 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

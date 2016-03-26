@@ -1,0 +1,102 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/kmod/PlamoBuild.kmod-22	2016-01-25 18:19:43.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-22.tar.xz"
++pkgbase=kmod
++vers=22
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--bindir=/bin --sysconfdir=/etc"
++DOCS="NEWS COPYING TODO README"
+ ######################################################################
+ 
+ fscheck() {
+@@ -192,6 +192,7 @@
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    xz) tar xvpJf ${i##*/} ;;
+     esac
+   done
+ fi
+@@ -238,11 +239,38 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/sbin
++  for i in {dep,ins,rm}mod mod{probe,info} ; do
++    ln -s /bin/kmod $P/sbin/$i
++  done
++  install -d $P/usr/bin
++  ln -s /bin/kmod $P/usr/bin/lsmod
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  install -d $P/etc/modprobe.d
++  cat <<- "EOF" > $P/etc/modprobe.d/plamo-default.conf.new
++	# sample modprobe.conf entries
++	#
++	# alias 定義をしておけば modprobe eth0 で必要なモジュールをロード可能
++	# alias eth0 skge
++	#
++	# モジュールをロードする際のオプションは option 定義で指定可能
++	# options sb io=0x220 irq=7 dma=1 dma15=5 mpu_io=0x330
++	# options skge debug=16
++	#
++	# install 定義はそのモジュールを組み込む際の動作を指定する。
++	# ロードして欲しくないモジュールはこういう風に指定すればいい
++	# install intel_rng /bin/true
++	# install rng_core_rng /bin/true
++	# install ieee1394 /bin/true
++	# install ohci1394 /bin/true
++	
++	install usblp /bin/true
++	EOF
++  touch -t `date '+%m%d0900'` $P/etc/modprobe.d{,/plamo-default.conf.new}
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -261,9 +289,29 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  cat <<- "EOF" >> $P/install/doinst.sh
++	
++	if [ -f etc/modprobe.d/plamo-default.conf ] ; then
++	  rm etc/modprobe.d/plamo-default.conf.new
++	else
++	  mv etc/modprobe.d/plamo-default.conf.new /tmp
++	  mv /tmp/plamo-default.conf.new etc/modprobe.d/plamo-default.conf
++	fi
++	EOF
++  touch -t `date '+%m%d0900'` $P/install/doinst.sh
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P \
++      `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
++  tar rvpf $pkg.tar -C $P \
++      `cd $P ; find usr/share/bash-completion/completions | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/modprobe.d
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

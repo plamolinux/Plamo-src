@@ -1,0 +1,137 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/rsyslog/PlamoBuild.rsyslog-4.6.8	2016-01-16 07:36:47.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://download.rsyslog.com/rsyslog/rsyslog-4.6.8.tar.gz"
++pkgbase=rsyslog
++vers=4.6.8
+ arch=`uname -m`
+-build=P1
++build=P4
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--sbindir=/sbin"
++DOCS="COPYING README AUTHORS INSTALL COPYING.LESSER NEWS ChangeLog"
+ ######################################################################
+ 
+ fscheck() {
+@@ -238,11 +238,98 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/etc/rsyslog.d
++  cat <<- "EOF" | unexpand > $P/etc/rsyslog.conf
++	# Begin /etc/rsyslog.conf
++	# CLFS configuration of rsyslog. For more info use man rsyslog.conf
++	
++	#######################################################################
++	# Rsyslog Modules
++	
++	# Support for Local System Logging
++	$ModLoad imuxsock.so
++	
++	# Support for Kernel Logging
++	$ModLoad imklog.so
++	
++	#######################################################################
++	# Global Options
++	
++	# Use traditional timestamp format.
++	$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
++	
++	# Set the default permissions for all log files.
++	$FileOwner root
++	$FileGroup root
++	$FileCreateMode 0640
++	$DirCreateMode 0755
++	
++	# Provides UDP reception
++	$ModLoad imudp
++	$UDPServerRun 514
++	
++	# Disable Repeating of Entries
++	$RepeatedMsgReduction on
++	
++	#######################################################################
++	# Include Rsyslog Config Snippets
++	
++	$IncludeConfig /etc/rsyslog.d/*.conf
++	
++	#######################################################################
++	# Standard Log Files
++	
++	auth,authpriv.*			/var/log/auth.log
++	*.*;auth,authpriv.none		-/var/log/syslog
++	daemon.*			-/var/log/daemon
++	kern.*				-/var/log/kern.log
++	mail.*				-/var/log/mail.log
++	user.*				-/var/log/user.log
++	
++	# Catch All Logs
++	*.=debug;\
++	        auth,authpriv.none;\
++	        news.none;mail.none	-/var/log/debug
++	*.=info;*.=notice;*.=warn;\
++	        auth,authpriv.none;\
++	        cron,daemon.none;\
++	        mail,news.none		-/var/log/messages
++	
++	# Emergencies are shown to everyone
++	*.emerg				*
++	
++	# End /etc/rsyslog.conf
++	EOF
++  install -d $P/etc/logrotate.d
++  for i in auth.log syslog daemon {kern,mail,user}.log debug messages ; do
++    cat <<- EOF > $P/etc/logrotate.d/$i
++	/var/log/$i {
++	    compress
++	    weekly
++	    rotate 4
++	    missingok
++	    notifempty
++	    sharedscripts
++	    postrotate
++	        kill -HUP \`cat /var/run/rsyslogd.pid\` 2> /dev/null || true
++	    endscript
++	}
++	EOF
++  done
++  sed -i '/rotate/s@4@8@' $P/etc/logrotate.d/{auth.log,syslog}
++  cat <<- "EOF" | patch $P/etc/logrotate.d/mail.log
++	9c9
++	<         kill -HUP `cat /var/run/rsyslogd.pid` 2> /dev/null || true
++	---
++	>         /etc/rc.d/init.d/postfix reload 2> /dev/null || true
++	EOF
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_libdir $P/usr/$libdir/rsyslog
++  touch -t `date '+%m%d0900'` $P/usr/$libdir/rsyslog
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -261,8 +348,12 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/$libdir/rsyslog
++  tar rvpf $pkg.tar -C $P etc/rsyslog.{d,conf}
++  tar rvpf $pkg.tar -C $P `cd $P ; find etc/logrotate.d | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

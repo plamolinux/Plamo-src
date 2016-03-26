@@ -1,0 +1,137 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/tcp_wrappers/PlamoBuild.tcp_wrappers-7.6.q	2016-01-21 20:23:46.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://archive.debian.org/debian/pool/main/t/tcp-wrappers/tcp-wrappers_7.6.q.orig.tar.gz
++    http://archive.debian.org/debian/pool/main/t/tcp-wrappers/tcp-wrappers_7.6.q-16.diff.gz"
++pkgbase=tcp_wrappers
++vers=7.6.q
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++build=P3
++src=tcp_wrappers_7.6
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="README BLURB DISCLAIMER CHANGES README.IRIX README.NIS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +200,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/tcp-wrappers_7.6.q-16.diff.gz | patch -Np1 -i -
++  for i in `cat debian/patches/series` ; do
++    patch -Np1 -i debian/patches/$i
++  done
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -218,7 +224,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make
++      make linux
+     fi
+   done
+ fi
+@@ -234,10 +240,58 @@
+   touch $W/i.st ; sleep 1
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
++    false && if [ -f Makefile ] ; then
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/usr/sbin
++  for i in tcpd tcpdmatch try-from safe_finger tcpdchk ; do
++    install $i $P/usr/sbin
++  done
++  install -d $P/usr/$libdir
++  install shared/libwrap.so.0.7.6 $P/usr/$libdir
++  install -m 644 libwrap.a $P/usr/$libdir
++  ln -s libwrap.so.0.7.6 $P/usr/$libdir/libwrap.so.0
++  ln -s libwrap.so.0.7.6 $P/usr/$libdir/libwrap.so
++  install -d $P/usr/include
++  install -m 644 tcpd.h $P/usr/include
++  install -d $mandir/man{3,5,8}
++  install -m 644 hosts_access.3 $mandir/man3
++  for i in hosts_access hosts_options ; do
++    install -m 644 $i.5 $mandir/man5
++  done
++  for i in tcpd tcpdmatch try-from safe_finger tcpdchk ; do
++    install -m 644 $i.8 $mandir/man8
++  done
++  install -d $P/etc
++  cat <<- "EOF" > $P/etc/hosts.allow.dist
++	#
++	# hosts.allow	This file describes the names of the hosts which are
++	#		allowed to use the local INET services, as decided by
++	#		the '/usr/sbin/tcpd' server.
++	#
++	# Version:	@(#)/etc/hosts.allow	1.00	05/28/93
++	#
++	# Author:	Fred N. van Kempen, <waltje@uwalt.nl.mugnet.org
++	#
++	#
++	ALL : LOCAL
++	# End of hosts.allow.
++	EOF
++  cat <<- "EOF" > $P/etc/hosts.deny.dist
++	#
++	# hosts.deny	This file describes the names of the hosts which are
++	#		*not* allowed to use the local INET services, as decided
++	#		by the '/usr/sbin/tcpd' server.
++	#
++	# Version:	@(#)/etc/hosts.deny	1.00	05/28/93
++	#
++	# Author:	Fred N. van Kempen, <waltje@uwalt.nl.mugnet.org
++	#
++	#
++	ALL : ALL EXCEPT LOCAL
++	# End of hosts.deny.
++	EOF
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +315,29 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  install -d $P/install
++  cat <<- "EOF" > $P/install/doinst.sh
++	hosts_config() {
++	  if [ -f etc/hosts.$1 ] ; then
++	    rm etc/hosts.$1.dist
++	  else
++	    mv etc/hosts.$1.dist /tmp
++	    mv /tmp/hosts.$1.dist etc/hosts.$1
++	  fi
++	}
++	
++	for i in allow deny ; do hosts_config $i ; done
++	EOF
++  touch -t `date '+%m%d0900'` $P/install/doinst.sh
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find etc | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

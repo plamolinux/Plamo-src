@@ -1,0 +1,162 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/linux_pam/PlamoBuild.linux_pam-1.1.8	2015-12-25 10:59:46.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="https://fedorahosted.org/releases/l/i/linux-pam/Linux-PAM-1.1.8.tar.bz2
++    https://raw.githubusercontent.com/willysr/csb/master/pam/pam-1.1.8-cve-2013-7041.patch
++    https://raw.githubusercontent.com/willysr/csb/master/pam/pam-1.1.8-cve-2014-2583.patch"
++pkgbase=linux_pam
++vers=1.1.8
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P2
++src=Linux-PAM-$vers
++OPT_CONFIG="--enable-shared --enable-read-both-confs --disable-nis"
++DOCS="NEWS ABOUT-NLS Copyright README COPYING AUTHORS CHANGELOG
++    ChangeLog INSTALL ChangeLog-CVS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +202,9 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  patch -Np1 -i $W/pam-1.1.8-cve-2013-7041.patch
++  patch -Np1 -i $W/pam-1.1.8-cve-2014-2583.patch
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -208,9 +214,10 @@
+       rm -rf config.cache config.log
+     fi
+     if [ -x configure ] ; then
+-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
++      ./configure --prefix=/usr --libdir=/usr/$libdir \
+           --infodir='${prefix}'/share/info \
+-          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
++          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]} \
++          --sbindir=/$libdir/security --enable-securedir=/$libdir/security
+     fi
+   done
+ fi
+@@ -238,11 +245,82 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/sbin
++  ln -s /$libdir/security/pam_tally $P/sbin
++  chmod 4755 $P/$libdir/security/unix_chkpwd
++  for i in libpam libpamc libpam_misc ; do
++    cp -p $P/usr/$libdir/$i.so.0.*.* $P/$libdir
++    ( cd $P/$libdir ; ln -s $i.so.0.*.* $i.so.0 )
++  done
++  cat <<- "EOF" > $P/etc/security/console.handlers
++	console consoledevs tty[0-9][0-9]* vc/[0-9][0-9]* :[0-9]\.[0-9] :[0-9]
++	EOF
++  install -d $P/etc/pam.d
++  cat <<- "EOF" > $P/etc/pam.d/system-auth
++	#%PAM-1.0
++	#
++	# The PAM configuration file for system authentication
++	#
++	
++	auth		required	pam_env.so
++	auth		sufficient	pam_unix.so try_first_pass nullok
++	auth		required	pam_deny.so
++	
++	account		required	pam_unix.so
++	
++	password	sufficient	pam_unix.so try_first_pass nullok md5 shadow
++	password	required	pam_deny.so
++	
++	session		required	pam_limits.so
++	session		required	pam_unix.so
++	EOF
++  for i in halt poweroff reboot ; do
++    cat <<- "EOF" > $P/etc/pam.d/$i
++	#%PAM-1.0
++	#
++	# The PAM configuration file for shutdown/reboot operations
++	#
++
++	auth		sufficient	pam_rootok.so
++	auth		required	pam_unix.so
++	
++	account		required	pam_permit.so
++	EOF
++  done
++  cat <<- "EOF" > $P/etc/pam.d/other
++	#%PAM-1.0
++	#
++	# The PAM configuration file for other
++	#
++	
++	auth		required	pam_deny.so
++	auth		required	pam_warn.so
++	
++	account		required	pam_deny.so
++	account		required	pam_warn.so
++	
++	password	required	pam_deny.so
++	password	required	pam_warn.so
++	
++	session		required	pam_deny.so
++	session		required	pam_warn.so
++	EOF
++  ln -s system-auth $P/etc/pam.d/plamo-default
++  cat <<- "EOF" > $P/etc/securetty
++	# /etc/securetty: list of terminals on which root is allowed to login.
++	# See securetty(5) and login(1).
++	console
++	EOF
++  seq -f "tty%g" 12 >> $P/etc/securetty
++  seq -f "ttyp%g" 12 >> $P/etc/securetty
++  seq -f "ttyS%g" 0 3 >> $P/etc/securetty
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_libdir $P/$libdir/security
++  touch -t `date '+%m%d0900'` $P/$libdir/security
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,10 +338,26 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  mv $docdir/Linux-PAM $docdir/$src/doc
++  mv $docdir/$src/{doc,{ABOUT-NLS,Copyright,README,COPYING,AUTHORS}.gz} $C
++  mv $docdir/$src/{CHANGELOG,ChangeLog,INSTALL,ChangeLog-CVS,$myname}.gz $C
++  mv $C/{doc,{ABOUT-NLS,Copyright,README,COPYING,AUTHORS}.gz} $docdir/$src
++  mv $C/{CHANGELOG,ChangeLog,INSTALL,ChangeLog-CVS,$myname}.gz $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  prune_symlink $P/etc/pam.d
++  touch -t `date '+%m%d0900'` $P/etc/pam.d
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find $libdir -maxdepth 1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/security
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "*.mo"`
++  tar rvpf $pkg.tar -C $P etc/{security,environment,pam.d,securetty}
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

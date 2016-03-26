@@ -1,0 +1,131 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/hdsetup/PlamoBuild.hdsetup-6.1	2016-03-20 22:53:19.000000000 +0900
+@@ -1,14 +1,35 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="https://www.busybox.net/downloads/busybox-1.24.1.tar.bz2
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/hdsetup/busybox-1.24.1-config
++    http://invisible-mirror.net/archives/dialog/dialog-1.1-20110302.tgz
++    http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/hdsetup/hdsetup-plamoscripts.tar.gz"
++pkgbase=hdsetup
++vers=6.1
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P2
++src[0]=busybox-1.24.1
++src[1]=dialog-1.1-20110302
++src[2]=coreutils-8.23
++OPT_CONFIG[0]=""
++OPT_CONFIG[1]="--bindir=/bin --enable-nls --with-ncursesw --enable-widec"
++OPT_CONFIG[2]="--bindir=/bin --enable-no-install-program=install,chroot"
++OPT_CONFIG[2]+=",hostid,nice,who,users,pinky,uptime,stty,df,stdbuf,[,base64"
++OPT_CONFIG[2]+=",basename,cat,chcon,chgrp,chmod,chown,cksum,comm,cp,csplit"
++OPT_CONFIG[2]+=",cut,date,dd,dir,dircolors,dirname,du,echo,env,expand,expr"
++OPT_CONFIG[2]+=",factor,false,fmt,fold,groups,head,id,join,kill,link,ln"
++OPT_CONFIG[2]+=",logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nl,nproc"
++OPT_CONFIG[2]+=",nohup,numfmt,od,pathchk,pr,printenv,printf,ptx,pwd,readlink"
++OPT_CONFIG[2]+=",realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum"
++OPT_CONFIG[2]+=",sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,sum"
++OPT_CONFIG[2]+=",sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort"
++OPT_CONFIG[2]+=",tty,uname,unexpand,uniq,unlink,vdir,wc,whoami,yes
++    --without-gmp"
++DOCS[0]="TODO LICENSE README AUTHORS INSTALL TODO_unicode"
++DOCS[1]=""
++DOCS[2]=""
+ ######################################################################
+ 
+ fscheck() {
+@@ -191,7 +212,9 @@
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
++    tgz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
++    xz) tar xvpJf ${i##*/} ;;
+     esac
+   done
+ fi
+@@ -199,9 +222,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd ${B[0]}
++  cp -p $W/busybox-1.24.1-config .config
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
++    if [ -f [Mm]akefile ] ; then
+       make clean
+     fi
+     if [ -f config.log ] ; then
+@@ -217,8 +242,12 @@
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
+-      make
++    if [ -f [Mm]akefile ] ; then
++      case $i in
++      0) make ;;
++      1) make LIBS="-lncursesw -lm -ldl -static" ;;
++      2) make LIBS="-ldl -static" ;;
++      esac
+     fi
+   done
+ fi
+@@ -234,15 +263,26 @@
+   touch $W/i.st ; sleep 1
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++    if [ -f [Mm]akefile ] ; then
++      case $i in
++      0) make install CONFIG_PREFIX=$P ;;
++      *) make install DESTDIR=$P ;;
++      esac
+     fi
+   done
++  rm $P/bin/{\[\[,ash,cttyhack,{e,f}grep,hush,install,test,unxz}
++  install -d $P/sbin
++  mv $P/bin $P/sbin/installer
++  cp -r $W/sbin $P
++  install -d $P/usr/lib/setup
++  touch $P/usr/lib/setup/Plamo-$vers
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_bindir $P/sbin/installer
++  touch -t `date '+%m%d0900'` $P/sbin/installer
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,9 +300,16 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  cp -a $S/docs $docdir/$src
++  chown -R root.root $docdir/$src/docs
++  mv $docdir/$src/{docs,{TODO,LICENSE,README,AUTHORS,INSTALL}.gz} $C
++  mv $docdir/$src/{TODO_unicode,$myname}.gz $C
++  mv $C/{docs,{TODO,LICENSE,README,AUTHORS,INSTALL}.gz} $docdir/$src
++  mv $C/{TODO_unicode,$myname}.gz $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin -maxdepth 1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/lib/setup
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

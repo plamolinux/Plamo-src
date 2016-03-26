@@ -1,0 +1,55 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/lsb_release/PlamoBuild.lsb_release-1.4	2016-03-14 17:42:03.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
+-arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++url="http://downloads.sourceforge.net/lsb/lsb-release-1.4.tar.gz"
++pkgbase=lsb_release
++vers=1.4
++arch=noarch
++build=P6
++src=lsb-release-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="ChangeLog INSTALL README lsb-release.template lsb_release.examples"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +199,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p Makefile{,.orig}
++  sed -i -e '/^prefix=/s@/local@@g' -e '/^mandir=/s@/man@/share/man@g' \
++      -e 's@${mandir}@$(DESTDIR)&@g' \
++      -e '/^mandir=/!s@${prefix}@$(DESTDIR)&@g' Makefile
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -238,6 +243,10 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/etc
++  cat <<- "EOF" > $P/etc/plamo-release
++	Plamo Linux release 6.1
++	EOF
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -262,6 +271,7 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P etc/plamo-release
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

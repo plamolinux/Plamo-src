@@ -1,0 +1,42 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/lzo/PlamoBuild.lzo-2.09	2016-01-13 13:13:06.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz"
++pkgbase=lzo
++vers=2.09
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--enable-shared"
++DOCS="AUTHORS BUGS COPYING ChangeLog INSTALL NEWS README THANKS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -260,10 +260,16 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  cp -a $S/{doc,examples} $docdir/$src
++  chown -R root.root $docdir/$src/{doc,examples}
++  mv $docdir/$src/{doc,examples,$myname.gz} $C
++  mv $C/{doc,examples,$myname.gz} $docdir/$src
++  touch -r $S $docdir/$src
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/include/lzo | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

@@ -1,0 +1,71 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/pciutils/PlamoBuild.pciutils-3.1.8	2016-01-15 17:27:48.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.kernel.org/pub/software/utils/pciutils/pciutils-3.1.8.tar.bz2
++    http://pciids.sourceforge.net/v2.2/pci.ids"
++pkgbase=pciutils
++vers=3.1.8
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="TODO README ChangeLog README.Windows COPYING"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +200,12 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  cp -p $W/pci.ids .
++  if [ $arch == x86_64 ] ; then
++    cp -p Makefile{,.orig}
++    sed -i '/^LIBDIR=/s@lib@lib64@g' Makefile
++  fi
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -218,7 +225,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make
++      make ZLIB=no SHARED=yes PCI_COMPRESSED_IDS=0 PREFIX=/usr
+     fi
+   done
+ fi
+@@ -235,7 +242,8 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install DESTDIR=$P ZLIB=no SHARED=yes PREFIX=/usr
++      make install-lib DESTDIR=$P ZLIB=no SHARED=yes PREFIX=/usr
+     fi
+   done
+   touch $W/i.et
+@@ -261,8 +269,13 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P \
++      `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/pci
++  tar rvpf $pkg.tar -C $P usr/share/pci.ids
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

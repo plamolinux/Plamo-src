@@ -1,0 +1,75 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/readline/PlamoBuild.readline-6.2.4	2016-01-16 01:45:35.000000000 +0900
+@@ -1,14 +1,18 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/gnu/readline/readline-6.2.tar.gz
++    http://ftp.gnu.org/gnu/readline/readline-6.2-patches/readline62-001
++    http://ftp.gnu.org/gnu/readline/readline-6.2-patches/readline62-002
++    http://ftp.gnu.org/gnu/readline/readline-6.2-patches/readline62-003
++    http://ftp.gnu.org/gnu/readline/readline-6.2-patches/readline62-004"
++pkgbase=readline
++vers=6.2
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="COPYING README MANIFEST INSTALL CHANGELOG CHANGES NEWS USAGE"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +203,11 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  patch -Np0 -i $W/readline62-001
++  patch -Np0 -i $W/readline62-002
++  patch -Np0 -i $W/readline62-003
++  patch -Np0 -i $W/readline62-004
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -208,7 +217,7 @@
+       rm -rf config.cache config.log
+     fi
+     if [ -x configure ] ; then
+-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
++      ./configure --prefix=/usr --libdir=/$libdir \
+           --infodir='${prefix}'/share/info \
+           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+@@ -238,6 +247,10 @@
+       make install DESTDIR=$P
+     fi
+   done
++  install -d $P/usr/$libdir
++  rm $P/$libdir/lib{history,readline}.so
++  ln -s /$libdir/libhistory.so.6 $P/usr/$libdir/libhistory.so
++  ln -s /$libdir/libreadline.so.6 $P/usr/$libdir/libreadline.so
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,9 +274,14 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find $libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/readline
++  tar rvpf $pkg.tar -C $P usr/share/readline
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

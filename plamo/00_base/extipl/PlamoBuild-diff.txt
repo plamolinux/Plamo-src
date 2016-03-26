@@ -1,0 +1,69 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/extipl/PlamoBuild.extipl-5.04	2016-03-20 21:41:47.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://jaist.dl.sourceforge.jp/extipl/2166/extipl-5.04.tar.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/extipl/extipl-5.04-syscall.patch.gz
++    http://jaist.dl.sourceforge.net/sourceforge/nasm/nasm-0.98.38.tar.bz2"
++pkgbase=extipl
++vers=5.04
+ arch=`uname -m`
+-build=P1
++build=P3
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="`echo doc/{English,Japanese}/{extipl,scorpius,techical}.txt`
++    COPYING README"
+ ######################################################################
+ 
+ fscheck() {
+@@ -199,6 +202,13 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  gunzip -c $W/extipl-5.04-syscall.patch.gz | patch -Np1 -i -
++  mkdir -p $W/nasm/{bin,man/man1}
++  cd $W/nasm-0.98.38
++  ./configure --prefix=$W/nasm
++  make install
++  PATH="$W/nasm/bin:$PATH"
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -221,6 +231,7 @@
+       make
+     fi
+   done
++  cd src ; make
+ fi
+ if [ $opt_package -eq 1 ] ; then
+   if [ `id -u` -ne 0 ] ; then
+@@ -238,6 +249,9 @@
+       make install DESTDIR=$P
+     fi
+   done
++  cd src ; make -i install install-jman PREFIX=$P \
++      MANDIR=$mandir JMANDIR=$mandir/ja_JP.eucJP
++  rm -rf $P/share
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+@@ -261,8 +275,9 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/ja_JP.eucJP/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

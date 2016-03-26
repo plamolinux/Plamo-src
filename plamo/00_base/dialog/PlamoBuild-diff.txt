@@ -1,0 +1,69 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/dialog/PlamoBuild.dialog-1.1	2016-01-13 22:18:40.000000000 +0900
+@@ -1,14 +1,14 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://invisible-mirror.net/archives/dialog/dialog-1.1-20110302.tgz"
++pkgbase=dialog
++vers=1.1_20110302
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++build=P2
++src=$pkgbase-1.1-20110302
++OPT_CONFIG="--bindir=/bin --enable-nls --with-ncursesw --enable-widec"
++DOCS="README COPYING CHANGES"
+ ######################################################################
+ 
+ fscheck() {
+@@ -191,6 +191,7 @@
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
++    tgz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
+     esac
+   done
+@@ -201,7 +202,7 @@
+   done
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
++    if [ -f makefile ] ; then
+       make clean
+     fi
+     if [ -f config.log ] ; then
+@@ -217,7 +218,7 @@
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
++    if [ -f makefile ] ; then
+       make
+     fi
+   done
+@@ -234,7 +235,7 @@
+   touch $W/i.st ; sleep 1
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
++    if [ -f makefile ] ; then
+       make install DESTDIR=$P
+     fi
+   done
+@@ -261,7 +262,8 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "*.mo"`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz

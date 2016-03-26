@@ -1,0 +1,36 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/findutils/PlamoBuild.findutils-4.6.0	2016-01-25 17:08:38.000000000 +0900
+@@ -1,14 +1,15 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://ftp.gnu.org/pub/gnu/findutils/findutils-4.6.0.tar.gz"
++pkgbase=findutils
++vers=4.6.0
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+-OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG="--localstatedir=/var"
++DOCS="ABOUT-NLS README AUTHORS README-hacking NEWS THANKS INSTALL COPYING
++    ChangeLog tool-versions.txt ChangeLog-2013 README-alpha TODO"
+ ######################################################################
+ 
+ fscheck() {
+@@ -262,7 +263,11 @@
+   done
+   convert
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/libexec | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name "*.mo"`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

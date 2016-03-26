@@ -1,0 +1,75 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/05_ext/ntfs_3g_ntfsprogs/PlamoBuild.ntfs_3g_ntfsprogs-2015.3.14	2016-02-23 17:54:34.000000000 +0900
+@@ -1,14 +1,17 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://tuxera.com/opensource/ntfs-3g_ntfsprogs-2015.3.14.tgz
++    http://cache.gmane.org//gmane/linux/debian/devel/secure-testing/general/6910-001.bin
++    https://github.com/PhantomX/slackbuilds/raw/master/ntfs-3g/patches/ntfs-3g_ntfsprogs-2011.10.9-RC-ntfsck-unsupported-return-0.patch"
++pkgbase=ntfs_3g_ntfsprogs
++vers=2015.3.14
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++build=P2
++src=ntfs-3g_ntfsprogs-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="INSTALL TODO.ntfsprogs README NEWS ChangeLog CREDITS COPYING.LIB
++    COPYING AUTHORS"
+ ######################################################################
+ 
+ fscheck() {
+@@ -184,13 +187,19 @@
+   done
+ fi
+ if [ $opt_download -eq 1 ] ; then
++  alt=0002-CVE-2015-3202.patch
+   for i in $url ; do
+-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
++    if [ ${i##*/} == 6910-001.bin ] ; then
++      [ ! -f $alt ] && wget $i -O $alt
++    elif [ ! -f ${i##*/} ] ; then
++      wget $i
++    fi
+   done
+   for i in $url ; do
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+     gz) tar xvpzf ${i##*/} ;;
++    tgz) tar xvpzf ${i##*/} ;;
+     bz2) tar xvpjf ${i##*/} ;;
+     esac
+   done
+@@ -235,7 +244,7 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install -i DESTDIR=$P
+     fi
+   done
+   touch $W/i.et
+@@ -261,9 +270,16 @@
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
+   convert
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find sbin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P \
++      `cd $P ; find usr/$libdir ! -name pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/include/ntfs-3g
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans
