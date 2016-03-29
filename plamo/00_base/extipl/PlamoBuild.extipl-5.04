@@ -3,11 +3,12 @@
 ######################################################################
 url="http://jaist.dl.sourceforge.jp/extipl/2166/extipl-5.04.tar.gz
     ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/extipl/extipl-5.04-syscall.patch.gz
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/extipl/extipl-5.04-x86_64.patch.gz
     http://jaist.dl.sourceforge.net/sourceforge/nasm/nasm-0.98.38.tar.bz2"
 pkgbase=extipl
 vers=5.04
 arch=`uname -m`
-build=P3
+build=P4
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="`echo doc/{English,Japanese}/{extipl,scorpius,techical}.txt`
@@ -203,7 +204,11 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
-  gunzip -c $W/extipl-5.04-syscall.patch.gz | patch -Np1 -i -
+  if [ $arch != x86_64 ] ; then
+    gunzip -c $W/extipl-5.04-syscall.patch.gz | patch -Np1 -i -
+  else
+    gunzip -c $W/extipl-5.04-x86_64.patch.gz | patch -Np1 -i -
+  fi
   mkdir -p $W/nasm/{bin,man/man1}
   cd $W/nasm-0.98.38
   ./configure --prefix=$W/nasm
