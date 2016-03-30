@@ -1,5 +1,5 @@
 --- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/netkit_combo/PlamoBuild.netkit_combo-0.17	2016-03-23 07:42:38.000000000 +0900
++++ plamo/00_base/netkit_combo/PlamoBuild.netkit_combo-0.17	2016-03-30 13:45:36.000000000 +0900
 @@ -1,14 +1,51 @@
  #!/bin/sh
  
@@ -33,7 +33,7 @@
  arch=`uname -m`
 -build=P1
 -src=$pkgbase-$vers
-+build=P7
++build=P8
 +src=netkit-combo-$vers
  OPT_CONFIG=""
 -DOCS="README"
@@ -58,7 +58,7 @@
  ######################################################################
  
  fscheck() {
-@@ -199,6 +236,46 @@
+@@ -199,6 +236,50 @@
    for i in `seq 0 $((${#B[@]} - 1))` ; do
      if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
    done
@@ -93,6 +93,10 @@
 +  gunzip -c $W/netkit-tftp_0.17-17.diff.gz | patch -Np1 -i -
 +  cd $B/netkit-telnet
 +  gunzip -c $W/netkit-telnet_0.17-36.diff.gz | patch -Np1 -i -
++  if [ $arch == x86_64 ] ; then
++    cp -p telnetd/Makefile{,.orig}
++    sed 's@/lib@/lib64@g' telnetd/Makefile.orig > telnetd/Makefile
++  fi
 +  cd $B/netkit-timed
 +  gunzip -c $W/netkit-timed-0.17.diff.gz | patch -Np1 -i -
 +  cd $B/netwrite
@@ -105,7 +109,7 @@
    for i in `seq 0 $((${#B[@]} - 1))` ; do
      cd ${B[$i]}
      if [ -f Makefile ] ; then
-@@ -208,9 +285,7 @@
+@@ -208,9 +289,7 @@
        rm -rf config.cache config.log
      fi
      if [ -x configure ] ; then
@@ -116,7 +120,7 @@
      fi
    done
  fi
-@@ -235,9 +310,11 @@
+@@ -235,9 +314,11 @@
    for i in `seq 0 $((${#B[@]} - 1))` ; do
      cd ${B[$i]}
      if [ -f Makefile ] ; then
@@ -129,7 +133,7 @@
    touch $W/i.et
    cd $W
    find $P ! -type l -newer i.st ! -newer i.et \
-@@ -260,10 +337,25 @@
+@@ -260,10 +341,25 @@
      fi
      ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
    done
