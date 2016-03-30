@@ -25,7 +25,7 @@ url="ftp://ftp.linux.org.uk/pub/linux/Networking/netkit/netkit-combo-0.17.tar.gz
 pkgbase=netkit_combo
 vers=0.17
 arch=`uname -m`
-build=P7
+build=P8
 src=netkit-combo-$vers
 OPT_CONFIG=""
 DOCS="README
@@ -267,6 +267,10 @@ if [ $opt_config -eq 1 ] ; then
   gunzip -c $W/netkit-tftp_0.17-17.diff.gz | patch -Np1 -i -
   cd $B/netkit-telnet
   gunzip -c $W/netkit-telnet_0.17-36.diff.gz | patch -Np1 -i -
+  if [ $arch == x86_64 ] ; then
+    cp -p telnetd/Makefile{,.orig}
+    sed 's@/lib@/lib64@g' telnetd/Makefile.orig > telnetd/Makefile
+  fi
   cd $B/netkit-timed
   gunzip -c $W/netkit-timed-0.17.diff.gz | patch -Np1 -i -
   cd $B/netwrite
