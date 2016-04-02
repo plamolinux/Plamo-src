@@ -5,7 +5,7 @@ url="http://ftp.gnu.org/gnu/bash/bash-4.2.53.tar.gz"
 pkgbase=bash
 vers=4.2.53
 arch=`uname -m`
-build=P2
+build=P3
 src[0]=$pkgbase-$vers
 src[1]=${src[0]}
 OPT_CONFIG[0]="--bindir=/bin --without-bash-malloc --with-installed-readline"
@@ -278,6 +278,7 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans
