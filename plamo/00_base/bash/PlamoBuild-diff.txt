@@ -1,5 +1,5 @@
 --- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/bash/PlamoBuild.bash-4.2.53	2015-12-25 20:30:44.000000000 +0900
++++ plamo/00_base/bash/PlamoBuild.bash-4.2.53	2016-04-02 17:02:57.000000000 +0900
 @@ -1,14 +1,18 @@
  #!/bin/sh
  
@@ -15,7 +15,7 @@
 -src=$pkgbase-$vers
 -OPT_CONFIG=""
 -DOCS="README"
-+build=P2
++build=P3
 +src[0]=$pkgbase-$vers
 +src[1]=${src[0]}
 +OPT_CONFIG[0]="--bindir=/bin --without-bash-malloc --with-installed-readline"
@@ -41,7 +41,7 @@
    touch $W/i.et
    cd $W
    find $P ! -type l -newer i.st ! -newer i.et \
-@@ -256,12 +264,18 @@
+@@ -256,14 +264,21 @@
        touch -t `date '+%m%d0900'` $docdir/$src/$myname
        gzip_one $docdir/$src/$myname
      else
@@ -61,4 +61,7 @@
 +  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/info | tail -n+2`
    tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
    tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
    touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans

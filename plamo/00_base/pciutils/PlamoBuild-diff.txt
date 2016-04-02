@@ -1,5 +1,5 @@
 --- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/pciutils/PlamoBuild.pciutils-3.1.8	2016-01-15 17:27:48.000000000 +0900
++++ plamo/00_base/pciutils/PlamoBuild.pciutils-3.1.8	2016-04-02 18:33:35.000000000 +0900
 @@ -1,14 +1,15 @@
  #!/bin/sh
  
@@ -13,7 +13,7 @@
 +vers=3.1.8
  arch=`uname -m`
 -build=P1
-+build=P3
++build=P4
  src=$pkgbase-$vers
  OPT_CONFIG=""
 -DOCS="README"
@@ -53,7 +53,7 @@
      fi
    done
    touch $W/i.et
-@@ -261,8 +269,13 @@
+@@ -261,9 +269,15 @@
      ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
    done
    convert
@@ -67,5 +67,7 @@
 +  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
 +  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
    tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
    touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
    mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans
