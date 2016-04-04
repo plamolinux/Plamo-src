@@ -5,7 +5,7 @@ vers=4.3.1
 url="http://ftp.jaist.ac.jp/pub/GNU/screen/screen-${vers}.tar.gz"
 verify=$url.sig
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog INSTALL NEWS NEWS.3.5 NEWS.3.6 NEWS.3.7 NEWS.3.9 README TODO'
@@ -168,10 +168,8 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
     libdir="lib64"
 else
-    target="-m32"
     libdir="lib"
 fi
 
@@ -239,7 +237,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+        CC="gcc -isystem /usr/include" CXX="g++ -isystem /usr/include" \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
