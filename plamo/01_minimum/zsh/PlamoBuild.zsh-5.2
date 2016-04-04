@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
-url='http://sourceforge.net/projects/zsh/files/zsh/5.1.1/zsh-5.1.1.tar.xz'
+url='http://sourceforge.net/projects/zsh/files/zsh/5.2/zsh-5.2.tar.xz'
 pkgbase=zsh
-vers=5.1.1
+vers=5.2
 arch=`uname -m`
 # arch=i586
 build=P1
@@ -90,11 +90,9 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
     libdir="lib64"
     suffix="64"
 else
-    target="-m32"
     libdir="lib"
     suffix=""
 fi
@@ -147,8 +145,8 @@ if [ $opt_config -eq 1 ] ; then
       if [ -x configure ] ; then
          export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
          export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
+         export CC="gcc -isystem /usr/include" 
+         export CXX="g++ -isystem /usr/include"
          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
      fi
       if [ $? != 0 ]; then
