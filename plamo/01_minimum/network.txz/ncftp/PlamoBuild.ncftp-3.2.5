@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.ncftpd.com/ncftp/ncftp-3.2.4-src.tar.bz2'
+url='ftp://ftp.ncftpd.com/ncftp/ncftp-3.2.5-src.tar.bz2'
 pkgbase=ncftp
-vers=3.2.4
-arch=x86_64
-# arch=i586
+vers=3.2.5
+arch=`uname -m`
 build=P1
-src=ncftp-3.2.4
+src=ncftp-3.2.5
 OPT_CONFIG=''
 DOCS='DONATE.txt README.txt'
 patchfiles=''
@@ -154,10 +153,8 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
     libdir="lib64"
 else
-    target="-m32"
     libdir="lib"
 fi
 
@@ -207,7 +204,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+        CC="gcc -isystem /usr/include" CXX="g++ -isystem /usr/include" \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
