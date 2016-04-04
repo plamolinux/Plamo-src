@@ -5,7 +5,7 @@ vers=24.5
 url="http://ftp.jaist.ac.jp/pub/GNU/emacs/emacs-${vers}.tar.xz"
 verify=${url}.sig
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 #OPT_CONFIG='--with-xim --without-imagemagick --with-x --with-x-toolkit=gtk3 --without-rsvg --without-gsettings --without-selinux'
 OPT_CONFIG='--without-all --without-x'
@@ -14,7 +14,7 @@ DOCS='COPYING ChangeLog INSTALL README'
 # http://debbugs.gnu.org/cgi/bugreport.cgi?bug=9754
 # https://bugs.launchpad.net/ubuntu/+source/emacs23/+bug/902043
 #patchfiles='emacs-xgselect.patch'
-patchfiles='emacs-24.2-add_txz.patch'
+patchfiles='emacs-24.2-add_txz.patch patch-aa'
 #file1=menu-tree.el
 file1_url="http://cdn11.atwikiimg.com/s-irie/?plugin=ref&serial=91"
 file2='http://homepage1.nifty.com/blankspace/emacs/wb-line-number.el'
@@ -177,10 +177,8 @@ pkg=${pkgbase}-$vers-$arch-$build
 pkgmini=${pkgbase}_mini-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
     libdir="lib64"
 else
-    target="-m32"
     libdir="lib"
 fi
 
@@ -244,14 +242,14 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    #if [ -f autogen.sh ] ; then
-    #  sh ./autogen.sh
-    #fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+        CC="gcc -isystem /usr/include" CXX="g++ -isystem /usr/include" \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
