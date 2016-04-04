@@ -5,7 +5,7 @@ pkgbase=FDclone
 vers=3.01b
 arch=`uname -m`
 # arch=i586
-build=P1
+build=P2
 src=FD-${vers}
 OPT_CONFIG=''
 DOCS='HISTORY HISTORY.eng Install Install.eng LICENSES LICENSES.eng README README.eng'
@@ -154,10 +154,8 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
     libdir="lib64"
 else
-    target="-m32"
     libdir="lib"
 fi
 
@@ -207,7 +205,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+        CC="gcc -isystem /usr/include" CXX="g++ -isystem /usr/include" \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
