@@ -6,7 +6,7 @@ url="http://www.kernel.org/pub/software/utils/pciutils/pciutils-3.1.8.tar.bz2
 pkgbase=pciutils
 vers=3.1.8
 arch=`uname -m`
-build=P3
+build=P4
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="TODO README ChangeLog README.Windows COPYING"
@@ -277,6 +277,7 @@ if [ $opt_package -eq 1 ] ; then
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+  tar rvpf $pkg.tar -C $P install/doinst.sh
   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
   mv $pkg.tar.xz $pkg.txz
   read -p "Do you want to keep work files? [y/N] " ans
