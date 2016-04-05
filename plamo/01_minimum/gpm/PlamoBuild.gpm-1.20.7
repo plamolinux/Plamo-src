@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase=lv
-vers=451
-url='http://www.ff.iij4u.or.jp/~nrt/freeware/lv451.tar.gz'
+pkgbase=gpm
+vers=1.20.7
+url="http://www.nico.schottelius.org/software/gpm/archives/gpm-1.20.7.tar.bz2"
 verify=
 commitid=
 arch=`uname -m`
-build=P3
-src=lv${vers}
-OPT_CONFIG=''
-DOCS='GPL.txt README'
+build=P2
+src=gpm-${vers}
+OPT_CONFIG="--sysconfdir=/etc --enable-shared --disable-static"
+DOCS='COPYING README README.gpm2 README.versions TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -105,11 +105,9 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-  target="-m64"
   libdir="lib64"
   suffix="64"
 else
-  target="-m32"
   libdir="lib"
   suffix=""
 fi
@@ -186,21 +184,21 @@ if [ $opt_config -eq 1 ] ; then
 #   記述します。
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     for patch in $patchfiles ; do
       patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
-    if [ -x ../src/configure ] ; then
+    if [ -x configure ] ; then
       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
       export LDFLAGS='-Wl,--as-needed' 
-      export CFLAGS="-isystem /usr/include $target" 
-      export CPPFLAGS="-isystem /usr/include $target "
-      ../src/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      export CFLAGS="-isystem /usr/include" 
+      export CPPFLAGS="-isystem /usr/include"
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
     if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
@@ -210,7 +208,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
@@ -232,26 +230,88 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/build
+    cd ${B[$i]}
     for mk in `find . -name "[Mm]akefile" ` ; do
       sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
     if [ -f Makefile ] ; then
-      mkdir -p $P/usr/bin
-      install -s -m 555 lv $P/usr/bin
-      ( cd $P/usr/bin ; ln -sf lv lgrep )
-      mkdir -p $P/usr/lib/lv
-      install -m 444 ../lv.hlp $P/usr/lib/lv
-      mkdir -p $P/usr/share/man/man1
-      install -m 444 ../lv.1 $P/usr/share/man/man1
-      #export LDFLAGS='-Wl,--as-needed'
-      #make install prefix=$P/usr libdir=$P/usr/$libdir
+      export LDFLAGS='-Wl,--as-needed'
+      make install DESTDIR=$P
     fi
     if [ $? != 0 ]; then
       echo "make install error. $0 script stop"
       exit 255
     fi
   done
+  ( cd $P/usr/$libdir; ln -svf libgpm.so.2 libgpm.so )
+  install -m 644 conf/* $P/etc
+  install -d $P/etc/rc.d/init.d
+  cat <<- "EOF" > $P/etc/rc.d/init.d/gpm
+	#!/bin/sh
+	# Time-stamp: <2008-09-02 11:31:18 kojima>
+	
+	# This file is derived from avahi.
+	# Start/stop/restart daemon in init.d/XXXX
+	
+	DESC="gpm (General Purpose Mouse)"
+	NAME="gpm"
+	DAEMON1="/usr/sbin/gpm -m /dev/input/mice -t imps2"
+	DAEMON2="/usr/bin/gpm-root"
+	
+	status() {
+	  if [ -n "`ps axww | gawk '{print $5}' | grep $NAME`" ] ; then
+	    return 0
+	  else
+	    return 1
+	  fi
+	}
+	
+	start() {
+	  echo "Starting $DESC:"
+	  $DAEMON1 &
+	  $DAEMON2 &
+	}
+	
+	stop() {
+	  echo "Stopping $DESC:"
+	  killall gpm
+	  killall gpm-root
+	}
+	
+	case "$1" in
+	start)
+	  if status ; then
+	    echo "$DESC is already running (will not start it twice)."
+	  else
+	    start
+	  fi
+	  ;;
+	stop)
+	  if status ; then
+	    stop
+	  else
+	    echo "$DESC seems already stopped."
+	  fi
+	  ;;
+	restart)
+	  stop
+	  start
+	  ;;
+	status)
+	  if status ; then
+	    echo "$DESC is currently running."
+	  else
+	    echo "$DESC is not running."
+	  fi
+	  ;;
+	*)
+	  echo "Usage: $0 {start|stop|status|restart}"
+	  exit 1
+	  ;;
+	esac
+	exit 0
+	EOF
+  chmod 755 $P/etc/rc.d/init.d/gpm
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################

@@ -8,7 +8,7 @@ url="http://pkgs.fedoraproject.org/repo/pkgs/nvi-m17n/nvi-1.79.tar.gz/765e2153f5
 pkgbase=nvi
 vers=1.79
 arch=`uname -m`
-build=P6
+build=P7
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-multibyte=euc-jp"
 DOCS="LAYOUT README FAQ
