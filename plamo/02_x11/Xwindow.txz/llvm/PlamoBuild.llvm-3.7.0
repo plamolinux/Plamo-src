@@ -6,7 +6,7 @@ url='http://llvm.org/releases/3.7.0/llvm-3.7.0.src.tar.xz
 pkgbase=llvm
 vers=3.7.0
 arch=`uname -m`
-build=P1
+build=P2
 src=llvm-3.7.0
 # these configs translated into cmake style
 # OPT_CONFIG='--enable-libffi  

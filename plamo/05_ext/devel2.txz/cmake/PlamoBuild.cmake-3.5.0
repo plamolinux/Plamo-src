@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
-url='http://www.h5l.org/dist/src/heimdal-1.5.2.tar.gz'
-pkgbase=heimdal
-vers=1.5.2
-arch=x86_64
-# arch=i586
+pkgbase=cmake
+vers=3.5.0
+url="http://www.cmake.org/files/v${vers%.*}/cmake-${vers}.tar.gz"
+arch=`uname -m`
 build=P1
-src=heimdal-1.5.2
-OPT_CONFIG='--disable-static --enable-shared --with-sqlite3=/usr '
-DOCS='ChangeLog ChangeLog.1998 ChangeLog.1999 ChangeLog.2000 ChangeLog.2001 ChangeLog.2002 ChangeLog.2003 ChangeLog.2004 ChangeLog.2005 ChangeLog.2006 LICENSE NEWS README TODO'
+src=cmake-${vers}
+OPT_CONFIG=''
+DOCS='CONTRIBUTING.rst Copyright.txt Licenses/LGPLv2.1.txt Licenses/README.rst README.rst'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -73,12 +72,13 @@ compress_all() {
 }  
 
 W=`pwd`
+WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
   if [ $arch = "x86_64" ]; then
-      B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
-      B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
   fi      
 done
 P=$W/work ; C=$W/pivot
@@ -143,13 +143,15 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr/heimdal --libdir=/usr/heimdal/${libdir} --infodir=/usr/share/info --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG[$i]}
-     fi
+
+    if [ -f $S/CMakeLists.txt ]; then
+        export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+        export LDFLAGS='-Wl,--as-needed' 
+        export CC="gcc -isystem /usr/include $target" 
+        export CXX="g++ -isystem /usr/include $target"
+        cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DLIB_INSTALL_DIR:PATH=/usr/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
+      fi
+
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
@@ -177,212 +179,63 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-    mkdir -p $P/etc
-    cp krb5.conf $P/etc
-
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  mkdir -p $P/etc/profile.d
-  mkdir -p $P/etc/rc.d/init.d
-
-  cat <<"EOF" > $P/etc/profile.d/heimdal.csh
-# add /usr/heimdal/bin to $PATH for tcsh
-set HEIMDAL=/usr/heimdal
-
-if ($?PATH) then
-  set path = ( $path $HEIMDAL/bin  )
-else
-  set path = ( /bin /usr/bin $HEIMDAL/bin )
-endif
-if ( `id -u` == 0 ) then
-  setenv PATH $PATH:$HEIMDAL/sbin
-endif
-
-EOF
-  cat <<"EOF" > $P/etc/profile.d/heimdal.sh
-# add /usr/heimdal/bin to $PATH for bash
-HEIMDAL=/usr/heimdal
-
-if [ "_$PATH" != "_" ]; then
-  PATH=$PATH:$HEIMDAL/bin
-else
-  PATH=/bin:/usr/bin:$HEIMDAL/bin
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
 fi
-if [ `id -u` = 0 ]; then
-  PATH=$PATH:$HEIMDAL/sbin
-fi
-export PATH 
 EOF
-
-  cat <<"EOF" > $P/etc/rc.d/init.d/heimdal
-#!/bin/sh -f
-#
-# description: The Heimdal Kerberos5 KDC Master server and its administration daemons.
-# processname: heimdal
-# chkconfig: 2345 11 89
-#
-# Creation:	1997-04-10
-# Auther:	JuK
-# HISTORY
-# 2006-01-02	JuK	port to Heimdal on Plamo Linux
-# 2001-10-01	JuK	port to RH7.1
-# 
-KDC=/usr/heimdal/libexec/kdc
-kdcdaemon="heimdal(Kerberos 5 KDC)"
-KADMIND=/usr/heimdal/libexec/kadmind
-kdmdaemon="kadmind(Kerberos DB admin. daemon)"
-KPASSWDD=/usr/heimdal/libexec/kpasswdd
-kpwdaemon="kpasswdd(Kerberos password daemon)"
-
-kdcpid=`ps ax | grep $KDC  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-kdmpid=`ps ax | grep $KADMIND  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-kpwpid=`ps ax | grep $KPASSWDD  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-
-#
-# start or stop kdc (KDC)
-# start or stop kadmind (Kerberos DB admin. daemon)
-# start or stop kpasswdd (Kerberos password daemon)
-#
-case $1 in
-'start')
-	if [ -f $KDC ]; then
-		if [ "X$kdcpid" = "X" ]; then
-			$KDC &
-			echo "$0: $kdcdaemon started."
-			kdcpid=`ps ax | grep $KDC  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-			echo "$0: Proccess ID = $kdcpid"
-		else
-			echo "$0: $kdcdaemon is ALREADY running(PID = $kdcpid)."
-		fi
-	else
-		echo "$0: $KDC does NOT exist."
-		exit 1
-	fi
-
-	if [ -f $KADMIND ]; then
-		if [ "X$kdmpid" = "X" ]; then
-			$KADMIND &
-			echo "$0: $kdmdaemon started."
-			kdmpid=`ps ax | grep $KADMIND  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-			echo "$0: Proccess ID = $kdmpid"
-		else
-			echo "$0: $kdmdaemon is ALREADY running(PID = $kdmpid)."
-		fi
-	else
-		echo "$0: $KADMIND does NOT exist."
-		exit 1
-	fi
-
-	if [ -f $KPASSWDD ]; then
-		if [ "X$kpwpid" = "X" ]; then
-			$KPASSWDD &
-			echo "$0: $kpwdaemon started."
-			kpwpid=`ps ax | grep $KPASSWDD  | grep -v grep |  sed -e 's/^  *//' -e 's/ .*//' `
-			echo "$0: Proccess ID = $kpwpid"
-		else
-			echo "$0: $kpwdaemon is ALREADY running(PID = $kpwpid)."
-		fi
-	else
-		echo "$0: $KPASSWDD does NOT exist."
-		exit 1
-	fi
-	;;
-'stop')
-	if [ -f $KDC ]; then
-		if [ "X$kdcpid" != "X" ]; then
-			/bin/kill $kdcpid
-			echo "$0: $kdcdaemon has been killed."
-		else
-			echo "$0: $kdcdaemon is NOT running."
-		fi
-	fi
-
-	if [ -f $KADMIND ]; then
-		if [ "X$kdmpid" != "X" ]; then
-			/bin/kill $kdmpid
-			echo "$0: $kdmdaemon has been killed."
-		else
-			echo "$0: $kdmdaemon is NOT running."
-		fi
-	fi
-
-	if [ -f $KPASSWDD ]; then
-		if [ "X$kpwpid" != "X" ]; then
-			/bin/kill $kpwpid
-			echo "$0: $kpwdaemon has been killed."
-		else
-			echo "$0: $kpwdaemon is NOT running."
-		fi
-	fi
-        ;;
-*)
-        echo "usage: $0 {start|stop}"
-	# check kdc
-	if [ "X$kdcpid" != "X" ]; then
-		echo "$0: $kdcdaemon is ALREADY running(PID = $kdcpid)."
-	else
-		echo "$0: $kdcdaemon is NOT running."
-	fi
-
-	# check kadmind
-	if [ "X$kdmpid" != "X" ]; then
-		echo "$0: $kdmdaemon is ALREADY running(PID = $kdmpid)."
-	else
-		echo "$0: $kdmdaemon is NOT running."
-	fi
-
-	# check kpasswdd
-	if [ "X$kpwpid" != "X" ]; then
-		echo "$0: $kpwdaemon is ALREADY running(PID = $kpwpid)."
-	else
-		echo "$0: $kpwdaemon is NOT running."
-	fi
-	exit 1
-	;;
-esac
-exit 0
-EOF
-  cp etc/services.append $P/etc/services.append-kerberos
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/etc
+      done
   fi
 
-  mkdir $P/install
-  cat <<EOF > $P/install/initpkg
-if [ -d /usr/${libdir}/pkgconfig ]; then
-   ( cd /usr/${libdir}/pkgconfig  ; ln -sf /usr/heimdal/${libdir}/pkgconfig/heimdal-gssapi.pc . )
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
 fi
-
-/sbin/mkinfodir
 EOF
-
+      done
+  fi
 
 # remove locales except ja
 # 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
-    for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
-    done
-    popd
-  fi
+  for loc_dir in `find $P -name locale` ; do
+      pushd $loc_dir
+      for loc in * ; do
+          if [ "$loc" != "ja" ]; then
+              rm -rf $loc
+          fi
+      done
+      popd
+   done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
+  if [ -d $P/usr/share/man ]; then
+      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+          gzip_dir $mdir
+      done
+  fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -399,7 +252,6 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -411,6 +263,17 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
+
+############################################################
+#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
+#   紛れこみがちなので
+############################################################
+
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share/doc
+  fi
+
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
