@@ -5,7 +5,7 @@ url="ftp://ftp.astron.com/pub/file/file-5.22.tar.gz"
 pkgbase=file
 vers=5.22
 arch=`uname -m`
-build=P3
+build=P4
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README TODO MAINT"
@@ -262,6 +262,7 @@ if [ $opt_package -eq 1 ] ; then
   done
   convert
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+  tar cvpf $pkg.tar -C $P `cd $P ; find usr/${libdir} | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/doc/$src
   tar rvpf $pkg.tar -C $P install/doinst.sh
