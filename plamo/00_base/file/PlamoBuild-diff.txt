@@ -1,5 +1,5 @@
---- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/file/PlamoBuild.file-5.22	2016-04-02 18:30:26.000000000 +0900
+--- admin/PlamoBuild.template.common.without_comment	2016-04-06 08:42:30.475775659 +0000
++++ plamo/00_base/file/PlamoBuild.file-5.22	2016-04-06 08:45:35.034704738 +0000
 @@ -1,14 +1,14 @@
  #!/bin/sh
  
@@ -12,7 +12,7 @@
 +vers=5.22
  arch=`uname -m`
 -build=P1
-+build=P3
++build=P4
  src=$pkgbase-$vers
  OPT_CONFIG=""
 -DOCS="README"
@@ -20,8 +20,11 @@
  ######################################################################
  
  fscheck() {
-@@ -264,6 +264,7 @@
+@@ -262,8 +262,10 @@
+   done
+   convert
    tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/${libdir} | tail -n+2`
    tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
    tar rvpf $pkg.tar -C $P usr/share/doc/$src
 +  tar rvpf $pkg.tar -C $P install/doinst.sh

@@ -6,8 +6,8 @@ url="http://ftp.x.org/contrib/applications/kterm-6.2.0.tar.gz
     http://plamo.linet.gr.jp/~tamuki/src/kterm-ja_ad.tar.gz"
 pkgbase=kterm
 vers=6.2.0
-arch=x86_64
-build=P2
+arch=`uname -m`
+build=P8
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="DEMO.kt.uu DEMO.xbm README.kt"
