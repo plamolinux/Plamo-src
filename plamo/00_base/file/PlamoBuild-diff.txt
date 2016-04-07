@@ -12,7 +12,7 @@
 +vers=5.22
  arch=`uname -m`
 -build=P1
-+build=P4
++build=P5
  src=$pkgbase-$vers
  OPT_CONFIG=""
 -DOCS="README"
