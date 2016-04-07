@@ -1,0 +1,72 @@
+#!/bin/bash
+# Time-stamp: <2016-02-04 20:05:32 karma>
+
+# This file is derived from  avahi.
+# Start/stop/restart daemon in init.d/XXXX
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DESC="lxcfs"
+NAME="lxcfs"
+DAEMON="lxcfs"
+MOUNTDIR="/var/lib/lxcfs"
+
+start()
+{
+  echo "Starting $DESC:  $DAEMON "
+  if [ ! -d $MOUNTDIR ]; then
+    mkdir -p $MOUNTDIR
+  fi
+  $DAEMON $MOUNTDIR > /dev/null 2>&1 &
+}
+
+status()
+{
+  chk=`ps axww | gawk '{print $5}' | grep $NAME`
+  if [ "$chk.x" != ".x" ]; then
+      return 0
+  else
+      return 1
+  fi
+}
+
+stop()
+{
+
+  if ( ! status ); then
+     echo "$DESC seems already stopped"
+  else
+     echo "Stopping $DESC: "
+     fusermount -u $MOUNTDIR
+  fi
+}
+
+restart()
+{
+  stop
+  start
+}
+
+case "$1" in
+'start')
+  if ( ! status ); then
+    start
+  else
+    echo "$DESC is already running (will not start it twice)."
+  fi
+  ;;
+'stop')
+  stop
+  ;;
+'restart')
+  restart
+  ;;
+'status')
+  if ( status ); then
+    echo "$DESC is currently running"
+  else
+    echo "$DESC is not running."
+  fi
+  ;;
+*)
+  echo "usage $0 start|stop|status|restart"
+esac
