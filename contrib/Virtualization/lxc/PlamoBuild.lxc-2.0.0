@@ -8,7 +8,7 @@ commitid=
 arch=`uname -m`
 build=P1
 src=lxc-${vers}
-OPT_CONFIG='--with-runtime-path=/var/run'
+OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
