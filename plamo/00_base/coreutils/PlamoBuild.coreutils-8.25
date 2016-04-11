@@ -216,9 +216,6 @@ if [ $opt_config -eq 1 ] ; then
     if [ -f config.log ] ; then
       rm -rf config.cache config.log
     fi
-    if [ $( id -u ) -eq 0 ]; then
-      export FORCE_UNSAFE_CONFIGURE=1
-    fi
     if [ -x configure ] ; then
       ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
