@@ -1,5 +1,5 @@
---- admin/PlamoBuild.template.common.without_comment	2016-04-06 17:42:30.475775659 +0900
-+++ plamo/00_base/coreutils/PlamoBuild.coreutils-8.25	2016-04-11 17:00:31.361517532 +0900
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/coreutils/PlamoBuild.coreutils-8.23	2016-01-05 21:08:59.000000000 +0900
 @@ -1,14 +1,17 @@
  #!/bin/sh
  
@@ -7,11 +7,12 @@
 -url=""
 -pkgbase=
 -vers=
++url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
 +pkgbase=coreutils
-+vers=8.25
-+url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
++vers=8.23
  arch=`uname -m`
- build=P1
+-build=P1
++build=P3
  src=$pkgbase-$vers
 -OPT_CONFIG=""
 -DOCS="README"
