@@ -1,11 +1,11 @@
 #!/bin/sh
 
 ######################################################################
-url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
 pkgbase=coreutils
-vers=8.23
+vers=8.25
+url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
 arch=`uname -m`
-build=P3
+build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-install-program=arch
     --enable-no-install-program=uptime,kill --without-gmp"
