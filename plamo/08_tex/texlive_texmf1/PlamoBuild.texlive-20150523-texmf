@@ -4,7 +4,7 @@ pkgbase=texlive_texmf
 vers=20150523
 url="ftp://tug.org/historic/systems/texlive/${vers:0:4}/texlive-${vers}-texmf.tar.xz"
 arch=noarch
-build=P1
+build=P2
 src=texlive-${vers}-texmf
 prefix=/opt/texlive/2015
 OPT_CONFIG=''
@@ -246,9 +246,18 @@ if [ $opt_package -eq 1 ] ; then
   chown -R root:root $P/*
 
   # exec texinit.sh after installation
-  mkdir -p $P/4/install
-  cat <<EOF >> $P/4/install/initpkg
-if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive ]; then
+  mkdir -p $P/2/install
+  mkdir -p $P/1/install
+  cat <<EOF >> $P/1/install/initpkg
+if [ -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive ]; then
+  sh $prefix/texinit.sh
+else
+  echo "必要なパッケージが揃っていません．texlive_texmf[123],ptexlive をインストールした後に $prefix/texinit.sh を実行してください．"
+fi
+EOF
+
+  cat <<EOF >> $P/2/install/initpkg
+if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive ]; then
   sh $prefix/texinit.sh
 else
   echo "必要なパッケージが揃っていません．texlive_texmf[123],ptexlive をインストールした後に $prefix/texinit.sh を実行してください．"

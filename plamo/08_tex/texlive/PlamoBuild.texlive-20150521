@@ -6,7 +6,7 @@ url="ftp://tug.org/texlive/historic/2015/texlive-20150521-source.tar.xz"
 verify=$url.sha256
 commitid=
 arch=`uname -m`
-build=P1
+build=P2
 src=texlive-${vers}-source
 #
 PREFIX=/opt/texlive/2015
@@ -283,7 +283,7 @@ if [ $opt_package -eq 1 ] ; then
   cat <<EOF >> $P/install/initpkg
 ( cd $PREFIX/bin/$TEXARCH ; ln -sf dvipdfmx xbb )
 
-if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 -a -f /var/log/packages/texlive_texmf3 -a -f /var/log/packages/texlive_texmf4 ]; then
+if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 ]; then
   sh $PREFIX/texinit.sh
 fi
 EOF
