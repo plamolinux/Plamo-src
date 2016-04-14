@@ -6,12 +6,11 @@ url="https://linuxcontainers.org/downloads/lxc/lxc-2.0.0.tar.gz"
 verify=$url.asc
 commitid=
 arch=`uname -m`
-build=P2
+build=P1
 src=lxc-${vers}
 OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-# These patches will be not needed when 2.0.1 is released.
-patchfiles="fallback_cgfs.patch  no_systemd.patch"
+patchfiles=''
 compress=txz
 ##############################################################
 
