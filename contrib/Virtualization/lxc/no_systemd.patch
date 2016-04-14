@@ -1,0 +1,63 @@
+From c30b61c37695a88f07ed5641ad270e4785a3a918 Mon Sep 17 00:00:00 2001
+From: Serge Hallyn <serge.hallyn@ubuntu.com>
+Date: Tue, 12 Apr 2016 12:34:28 -0500
+Subject: [PATCH] cgfsng: don't require that systemd subsystem be mounted
+
+Note that is_crucial_subsystem still lists name=systemd.  That is
+used in cgfs and cgmanager.  Cgmanager is typically setup to create
+name=systemd, so it is ok.  cgfs uses is_crucial_subsystem() only
+to decide whether failure to create or chown a directory should be
+terminal.  That's ok, because (a) if name=systemd is not mounted then
+we won't hit that, and (b) if name=systemd is mounted, then we'd
+really still like to set it up for containers.
+
+Signed-off-by: Serge Hallyn <serge.hallyn@ubuntu.com>
+---
+ src/lxc/cgfsng.c | 9 ++-------
+ src/lxc/cgroup.c | 7 ++++++-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/lxc/cgfsng.c b/src/lxc/cgfsng.c
+index fad0be4..1e72347 100644
+--- a/src/lxc/cgfsng.c
++++ b/src/lxc/cgfsng.c
+@@ -407,19 +407,14 @@ static bool controller_found(struct hierarchy **hlist, char *entry)
+ }
+ 
+ /*
+- * Return true if all of the controllers which we require have been
+- * found.  The required list is systemd, freezer, and anything in
+- * lxc.cgroup.use.
++ * Return true if all of the controllers which we require have been found.
++ * The required list is  freezer and anything in * lxc.cgroup.use.
+  */
+ static bool all_controllers_found(void)
+ {
+ 	char *p, *saveptr = NULL;
+ 	struct hierarchy ** hlist = hierarchies;
+ 
+-	if (!controller_found(hlist, "name=systemd")) {
+-		ERROR("no systemd controller mountpoint found");
+-		return false;
+-	}
+ 	if (!controller_found(hlist, "freezer")) {
+ 		ERROR("no freezer controller mountpoint found");
+ 		return false;
+diff --git a/src/lxc/cgroup.c b/src/lxc/cgroup.c
+index 1a92ef4..91ef359 100644
+--- a/src/lxc/cgroup.c
++++ b/src/lxc/cgroup.c
+@@ -226,7 +226,12 @@ void prune_init_scope(char *cg)
+ 
+ /*
+  * Return true if this is a subsystem which we cannot do
+- * without
++ * without.
++ *
++ * systemd is questionable here.  The way callers currently
++ * use this, if systemd is not mounted then it will be ignored.
++ * But if systemd is mounted, then it must be setup so that lxc
++ * can create cgroups in it, else containers will fail.
+  */
+ bool is_crucial_cgroup_subsystem(const char *s)
+ {
