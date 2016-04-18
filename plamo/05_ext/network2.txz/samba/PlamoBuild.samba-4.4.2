@@ -305,16 +305,9 @@ EOF
 [global]
 workgroup = MYGROUP
 server string = Samba Server(%v,%h)
-security = SHARE
 dos charset = CP932
 unix charset = EUCJP-MS
 display charset = EUCJP-MS
-
-[data]
-comment = Samba Docs
-path = /home/samba
-guest only = Yes
-
 EOF
 
   mkdir -p $P/etc/logrotate.d
