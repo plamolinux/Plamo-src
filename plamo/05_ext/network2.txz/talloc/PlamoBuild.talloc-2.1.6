@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://samba.org/ftp/talloc/talloc-2.0.8.tar.gz'
-pkgbase=talloc
 vers=2.0.8
-arch=x86_64
-# arch=i586
+arch=`uname -m`
+url="http://samba.org/ftp/talloc/talloc-${vers}.tar.gz"
+pkgbase=talloc
 build=P1
-src=talloc-2.0.8
+src=talloc-${vers}
 OPT_CONFIG=''
 DOCS='NEWS talloc_guide.txt'
 patchfiles=''
