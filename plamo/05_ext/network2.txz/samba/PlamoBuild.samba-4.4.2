@@ -300,15 +300,8 @@ exit 0
 EOF
 
   mkdir -p $P/usr/${libdir}
-  cat <<"EOF" > $P/etc/samba/smb.conf.dist
-# Global parameters
-[global]
-workgroup = MYGROUP
-server string = Samba Server(%v,%h)
-dos charset = CP932
-unix charset = EUCJP-MS
-display charset = EUCJP-MS
-EOF
+  mkdir -p $P/etc/samba
+  cp examples/smb.conf.default $P/etc/samba/smb.conf.dist
 
   mkdir -p $P/etc/logrotate.d
   cat <<"EOF" > $P/etc/logrotate.d/samba
