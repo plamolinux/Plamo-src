@@ -1,18 +1,18 @@
---- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/coreutils/PlamoBuild.coreutils-8.23	2016-01-05 21:08:59.000000000 +0900
-@@ -1,14 +1,17 @@
+--- admin/PlamoBuild.template.common.without_comment	2016-04-06 17:42:30.475775659 +0900
++++ plamo/00_base/coreutils/PlamoBuild.coreutils-8.25	2016-04-21 14:39:21.496965135 +0900
+@@ -1,14 +1,18 @@
  #!/bin/sh
  
  ######################################################################
 -url=""
 -pkgbase=
 -vers=
-+url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
 +pkgbase=coreutils
-+vers=8.23
++vers=8.25
++url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
++verify="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz.sig"
  arch=`uname -m`
--build=P1
-+build=P3
+ build=P1
  src=$pkgbase-$vers
 -OPT_CONFIG=""
 -DOCS="README"
@@ -24,7 +24,55 @@
  ######################################################################
  
  fscheck() {
-@@ -192,6 +195,7 @@
+@@ -158,6 +162,24 @@
+   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+ }
+ 
++verify_checksum() {
++  echo "Verify Checksum..."
++  checksum_command=$1
++  verify_file=${verify##*/}
++  for s in $url ; do
++    srcsum=`$checksum_command ${s##*/}`
++    verifysum=`grep ${s##*/} $verify_file`
++    if [ x"$srcsum" != x"$verifysum" ]; then
++      return 1
++    fi
++  done
++  return 0
++}
++
++if [ $(id -u) -ne 0 ]; then
++  export FORCE_UNSAFE_CONFIGURE=1
++fi
++
+ fscheck
+ W=`pwd`
+ for i in `seq 0 $((${#src[@]} - 1))` ; do
+@@ -187,11 +209,30 @@
+   for i in $url ; do
+     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+   done
++  for i in $verify ; do
++    if [ ! -f ${i##*/} ] ; then
++      wget $i
++    fi
++  done
++  for i in $verify ; do
++    case ${i##*.} in
++    asc) gpg2 --verify ${i##*/} ;;
++    sig) gpg2 --verify ${i##*/} ;;
++    sha256sum) verify_checksum "sha256sum" ;;
++    esac
++    if [ $? -ne 0 ]; then
++      echo "archive verify was failed."
++      exit 1
++    else
++      echo "archive verify was successed."
++    fi
++  done
+   for i in $url ; do
+     case ${i##*.} in
      tar) tar xvpf ${i##*/} ;;
      gz) tar xvpzf ${i##*/} ;;
      bz2) tar xvpjf ${i##*/} ;;
@@ -32,7 +80,7 @@
      esac
    done
  fi
-@@ -199,6 +203,11 @@
+@@ -199,6 +240,11 @@
    for i in `seq 0 $((${#B[@]} - 1))` ; do
      if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
    done
@@ -44,7 +92,7 @@
    for i in `seq 0 $((${#B[@]} - 1))` ; do
      cd ${B[$i]}
      if [ -f Makefile ] ; then
-@@ -238,6 +247,13 @@
+@@ -238,6 +284,13 @@
        make install DESTDIR=$P
      fi
    done
@@ -58,7 +106,7 @@
    touch $W/i.et
    cd $W
    find $P ! -type l -newer i.st ! -newer i.et \
-@@ -261,9 +277,16 @@
+@@ -261,9 +314,16 @@
      ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
    done
    convert

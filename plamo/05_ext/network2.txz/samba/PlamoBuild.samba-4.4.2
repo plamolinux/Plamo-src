@@ -5,7 +5,7 @@ vers=4.4.2
 url="http://www.samba.org/samba/ftp/stable/samba-${vers}.tar.gz"
 verify=${url/gz/asc}
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 if [ $arch = "x86_64" ]; then
     target="-m64"
@@ -300,22 +300,8 @@ exit 0
 EOF
 
   mkdir -p $P/usr/${libdir}
-  cat <<"EOF" > $P/etc/samba/smb.conf.dist
-# Global parameters
-[global]
-workgroup = MYGROUP
-server string = Samba Server(%v,%h)
-security = SHARE
-dos charset = CP932
-unix charset = EUCJP-MS
-display charset = EUCJP-MS
-
-[data]
-comment = Samba Docs
-path = /home/samba
-guest only = Yes
-
-EOF
+  mkdir -p $P/etc/samba
+  cp examples/smb.conf.default $P/etc/samba/smb.conf.dist
 
   mkdir -p $P/etc/logrotate.d
   cat <<"EOF" > $P/etc/logrotate.d/samba
