@@ -1,12 +1,11 @@
 #!/bin/sh
 
 ######################################################################
+url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.25.tar.xz"
 pkgbase=coreutils
 vers=8.25
-url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
-verify="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz.sig"
 arch=`uname -m`
-build=P1
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-install-program=arch
     --enable-no-install-program=uptime,kill --without-gmp"
@@ -191,7 +190,7 @@ if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then
       wget $i
-      for sig in asc sig {md5,sha{1,256}}{,sum} ; do
+      for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
         if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
       done
       if [ -f ${i##*/}.$sig ] ; then
@@ -222,7 +221,7 @@ if [ $opt_config -eq 1 ] ; then
   sed 's@EXTRA_LOCALE_CATEGORIES@#&@g' po/Makevars.orig > po/Makevars
   cp -p src/copy.c{,.orig}
   sed 's@FASTREAD@NONE@g' src/copy.c.orig > src/copy.c
-  if [ $(id -u) -eq 0 ]; then
+  if [ `id -u` -eq 0 ] ; then
     export FORCE_UNSAFE_CONFIGURE=1
   fi
   for i in `seq 0 $((${#B[@]} - 1))` ; do
