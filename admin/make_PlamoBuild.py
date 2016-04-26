@@ -92,7 +92,6 @@ def make_headers(url, filename, vers, readme, patchfiles):
 pkgbase=%s
 vers=%s
 url=%s
-verify=
 commitid=
 arch=`uname -m`
 build=P1
@@ -167,20 +166,6 @@ compress_all() {
   strip_all
 }  
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      return 1
-    fi
-  done
-  return 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
@@ -234,27 +219,20 @@ if [ $opt_download -eq 1 ] ; then
     *)
       if [ ! -f ${i##*/} ] ; then
         wget $i
+        for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+        done
+        if [ -f ${i##*/}.$sig ] ; then
+          case $sig in
+          asc|sig) gpg2 --verify ${i##*/}.$sig ;;
+          md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
+          *) $sig -c ${i##*/}.$sig ;;
+          esac
+          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+        fi
       fi
       ;;
     esac
-  done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
-    case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    sha256sum) verify_checksum "sha256sum" ;;
-    esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
   done
   for i in $url ; do
     case ${i##*.} in
