@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
-url='http://www.samba.org/ftp/tdb/tdb-1.2.9.tar.gz'
+vers=1.3.9
+arch=`uname -m`
+url="http://www.samba.org/ftp/tdb/tdb-${vers}.tar.gz"
 pkgbase=tdb
-vers=1.2.9
-arch=x86_64
-# arch=i586
-build=P2
-src=tdb-1.2.9
+build=P1
+src=tdb-${vers}
 OPT_CONFIG=''
 DOCS=''
 patchfiles=''

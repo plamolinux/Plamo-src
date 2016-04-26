@@ -1,14 +1,23 @@
 #!/bin/sh
 ##############################################################
 pkgbase=samba
-vers=3.6.25
+vers=4.4.2
 url="http://www.samba.org/samba/ftp/stable/samba-${vers}.tar.gz"
 verify=${url/gz/asc}
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
-OPT_CONFIG='--with-lockdir=/var/samba/locks  --with-statedir=/var/samba/locks --with-cachedir=/var/samba/locks --with-piddir=/var/samba/locks --with-swatdir=/usr/share/swat --with-krb5=/usr/heimdal -with-logfilebase=/var/log/samba --with-fhs --enable-nss-wrapper  --enable-socket-wrapper'
-DOCS='COPYING MAINTAINERS.txt PFIF.txt README README.Coding README.cifs-utils README.contributing WHATSNEW.txt merged-branches.txt release-scripts'
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+    suffix="64"
+else
+    target="-m32"
+    libdir="lib"
+    suffix=""
+fi
+OPT_CONFIG="--with-logfilebase=/var/log/samba --enable-fhs --without-ad-dc --without-systemd --without-regedit --with-pammodulesdir=${libdir}/security"
+DOCS='BUILD_SYSTEMS.txt COPYING PFIF.txt README README.Coding README.cifs-utils README.contributing Roadmap WHATSNEW.txt merged-branches.txt release-scripts'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -103,15 +112,6 @@ docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
-else
-    target="-m32"
-    libdir="lib"
-    suffix=""
-fi
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -169,7 +169,7 @@ if [ $opt_config -eq 1 ] ; then
 #   記述します。
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/source3
+    cd ${B[$i]}
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
@@ -178,22 +178,22 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -x configure ] ; then
+      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CC="gcc -isystem /usr/include $target" 
+      export CXX="g++ -isystem /usr/include $target "
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var ${OPT_CONFIG[$i]}
+    fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/source3
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
@@ -211,20 +211,17 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}/source3
-    for mk in `find . -name "[Mm]akefile" ` ; do
-        sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
+    cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-        ( cd $P/usr/share/swat/help ; for f in manpages/* ; do ln -sf $f . ; done )
-    mkdir -p $P/var/samba/locks
-    mkdir -p $P/var/log/samba
-    mkdir -p $P/home/samba
-    chmod a+rwx $P/home/samba
-    cp -a ../docs/Samba3* ../docs/htmldocs $P/home/samba
+    ( cd $P/usr/share/swat/help ; for f in manpages/* ; do ln -sf $f . ; done )
+    #mkdir -p $P/var/run/samba
+    #mkdir -p $P/var/log/samba
+    #mkdir -p $P/home/samba
+    #chmod a+rwx $P/home/samba
+    #cp -a ../docs/Samba3* ../docs/htmldocs $P/home/samba
     chk_me=`whoami | grep root`
     if [ ! "$chk_me.x" = ".x" ]; then
 	chown -R root.root $P/home/samba/*
@@ -236,14 +233,14 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $P/${libdir}
-  install -v -m755 ../nsswitch/libnss_win{s,bind}.so $P/${libdir}
-  ( cd $P/${libdir} ; ln -v -sf libnss_winbind.so libnss_winbind.so.2 )
-  ( cd $P/${libdir} ; ln -v -sf libnss_wins.so libnss_wins.so.2 )
+  mv -v $P/usr/lib/libnss_win{s,bind}.so* $P/${libdir}
+  ( cd $P/${libdir} ; ln -v -sf ../../${libdir}/libnss_winbind.so.2 libnss_winbind.so )
+  ( cd $P/${libdir} ; ln -v -sf ../../${libdir}/libnss_wins.so.2 libnss_wins.so )
 
   mkdir -p $P/etc/openldap/schema
-  install -v -m644    ../examples/LDAP/README  $P/etc/openldap/schema/README.LDAP
-  install -v -m644    ../examples/LDAP/samba*  $P/etc/openldap/schema
-  install -v -m755    ../examples/LDAP/{convert*,get*,ol*} $P/etc/openldap/schema
+  install -v -m644    examples/LDAP/README  $P/etc/openldap/schema/README.LDAP
+  install -v -m644    examples/LDAP/samba*  $P/etc/openldap/schema
+  install -v -m755    examples/LDAP/{convert*,get*,ol*} $P/etc/openldap/schema
 
   mkdir -p $docdir/$src
   mkdir -p $P/etc/pam.d
@@ -270,13 +267,13 @@ start() {
 
 stop() {
      echo "Stopping Samba Server.."
-     kill `cat /var/samba/locks/nmbd.pid`
-     if [ -f /var/samba/locks/nmbd.pid ]; then
-        rm -rf /var/samba/locks/nmbd.pid
+     kill `cat /var/run/samba/nmbd.pid`
+     if [ -f /var/run/samba/nmbd.pid ]; then
+        rm -rf /var/run/samba/nmbd.pid
      fi
-     kill `cat /var/samba/locks/smbd.pid`
-     if [ -f /var/samba/locks/smbd.pid ]; then
-        rm -rf /var/samba/locks/smbd.pid
+     kill `cat /var/run/samba/smbd.pid`
+     if [ -f /var/run/samba/smbd.pid ]; then
+        rm -rf /var/run/samba/smbd.pid
      fi
 }
 
@@ -303,22 +300,8 @@ exit 0
 EOF
 
   mkdir -p $P/usr/${libdir}
-  cat <<"EOF" > $P/etc/samba/smb.conf.dist
-# Global parameters
-[global]
-workgroup = MYGROUP
-server string = Samba Server(%v,%h)
-security = SHARE
-dos charset = CP932
-unix charset = EUCJP-MS
-display charset = EUCJP-MS
-
-[data]
-comment = Samba Docs
-path = /home/samba
-guest only = Yes
-
-EOF
+  mkdir -p $P/etc/samba
+  cp examples/smb.conf.default $P/etc/samba/smb.conf.dist
 
   mkdir -p $P/etc/logrotate.d
   cat <<"EOF" > $P/etc/logrotate.d/samba
@@ -328,7 +311,7 @@ EOF
    sharedscripts
    copytruncate
    postrotate
-      /bin/kill -HUP `cat /var/samba/locks/*.pid 2>/dev/null` 2>/dev/null || true
+      /bin/kill -HUP `cat /var/run/samba/*.pid 2>/dev/null` 2>/dev/null || true
    endscript
 }
 EOF

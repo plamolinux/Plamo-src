@@ -1,17 +1,17 @@
 #!/bin/sh
 
 ######################################################################
-url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
+url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.25.tar.xz"
 pkgbase=coreutils
-vers=8.23
+vers=8.25
 arch=`uname -m`
-build=P3
+build=P2
 src=$pkgbase-$vers
 OPT_CONFIG="--enable-install-program=arch
     --enable-no-install-program=uptime,kill --without-gmp"
-DOCS="ChangeLog-2005 COPYING INSTALL ABOUT-NLS ChangeLog-2007 NEWS
-    README ChangeLog-2006 ChangeLog-2008 THANKS-to-translators
-    ChangeLog AUTHORS TODO THANKS"
+DOCS="COPYING TODO INSTALL THANKS ChangeLog-2006 ChangeLog-2008 NEWS
+    ChangeLog ChangeLog-2007 README ChangeLog-2005 AUTHORS ABOUT-NLS
+    THANKS-to-translators"
 ######################################################################
 
 fscheck() {
@@ -188,7 +188,20 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+      for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+      done
+      if [ -f ${i##*/}.$sig ] ; then
+        case $sig in
+        asc|sig) gpg2 --verify ${i##*/}.$sig ;;
+        md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
+        *) $sig -c ${i##*/}.$sig ;;
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+      fi
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -208,6 +221,9 @@ if [ $opt_config -eq 1 ] ; then
   sed 's@EXTRA_LOCALE_CATEGORIES@#&@g' po/Makevars.orig > po/Makevars
   cp -p src/copy.c{,.orig}
   sed 's@FASTREAD@NONE@g' src/copy.c.orig > src/copy.c
+  if [ `id -u` -eq 0 ] ; then
+    export FORCE_UNSAFE_CONFIGURE=1
+  fi
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     if [ -f Makefile ] ; then
