@@ -1,5 +1,5 @@
---- admin/PlamoBuild.template.common.without_comment	2016-04-06 17:42:30.475775659 +0900
-+++ plamo/00_base/util_linux/PlamoBuild.util_linux-2.28	2016-04-22 18:27:53.531592034 +0900
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/util_linux/PlamoBuild.util_linux-2.27	2016-03-23 18:07:55.000000000 +0900
 @@ -1,14 +1,17 @@
  #!/bin/sh
  
@@ -7,14 +7,15 @@
 -url=""
 -pkgbase=
 -vers=
-+url="http://www.kernel.org/pub/linux/utils/util-linux/v2.28/util-linux-2.28.tar.xz"
++url="http://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.tar.xz"
 +pkgbase=util_linux
-+vers=2.28
++vers=2.27
  arch=`uname -m`
- build=P1
+-build=P1
 -src=$pkgbase-$vers
 -OPT_CONFIG=""
 -DOCS="README"
++build=P2
 +src=util-linux-$vers
 +OPT_CONFIG="--localstatedir=/var --disable-setpriv --disable-last
 +    --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
@@ -24,28 +25,7 @@
  ######################################################################
  
  fscheck() {
-@@ -185,13 +188,27 @@
- fi
- if [ $opt_download -eq 1 ] ; then
-   for i in $url ; do
--    if [ ! -f ${i##*/} ] ; then wget $i ; fi
-+    if [ ! -f ${i##*/} ] ; then
-+      wget $i
-+      for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
-+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-+      done
-+      if [ -f ${i##*/}.$sig ] ; then
-+        case $sig in
-+        asc|sig) gpg2 --verify ${i##*/}.$sig ;;
-+        md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
-+        *) $sig -c ${i##*/}.$sig ;;
-+        esac
-+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-+      fi
-+    fi
-   done
-   for i in $url ; do
-     case ${i##*.} in
+@@ -192,6 +195,7 @@
      tar) tar xvpf ${i##*/} ;;
      gz) tar xvpzf ${i##*/} ;;
      bz2) tar xvpjf ${i##*/} ;;
@@ -53,7 +33,7 @@
      esac
    done
  fi
-@@ -238,6 +255,12 @@
+@@ -238,6 +242,12 @@
        make install DESTDIR=$P
      fi
    done
@@ -66,7 +46,7 @@
    touch $W/i.et
    cd $W
    find $P ! -type l -newer i.st ! -newer i.et \
-@@ -260,10 +283,24 @@
+@@ -260,10 +270,24 @@
      fi
      ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
    done
