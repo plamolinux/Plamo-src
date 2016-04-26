@@ -1,5 +1,5 @@
---- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
-+++ plamo/00_base/util_linux/PlamoBuild.util_linux-2.27	2016-03-23 18:07:55.000000000 +0900
+--- admin/PlamoBuild.template.common.without_comment	2016-04-06 17:42:30.475775659 +0900
++++ plamo/00_base/util_linux/PlamoBuild.util_linux-2.28	2016-04-26 16:58:37.743777548 +0900
 @@ -1,14 +1,17 @@
  #!/bin/sh
  
@@ -7,20 +7,19 @@
 -url=""
 -pkgbase=
 -vers=
-+url="http://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.tar.xz"
++url="http://www.kernel.org/pub/linux/utils/util-linux/v2.28/util-linux-2.28.tar.xz"
 +pkgbase=util_linux
-+vers=2.27
++vers=2.28
  arch=`uname -m`
--build=P1
+ build=P1
 -src=$pkgbase-$vers
 -OPT_CONFIG=""
 -DOCS="README"
-+build=P2
 +src=util-linux-$vers
 +OPT_CONFIG="--localstatedir=/var --disable-setpriv --disable-last
 +    --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
 +    --disable-sulogin --disable-su --enable-write --disable-pylibmount
-+    --without-user --without-python"
++    --without-user --without-python --without-systemd --without-systemdsystemunitdir"
 +DOCS="COPYING ABOUT-NLS ChangeLog README NEWS README.licensing AUTHORS"
  ######################################################################
  
@@ -33,6 +32,15 @@
      esac
    done
  fi
+@@ -208,7 +212,7 @@
+       rm -rf config.cache config.log
+     fi
+     if [ -x configure ] ; then
+-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
++      ./configure --prefix=/usr --libdir=/usr/$libdir \
+           --infodir='${prefix}'/share/info \
+           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
 @@ -238,6 +242,12 @@
        make install DESTDIR=$P
      fi

@@ -1,16 +1,16 @@
 #!/bin/sh
 
 ######################################################################
-url="http://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.tar.xz"
+url="http://www.kernel.org/pub/linux/utils/util-linux/v2.28/util-linux-2.28.tar.xz"
 pkgbase=util_linux
-vers=2.27
+vers=2.28
 arch=`uname -m`
-build=P3
+build=P1
 src=util-linux-$vers
 OPT_CONFIG="--localstatedir=/var --disable-setpriv --disable-last
     --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
     --disable-sulogin --disable-su --enable-write --disable-pylibmount
-    --without-user --without-python"
+    --without-user --without-python --without-systemd --without-systemdsystemunitdir"
 DOCS="COPYING ABOUT-NLS ChangeLog README NEWS README.licensing AUTHORS"
 ######################################################################
 
