@@ -5,7 +5,7 @@ url="http://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.tar.
 pkgbase=util_linux
 vers=2.27
 arch=`uname -m`
-build=P2
+build=P3
 src=util-linux-$vers
 OPT_CONFIG="--localstatedir=/var --disable-setpriv --disable-last
     --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
@@ -212,7 +212,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
+      ./configure --prefix=/usr --libdir=/usr/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
