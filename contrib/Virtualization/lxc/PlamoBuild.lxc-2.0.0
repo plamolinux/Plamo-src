@@ -6,7 +6,7 @@ url="https://linuxcontainers.org/downloads/lxc/lxc-2.0.0.tar.gz"
 verify=$url.asc
 commitid=
 arch=`uname -m`
-build=P2
+build=P3
 src=lxc-${vers}
 OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
