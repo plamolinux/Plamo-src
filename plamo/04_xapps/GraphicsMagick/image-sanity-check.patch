@@ -1,0 +1,28 @@
+diff -r 33200fc645f6 magick/render.c
+--- a/magick/render.c	Sat Nov 07 14:49:16 2015 -0600
++++ b/magick/render.c	Sun May 08 18:21:47 2016 -0500
+@@ -4096,6 +4096,24 @@
+           &image->exception);
+       else
+         {
++          /*
++            Sanity check URL/path before passing it to ReadImage()
++
++            This is a temporary fix until suitable flags can be passed
++            to keep SetImageInfo() from doing potentially dangerous
++            magick things.
++          */
++#define VALID_PREFIX(str,url) (LocaleNCompare(str,url,sizeof(str)-1) == 0)
++          if (!VALID_PREFIX("http://", primitive_info->text) &&
++              !VALID_PREFIX("https://", primitive_info->text) &&
++              !VALID_PREFIX("ftp://", primitive_info->text)  &&
++              !(IsAccessibleNoLogging(primitive_info->text))
++              )
++            {
++              ThrowException(&image->exception,FileOpenError,UnableToOpenFile,primitive_info->text);
++              status=MagickFail;
++              break;
++            }
+           (void) strlcpy(clone_info->filename,primitive_info->text,
+             MaxTextExtent);
+           composite_image=ReadImage(clone_info,&image->exception);
