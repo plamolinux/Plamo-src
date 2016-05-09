@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=45.0.2
+vers=46.0.1
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -242,13 +242,15 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    #hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    git clone https://github.com/mozilla-japan/gecko-l10n.git
+    ( cd gecko-l10n && git checkout -b l10n-mozilla-${vers:0:4} origin/l10n-mozilla-${vers:0:4} )
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
     else
       rm -rf ../l10n/*
     fi
-    mv ja ../l10n/
+    mv gecko-l10n/ja ../l10n/
 
 #    if [ -f autogen.sh ] ; then
 #      sh ./autogen.sh
