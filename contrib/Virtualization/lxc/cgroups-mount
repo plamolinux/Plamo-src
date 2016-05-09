@@ -1,6 +1,15 @@
 #!/bin/sh
 # mount cgroup filesystems per subsystem
 
+dummy_systemd() {
+  mkdir -p /sys/fs/cgroup/systemd
+  if ! mountpoint -q /sys/fs/cgroup/systemd ; then
+    if ! mount -n -t cgroup -o none,name=systemd systemd /sys/fs/cgroup/systemd ; then
+      rmdir /sys/fs/cgroup/systemd
+    fi
+  fi
+}
+
 start() {
   # if cgroupfs is mounted by fstab, don't run
   if grep -v "^#" /etc/fstab | grep -q "cgroup" ; then
@@ -12,6 +21,7 @@ start() {
   if ! mountpoint -q /sys/fs/cgroup ; then
     mount -t tmpfs -o mode=0755 cgroup /sys/fs/cgroup
   fi
+  dummy_systemd
 
   # get list of cgroup controllers
   for c in `tail -n+2 /proc/cgroups | cut -f1` ; do
