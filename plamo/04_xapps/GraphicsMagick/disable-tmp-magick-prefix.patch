@@ -1,0 +1,13 @@
+diff -r 33200fc645f6 magick/image.c
+--- a/magick/image.c	Sat Nov 07 14:49:16 2015 -0600
++++ b/magick/image.c	Sat May 07 20:12:57 2016 -0500
+@@ -2780,9 +2780,6 @@
+               (void) strlcpy(image_info->magick,magic,MaxTextExtent);
+               if (LocaleCompare(magic,"TMP") != 0)
+                 image_info->affirm=MagickTrue;
+-              else
+-                /* input file will be automatically removed */
+-                image_info->temporary=MagickTrue;
+             }
+         }
+     }
