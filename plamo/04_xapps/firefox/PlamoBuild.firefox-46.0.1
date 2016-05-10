@@ -8,7 +8,7 @@ url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pk
 arch=`uname -m`
 build=P1
 src=firefox-${vers}
-firefox_tag=FIREFOX_${vers//./_}_RELEASE
+firefox_tag=FENNEC_${vers//./_}_RELEASE
 DOCS='LICENSE README.txt other-licenses xpinstall'
 patchfiles='firefox.desktop.patch'
 compress=txz
@@ -243,7 +243,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     #hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    hg -v clone https://hg.mozilla.org/l10n-central/ja/ ja
+    hg -v clone http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
     else
