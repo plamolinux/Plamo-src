@@ -243,14 +243,13 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     #hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    git clone https://github.com/mozilla-japan/gecko-l10n.git
-    ( cd gecko-l10n && git checkout -b l10n-mozilla-${vers:0:4} origin/l10n-mozilla-${vers:0:4} )
+    hg -v clone https://hg.mozilla.org/l10n-central/ja/ ja
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
     else
       rm -rf ../l10n/*
     fi
-    mv gecko-l10n/ja ../l10n/
+    mv ja ../l10n/
 
 #    if [ -f autogen.sh ] ; then
 #      sh ./autogen.sh
