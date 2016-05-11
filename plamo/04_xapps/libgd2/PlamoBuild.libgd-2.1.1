@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='https://bitbucket.org/libgd/gd-libgd/downloads/libgd-2.1.0.tar.xz'
 pkgbase=libgd2
-vers=2.1.0
-arch=x86_64
-# arch=i686
+vers=2.1.1
+url="https://github.com/libgd/libgd/releases/download/gd-${vers}/libgd-${vers}.tar.xz"
+arch=`uname -m`
 build=P1
-src=libgd-2.1.0
+src=libgd-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='COPYING ChangeLog NEWS'
-patchfiles=''
+patchfiles='CVE-2016-3074.patch'
 compress=txz
 ##############################################################
 
