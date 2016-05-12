@@ -5,7 +5,7 @@ url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.2p2.tar.gz"
 pkgbase=openssh
 vers=7.2p2
 arch=`uname -m`
-build=P2
+build=P3
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc/ssh --localstatedir=/var --with-pam
     --with-privsep-user=sshd --with-privsep-path=/var/lib/sshd
@@ -13,6 +13,7 @@ OPT_CONFIG="--sysconfdir=/etc/ssh --localstatedir=/var --with-pam
 DOCS="CREDITS INSTALL LICENCE OVERVIEW PROTOCOL PROTOCOL.agent
     `echo PROTOCOL.{certkeys,chacha20poly1305,key,krl,mux}`
     README `echo README.{dns,platform,privsep,tun}` TODO ChangeLog"
+patchfiles="CVE-2015-8325.patch"
 ######################################################################
 
 fscheck() {
@@ -189,7 +190,20 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+      for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+      done
+      if [ -f ${i##*/}.$sig ] ; then
+        case $sig in
+        asc|sig) gpg2 --verify ${i##*/}.$sig ;;
+        md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
+        *) $sig -c ${i##*/}.$sig ;;
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+      fi
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -204,6 +218,11 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
+
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
   cp -p sshd_config{,.orig}
   sed -i -e 's@^#\(UsePAM\) no$@\1 yes@g' \
       -e 's@^#\(PermitUserEnvironment\) no$@\1 yes@g' sshd_config
