@@ -7,7 +7,7 @@ verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG=''
+OPT_CONFIG='--enable-dso --enable-ipv6 --enable-openssl --with-modules=mod_tls:mod_auth_pam --with-shared=mod_sftp:mod_sftp_pam'
 DOCS='COPYING ChangeLog INSTALL NEWS README README.AIX README.DSO README.FreeBSD README.IPv6 README.LDAP README.PAM README.Solaris2.5x README.Unixware README.capabilities README.classes README.controls README.cygwin README.facl README.modules README.ports RELEASE_NOTES'
 patchfiles=''
 compress=txz
