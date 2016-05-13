@@ -272,9 +272,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -s ssh $P/usr/bin/slogin
   ln -s ssh.1 $mandir/man1/slogin.1
   chgrp sys $P/var/lib/sshd
-  mv $P/etc/ssh/ssh_config{,.new} ; mv $P/etc/ssh/sshd_config{,.new}
-  mv $P/etc/ssh/{ssh{,d}_config.new,moduli} $C
-  mv $C/{ssh{,d}_config.new,moduli} $P/etc/ssh
+  mv $P/etc/ssh/ssh_config{,.dist} ; mv $P/etc/ssh/sshd_config{,.dist}
+  mv $P/etc/ssh/{ssh{,d}_config.dist,moduli} $C
+  mv $C/{ssh{,d}_config.dist,moduli} $P/etc/ssh
   install -d $P/etc/pam.d
   install -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
   install contrib/ssh-copy-id $P/usr/bin
@@ -305,11 +305,8 @@ if [ $opt_package -eq 1 ] ; then
   cat <<- "EOF" >> $P/install/doinst.sh
 	
 	ssh_config() {
-	  if [ -f etc/ssh/${1}_config ] ; then
-	    rm etc/${1}_config.new
-	  else
-	    mv etc/${1}_config.new /tmp
-	    mv /tmp/${1}_config.new etc/${1}_config
+	  if [ ! -f etc/ssh/${1}_config ] ; then
+	    cp etc/ssh/${1}_config.dist etc/ssh/${1}_config
 	  fi
 	}
 	
