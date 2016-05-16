@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase=ntp
-vers=4.2.8p6
-url="http://archive.ntp.org/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
+vers=4.2.8p7
+url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 verify=$url.md5
 arch=`uname -m`
 build=P1
