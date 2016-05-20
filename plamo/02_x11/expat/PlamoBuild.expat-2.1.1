@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz'
 pkgbase=expat
-vers=2.1.0
-arch=x86_64
-# arch=i586
+vers=2.1.1
+url="http://downloads.sourceforge.net/project/expat/expat/${vers}/expat-${vers}.tar.bz2"
+arch=`uname -m`
 build=P1
-src=expat-2.1.0
+src=expat-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='COPYING README'
-patchfiles=''
+patchfiles='CVE-2016-0718-v2-2-1.patch'
 compress=txz
 ##############################################################
 
@@ -197,7 +196,7 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+       patch -p2 < $W/$patch
     done
 
     if [ -f autogen.sh ] ; then
