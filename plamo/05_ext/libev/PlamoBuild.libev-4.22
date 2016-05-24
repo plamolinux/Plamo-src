@@ -222,6 +222,8 @@ if [ $opt_package -eq 1 ] ; then
       echo "make install error. $0 script stop"
       exit 255
     fi
+    # This conflicts with libevent
+    rm -f $P/usr/include/event.h
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
