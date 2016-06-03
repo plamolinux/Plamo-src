@@ -2,7 +2,7 @@
 
 ######################################################################
 pkgbase=git
-vers=2.6.3
+vers=2.8.3
 url="https://www.kernel.org/pub/software/scm/git/git-${vers}.tar.gz
     https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.gz
     http://plamo.linet.gr.jp/~tamuki/src/git-set-file-times"
@@ -10,7 +10,7 @@ arch=`uname -m`
 build=P1
 src=$pkgbase-$vers
 OPT_CONFIG="--sysconfdir=/etc"
-DOCS="COPYING INSTALL LGPL-2.1 README RelNotes command-list.txt"
+DOCS="COPYING INSTALL LGPL-2.1 README.md RelNotes command-list.txt"
 ######################################################################
 
 fscheck() {
@@ -187,7 +187,25 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    archive=${i##*/}
+    sign=${archive%.*}.sign
+    if [ ! -f $archive ] ; then
+      wget $i
+      wget ${i%.*}.sign
+      if [ ${archive##*.} == "gz" ] ; then
+        gzip -dc $archive | gpg2 --verify $sign -
+        if [ $? -ne 0 ] ; then
+          echo "archive verify failed"
+          exit 1
+        fi
+      elif [ ${i##*.} == "xz" ] ; then
+        xz -dc $archive | gpg2 --verify $sign -
+        if [ $? -ne 0 ] ; then
+          echo "archive verify failed"
+          exit 1
+        fi
+      fi
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
