@@ -8,8 +8,8 @@ build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS=''
-# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.23.3-standalone-1.patch
-patchfiles='nss-3.23-standalone-1.patch'
+# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.24-standalone-1.patch
+patchfiles='nss-3.24-standalone-1.patch'
 compress=txz
 ##############################################################
 
