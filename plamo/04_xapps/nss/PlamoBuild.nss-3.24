@@ -1,18 +1,16 @@
 #!/bin/sh
+export LANG=C
 ##############################################################
-pkgbase=php
-vers=7.0.7
-url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
+pkgbase=nss
+vers=3.24
+url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_${vers//./_}_RTM/src/nss-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-CONFDIR="/etc/httpd/"
-OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mariadb --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --with-libzip --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared --enable-opcache=shared --enable-opcache-file --with-openssl=shared --enable-exif=shared --enable-calendar"
-if [ $arch == 'x86_64' ]; then
-  OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
-fi
-DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.namespaces'
-patchfiles=''
+OPT_CONFIG=''
+DOCS=''
+# http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.24-standalone-1.patch
+patchfiles='nss-3.24-standalone-1.patch'
 compress=txz
 ##############################################################
 
@@ -20,22 +18,41 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
-      else
-         echo "stripping $chk"
-         strip $chk
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
       fi
-    fi
-  done
+    done
+  ) fi
 }
 
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
 
 gzip_dir() {
   echo "compressing in $1"
@@ -71,10 +88,15 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress_all() {
-  cd $P
-  strip_all
-}  
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
 
 prune_symlink() {
   echo "pruning symlink in $1"
@@ -135,11 +157,9 @@ pkg=$pkgbase-$vers-$arch-$build
 if [ $arch = "x86_64" ]; then
     target="-m64"
     libdir="lib64"
-    suffix="64"
 else
     target="-m32"
     libdir="lib"
-    suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -157,11 +177,16 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget -O $src.tar.bz2 $i ; fi
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
-  tar xvpf  $src.tar.bz2
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    esac
+  done
 fi
-
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -176,33 +201,37 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
-    # not for creating ZTS PHP
-    sed '/APACHE_THREADED_MPM=/d' -i sapi/apache2handler/config.m4 -i configure
-
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
+    if [ -x configure ] ; then
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
 	  exit 255
       fi
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed'
+    export CC="gcc -isystem /usr/include $target"
+    export CXX="g++ -isystem /usr/include $target "
+    export BUILD_OPT=1
+    export NSS_USE_SYSTEM_SQLITE=1
+    export NSPR_INCLUDE_DIR=/usr/include/nspr
+    export USE_SYSTEM_NSPR=1
+    export USE_SYSTEM_ZLIB=1
+    if [ $arch = "x86_64" ]; then
+      export USE_64=1
     fi
+    cd nss && make 
   done
 fi
 if [ $opt_package -eq 1 ] ; then
@@ -220,45 +249,48 @@ if [ $opt_package -eq 1 ] ; then
     for mk in `find . -name "[Mm]akefile" ` ; do
         sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
     done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      # copy dummy httpd.conf
-      mkdir -p $P/$CONFDIR
-      cp $CONFDIR/original/httpd.conf $P/$CONFDIR
-      make install INSTALL_ROOT=$P
-      # delete unused files
-      rm -rf $P/$CONFDIR/httpd.conf*
-      ( cd $P ; rm -rf .channels .depdb .filemap .lock .registry .depdblock )
-      # /usr/${libdir}/build 以下を使用するソフトがある模様．
-      #( cd $P/usr/lib64/ ; rm -rf build )
-      ln -sf phar.phar $P/usr/bin/phar
-    fi
+    export NSS_LINUXDIR=$( basename `ls -d $PWD/dist/Linux*` )
+    pushd dist
+    install -v -m755 -d $P/usr/${libdir}
+    install -v -m755 $NSS_LINUXDIR/lib/*.so $P/usr/${libdir}
+    install -v -m644 $NSS_LINUXDIR/lib/{*.chk,libcrmf.a} $P/usr/${libdir}
+    install -v -m755 -d $P/usr/include/nss
+    install -v -m755 -d $P/usr/bin
+    for file in certutil cmsutil crlutil modutil pk12util signtool signver ssltap nss-config; do
+        install -v -m755 $NSS_LINUXDIR/bin/${file} $P/usr/bin
+    done 
+    mkdir -p $P/usr/${libdir}/pkgconfig
+    cp -v -L $NSS_LINUXDIR/lib/pkgconfig/nss.pc $P/usr/${libdir}/pkgconfig
+    cp -v -RL {public,private}/nss/* $P/usr/include/nss
+    chmod 644 $P/usr/include/nss/*
+    popd
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # Install php.ini
-  install -m 644 ${B[$i]}/php.ini-production $P/$CONFDIR/php.ini.dist
-  # Install Apache Configuration File
-  mkdir -p $P/$CONFDIR/extra.dist/
-  cat <<EOF > $P/$CONFDIR/extra.dist/php7.conf
-LoadModule php7_module        ${libdir}/httpd/modules/libphp7.so
-
-<FilesMatch \.php$>
-  SetHandler application/x-httpd-php
-</FilesMatch>
-EOF
-  mkdir -p $P/install
-  cat <<EOF > $P/install/initpkg
-if [ ! -f $CONFDIR/extra/php5.conf ]; then
-  ( cd $CONFDIR ; cp extra.dist/php7.conf extra/php7.conf )
-fi
-if [ ! -f $CONFDIR/php.ini ]; then
-  ( cd $CONFDIR ; cp php.ini.dist php.ini )
+  mkdir -p $P/usr/share/doc/$src
+  if [ -d $P/usr/share/omf ]; then
+      mkdir -p $P/install
+      for omf in $P/usr/share/omf/* ; do
+	omf_name=`basename $omf`
+	cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
 fi
 EOF
+      done
+  fi
 
-  mkdir -p $docdir/$src
+  if [ -d $P/etc/gconf/schemas ]; then
+      mkdir -p $P/install
+      for schema in $P/etc/gconf/schemas/* ; do
+          cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+      done
+  fi
 
 # remove locales except ja
 # 
@@ -272,27 +304,15 @@ EOF
     popd
   fi
 
-######################################################################
-# path に lib があるバイナリは strip -g, ないバイナリは strip する
-######################################################################
-  cd $P
-  compress_all
-  for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-     gzip_dir mdir
-  done
-
-  if [ -d $P/usr/share/man ] ; then
-      for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d` ; do
-	  gzip_dir $mdir
-      done
-  fi
-
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
-  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -315,14 +335,10 @@ EOF
       cp $W/$patch $docdir/$src/$patch
       gzip_one $docdir/$src/$patch
   done
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  convert
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
