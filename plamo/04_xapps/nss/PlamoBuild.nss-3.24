@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=nss
-vers=3.23
+vers=3.24
 url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_${vers//./_}_RTM/src/nss-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
