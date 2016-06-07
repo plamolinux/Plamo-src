@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase=firefox
-vers=46.0.1
+vers=47.0
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -242,8 +242,8 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    #hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    hg -v clone http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    hg -v clone -r $firefox_tag http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
+    #hg -v clone http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
     else
