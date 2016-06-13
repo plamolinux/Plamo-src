@@ -2,14 +2,14 @@
 ##############################################################
 pkgbase=jansson
 vers=2.7
-url="http://www.digip.org/jansson/releases/jansson-${vers}.tar.bz2"
+url="https://github.com/akheron/jansson/archive/v${vers}.tar.gz"
 commitid=
 arch=`uname -m`
-build=P1
+build=P2
 src=jansson-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='LICENSE README.rst'
-patchfiles=''
+patchfiles='CVE-2016-4425.patch'
 compress=txz
 ##############################################################
 
