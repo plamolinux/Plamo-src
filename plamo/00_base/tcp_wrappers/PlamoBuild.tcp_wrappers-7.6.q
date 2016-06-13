@@ -6,7 +6,7 @@ url="http://archive.debian.org/debian/pool/main/t/tcp-wrappers/tcp-wrappers_7.6.
 pkgbase=tcp_wrappers
 vers=7.6.q
 arch=`uname -m`
-build=P3
+build=P5
 src=tcp_wrappers_7.6
 OPT_CONFIG=""
 DOCS="README BLURB DISCLAIMER CHANGES README.IRIX README.NIS"
@@ -186,13 +186,35 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i ; j=${i%.*}
+      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+        if wget --spider $j.$sig ; then
+          case ${i##*.} in
+          gz) gunzip -c ${i##*/} > ${j##*/} ;;
+          bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
+          xz) unxz -c ${i##*/} > ${j##*/} ;;
+          esac
+          touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
+        fi
+      done
+      if [ -f ${i##*/}.$sig ] ; then
+        case $sig in
+        asc|sig|sign) gpg2 --verify ${i##*/}.$sig ;;
+        sha256|sha1|md5) ${sig}sum -c ${i##*/}.$sig ;;
+        *) $sig -c ${i##*/}.$sig ;;
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+      fi
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
+    gz|tgz) tar xvpzf ${i##*/} ;;
+    bz2|tbz) tar xvpjf ${i##*/} ;;
+    xz|txz) tar xvpJf ${i##*/} ;;
     esac
   done
 fi
@@ -214,8 +236,8 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
-          --infodir='${prefix}'/share/info \
+      ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+          --libdir='${exec_prefix}'/$libdir --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
   done
@@ -264,7 +286,7 @@ if [ $opt_package -eq 1 ] ; then
     install -m 644 $i.8 $mandir/man8
   done
   install -d $P/etc
-  cat <<- "EOF" > $P/etc/hosts.allow.dist
+  cat <<- "EOF" > $P/etc/hosts.allow.new
 	#
 	# hosts.allow	This file describes the names of the hosts which are
 	#		allowed to use the local INET services, as decided by
@@ -278,7 +300,7 @@ if [ $opt_package -eq 1 ] ; then
 	ALL : LOCAL
 	# End of hosts.allow.
 	EOF
-  cat <<- "EOF" > $P/etc/hosts.deny.dist
+  cat <<- "EOF" > $P/etc/hosts.deny.new
 	#
 	# hosts.deny	This file describes the names of the hosts which are
 	#		*not* allowed to use the local INET services, as decided
@@ -315,14 +337,14 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
   convert
-  install -d $P/install
-  cat <<- "EOF" > $P/install/doinst.sh
+  cat <<- "EOF" >> $P/install/doinst.sh
+	
 	hosts_config() {
+	  mv etc/hosts.$1.new /tmp
 	  if [ -f etc/hosts.$1 ] ; then
-	    rm etc/hosts.$1.dist
+	    mv /tmp/hosts.$1.new etc/hosts.$1.dist
 	  else
-	    mv etc/hosts.$1.dist /tmp
-	    mv /tmp/hosts.$1.dist etc/hosts.$1
+	    mv /tmp/hosts.$1.new etc/hosts.$1
 	  fi
 	}
 	
