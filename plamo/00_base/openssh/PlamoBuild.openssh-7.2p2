@@ -2,7 +2,7 @@
 
 ######################################################################
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.2p2.tar.gz
-    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/glibc/CVE-2015-8325.patch"
+    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/openssh/CVE-2015-8325.patch"
 pkgbase=openssh
 vers=7.2p2
 arch=`uname -m`
