@@ -1,57 +1,26 @@
 #! /usr/bin/python
-# -*- coding: euc-jp -*-;
+# -*- coding: utf-8 -*-
 
-import getopt, sys, os, tarfile
+import argparse, sys, os
 
-def usage():
-    print "Usage:"
-    print sys.argv[0],": make PlamoBuild script for archive file or source tree(directory","\n"
-    print sys.argv[0],"[-hv] [-t type] <archive_file | directory>"
-    print "          -h, --help : help(show this message)"
-    print "          -v, --verbose : verbose(not implemented yet)"
-    print "          -u, --url= : source code url(need citation)"
-    print "          -t, --type= : select script type. Script types are follows:"
-    print "                KDE : for KDE package(set --prefix to /opt/kde)"
-    print "                  otherwise --prefix is /usr"
-    print "  archive_file is a source archive in tar.gz or tar.bz2 format"
-    print "  directory is a source code directory"
+def get_args():
+    parser = argparse.ArgumentParser(description='PlamoBuild script maker')
+    parser.add_argument("-p", "--prefix",  default="/usr", help='install directory prefix(default=/usr)')
+    parser.add_argument("-u", "--url", default='input source code url here', help='source code download url')
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")
+    parser.add_argument("-m", "--method", help="force config method(config, cmake, perl, python)")
+    parser.add_argument("-s", "--source", action="store_true", help="copy source codes into build directory(use with configure)")
+    parser.add_argument("srcdir", help="source code directory")
 
-    print " example: ", sys.argv[0], "myprogs.tar.bz2"
-    print "          ", sys.argv[0], "mycode_directory"
+    return parser.parse_args()
 
-    sys.exit(2)
-
-def get_parms():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvt:u:", ["help", "verbose", "type=", "url="])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
-
-    result = [opts, args]
-    return result
-
-def tar_expand(archive):
-    tar = tarfile.open(archive, 'r')
-    for i in tar:
-        tar.extract(i)
-
-def tar_top(archive):
-    tar = tarfile.open(archive, 'r')
-    (dirname, trash) = archive.split('.tar')
-    print "in tar_top, dirname = ", dirname
-    tarlist = []
-    for i in tar:
-        tarlist.append(i.name)
-    
-    return tarlist[0]
-
-def get_readmes(files):
+def get_readmes(srcdir):
     keywords = ['ABOUT', 'AUTHOR', 'COPYING', 'CHANGELOG', 'HACKING', 'HISTORY', 'INSTALL', 'LICENSE', 'LSM', 'MAINTAINERS', 'NEWS', 'README', 'RELEASE', 'THANKS', 'THANKYOU', 'TODO',  'TXT']
     exceptions = ['CMakeLists.txt', 'install-sh', 'mkinstalldirs', 'install.sh', '.in']
 
     tmplist = []
     newlist = [];
+    files = os.listdir(srcdir)
     for i in files:
         check = i.upper()
         for j in keywords:
@@ -71,9 +40,10 @@ def get_readmes(files):
                 
     return newlist
 
-def get_patchfiles(files):
+def get_patchfiles(srcdir):
     keywords = ['PATCH', 'DIFF']
     patchlist = []
+    files = os.listdir(srcdir)
     for i in files:
         check = i.upper()
         for j in keywords:
@@ -82,116 +52,92 @@ def get_patchfiles(files):
 
     return patchlist
 
-def make_headers(url, filename, vers, readme, patchfiles):
-    pkgname = filename.replace('-', '_')
+def get_config_type(srcdir):
+    files = os.listdir(srcdir)
+    type = 'none'
+    for file in files:
+        # print file
+        if file == 'CMakeLists.txt' :
+            type = 'cmake'
+            break
+        elif file == 'configure' :
+            type = 'config'
+            break
+        elif file == 'setup.py' :
+            type = 'python'
+            break
+        elif file == 'Makefile.PL' :
+            type = 'perl'
+            break
+        
+    if type == 'none' :
+        print("cannot find proper configure methods.")
+        print("PlamoBuild script is setup for configure, but you should adjust build script manually")
+        type = 'config'
+
+    return type
+
+def get_basename_and_version(srcdir):
+    dirname = srcdir.split('/')[-1]
+    parts = dirname.split('-')
+    if len(parts) == 2:   # ex: bash-4.02
+        basename = parts[0]
+        version = parts[1]
+    else:                 # ex: kde-baseapps-4.14.3
+        basename = "_".join(parts[0:-1])
+        version = parts[-1]
+
+    return (basename, version)
+    
+def make_headers(url, srcdir, pkgbase, vers, readme, patchfiles, method):
     readme.sort()
     docs = " ".join(readme)
     patchs = " ".join(patchfiles)
-    header = '''#!/bin/sh
+    
+    if method == 'config' :
+        header = '''#!/bin/sh
 ##############################################################
-pkgbase=%s
-vers=%s
-url=%s
-commitid=
+url='{0}'
+pkgbase='{1}'
+vers='{2}'
 arch=`uname -m`
 build=P1
-src=%s-${vers}
-OPT_CONFIG=''
-DOCS='%s'
-patchfiles='%s'
+src='{3}'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='{4}'
+patchfiles='{5}'
 compress=txz
 ##############################################################
-''' % (pkgname, vers, url, filename, docs, patchs)
+'''.format(url, pkgbase, vers, srcdir, docs, patchs)
+    else:
+        header = '''#!/bin/sh
+##############################################################
+url='{0}'
+pkgbase='{1}'
+vers='{2}'
+arch=`uname -m`
+build=P1
+src='{3}'
+OPT_CONFIG=''
+DOCS='{4}'
+patchfiles='{5}'
+compress=txz
+##############################################################
+'''.format(url, pkgbase, vers, srcdir, docs, patchs)
+
     return header
 
+def make_config(prefix, method, source):
+    body_01 = '''
+source /usr/share/plamobuild_functions.sh
 
-def make_body1():
-    body='''
-install2() {
-  install -d ${2%/*} ; install -m 644 $1 $2
-}
+# $B$3$N%9%/%j%W%H$G;H$&(B1$BJ8;zJQ?t$N0UL#(B
+# 
+# $W : $B$3$N%9%/%j%W%H$rF0$+$9%+%l%s%H%G%#%l%/%H%j(B
+# $S : $B%=!<%9%3!<%I$N$"$k%G%#%l%/%H%j(B($B%G%U%)%k%H(B: $W/${src})
+# $B : $B%S%k%IMQ%G%#%l%/%H%j(B($B%G%U%)%k%H(B: /tmp/build{,32})
+# $P : $B%S%k%I$7$?%U%!%$%k$r%$%s%9%H!<%k$9$k%G%#%l%/%H%j!J%G%U%)%k%H(B: $W/work)
 
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-        echo "stripping $chk with -g "
-        strip -g $chk
-      else
-        echo "stripping $chk"
-        strip $chk
-      fi
-    fi
-  done
-}
-
-gzip_dir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    cd $1
-    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
-    for i in $files ; do
-      echo "$i"
-      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
-      lnks=`ls -l $i | awk '{print $2}'`
-      if [ $lnks -gt 1 ] ; then
-        inum=`ls -i $i | awk '{print $1}'`
-        for j in `find . -maxdepth 1 -inum $inum` ; do
-          if [ ${j#./} == $i ] ; then
-            gzip -f $i
-          else
-            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
-          fi
-        done
-      elif [ -h $i ] ; then
-        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
-      else
-        gzip $i
-      fi
-    done
-    for i in $files ; do mv ${i%.gz}.gz $C ; done
-    for i in $files ; do mv $C/${i%.gz}.gz . ; done
-  ) fi
-}
-
-gzip_one() {
-  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
-}
-
-compress_all() {
-  cd $P
-  strip_all
-}  
-
-W=`pwd`
-for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-    B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-    B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
-done
-P=$W/work ; C=$W/pivot
-infodir=$P/usr/share/info
-mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
-docdir=$P/usr/share/doc
-myname=`basename $0`
-pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-  target="-m64"
-  libdir="lib64"
-  suffix="64"
-else
-  target="-m32"
-  libdir="lib"
-  suffix=""
-fi
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -207,251 +153,163 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  for i in $url ; do
-    case ${i##*.} in
-    git)
-      if [ ! -d `basename ${i##*/} .git` ] ; then
-        git clone $i
-      else
-        ( cd `basename ${i##*/} .git` ; git pull origin master )
-      fi
-      ;;
-    *)
-      if [ ! -f ${i##*/} ] ; then
-        wget $i
-        for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
-          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-        done
-        if [ -f ${i##*/}.$sig ] ; then
-          case $sig in
-          asc|sig) gpg2 --verify ${i##*/}.$sig ;;
-          md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
-          *) $sig -c ${i##*/}.$sig ;;
-          esac
-          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-        fi
-      fi
-      ;;
-    esac
-  done
-  for i in $url ; do
-    case ${i##*.} in
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    git) ( cd `basename ${i##*/} .git`
-        git checkout master
-        if [ -n "$commitid" ] ; then
-          git reset --hard $commitid
-        fi
-        git set-file-times ) ;;
-    *) tar xvpf ${i##*/} ;;
-    esac
-  done
+    download_sources
 fi
 '''
-    return body
-
-def make_config(type):
-    if type == "usr":
-        config = '''
+    if method == 'config' :
+        if source == True :  # with source build
+            body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
-  done
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
 ######################################################################
-# * ./configure ¤ò¹Ô¤¦Á°¤ËÅ¬ÍÑ¤·¤¿¤¤ÀßÄê¤ä¥Ñ¥Ã¥Á¤Ê¤É¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Þ¤¹¡£
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
+    cd $B
     for patch in $patchfiles ; do
-      patch -p1 < $W/$patch
+       patch -p1 < $W/$patch
     done
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-
-    if [ -x configure ] ; then
-      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-      export LDFLAGS='-Wl,--as-needed' 
-      export CFLAGS="-isystem /usr/include $target" 
-      export CPPFLAGS="-isystem /usr/include $target "
-      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi'''
-    elif type == "KDE":
-        config = '''
+    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
+    '''.format(prefix)
+        else:     # out of source build
+            body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; mkdir -p ${B[$i]}
-  done
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-# * ./configure ¤ò¹Ô¤¦Á°¤ËÅ¬ÍÑ¤·¤¿¤¤ÀßÄê¤ä¥Ñ¥Ã¥Á¤Ê¤É¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Þ¤¹¡£
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  for i in `seq 0 $((${#S[@]} - 1))` ; do
     cd $S
     for patch in $patchfiles ; do
-      if [ ! -f ".$patch" ]; then
-        patch -p1 < $W/$patch
-        touch ".$patch"
-      fi
+        if [ -f .${{patch}} ]; then
+            patch -p1 < $W/$patch
+            touch .${{patch}}
+        fi
     done
 
     cd $B
-    if [ -f $S/CMakeLists.txt ]; then
-      export PKG_CONFIG_PATH=/opt/kde/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-      export LDFLAGS='-Wl,--as-needed' 
-      export CC="gcc -isystem /usr/include $target" 
-      export CXX="g++ -isystem /usr/include $target"
-      cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/kde -DLIB_INSTALL_DIR:PATH=/opt/kde/${libdir} -DLIB_SUFFIX=$suffix ${OPT_CONFIG} $S
-    fi'''
+    # if [ -f $S/autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
+    '''.format(prefix)
 
+    elif method == 'cmake' :      # cmake $B$G$O(B out of the tree build $B$,%G%U%)%k%H(B
+        body_02 = '''
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#   patch apply to source tree but make at out of source tree
+######################################################################
+    cd $S
+    for patch in $patchfiles ; do
+        if [ -f .${{patch}} ]; then
+            patch -p1 < $W/$patch
+            touch .${{patch}}
+        fi
+    done
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG[$i]}} $S
+    '''.format(prefix)
+
+    elif method == 'python' :
+        body_02 = '''
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+######################################################################
+#  copy srcs to build directory, patch and config in build dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    python setup.py config
+    '''
+
+    elif method == 'perl' :
+        body_02 = '''
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+######################################################################
+#  copy srcs to build directory, patch and config in build dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    perl Makefile.PL
+    '''
+    body_03 = '''
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    '''
+    config = body_01 + body_02 + body_03
     return config
 
-def make_body2():
-    body='''
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
-  done
-fi
+def make_build(method):
+    if method == 'python':
+        body_01 = '''
 if [ $opt_build -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make -j3
-    fi
+    cd $B
+    python setup.py build
     if [ $? != 0 ]; then
-      echo "make error. $0 script stop"
-      exit 255
+	echo "build error. $0 script stop"
+	exit 255
     fi
-  done
 fi
+
 if [ $opt_package -eq 1 ] ; then
-  if [ `id -u` -ne 0 ] ; then
-    read -p "Do you want to package as root? [y/N] " ans
-    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
-      cd $W ; /bin/su -c "$0 package" ; exit
-    fi
-  fi
+  check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
-  touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    for mk in `find . -name "[Mm]akefile" ` ; do
-      sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
-    done
-    if [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+  cd $B
+  python setup.py install --root $P
+'''
+    else:
+        body_01 = '''
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
-      echo "make install error. $0 script stop"
-      exit 255
+	echo "build error. $0 script stop"
+	exit 255
     fi
-  done
-######################################################################
-# * make install ¤Ç¥³¥Ô¡¼¤µ¤ì¤Ê¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Þ¤¹¡£
-######################################################################
-  mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-    mkdir -p $P/install
-    for omf in $P/usr/share/omf/* ; do
-      omf_name=`basename $omf`
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
 fi
-EOF
-    done
-  fi
 
-  if [ -d $P/etc/gconf/schemas ]; then
-    mkdir -p $P/install
-    for schema in $P/etc/gconf/schemas/* ; do
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-  ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-    done
-  fi
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+'''      
+    body_02 = '''
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
 
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-    pushd $loc_dir
-    for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
-    done
-    popd
-  done      
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
 
-######################################################################
-# path ¤Ë lib ¤¬¤¢¤ë¥Ð¥¤¥Ê¥ê¤Ï strip -g, ¤Ê¤¤¥Ð¥¤¥Ê¥ê¤Ï strip ¤¹¤ë
-######################################################################
-  cd $P
-  compress_all
-  if [ -d $P/usr/share/man ]; then
-    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-      gzip_dir $mdir
-    done
-  fi
-######################################################################
-# * compress ÂÐ¾Ý°Ê³°¤Ç°µ½Ì¤·¤¿¤¤¥Ç¥£¥ì¥¯¥È¥ê¤ä¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³
-#   ¤Ëµ­½Ò¤·¤Þ¤¹(strip_{bin,lib}dir ¤ä gzip_{dir,one} ¤ò»È¤¤¤Þ¤¹)¡£
-# * Â¾¤Î¥¢¡¼¥«¥¤¥Ö¤«¤éÄÉ²Ã¤·¤¿¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Þ¤¹¡£
-######################################################################
-  cd $W
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
-  done
-
-  for patch in $patchfiles ; do
-    cp $W/$patch $docdir/$src/$patch
-    gzip_one $docdir/$src/$patch
-  done
-
-############################################################
-#   /usr/share/doc °Ê²¼¤Ë¤Ï°ìÈÌ¥æ¡¼¥¶¤ÎID¤Î¤Þ¤Þ¤Î¥Õ¥¡¥¤¥ë¤¬
-#   Ê¶¤ì¤³¤ß¤¬¤Á¤Ê¤Î¤Ç
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-    chown -R root.root $P/usr/share/doc
-  fi
-
-######################################################################
-# * convert ÂÐ¾Ý°Ê³°¤Ç´¢¤ê¼è¤ê¤¿¤¤¥·¥ó¥Ü¥ê¥Ã¥¯¥ê¥ó¥¯¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Þ¤¹(prune_symlink ¤ò»È¤¤¤Þ¤¹)¡£
-# * ´°À®¤·¤¿ºî¶È¥Ç¥£¥ì¥¯¥È¥ê¤«¤é tar ¥¤¥á¡¼¥¸¤òºîÀ®¤¹¤ë¼ê½ç¤ò°Ê¹ß¤Ëµ­½Ò
-#   ¤·¤Þ¤¹(¤³¤À¤ï¤ê¤òµá¤á¤Ê¤¤¤Ê¤éÃ±¤Ë makepkg ¤Ç¤âÎÉ¤¤¤Ç¤¹)¡£
-######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
 y
@@ -460,90 +318,55 @@ EOF
 
 fi
 '''
+    body = body_01 + body_02
     return body
 
-###########
-
 def main():
-    opts, filelist = get_parms()
+    params = get_args()
+    cwd = os.getcwd()
+    # print params
 
-    verbose = False
-    type = "usr"
-    url = "'input sourcecode url here'"
-    for o, a in opts:
-        if o == "-v":
-            verbose = True
-        elif o in ("-h", "--help"):
-            usage()
-        elif o in ("-t", "--type"):
-            type = a
-        elif o in ("-u", "--url"):
-            url = "'" + a + "'"
+    if params.method == 'config' :
+        method = 'config'
+    elif params.method == 'cmake' :
+        method = 'cmake'
+    elif params.method == 'python' :
+        method = 'python'
+    elif params.method == 'perl' :
+        method = 'perl'
+    else :
+        method = get_config_type(params.srcdir)
+        
+    # print method
+    (basename, version) = get_basename_and_version(params.srcdir)
+    # print basename, version
+    readmes = get_readmes(params.srcdir)
+    # print readmes
+    patches = get_patchfiles(cwd)
+    # print patches
 
-    filetmp = filelist[0]
-    file = filetmp.rstrip("/")
-    if file.find('.tar') >= 0:
-        archive = os.path.basename(file)
-        if verbose == True:
-            print "unpacking :", archive
-        tar_expand(archive)
+    header = make_headers(params.url, params.srcdir, basename, version, readmes, patches, method)
+    config = make_config(params.prefix, method, params.source)
+    build = make_build(method)
 
-# tmpname = tar_top(archive)
-        (dirname, trash) = archive.split('.tar')
-        print "dirname = ", dirname
-    elif os.path.isdir(file) == True:
-        dirname = file
-    elif len(sys.argv) == 1:
-        files = os.listdir('.')
-        for i in files:
-            if i.find('.tar') >= 0:
-                archive = i
-                break
-            tar_expand(archive)
-            (dirname, trash) = archive.split('.tar')
-            if verbose == True:
-                print "dirname = ", dirname
-        else:
-            usage()
+    script = header + config + build
+    script_name = "PlamoBuild." + basename + '-' + version
 
-    listparts = dirname.split('-')
-    vers = listparts[-1]
+    if params.verbose :
+        print(script)
 
-    if verbose == True:
-        print "version:", vers
+    if os.path.isfile(script_name) :
+        print("same named Build script already exists. ")
+        ans = raw_input("OverWrite? [y/N]: ")
+        if ans != 'y' and ans != 'Y' :
+            sys.exit("not overwrited. exits")
+            
+    with open(script_name, 'w') as file:
+        file.write(script)
 
-    fileparts = listparts[0:len(listparts)-1]
-    filename = '-'.join(fileparts)
-    pkgname = filename.replace('-', '_')
+    os.chmod(script_name, 0755)
 
-    if verbose == True:
-        print "filename, pkgname:", filename, pkgname
-
-# newfiles = os.listdir(dirname)
-    READMEs = get_readmes(os.listdir(dirname))
-    patches = get_patchfiles(os.listdir(os.getcwd()))
-    if verbose == True:
-        print "patches:", patches
-
-   # url = 'ftp://ftp.kddlabs.co.jp/pub/GNOME/desktop/2.26/2.26.2/sources/'+filename+'-'+vers+'.tar.bz2'
-    header = make_headers(url, filename, vers, READMEs, patches)
-    body1 = make_body1()
-    config = make_config(type)
-    body2 = make_body2()
-    body = body1 + config + body2
-
-    scriptname = 'PlamoBuild.' + dirname
-    print "making %s ..." % scriptname
-
-    out = open(scriptname, 'w')
-    out.write(header)
-    out.write(body)
-    out.close()
-
-    os.chmod(scriptname, 0o755)
-
-#for i in dt.splitlines():
-#    print i
-
+    
 if __name__ == "__main__":
     main()
+
