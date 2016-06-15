@@ -1,0 +1,11 @@
+diff -uNr autofs-5.1.1.orig/samples/rc.autofs.in autofs-5.1.1/samples/rc.autofs.in
+--- autofs-5.1.1.orig/samples/rc.autofs.in	2015-04-21 18:37:45.000000000 +0900
++++ autofs-5.1.1/samples/rc.autofs.in	2016-06-15 18:00:28.325575993 +0900
+@@ -91,6 +91,7 @@
+ 	while [ -n "`pidof $prog`" -a $count -lt 15 ] ; do
+ 		killall -TERM $prog >& /dev/null
+ 		RETVAL=$?
++		sleep 1
+ 		[ $RETVAL = 0 -a -z "`pidof $prog`" ] || sleep 20
+ 		count=`expr $count + 1`
+ 	done
