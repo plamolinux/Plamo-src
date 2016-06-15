@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libjpeg_turbo
-vers=1.4.2
+vers=1.5.0
 url="http://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
 src=libjpeg-turbo-${vers}
-OPT_CONFIG='--disable-static -with-jpeg8'
+OPT_CONFIG='--disable-static --with-jpeg8'
 DOCS='BUILDING.txt ChangeLog.txt README README-turbo.txt coderules.txt jconfig.txt libjpeg.txt release structure.txt usage.txt wizard.txt'
 patchfiles=
 compress=txz
@@ -113,7 +113,20 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+        for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+        done
+        if [ -f ${i##*/}.$sig ] ; then
+          case $sig in
+          asc|sig) gpg2 --verify ${i##*/}.$sig ;;
+          md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
+          *) $sig -c ${i##*/}.$sig ;;
+          esac
+          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+        fi
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -187,6 +200,7 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
+  install -m644 jpegint.h $P/usr/include
   mkdir -p $docdir/$src
 
 ######################################################################
