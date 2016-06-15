@@ -93,7 +93,20 @@ gzip_one() {
 
 download_sources() {
     for i in $url ; do
-	if [ ! -f ${i##*/} ] ; then wget $i ; fi
+      if [ ! -f ${i##*/} ] ; then
+	wget $i ;
+	for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+        done
+        if [ -f ${i##*/}.$sig ] ; then
+          case $sig in
+          asc|sig) gpg2 --verify ${i##*/}.$sig ;;
+          md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
+          *) $sig -c ${i##*/}.$sig ;;
+          esac
+          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+        fi
+      fi
     done
     for i in $url ; do
 	case ${i##*.} in
