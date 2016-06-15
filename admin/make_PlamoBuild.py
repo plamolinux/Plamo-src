@@ -97,9 +97,9 @@ def make_headers(url, srcdir, pkgbase, vers, readme, patchfiles, method):
     if method == 'config' :
         header = '''#!/bin/sh
 ##############################################################
-url='{0}'
 pkgbase='{1}'
 vers='{2}'
+url='{0}'
 arch=`uname -m`
 build=P1
 src='{3}'
@@ -112,9 +112,9 @@ compress=txz
     else:
         header = '''#!/bin/sh
 ##############################################################
-url='{0}'
 pkgbase='{1}'
 vers='{2}'
+url='{0}'
 arch=`uname -m`
 build=P1
 src='{3}'
