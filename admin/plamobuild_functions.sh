@@ -48,11 +48,11 @@ strip_all() {
     if [ "$chk_elf.x" != ".x" ]; then
       chk_lib=`echo $chk | grep lib`
       if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
+        echo "stripping $chk with -g "
+        strip -g $chk
       else
-         echo "stripping $chk"
-         strip $chk
+        echo "stripping $chk"
+        strip $chk
       fi
     fi
   done
@@ -92,30 +92,30 @@ gzip_one() {
 
 
 download_sources() {
-    for i in $url ; do
-      if [ ! -f ${i##*/} ] ; then
-	wget $i ;
-	for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
-          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-        done
-        if [ -f ${i##*/}.$sig ] ; then
-          case $sig in
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i ;
+      for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+      done
+      if [ -f ${i##*/}.$sig ] ; then
+        case $sig in
           asc|sig) gpg2 --verify ${i##*/}.$sig ;;
           md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
           *) $sig -c ${i##*/}.$sig ;;
-          esac
-          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-        fi
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
       fi
-    done
-    for i in $url ; do
-	case ${i##*.} in
-	    tar) tar xvpf ${i##*/} ;;
-	    gz) tar xvpzf ${i##*/} ;;
-	    bz2) tar xvpjf ${i##*/} ;;
-	    *) tar xvf ${i##*/} ;;
-	esac
-    done
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+      tar) tar xvpf ${i##*/} ;;
+      gz) tar xvpzf ${i##*/} ;;
+      bz2) tar xvpjf ${i##*/} ;;
+      *) tar xvf ${i##*/} ;;
+    esac
+  done
 }
 
 verify_checksum() {
@@ -144,29 +144,29 @@ check_root() {
 
 # インストール後の各種調整
 install_tweak() {
-# バイナリファイルを strip
+  # バイナリファイルを strip
   cd $P
   strip_all 
 
-# ja 以外のlocaleファイルを削除  
+  # ja 以外のlocaleファイルを削除  
   for loc_dir in `find $P/usr/share -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-	      rm -rf $loc
-          fi
-      done
-      popd
+    pushd $loc_dir
+    for loc in * ; do
+      if [ "$loc" != "ja" ]; then
+	rm -rf $loc
+      fi
+    done
+    popd
   done      
 
-#  man ページを圧縮
+  #  man ページを圧縮
   if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
+    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+      gzip_dir $mdir
+    done
   fi
 
-# doc ファイルのインストールと圧縮  
+  # doc ファイルのインストールと圧縮  
   cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
@@ -185,16 +185,16 @@ install_tweak() {
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
-# パッチファイルのインストール  
+  # パッチファイルのインストール  
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
 
-# /usr/share/doc 以下のowner.group設定
+  # /usr/share/doc 以下のowner.group設定
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
+    chown -R root.root $P/usr/share/doc
   fi
 
 }
@@ -205,12 +205,12 @@ install_tweak() {
 W=`pwd`
 WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
-    S[$i]=$W/${src[$i]} 
-    if [ $arch = "x86_64" ]; then
-	B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-    else
-	B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-    fi      
+  S[$i]=$W/${src[$i]} 
+  if [ $arch = "x86_64" ]; then
+    B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+    B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
@@ -221,11 +221,11 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib"
-    suffix=""
+  target="-m64"
+  libdir="lib"
+  suffix=""
 else
-    target="-m32"
-    libdir="lib"
-    suffix=""
+  target="-m32"
+  libdir="lib"
+  suffix=""
 fi
