@@ -185,7 +185,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
     cd $S
     for patch in $patchfiles ; do
-        if [ -f .${{patch}} ]; then
+        if [ ! -f .${{patch}} ]; then
             patch -p1 < $W/$patch
             touch .${{patch}}
         fi
@@ -345,8 +345,9 @@ def main():
     patches = get_patchfiles(cwd)
     # print patches
 
-    url = params.url.replace(version, '${vers}')
-    srcdir = params.srcdir.replace(version, '${vers}')
+    url = params.url.replace(version, '${vers}').replace(basename, '${pkgbase}')
+    srcdir = params.srcdir.replace(version, '${vers}').replace(basename, '${pkgbase}')
+
     header = make_headers(url, srcdir, basename, version, readmes, patches, method)
     config = make_config(params.prefix, method, params.source)
     build = make_build(method)
