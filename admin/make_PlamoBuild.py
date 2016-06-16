@@ -99,10 +99,10 @@ def make_headers(url, srcdir, pkgbase, vers, readme, patchfiles, method):
 ##############################################################
 pkgbase='{1}'
 vers='{2}'
-url='{0}'
+url="{0}"
 arch=`uname -m`
 build=P1
-src='{3}'
+src="{3}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='{4}'
 patchfiles='{5}'
@@ -114,10 +114,10 @@ compress=txz
 ##############################################################
 pkgbase='{1}'
 vers='{2}'
-url='{0}'
+url="{0}"
 arch=`uname -m`
 build=P1
-src='{3}'
+src="{3}"
 OPT_CONFIG=''
 DOCS='{4}'
 patchfiles='{5}'
@@ -345,7 +345,9 @@ def main():
     patches = get_patchfiles(cwd)
     # print patches
 
-    header = make_headers(params.url, params.srcdir, basename, version, readmes, patches, method)
+    url = params.url.replace(version, '${vers}')
+    srcdir = params.srcdir.replace(version, '${vers}')
+    header = make_headers(url, srcdir, basename, version, readmes, patches, method)
     config = make_config(params.prefix, method, params.source)
     build = make_build(method)
 
