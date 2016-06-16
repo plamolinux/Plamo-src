@@ -131,12 +131,12 @@ def make_config(prefix, method, source):
     body_01 = '''
 source /usr/share/plamobuild_functions.sh
 
-# $B$3$N%9%/%j%W%H$G;H$&(B1$BJ8;zJQ?t$N0UL#(B
+# このスクリプトで使う1文字変数の意味
 # 
-# $W : $B$3$N%9%/%j%W%H$rF0$+$9%+%l%s%H%G%#%l%/%H%j(B
-# $S : $B%=!<%9%3!<%I$N$"$k%G%#%l%/%H%j(B($B%G%U%)%k%H(B: $W/${src})
-# $B : $B%S%k%IMQ%G%#%l%/%H%j(B($B%G%U%)%k%H(B: /tmp/build{,32})
-# $P : $B%S%k%I$7$?%U%!%$%k$r%$%s%9%H!<%k$9$k%G%#%l%/%H%j!J%G%U%)%k%H(B: $W/work)
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -185,7 +185,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
     cd $S
     for patch in $patchfiles ; do
-        if [ -f .${{patch}} ]; then
+        if [ ! -f .${{patch}} ]; then
             patch -p1 < $W/$patch
             touch .${{patch}}
         fi
@@ -200,7 +200,7 @@ if [ $opt_config -eq 1 ] ; then
     $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
     '''.format(prefix)
 
-    elif method == 'cmake' :      # cmake $B$G$O(B out of the tree build $B$,%G%U%)%k%H(B
+    elif method == 'cmake' :      # cmake では out of the tree build がデフォルト
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
@@ -345,8 +345,9 @@ def main():
     patches = get_patchfiles(cwd)
     # print patches
 
-    url = params.url.replace(version, '${vers}')
-    srcdir = params.srcdir.replace(version, '${vers}')
+    url = params.url.replace(version, '${vers}').replace(basename, '${pkgbase}')
+    srcdir = params.srcdir.replace(version, '${vers}').replace(basename, '${pkgbase}')
+
     header = make_headers(url, srcdir, basename, version, readmes, patches, method)
     config = make_config(params.prefix, method, params.source)
     build = make_build(method)
