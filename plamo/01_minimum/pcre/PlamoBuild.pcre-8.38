@@ -87,6 +87,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  ( cd $P/usr/lib ; ln -sf libpcre.so.1 libpcre.so.0 )
 
 ################################
 #      install tweaks
