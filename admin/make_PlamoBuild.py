@@ -131,12 +131,12 @@ def make_config(prefix, method, source):
     body_01 = '''
 source /usr/share/plamobuild_functions.sh
 
-# уБУуБоуВ╣уВпуГкуГЧуГИуБзф╜┐уБЖ1цЦЗхнЧхдЙцХ░уБоцДПхС│
+# д│д╬е╣епеъе╫е╚д╟╗╚дж1╩╕╗·╩╤┐Їд╬░╒╠г
 # 
-# $W : уБУуБоуВ╣уВпуГкуГЧуГИуВТхЛХуБЛуБЩуВлуГмуГ│уГИуГЗуВгуГмуВпуГИуГк
-# $S : уВ╜уГ╝уВ╣уВ│уГ╝уГЙуБоуБВуВЛуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: $W/${src})
-# $B : уГУуГлуГЙчФиуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: /tmp/build{,32})
-# $P : уГУуГлуГЙуБЧуБЯуГХуВбуВдуГлуВТуВдуГ│уВ╣уГИуГ╝уГлуБЩуВЛуГЗуВгуГмуВпуГИуГкя╝ИуГЗуГХуВйуГлуГИ: $W/work)
+# $W : д│д╬е╣епеъе╫е╚дЄ╞░длд╣елеьеєе╚е╟егеьепе╚еъ
+# $S : е╜б╝е╣е│б╝е╔д╬двдые╟егеьепе╚еъ(е╟е╒ейеые╚: $W/${src})
+# $B : е╙еые╔═╤е╟егеьепе╚еъ(е╟е╒ейеые╚: /tmp/build{,32})
+# $P : е╙еые╔д╖д┐е╒ебедеыдЄедеєе╣е╚б╝еыд╣дые╟егеьепе╚еъб╩е╟е╒ейеые╚: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -200,7 +200,7 @@ if [ $opt_config -eq 1 ] ; then
     $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
     '''.format(prefix)
 
-    elif method == 'cmake' :      # cmake уБзуБп out of the tree build уБМуГЗуГХуВйуГлуГИ
+    elif method == 'cmake' :      # cmake д╟д╧ out of the tree build дме╟е╒ейеые╚
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
