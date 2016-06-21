@@ -8,7 +8,7 @@ build=P1
 src=expat-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='COPYING README'
-patchfiles='CVE-2015-1283-refix.patch CVE-2016-0718-v2-2-1.patch cve-2012-6702-plus-cve-2016-5300-v1.patch'
+patchfiles='CVE-2016-0718-v2-2-1.patch'
 compress=txz
 ##############################################################
 
@@ -196,7 +196,7 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+       patch -p2 < $W/$patch
     done
 
     if [ -f autogen.sh ] ; then
