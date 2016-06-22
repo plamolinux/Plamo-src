@@ -1,16 +1,14 @@
 #!/bin/sh
 ##############################################################
-url='http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz'
 pkgbase=libarchive
-vers=3.1.2
-arch=x86_64
-# arch=i586
-build=P2
-src=libarchive-3.1.2
+vers=3.2.1
+url="http://www.libarchive.org/downloads/libarchive-${vers}.tar.gz"
+arch=`uname -m`
+build=P1
+src=libarchive-${vers}
 OPT_CONFIG='--disable-static'
 DOCS='COPYING INSTALL NEWS README'
 patchfiles=''
-compatlib="libarchive.so.12.0.4"
 compress=txz
 ##############################################################
 
@@ -254,9 +252,6 @@ if [ $opt_package -eq 1 ] ; then
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
   mkdir -p $docdir/$src
-  cp /usr/${libdir}/$compatlib $P/usr/${libdir}/
-  ( cd $P/usr/${libdir} ; ln -sf libarchive.so.{12.0.4,12.0} )
-  ( cd $P/usr/${libdir} ; ln -sf libarchive.so.{12.0,12} )
 
 # remove locales except ja
 # 
