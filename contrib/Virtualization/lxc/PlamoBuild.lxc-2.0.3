@@ -1,16 +1,16 @@
 #!/bin/sh 
 ##############################################################
 pkgbase=lxc
-vers=2.0.1
+vers=2.0.3
 url="https://linuxcontainers.org/downloads/lxc/lxc-${vers}.tar.gz"
 verify=$url.asc
 commitid=
 arch=`uname -m`
-build=P2
+build=P1
 src=lxc-${vers}
 OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-patchfiles="plamo-template.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
