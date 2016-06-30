@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=wireshark
-vers=1.10.12
+vers=2.0.4
 url="http://wiresharkdownloads.riverbed.com/wireshark/src/wireshark-${vers}.tar.bz2"
 verify="http://wiresharkdownloads.riverbed.com/wireshark/src/all-versions/SIGNATURES-${vers}.txt"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG='--with-ssl'
+OPT_CONFIG='--with-qt=4 --with-gtk3=yes --with-pcap --with-zlib --with-ssl'
 DOCS='AUTHORS CMakeOptions.txt COPYING CPackConfig.txt ChangeLog INSTALL INSTALL.configure NEWS README README.DECT README.aix README.bsd README.cmake README.hpux README.irix README.linux README.macos README.tru64 README.vmware README.windows'
 patchfiles=''
 compress=txz
@@ -218,6 +218,15 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
+
+    # As default, wireshark command is with Qt.
+    # So move wireshark to wireshark-qt
+    mv $P/usr/bin/wireshark $P/usr/bin/wireshark-qt
+    ( cd $P/usr/bin ; ln -s wireshark-gtk wireshark )
+
+    # move the desktop file of Qt under /opt/kde
+    mkdir -p $P/opt/kde/share/applications
+    mv $P/usr/share/applications/wireshark.desktop $P/opt/kde/share/applications
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
