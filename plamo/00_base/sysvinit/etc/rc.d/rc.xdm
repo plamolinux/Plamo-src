@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# rc.xdm
+#
+BIN=/usr/bin/xdm
+PIDFILE=/usr/lib/X11/xdm/xdm-pid
+if [ -f $PIDFILE ] ; then
+  XDMPID=`/bin/cat $PIDFILE`
+  CK=$(/bin/ps x | /usr/bin/grep $XDMPID | /usr/bin/awk '{print $5}')
+  if [ ! "x.$CK" = "x.$BIN" ] ; then
+    unset XDMPID
+  fi
+fi
+PIDFILE=/usr/lib64/X11/xdm/xdm-pid
+if [ -f $PIDFILE ] ; then
+  XDMPID=`/bin/cat $PIDFILE`
+  CK=$(/bin/ps x | /usr/bin/grep $XDMPID | /usr/bin/awk '{print $5}')
+  if [ ! "x.$CK" = "x.$BIN" ] ; then
+    unset XDMPID
+  fi
+fi
+usage()
+{
+    echo "Usage: $0 {start&|stop|restart}"
+}
+
+EXITCODE=1
+for x in "1" ; do
+
+    if [ $# -lt 1 ] ; then usage ; break ; fi
+    action=$1
+    case "$action" in
+
+    'start')
+        if [ ! "x.$XDMPID" = "x." ] ; then
+          echo "Already running"
+        else
+          TIMEOUT=$2
+          if [ "x.$TIMEOUT" = "x." ] ; then
+            TIMEOUT=10
+          fi 
+          /usr/bin/sleep $TIMEOUT
+          LNUM=$(/usr/bin/w -h | /usr/bin/awk '{print ".." $3 $2}' | /usr/bin/grep "\\.\\.-tty[0-9]" | /usr/bin/wc -l) 
+          if [ $LNUM = 0 ] ; then 
+            echo -n ""
+	    echo "Starting xdm     "
+            $BIN
+          fi
+          EXITCODE=0
+        fi 
+	;;
+
+    'stop')
+	echo "Shutting down xdm"
+        kill $XDMPID 2> /dev/null
+	EXITCODE=0
+	;;
+
+    'restart')
+	kill -HUP $XDMPID 2> /dev/null 
+	EXITCODE=0
+	;;
+
+    *)
+	usage
+	;;
+
+    esac
+
+done
+
+# Only exit if we're in our own subshell
+if [ "${0##*/}" = "rc.xdm" ] ; then
+    exit $EXITCODE
+fi
