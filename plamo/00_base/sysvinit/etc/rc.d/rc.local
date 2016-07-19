@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# rc.local: Site-local initialization.
+#
+# Put any local setup commands in here:
+
+# リモートからの xdm セッションのみを受け付ける場合、ここで xdm を起動
+# 注) ローカルのX環境でグラフィカルログインを行なう場合は、ランレベルを4に
+#     設定してもよい。その場合、ここでの初期化を行なわないこと
+
+# Start xdm.
+#if [ -x /etc/rc.d/rc.xdm ]; then
+#    echo "xdm will start after 10 seconds..."
+#    /etc/rc.d/rc.xdm start 10 &
+#fi
+
+# リモートの xdm セッションに接続する (X端末として動作させる)場合、ここで
+# Xindirect を起動
+
+# Start Xindirect.
+#if [ -x /etc/rc.d/rc.Xindirect ]; then
+#    echo "X will start after 12 seconds..."
+#    /etc/rc.d/rc.Xindirect start localhost 12 &
+#fi
+
+# make /dev/root -> real rootpartition link
+/sbin/link_rootdev.sh

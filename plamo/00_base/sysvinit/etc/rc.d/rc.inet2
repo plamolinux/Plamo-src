@@ -1,0 +1,106 @@
+#!/bin/sh
+#
+# rc.inet2: Initialize network subsystem.
+#
+# ネットワークサービスの起動を行う
+#
+# SSHキーの作成，inetd, NFS, NIS, dbus の起動
+#
+
+SERV="" ; RPCBIND="" ; YP=""
+
+#true -f dev,filesys,driver /usr/bin/ssh /usr/bin/slogin
+
+if [ -x /usr/bin/ssh-keygen ] ; then
+  if [ ! -f /etc/ssh/ssh_host_key ] ; then
+    echo "/etc/ssh/ssh_host_key doesn't exist, generating..."
+    ssh-keygen -t rsa1 -f /etc/ssh/ssh_host_key -N ""
+  fi
+  if [ ! -f /etc/ssh/ssh_host_dsa_key ] ; then
+    echo "/etc/ssh/ssh_host_dsa_key doesn't exist, generating..."
+    ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key -N ""
+  fi
+  if [ ! -f /etc/ssh/ssh_host_rsa_key ] ; then
+    echo "/etc/ssh/ssh_host_rsa doesn't exist, generating..."
+    ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ""
+  fi
+  if [ ! -f /etc/ssh/ssh_host_ecdsa_key ] ; then
+    echo "/etc/ssh/ssh_host_ecdsa doesn't exist, generating..."
+    ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N ""
+  fi
+  if [ ! -f /etc/ssh/ssh_host_ed25519_key ] ; then
+    echo "/etc/ssh/ssh_host_ed25519 doesn't exist, generating..."
+    ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
+  fi
+fi
+
+# 起動したいサービスの部分のコメントを削除
+
+# bind
+#BINDDIR=/var/named/chroot
+#NCPU=`grep '^processor' /proc/cpuinfo | wc -l`
+#SERV="$SERV named:-c:/etc/bind/named.conf:-t:$BINDDIR:-u:named:-n:$NCPU"
+
+# NFS Server
+# mount の -v オプションの仕様が変わって，mount -fnvat nfs は常に文字列
+# が入る。そのため，以下の処理で rpc 関連のデーモン類は常に起動されてし
+# まうが，そう大きなものでもないのでこのままにしておく。
+nfs_srv=`exportfs -avr` ; nfs_clt=`mount -fnvat nfs`
+if [ -n "$nfs_srv" -o -n "$nfs_clt" ] ; then
+  NNFS=4
+  SERV="$SERV rpc.nfsd:$NNFS rpc.mountd rpc.idmapd rpc.statd rpc.gssd"
+  RPCBIND=yes
+fi
+
+# Start the RPC bind.
+if [ -n "RPCBIND" ] ; then
+  echo "Starting RPC service..."
+  modprobe sunrpc
+  mount -t rpc_pipefs rpc_pipefs /var/lib/nfs/rpc_pipefs
+  rpcbind
+fi
+
+# Start the INET superserver.
+if [ -x /usr/sbin/inetd ] ; then
+  echo "Starting inetd..."
+  inetd
+else
+  echo "no INETD found.  INET cancelled!"
+  exit 1
+fi
+
+# Enable yp.
+#YP=yes
+
+# Setting up NIS.
+# NOTE: For detailed information about setting up NIS,
+#       see the documents in /usr/doc/yp-clients and /usr/doc/ypserv.
+if [ -n "$YP" -a -x /usr/sbin/ypbind -a -d /var/yp ] ; then
+  if [ -r /etc/defaultdomain ] ; then
+    nisdomainname `cat /etc/defaultdomain`
+  fi
+  echo "Starting ypbind..."
+  ypbind
+fi
+
+# Start the various services.
+for spec in $SERV ; do
+  server=${spec%%:*}
+  service=${server##*/}
+  if [ -x /usr/sbin/$server -o -x /usr/bin/$server ] ; then
+    echo "Starting ${service##*.}..."
+    ${spec//:/ }
+  fi
+done
+
+# Start dbus service.
+if [ -x /usr/bin/dbus-uuidgen ] ; then
+  echo "Checking uuidgen..."
+  dbus-uuidgen --ensure
+fi
+if [ -x /usr/bin/dbus-daemon ] ; then
+  echo "Starting system message bus..."
+  dbus-daemon --system
+fi
+
+# Done!

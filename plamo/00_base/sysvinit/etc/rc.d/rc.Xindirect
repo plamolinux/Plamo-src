@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# rc.Xindierct
+#
+BIN=/usr/bin/X
+XSPID=$(/bin/ps xa | /usr/bin/awk '{print $1" "$5}' | /usr/bin/grep $BIN | /usr/bin/awk '{print $1}') ;
+
+usage()
+{
+    echo "Usage: $0 {start hostname&|stop}"
+}
+
+EXITCODE=1
+for x in "1" ; do
+
+    if [ $# -lt 1 ] ; then usage ; break ; fi
+    action=$1
+    case "$action" in
+
+    'start')
+	if [ "x.$2" = "x." ] ; then 
+          usage
+ 	elif [ ! "x.$XSPID" = "x." ] ; then
+          echo "Already running"
+        else
+          TIMEOUT=$3
+          if [ "x.$TIMEOUT" = "x." ] ; then
+            TIMEOUT=10
+          fi 
+          /usr/bin/sleep $TIMEOUT
+          LNUM=$(/usr/bin/w -h | /usr/bin/awk '{print ".." $3 $2}' | /usr/bin/grep "\\.\\.-tty[0-9]" | /usr/bin/wc -l) 
+          if [ $LNUM = 0 ] ; then 
+            echo -n ""
+	    echo "Starting X       "
+            $BIN -indirect $2 &
+          fi
+          EXITCODE=0
+        fi 
+	;;
+
+    'stop')
+	echo "Shutting down X"
+        kill $XSPID 2> /dev/null
+	EXITCODE=0
+	;;
+
+    *)
+	usage
+	;;
+
+    esac
+
+done
+
+# Only exit if we're in our own subshell
+if [ "${0##*/}" = "rc.Xindirect" ] ; then
+    exit $EXITCODE
+fi

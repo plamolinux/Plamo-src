@@ -1,0 +1,63 @@
+#
+# /etc/rc.d/rc.cdrom
+# This script searches for a CD-ROM on the known Linux CD devices.
+# If one is found, it is mounted under $MOUNTPOINT.
+#
+# It can make some darn annoying error messages though, so it's no
+# longer executable by default.  If you want it on, do this:
+#
+#   chmod 755 rc.cdrom
+#
+
+MOUNTPOINT="/cdrom"
+unset SKIP
+# If something is already mounted, skip the rest of the tests:
+if mount | fgrep "on $MOUNTPOINT " 1> /dev/null 2> /dev/null ; then
+  SKIP=1
+elif [ ! -d $MOUNTPOINT ]; then
+  SKIP=1
+fi
+# Look for a detected IDE/ATAPI CD-ROM drive.  If we find one, try to mount:
+if dmesg | fgrep ATAPI | fgrep CD 1> /dev/null 2> /dev/null ; then
+  CD=`dmesg | fgrep ATAPI | fgrep CD | cut -f 1 -d ':' | sed -n "1 p"`
+  echo "Kernel detected ATAPI CDROM drive /dev/$CD, checking for a disc:"
+  mount /dev/$CD /cdrom -t iso9660
+  SKIP=1
+fi
+# Next, look for and try to mount a SCSI CD-ROM drive:
+if [ ! "$SKIP" = "1" ]; then
+  if dmesg | fgrep "scsi CD-ROM sr" | cut -d ' ' -f 4 1> /dev/null 2> /dev/null ; then
+    CD=`dmesg | fgrep "scsi CD-ROM sr" | cut -d ' ' -f 4 | sed -n "1 p"`
+    echo "Kernel detected SCSI CDROM drive /dev/$CD, checking for a disc:"
+    mount /dev/$CD /cdrom -t iso9660
+    SKIP=1
+  fi
+fi
+# Try loading modules to find a non ATAPI/IDE CD-ROM drive (requires kerneld):
+if [ ! "$SKIP" = "1" ]; then
+  unset MOUNT
+  echo -n "Checking for a non ATAPI/SCSI CD-ROM drive... "
+  for device in cdrom pcd0 pcd1 pcd2 pcd3 sonycd cdu535 mcd sbpcd aztcd \
+  cm206cd gscd0 mcdx0 mcdx1 optcd0 \
+  sjcd lmscd ; do # check for a CD-ROM drive with a disc in it.
+    if mount -t iso9660 -o ro /dev/$device $MOUNTPOINT 1> /dev/null 2> /dev/null ; then
+      MOUNT=1
+      if [ ! "$device" = "cdrom" ]; then
+        rm -f /dev/cdrom
+        ln -sf /dev/$device /dev/cdrom
+      fi
+      break;
+    fi
+    sleep 1 # rapid-fire calls to mount might cause problems
+  done
+  if [ "$MOUNT" = "1" ]; then # mount successful
+    echo "found on /dev/$device."
+    if [ -d /cdrom/rootdsks.144 -o -d /cdrom/rootdsks ]; then # Slackware CD-ROM is mounted.
+      echo "    Mounting Slackware Linux CD-ROM on $MOUNTPOINT."
+    else
+      echo "    Mounting ISO9660 CD-ROM on $MOUNTPOINT."
+    fi
+  else
+    echo "no CD found."
+  fi
+fi

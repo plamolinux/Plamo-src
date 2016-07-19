@@ -1,0 +1,17 @@
+#! /bin/sh
+#
+# rc.4: Initialize for run-level 4 (xdm environment).
+#
+
+echo "Starting X display manager..."
+if [ -x /opt/kde/bin/kdm ]; then
+    export LANG=ja_JP.eucJP
+    exec /opt/kde/bin/kdm -nodaemon
+elif [ -x /usr/sbin/gdm ]; then
+    export LANG=ja_JP.eucJP
+    exec /usr/sbin/gdm -nodaemon
+else
+    exec /usr/bin/xdm -nodaemon
+fi
+
+# All done.

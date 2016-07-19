@@ -1,0 +1,186 @@
+#!/bin/sh
+# rc.modules 1.11  Tue Jun 25 14:29:34 PDT 1996 pjv <volkerdi@cdrom.com>
+#
+# This file loads extra drivers into the Linux kernel.
+# The modules will be looked for under /lib/modules/<kernel version number>
+#
+# Most Linux kernel modules will accept extra options such as IRQ or base
+# address, or to set various modes (such as 10baseT or BNC, etc).  The Linux
+# kernel source is the best place to look for extra documentation for the
+# various modules.  This can be found under /usr/src/linux-2.0 if you've
+# installed it.  Also, the kernel source docs are present on the Slackware
+# CD in the /docs/kernel.20 directory.
+#
+# NOTE:  If any problems arise loading or using these modules, try compiling
+# and installing a custom kernel that contains the support instead.  That
+# always works. ;^)
+#
+
+# Update module dependencies:
+# echo "Updating module dependencies for Linux `uname -r`:"
+#/sbin/depmod -a
+
+# murasaki can handle these devices.
+#
+# PCI network and sound
+# ALSA modules for Sound card (Class 401)
+#vers=`uname -r`
+#v_id="0x0000"`/sbin/lspci -n | grep 0401 | gawk '{print $4}' | cut -f 1 -d ':' | head -1`
+#p_id="0x0000"`/sbin/lspci -n | grep 0401 | gawk '{print $4}' | cut -f 2 -d ':' | head -1`
+#mod=`grep $v_id /lib/modules/$vers/modules.pcimap | grep $p_id | head -1 | gawk '{print $1}'`
+#if [ ! "x.$mod" = "x." ]; then
+#  modprobe $mod
+#  modprobe soundcore
+#  modprobe snd-mixer-oss
+#  modprobe snd-pcm-oss
+#  modprobe snd-seq-oss
+#  /usr/bin/aumix -q -v85 -w88
+#fi
+
+# driver for Network card (Class 200)
+#v_id="0x0000"`/sbin/lspci -n | grep 0200 | gawk '{print $4}' | cut -f 1 -d ':' | head -1`
+#p_id="0x0000"`/sbin/lspci -n | grep 0200 | gawk '{print $4}' | cut -f 2 -d ':' | head -1`
+#mod=`grep $v_id /lib/modules/$vers/modules.pcimap | grep $p_id | head -1 | gawk '{print $1}'`
+#if [ ! "x.$mod" = "x." ]; then
+#  modprobe $mod
+#fi
+#
+# These modules add CD-ROM drive support.  Most of these drivers will probe
+# for the I/O address and IRQ of the drive automatically if the parameters
+# to configure them are omitted. Typically the I/O address will be specified 
+# in hexadecimal, e.g.: cm206=0x300,11
+# 
+#/sbin/modprobe aztcd aztcd=<I/O address>
+#/sbin/modprobe cdu31a cdu31a_port=<I/O address> cdu31a_irq=<interrupt>
+#/sbin/modprobe cm206 cm206=<I/O address>,<IRQ>
+#/sbin/modprobe gscd gscd=<I/O address>
+#/sbin/modprobe mcd mcd=<I/O address>,<IRQ>
+#/sbin/modprobe mcdx mcdx=<I/O address>,<IRQ>
+#/sbin/modprobe optcd optcd=<I/O address>
+# Below, this last number is "1" for SoundBlaster Pro card, or "0" for a clone.
+#/sbin/modprobe sbpcd sbpcd=<I/O address>,1
+#/sbin/modprobe sonycd535 sonycd535=<I/O address>
+#/sbin/modprobe sjcd sjcd=<I/O address>
+
+# Parallel port (printer) support:
+# /sbin/modprobe lp
+
+# Cyclades multiport serial card support:
+#/sbin/modprobe cyclades
+
+# Serial line IP support (SLIP/CSLIP/PPP):
+# This module is for SLIP/CSLIP support:
+# /sbin/modprobe slip
+# This module is for PPP support:
+# /sbin/modprobe ppp
+# This module provides BSD compression for PPP (optional):
+#/sbin/modprobe bsd_comp
+
+# Sound support:
+# (The sound module included with Slackware is configured for a SoundBlaster 16
+# or AWE32 at I/O 0x220 IRQ 5.  If you need a different configuration you'll
+# need to compile your own module from the Linux kernel source)
+#/sbin/modprobe sound
+
+# Network device support:
+# Most of these drivers will probe automatically for the card if you don't
+# specify an I/O address and IRQ.  But, the NE2000 driver needs at least the
+# I/O.  For complete information, see the net-modules.txt file that comes
+# with the Linux 2.0.0 source code.  This file can also be found on the
+# Slackware CD-ROM in the /docs/kernel.20 directory.
+#
+# Ethernet cards based on the 8390 chip.
+#/sbin/modprobe 3c503 
+#/sbin/modprobe ac3200
+#/sbin/modprobe e2100
+#/sbin/modprobe hp-plus
+#/sbin/modprobe hp
+#/sbin/modprobe ne io=0xNNN
+#/sbin/modprobe smc-ultra
+#/sbin/modprobe wd
+#
+# Other ethernet card drivers:
+#/sbin/modprobe 3c501
+#/sbin/modprobe 3c503
+#/sbin/modprobe 3c505
+#/sbin/modprobe 3c507
+#/sbin/modprobe 3c509
+#/sbin/modprobe 3c59x
+#/sbin/modprobe apricot
+#/sbin/modprobe arcnet
+#/sbin/modprobe at1700
+#/sbin/modprobe de4x5
+#/sbin/modprobe de600
+#/sbin/modprobe de620
+#/sbin/modprobe depca
+#/sbin/modprobe dgrs
+#/sbin/modprobe eepro
+#/sbin/modprobe eexpress
+#/sbin/modprobe eth16i
+#/sbin/modprobe ewrk3
+#/sbin/modprobe fmv18x
+#/sbin/modprobe hp100
+#/sbin/modprobe ibmtr
+#/sbin/modprobe ni52
+#/sbin/modprobe smc9194
+#/sbin/modprobe tulip
+#/sbin/modprobe wavelan
+#
+# Parallel port IP:
+#/sbin/modprobe plip
+#
+# Serial line load balancing support:
+#/sbin/modprobe eql
+#
+# A dummy IP driver.  Essentially a loopback device.  Can be useful --
+# see the Network Administrator's Guide from sunsite.unc.edu:/pub/Linux/docs/LDP
+#/sbin/modprobe dummy
+
+# Binary format/filesystem support.
+#/sbin/modprobe binfmt_elf
+#/sbin/modprobe ext
+#/sbin/modprobe ext2
+#/sbin/modprobe hpfs
+#/sbin/modprobe isofs
+#/sbin/modprobe minix
+#/sbin/modprobe msdos
+#/sbin/modprobe nfs
+#/sbin/modprobe smbfs
+#/sbin/modprobe sysv
+#/sbin/modprobe umsdos
+#/sbin/modprobe xiafs
+
+# SCSI controller support:
+#/sbin/modprobe 53c7,8xx
+#/sbin/modprobe NCR53c406a
+#/sbin/modprobe aha152x
+#/sbin/modprobe aha1542
+#/sbin/modprobe aha1740
+#/sbin/modprobe aic7xxx
+#/sbin/modprobe eata
+#/sbin/modprobe eata_dma
+#/sbin/modprobe eata_pio
+#/sbin/modprobe fdomain
+#/sbin/modprobe in2000
+#/sbin/modprobe qlogic
+#/sbin/modprobe scsi_mod
+#/sbin/modprobe scsi_syms
+#/sbin/modprobe sd_mod
+#/sbin/modprobe seagate
+#/sbin/modprobe sg
+#/sbin/modprobe sr_mod
+#/sbin/modprobe st
+#/sbin/modprobe u14-34f
+#/sbin/modprobe ultrastor
+#/sbin/modprobe wd7000
+
+# Mouse support:
+#/sbin/modprobe atixlmouse
+#/sbin/modprobe busmouse
+#/sbin/modprobe mouse
+#/sbin/modprobe msbusmouse
+#/sbin/modprobe psaux
+
+# Floppy drive support:
+# (Most Linux kernels should already contain this)
+#/sbin/modprobe floppy

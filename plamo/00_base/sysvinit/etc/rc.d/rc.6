@@ -1,0 +1,143 @@
+#!/bin/sh
+#
+# rc.6/rc.0: Reboot or shutdown system.
+#
+
+# Set the path.
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Set linefeed mode to avoid staircase effect.
+stty onlcr
+
+# Find out how we were called.
+case "$0" in
+*0)
+  action=shutdown
+  message="The system is halted."
+  command="halt -p"
+  ;;
+*6)
+  action=reboot
+  message="Rebooting."
+  command="reboot"
+  ;;
+*)
+  echo "$0: call me as \"rc.0\" or \"rc.6\" please!"
+  exit 1
+  ;;
+esac
+
+# Tell the viewers what's going to happen...
+echo "Running $action script..."
+
+# Run the shutdown scripts in /etc/rc.d/init.d.
+INITDANY=""
+if [ -d /etc/rc.d/init.d ] ; then
+  EXCLUDELIST=""
+  for i in /etc/rc.d/rc.* ; do
+    if [ -h $i -a -f $i ] ; then
+      EXCLUDE=`ls -l $i | sed -n 's@.*init\.d/@@p'`
+      [ -n "$EXCLUDE" ] && EXCLUDELIST="$EXCLUDELIST -e $EXCLUDE"
+    fi
+  done
+  INITDLIST=`ls /etc/rc.d/init.d`
+  [ -n "$EXCLUDELIST" ] && INITDLIST=`grep <<< "$INITDLIST" -v $EXCLUDELIST`
+  for i in $INITDLIST ; do
+    if [ -x /etc/rc.d/init.d/$i ] ; then
+      if [ -z "$INITDANY" ] ; then
+        echo "Stopping services in /etc/rc.d/init.d:"
+        INITDANY=y
+      fi
+      MESSAGES=`/etc/rc.d/init.d/$i stop 2>&1`
+      if [ -z "$MESSAGES" ] ; then
+        echo "Stopping $i..."
+      else
+        echo "$MESSAGES"
+      fi
+    fi
+  done
+fi
+
+echo "Stopping services:"
+
+# Stopping automounter.
+if [ -x /etc/rc.d/rc.autofs ] ; then
+  echo "Stopping automounter..."
+  /etc/rc.d/rc.autofs stop
+fi
+
+if [ -x /usr/sbin/alsactl -a -d /proc/asound ] ; then
+  echo "Saving ALSA sound mixer..."
+  alsactl store
+fi
+
+# Kill all processes.
+# INIT is supposed to handle this entirely now, but this didn't always
+# work correctly without this second pass at killing off the processes.
+# Since INIT already notified the user that processes were being killed,
+# we'll avoid echoing this info this time around.
+
+# shutdown did not already kill all processes
+if [ "$1" != "fast" ] ; then
+  killall5 -15
+  killall5 -9
+fi
+
+# Try to turn off quota and accounting.
+if [ -x /usr/sbin/quotaoff ] ; then
+  echo "Turning off quota..."
+  quotaoff -a
+fi
+if [ -x /sbin/accton ] ; then
+  echo "Turning off accounting..."
+  accton
+fi
+
+# Before unmounting file systems write a reboot or halt record to wtmp.
+$command -w
+
+# Save localtime.
+if [ ! -h /etc/localtime -a -f /usr/share/zoneinfo/localtime ] ; then
+  echo "Saving localtime..."
+  cp /usr/share/zoneinfo/localtime /etc
+fi
+
+# Save system time into hardware clock with UTC.
+if [ -x /sbin/hwclock ] ; then
+  hwclock --systohc --utc
+fi
+
+# Unmount any remote filesystems.
+if [ -n "`mount -anfv -t nfs 2> /dev/null`" ] ; then
+  echo "Unmounting remote filesystems..."
+  umount -a -t nfs
+fi
+
+# Turn off swap, then unmount local file systems.
+echo "Turning off swap..."
+swapoff -a
+echo "Unmounting local file systems..."
+# Don't remount UMSDOS root volumes.
+if [ "`mount | head -n1 | cut -d' ' -f5`" == "umsdos" ] ; then
+  umount -a -t nonfs,tmpfs,umsdos
+else
+  umount -a -t nonfs,tmpfs
+  echo "Remounting root filesystem read-only..."
+  mount -n -o remount,ro /
+fi
+# This never hurts.
+sync
+
+# See if this is a powerfail situation.
+if [ -x /sbin/powerd -a -f /etc/power_is_failing ] ; then
+  echo "Turning off UPS, bye."
+  powerd -q
+  exit 1
+fi
+
+# Now halt or reboot.
+echo "$message"
+if [ -f /fastboot ] ; then
+  echo "On the next boot, fsck will be skipped."
+fi
+$command -f
