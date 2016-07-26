@@ -4,7 +4,7 @@ pkgbase='sed'
 vers='4.2.2'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 arch=`uname -m`
-build=P2
+build=P3
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--bindir=/bin'
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.DOC ChangeLog INSTALL NEWS README README-alpha THANKS'
@@ -89,6 +89,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -f $P/usr/share/info/dir ]; then
       rm -f $P/usr/share/info/dir
   fi
+  install -d $P/usr/bin
+  ln -s /bin/sed $P/usr/bin/
 
 ################################
 #      install tweaks
