@@ -1,0 +1,143 @@
+#!/bin/sh
+##############################################################
+pkgbase='openssh'
+vers='7.3p1'
+url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
+arch=`uname -m`
+build=P1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
+    --with-privsep-path=/var/lib/sshd --with-md5-passwords"
+DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
+    README README.dns README.platform README.privsep README.tun
+    PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
+    PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
+    TODO"
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    # tweak sshd_config
+    sed -i -e "s/#PermitUserEnvironment no/PermitUserEnvironment yes/" \
+        -e "s/#UsePAM no/UsePAM yes/" sshd_config
+
+    # replace lib to lib64 when arch is x86_64
+    sed -i "s@/lib/@/${libdir}/@" contrib/sshd.pam.generic
+
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    export LDFLAGS='-Wl,--as-needed' 
+    ./configure --prefix=/usr \
+                --localstatedir=/var \
+                --mandir='${prefix}'/share/man \
+                ${OPT_CONFIG[$i]}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  # slogin -> ssh
+  ln -s ssh $P/usr/bin/slogin
+  ln -s ssh.1 $mandir/man1/slogin.1
+
+  # owner of /var/lib/sshd is root:sys
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown root:sys $P/var/lib/sshd
+  fi
+
+  mv $P/etc/ssh/ssh_config{,.dist}
+  mv $P/etc/ssh/sshd_config{,.dist}
+
+  install -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  install -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
+  install -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
+
+  mkdir -p $P/install
+  cat <<- "EOF" >> $P/install/initpkg
+        if [ ! -f /etc/ssh/sshd_config ]; then
+          cd /etc/ssh ; cp sshd_config.dist sshd_config
+        fi
+        if [ ! -f /etc/ssh/ssh_config ]; then
+          cd /etc/ssh ; cp ssh_config.dist ssh_config
+        fi
+        EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
