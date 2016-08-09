@@ -13,7 +13,15 @@ if [ "$arch" = "x86_64" ]; then
 else
     OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
 fi
-DOCS='COPYING README RELEASE-NOTES'
+DOCS="COPYING README RELEASE-NOTES
+      docs/CHECKSRC.md docs/CODE_STYLE.md docs/HTTP2.md
+      docs/CODE_OF_CONDUCT.md docs/HTTP-COOKIES.md docs/ROADMAP.md
+      docs/BINDINGS docs/BUGS docs/CONTRIBUTE docs/FAQ docs/FEATURES docs/HISTORY
+      docs/INSTALL docs/INSTALL.devcpp docs/INTERNALS docs/KNOWN_BUGS
+      docs/LICENSE-MIXING docs/MAIL-ETIQUETTE docs/MANUAL docs/README.netware docs/README.win32
+      docs/RELEASE-PROCEDURE docs/RESOURCES docs/SECURITY docs/SSL-PROBLEMS 
+      docs/SSLCERTS docs/THANKS docs/TODO docs/TheArtOfHttpScripting docs/VERSIONS
+      docs/curl.html docs/index.html docs/mk-ca-bundle.html"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -272,29 +280,6 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  if [ -d $P/usr/share/omf ]; then
-      mkdir -p $P/install
-      for omf in $P/usr/share/omf/* ; do
-	omf_name=`basename $omf`
-	cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-    scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-      done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-      mkdir -p $P/install
-      for schema in $P/etc/gconf/schemas/* ; do
-          cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-      done
-  fi
-
 # remove locales except ja
 # 
   if [ -d $P/usr/share/locale ]; then
