@@ -1,8 +1,9 @@
 #!/bin/sh
 unset LS_BLOCK_SIZE
+export LANG=C
 ##############################################################
 pkgbase=thunderbird
-vers=45.1.1
+vers=45.2.0
 url="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
