@@ -154,18 +154,23 @@ check_root() {
 install_tweak() {
   # バイナリファイルを strip
   cd $P
-  strip_all 
+  strip_all
+
+  # dir ファイルの削除
+  if [ -f $infodir/dir ]; then
+    rm -f $infodir/dir
+  fi
 
   # ja 以外のlocaleファイルを削除  
   for loc_dir in `find $P/usr/share -name locale` ; do
     pushd $loc_dir
     for loc in * ; do
       if [ "$loc" != "ja" ]; then
-	rm -rf $loc
+        rm -rf $loc
       fi
     done
     popd
-  done      
+  done
 
   #  man ページを圧縮
   if [ -d $P/usr/share/man ]; then
@@ -218,7 +223,7 @@ for i in `seq 0 $((${#src[@]} - 1))` ; do
     B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
   else
     B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  fi
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
