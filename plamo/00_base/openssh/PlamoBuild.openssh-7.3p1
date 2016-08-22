@@ -113,13 +113,13 @@ if [ $opt_package -eq 1 ] ; then
 
   mkdir -p $P/install
   cat <<- "EOF" >> $P/install/initpkg
-        if [ ! -f /etc/ssh/sshd_config ]; then
-          cd /etc/ssh ; cp sshd_config.dist sshd_config
-        fi
-        if [ ! -f /etc/ssh/ssh_config ]; then
-          cd /etc/ssh ; cp ssh_config.dist ssh_config
-        fi
-        EOF
+	if [ ! -f /etc/ssh/sshd_config ]; then
+	  cd /etc/ssh ; cp sshd_config.dist sshd_config
+	fi
+	if [ ! -f /etc/ssh/ssh_config ]; then
+	  cd /etc/ssh ; cp ssh_config.dist ssh_config
+	fi
+	EOF
 
 ################################
 #      install tweaks
