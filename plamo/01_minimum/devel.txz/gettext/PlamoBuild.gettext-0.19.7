@@ -6,10 +6,11 @@ url='http://ftp.gnu.org/gnu/gettext/gettext-0.19.7.tar.gz'
 verify=
 commitid=
 arch=`uname -m`
-build=P1
+build=P3
 src=gettext-${vers}
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog ChangeLog.0 HACKING INSTALL NEWS README README.woe32 THANKS'
+OPT_CONFIG=''
+DOCS="ChangeLog.0 DEPENDENCIES ChangeLog HACKING README INSTALL
+    AUTHORS README.woe32 THANKS COPYING PACKAGING NEWS"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -192,6 +193,12 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    # Set LANG=C when $(GCJ) runs
+    sed -i 's@$(GCJ)@LANG=C &@g' gettext-tools/src/Makefile.in
+
+    # for po-mode
+    export EMACS=$(which emacs 2> /dev/null || which emacs_mini 2> /dev/null)
 
     if [ -x configure ] ; then
       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
