@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-url='ftp://ftp.gnupg.org/gcrypt/libgcrypt/libgcrypt-1.5.4.tar.bz2'
-verify=$url.sig
 pkgbase=libgcrypt
-vers=1.5.4
+vers=1.5.6
+url="https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${vers}.tar.bz2"
+verify=$url.sig
 arch=`uname -m`
-build=P2
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG='--disable-static --with-capabilities'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README README.SVN THANKS TODO'
-patchfiles='CVE-2014-3591.patch CVE-2015-0837-1.patch CVE-2015-0837-2.patch CVE-2015-0837-3.patch'
+patchfiles='CVE-2015-0837-1.patch CVE-2015-0837-2.patch CVE-2015-0837-3.patch'
 compress=txz
 ##############################################################
 
