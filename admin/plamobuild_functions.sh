@@ -150,18 +150,22 @@ check_root() {
   fi
 }
 
-# $B%$%s%9%H!<%k8e$N3F<oD4@0(B
+# ¥¤¥ó¥¹¥È¡¼¥ë¸å¤Î³Æ¼ïÄ´À°
 install_tweak() {
-  # $B%P%$%J%j%U%!%$%k$r(B strip
+  # ¥Ð¥¤¥Ê¥ê¥Õ¥¡¥¤¥ë¤ò strip
   cd $P
   strip_all
 
-  # dir $B%U%!%$%k$N:o=|(B
-  if [ -f $infodir/dir ]; then
+  # dir ¥Õ¥¡¥¤¥ë¤Îºï½ü
+  if [ -d $infodir ]; then
     rm -f $infodir/dir
+    for info in $infodir/*
+    do
+      gzip_one $info
+    done
   fi
 
-  # ja $B0J30$N(Blocale$B%U%!%$%k$r:o=|(B  
+  # ja °Ê³°¤Îlocale¥Õ¥¡¥¤¥ë¤òºï½ü
   for loc_dir in `find $P/usr/share -name locale` ; do
     pushd $loc_dir
     for loc in * ; do
@@ -172,14 +176,14 @@ install_tweak() {
     popd
   done
 
-  #  man $B%Z!<%8$r05=L(B
+  #  man ¥Ú¡¼¥¸¤ò°µ½Ì
   if [ -d $P/usr/share/man ]; then
     for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
       gzip_dir $mdir
     done
   fi
 
-  # doc $B%U%!%$%k$N%$%s%9%H!<%k$H05=L(B  
+  # doc ¥Õ¥¡¥¤¥ë¤Î¥¤¥ó¥¹¥È¡¼¥ë¤È°µ½Ì
   cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
@@ -198,13 +202,13 @@ install_tweak() {
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
-  # $B%Q%C%A%U%!%$%k$N%$%s%9%H!<%k(B  
+  # ¥Ñ¥Ã¥Á¥Õ¥¡¥¤¥ë¤Î¥¤¥ó¥¹¥È¡¼¥ë
   for patch in $patchfiles ; do
     cp $W/$patch $docdir/$src/$patch
     gzip_one $docdir/$src/$patch
   done
 
-  # /usr/share/doc $B0J2<$N(Bowner.group$B@_Dj(B
+  # /usr/share/doc °Ê²¼¤Îowner.groupÀßÄê
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
     chown -R root.root $P/usr/share/doc
