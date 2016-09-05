@@ -1,0 +1,113 @@
+--- admin/PlamoBuild.template.common.without_comment	2015-12-18 07:10:02.000000000 +0900
++++ plamo/00_base/openssl/PlamoBuild.openssl-1.0.1s	2016-03-15 08:55:17.000000000 +0900
+@@ -1,14 +1,19 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
+-pkgbase=
+-vers=
++url="http://www.openssl.org/source/openssl-1.0.1s.tar.gz
++    https://github.com/plamolinux/Plamo-src/raw/master/plamo/00_base/openssl/openssl-1.0.1p-fix_parallel_build-1.patch
++    https://github.com/plamolinux/Plamo-src/raw/master/plamo/00_base/openssl/mkcabundle.pl"
++pkgbase=openssl
++vers=1.0.1s
+ arch=`uname -m`
+-build=P1
++build=P2
+ src=$pkgbase-$vers
+ OPT_CONFIG=""
+-DOCS="README"
++DOCS="ACKNOWLEDGMENTS CHANGES CHANGES.SSLeay CONTRIBUTING FAQ INSTALL
++    INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS
++    INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS PROBLEMS README
++    README.ASN1 README.ENGINE"
+ ######################################################################
+ 
+ fscheck() {
+@@ -187,6 +192,9 @@
+   for i in $url ; do
+     if [ ! -f ${i##*/} ] ; then wget $i ; fi
+   done
++  if [ ! -f ca-bundle.crt ] ; then
++    ./mkcabundle.pl > ca-bundle.crt
++  fi
+   for i in $url ; do
+     case ${i##*.} in
+     tar) tar xvpf ${i##*/} ;;
+@@ -199,6 +207,8 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
++  cd $B
++  patch -Np1 -i $W/openssl-1.0.1p-fix_parallel_build-1.patch
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+@@ -213,11 +223,19 @@
+           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+     fi
+   done
++  case $arch in
++  i686) sys=elf ;;
++  x86_64) sys=x86_64 ;;
++  armv7l) sys=armv4 ;;
++  esac
++  ./Configure linux-$sys --prefix=/usr --openssldir=/etc/ssl \
++      shared zlib-dynamic enable-ssl2
+ fi
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
++      make depend
+       make
+     fi
+   done
+@@ -235,14 +253,20 @@
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++      make install MANDIR=/usr/share/man MANSUFFIX=ssl INSTALL_PREFIX=$P
+     fi
+   done
++  install $W/mkcabundle.pl $P/etc/ssl
++  cp -r certs $P/etc/ssl
++  install -m 644 $W/ca-bundle.crt $P/etc/ssl/certs
++  ln -s /etc/ssl $P/usr/share
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_libdir $P/usr/$libdir/engines
++  touch -t `date '+%m%d0900'` $P/usr/$libdir/engines
+   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+     for j in ${DOCS[$i]} ; do
+       for k in ${S[$i]}/$j ; do
+@@ -260,10 +284,24 @@
+     fi
+     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+   done
++  touch -t `date '+%m%d0900'` $docdir/$src
+   convert
++  prune_symlink $P/etc/ssl/certs/demo
++  prune_symlink $P/usr/share
++  touch -t `date '+%m%d0900'` $P/etc/ssl/certs/demo
+   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/$libdir/engines
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir/pkgconfig | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir -maxdepth 1 -type f`
++  tar rvpf $pkg.tar -C $P usr/include/openssl
++  tar rvpf $pkg.tar -C $P etc/ssl
++  tar rvpf $pkg.tar -C $P usr/share/ssl
+   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man3 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man5 | tail -n+2`
++  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man7 | tail -n+2`
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
++  tar rvpf $pkg.tar -C $P install/doinst.sh
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz
+   read -p "Do you want to keep work files? [y/N] " ans
