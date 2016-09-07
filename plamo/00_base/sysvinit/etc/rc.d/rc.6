@@ -108,10 +108,13 @@ if [ -x /sbin/hwclock ] ; then
 fi
 
 # Unmount any remote filesystems.
-if [ -n "`mount -anfv -t nfs 2> /dev/null`" ] ; then
-  echo "Unmounting remote filesystems..."
-  umount -a -t nfs
-fi
+for type in `cat /proc/self/mounts | awk '{ print $3 }'`
+do
+  if [ x$type = "xnfs" ]; then
+    echo "Unmounting remote NFS filesystems..."
+    umount -a -t nfs
+  fi
+done
 
 # Turn off swap, then unmount local file systems.
 echo "Turning off swap..."
