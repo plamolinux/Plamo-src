@@ -1,12 +1,12 @@
 #!/bin/sh
 
 ######################################################################
-url="http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2
-    ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/sysvinit/plamo-rc-scripts-20160208.tgz"
+url="http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2"
+scripts_archive="ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/sysvinit/plamo-rc-scripts-20160907.tgz"
 pkgbase=sysvinit
 vers=2.88dsf
 arch=`uname -m`
-build=P16
+build=P17
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="doc/bootlogd.README doc/Install doc/Changelog doc/Propaganda
@@ -173,11 +173,12 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1; opt_archive=0
 else
-  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0; opt_archive=0
   for i in $@ ; do
     case $i in
+    archive) opt_archive=1 ;;
     download) opt_download=1 ;;
     config) opt_config=1 ;;
     build) opt_build=1 ;;
@@ -185,10 +186,20 @@ else
     esac
   done
 fi
+# create archive: plamo-rc-scripts-*.tgz from git repository
+if [ $opt_archive -eq 1 ] ; then
+  git archive HEAD etc/ --worktree-attributes -o ${scripts_archive##*/}
+fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
     if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
+  if [ ! -d etc ]; then
+    if [ ! -f ${scripts_archive##*/} ]; then
+      wget $scripts_archive
+    fi
+    tar xvf ${scripts_archive##*/}
+  fi
   for i in $url ; do
     case ${i##*.} in
     tar) tar xvpf ${i##*/} ;;
@@ -269,6 +280,7 @@ if [ $opt_package -eq 1 ] ; then
       -exec touch -t `date '+%m%d0900'` {} \;
   compress
   cp -a etc $P
+  find $P/etc \( -name .gitignore -o -name .gitkeep \) -exec rm -f {} \;
   chown -R root.root $P/etc
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
