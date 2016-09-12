@@ -2,11 +2,11 @@
 
 ######################################################################
 url="http://download.savannah.gnu.org/releases/sysvinit/sysvinit-2.88dsf.tar.bz2"
-scripts_archive="ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/sysvinit/plamo-rc-scripts-20160907.tgz"
+scripts_archive="ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/sysvinit/plamo-rc-scripts-20160908.tgz"
 pkgbase=sysvinit
 vers=2.88dsf
 arch=`uname -m`
-build=P17
+build=P18
 src=$pkgbase-$vers
 OPT_CONFIG=""
 DOCS="doc/bootlogd.README doc/Install doc/Changelog doc/Propaganda
