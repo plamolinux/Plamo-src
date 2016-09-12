@@ -1,11 +1,0 @@
-diff -r 33200fc645f6 coders/mvg.c
---- a/coders/mvg.c	Sat Nov 07 14:49:16 2015 -0600
-+++ b/coders/mvg.c	Sat May 07 20:11:54 2016 -0500
-@@ -234,6 +234,7 @@
-   entry->seekable_stream=True;
-   entry->description="Magick Vector Graphics";
-   entry->module="MVG";
-+  entry->extension_treatment=IgnoreExtensionTreatment;
-   (void) RegisterMagickInfo(entry);
- }
- 
