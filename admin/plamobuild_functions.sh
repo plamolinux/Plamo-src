@@ -92,38 +92,40 @@ gzip_one() {
 
 
 download_sources() {
-  for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i ; j=${i%.*}
-      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
-        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-        if wget --spider $j.$sig ; then
-          case ${i##*.} in
-          gz) gunzip -c ${i##*/} > ${j##*/} ;;
-          bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
-          xz) unxz -c ${i##*/} > ${j##*/} ;;
-          esac
-          touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
-        fi
-      done
-      if [ -f ${i##*/}.$sig ] ; then
-        case $sig in
-        asc|sig|sign) gpg2 --verify ${i##*/}.$sig ;;
-        sha256|sha1|md5) ${sig}sum -c ${i##*/}.$sig ;;
-        *) $sig -c ${i##*/}.$sig ;;
-        esac
-        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+  if [ ! -f ${url##*/} ] ; then
+    wget $url
+    j=${url%.*}
+    for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+      if wget --spider $url.$sig ; then
+        wget $url.$sig
+        break
       fi
+      if wget --spider $j.$sig ; then
+        case ${url##*.} in
+          gz) gunzip -c ${url##*/} > ${j##*/} ;;
+          bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
+          xz) unxz -c ${url##*/} > ${j##*/} ;;
+        esac
+        touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
+      fi
+    done
+    if [ -f ${url##*/}.$sig ] ; then
+      case $sig in
+        asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
+        sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
+        *) $sig -c ${url##*/}.$sig ;;
+      esac
+      if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
     fi
-  done
-  for i in $url ; do
-    case ${i##*.} in
-      tar) tar xvpf ${i##*/} ;;
-      gz) tar xvpzf ${i##*/} ;;
-      bz2) tar xvpjf ${i##*/} ;;
-      *) tar xvf ${i##*/} ;;
-    esac
-  done
+  fi
+  ;;
+  esac
+  case ${url##*.} in
+    tar) tar xvpf ${url##*/} ;;
+    gz) tar xvpzf ${url##*/} ;;
+    bz2) tar xvpjf ${url##*/} ;;
+    *) tar xvf ${url##*/} ;;
+  esac
 }
 
 verify_checksum() {
