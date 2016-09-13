@@ -92,39 +92,55 @@ gzip_one() {
 
 
 download_sources() {
-  if [ ! -f ${url##*/} ] ; then
-    wget $url
-    j=${url%.*}
-    for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
-      if wget --spider $url.$sig ; then
-        wget $url.$sig
-        break
-      fi
-      if wget --spider $j.$sig ; then
-        case ${url##*.} in
+  case ${url##*.} in
+  git)
+    if [ ! -d $(basename ${url##*/} .git) ] ; then
+      git clone $url
+    else
+      ( cd $(basename ${url##*/} .git) ; git pull origin master )
+    fi
+    ;;
+  *)
+    if [ ! -f ${url##*/} ] ; then
+      wget $url
+      j=${url%.*}
+      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+        if wget --spider $url.$sig ; then
+	  wget $url.$sig
+	  break
+	fi
+        if wget --spider $j.$sig ; then
+          case ${url##*.} in
           gz) gunzip -c ${url##*/} > ${j##*/} ;;
           bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
           xz) unxz -c ${url##*/} > ${j##*/} ;;
-        esac
-        touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
-      fi
-    done
-    if [ -f ${url##*/}.$sig ] ; then
-      case $sig in
+          esac
+          touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
+        fi
+      done
+      if [ -f ${url##*/}.$sig ] ; then
+        case $sig in
         asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
         sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
         *) $sig -c ${url##*/}.$sig ;;
-      esac
-      if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+      fi
     fi
-  fi
-  ;;
+    ;;
   esac
   case ${url##*.} in
-    tar) tar xvpf ${url##*/} ;;
-    gz) tar xvpzf ${url##*/} ;;
-    bz2) tar xvpjf ${url##*/} ;;
-    *) tar xvf ${url##*/} ;;
+  tar) tar xvpf ${url##*/} ;;
+  gz) tar xvpzf ${url##*/} ;;
+  bz2) tar xvpjf ${url##*/} ;;
+  git)
+    ( cd $(basename ${url##*/} .git)
+      git checkout master
+      if [ -n "$commitid" ]; then
+	git checkout -b build $commitid
+      fi
+    ) ;;
+  *) tar xvf ${url##*/} ;;
   esac
 }
 
