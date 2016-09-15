@@ -129,10 +129,9 @@ download_sources() {
     fi
     ;;
   esac
-  case ${url##*.} in
-  tar) tar xvpf ${url##*/} ;;
-  gz) tar xvpzf ${url##*/} ;;
-  bz2) tar xvpjf ${url##*/} ;;
+  case ${url##*/} in
+  *.tar*) tar xvf ${url##*/} ;;
+  *.zip) unzip ${url##*/} ;;
   git)
     ( cd $(basename ${url##*/} .git)
       git checkout master
@@ -140,7 +139,6 @@ download_sources() {
         git checkout -b build $commitid
       fi
     ) ;;
-  *) tar xvf ${url##*/} ;;
   esac
 }
 
