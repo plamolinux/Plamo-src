@@ -225,13 +225,10 @@ install_tweak() {
 W=`pwd`
 WD=/tmp
 S=$W/$src
-if [ $arch = "x86_64" ]; then
-  B=$WD/build
-else
-  B=$WD/build32
-fi
+B=$WD/build
+P=$W/work
+C=$W/pivot
 
-P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man
