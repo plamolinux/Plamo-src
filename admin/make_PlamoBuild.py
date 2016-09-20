@@ -190,11 +190,11 @@ if [ $opt_config -eq 1 ] ; then
             touch .${{patch}}
         fi
     done
-
-    cd $B
-    # if [ -f $S/autogen.sh ] ; then
+    # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    cd $B
     export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
