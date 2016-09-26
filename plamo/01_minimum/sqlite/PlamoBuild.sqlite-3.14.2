@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase=sqlite
-vers=3.13.0
-url="http://sqlite.org/2016/sqlite-autoconf-3130000.tar.gz"
+vers=3.14.2
+url="http://sqlite.org/2016/sqlite-autoconf-3140200.tar.gz"
 arch=`uname -m`
 build=P1
-src=sqlite-autoconf-3130000
+src=sqlite-autoconf-3140200
 # SQLITE_SECURE_DELETE を定義する必要あり (firefox/thunderbird)．
 # --enable-threadsafe で有効になるのかな?
 OPT_CONFIG='--disable-static --enable-threadsafe --enable-readline --enable-dynamic-extensions'
