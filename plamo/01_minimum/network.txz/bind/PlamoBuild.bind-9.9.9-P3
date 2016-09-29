@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=bind
-vers=9.9.9_P2
+vers=9.9.9_P3
 url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
