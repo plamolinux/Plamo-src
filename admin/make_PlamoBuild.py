@@ -160,7 +160,7 @@ fi
         if source == True :  # with source build
             body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
@@ -174,7 +174,7 @@ if [ $opt_config -eq 1 ] ; then
     # fi
     export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
+    ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}
     '''.format(prefix)
         else:     # out of source build
             body_02 = '''
