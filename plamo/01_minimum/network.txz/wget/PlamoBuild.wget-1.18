@@ -5,11 +5,11 @@ vers=1.18
 url="http://ftp.gnu.org/gnu/wget/wget-${vers}.tar.xz"
 verify=$url.sig
 arch=`uname -m`
-build=P1
+build=P3
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog.README INSTALL NEWS README'
-patchfiles=''
+DOCS="INSTALL COPYING README MAILING-LIST ChangeLog ABOUT-NLS AUTHORS NEWS"
+patchfiles='CVE-2016-7098.patch'
 compress=txz
 ##############################################################
 
