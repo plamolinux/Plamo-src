@@ -1,16 +1,20 @@
 #!/bin/sh
 ##############################################################
-pkgbase='bzip2'
-vers='1.0.6'
-url="http://www.bzip.org/${vers}/${pkgbase}-${vers}.tar.gz"
+pkgbase='perl'
+vers='5.24.0'
+url="http://www.cpan.org/src/5.0/${pkgbase}-${vers}.tar.gz"
 arch=`uname -m`
-build=P6
+build=P1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='LICENSE README README.COMPILATION.PROBLEMS README.XML.STUFF bzip2.txt'
+DOCS='AUTHORS Copying INSTALL README README.aix README.amiga README.android README.bs2000 README.ce README.cn README.cygwin README.dos README.freebsd README.haiku README.hpux README.hurd README.irix README.jp README.ko README.linux README.macos README.macosx README.micro README.netware README.openbsd README.os2 README.os390 README.os400 README.plan9 README.qnx README.riscos README.solaris README.symbian README.synology README.tru64 README.tw README.vms README.vos README.win32 autodoc.pl install_lib.pl installhtml installman installperl'
 patchfiles=''
 compress=txz
 ##############################################################
+
+export BUILD_ZLIB=False
+export BUILD_BZIP2=0
+export ARCH=$arch
 
 source /usr/share/plamobuild_functions.sh
 
@@ -20,6 +24,7 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -39,7 +44,7 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B  
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
@@ -47,16 +52,49 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
-    sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile
-    sed -i "s@(PREFIX)/man@(PREFIX)/share/man@g" Makefile
+
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    if [ $arch = "x86_64" ]; then
+        arch_opts="-Dcccdlflags='-fPIC'"
+    else
+        arch_opts=""
+    fi
+    
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed'
+    sh Configure \
+       -des \
+       -Dprefix=/usr \
+       -Dvendorprefix=/usr \
+       -Dprivlib=/usr/share/perl5 \
+       -Darchlib=/usr/${libdir}/perl5 \
+       -Dsitelib=/usr/share/perl5/site_perl \
+       -Dsitearch=/usr/${libdir}/perl5/site_perl \
+       -Dvendorlib=/usr/share/perl5/vendor_perl \
+       -Dvendorarch=/usr/${libdir}/perl5/vendor_perl \
+       -Dman1dir=/usr/share/man/man1 \
+       -Dman3dir=/usr/share/man/man3 \
+       -Dpager="/usr/bin/less -isR"  \
+       -Dcc='gcc -isystem /usr/include' \
+       -Dlddlflags="-shared ${LDFLAGS}" \
+       -Dldflags="${LDFLAGS}" \
+       -Dusethreads \
+       ${arch_opts} \
+       -Duseshrplib
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -f Makefile-libbz2_so
-    make clean
-    make -j3
+    make
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -68,30 +106,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install PREFIX=$P/usr LIBDIR=$libdir
-
-  # bzip2 binary
-  mkdir -p $P/bin
-  install -m755 bzip2-shared $P/bin/bzip2
-  rm $P/usr/bin/bzip2
-  ( cd $P/usr/bin ; ln -sv ../../bin/bzip2 bzip2 )
-  
-  # library and link
-  install -D -m755 libbz2.so.${vers} $P/$libdir/libbz2.so.${vers}
-  ( cd $P/$libdir ; ln -sv libbz2.so.${vers} libbz2.so.${vers%.*} )
-  ( cd $P/$libdir ; ln -sv libbz2.so.${vers%.*} libbz2.so )
-  mkdir -p $P/usr/${libdir}
-  ( cd $P/usr/${libdir} ; ln -sv ../../lib/libbz2.so.${vers%.*} libbz2.so )
-
-  # files under /usr/bin
-  ( cd $P/usr/bin ; \
-    rm bzcmp bzegrep bzfgrep bzless bunzip2 bzcat ; \
-    ln -sv ../../bin/bzip2 bunzip2 ; \
-    ln -sv ../../bin/bzip2 bzcat ; \
-    ln -sv bzdiff bzcmp ; \
-    ln -sv bzgrep bzegrep ; \
-    ln -sv bzgrep bzfgrep ; \
-    ln -sv bzmore bzless )
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks

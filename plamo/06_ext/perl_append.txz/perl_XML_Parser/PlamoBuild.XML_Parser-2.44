@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-pkgbase='bzip2'
-vers='1.0.6'
-url="http://www.bzip.org/${vers}/${pkgbase}-${vers}.tar.gz"
+pkgbase='perl_XML_Parser'
+vers='2.44'
+url="http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-${vers}.tar.gz"
 arch=`uname -m`
-build=P6
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='LICENSE README README.COMPILATION.PROBLEMS README.XML.STUFF bzip2.txt'
+build=P1
+src="XML-Parser-${vers}"
+OPT_CONFIG=''
+DOCS='README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -20,6 +20,7 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -39,28 +40,32 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  copy srcs to build directory, patch and config in build dir
 ######################################################################
     cd $B
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
-    sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile
-    sed -i "s@(PREFIX)/man@(PREFIX)/share/man@g" Makefile
+
+    perl Makefile.PL INSTALLDIRS=vendor
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -f Makefile-libbz2_so
-    make clean
-    make -j3
+    make
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
     fi
+    make test
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -68,30 +73,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install PREFIX=$P/usr LIBDIR=$libdir
-
-  # bzip2 binary
-  mkdir -p $P/bin
-  install -m755 bzip2-shared $P/bin/bzip2
-  rm $P/usr/bin/bzip2
-  ( cd $P/usr/bin ; ln -sv ../../bin/bzip2 bzip2 )
-  
-  # library and link
-  install -D -m755 libbz2.so.${vers} $P/$libdir/libbz2.so.${vers}
-  ( cd $P/$libdir ; ln -sv libbz2.so.${vers} libbz2.so.${vers%.*} )
-  ( cd $P/$libdir ; ln -sv libbz2.so.${vers%.*} libbz2.so )
-  mkdir -p $P/usr/${libdir}
-  ( cd $P/usr/${libdir} ; ln -sv ../../lib/libbz2.so.${vers%.*} libbz2.so )
-
-  # files under /usr/bin
-  ( cd $P/usr/bin ; \
-    rm bzcmp bzegrep bzfgrep bzless bunzip2 bzcat ; \
-    ln -sv ../../bin/bzip2 bunzip2 ; \
-    ln -sv ../../bin/bzip2 bzcat ; \
-    ln -sv bzdiff bzcmp ; \
-    ln -sv bzgrep bzegrep ; \
-    ln -sv bzgrep bzfgrep ; \
-    ln -sv bzmore bzless )
+  make pure_install DESTDIR=$P
 
 ################################
 #      install tweaks
