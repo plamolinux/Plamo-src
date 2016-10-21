@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=wireshark
-vers=2.0.4
+vers=2.2.1
 url="http://wiresharkdownloads.riverbed.com/wireshark/src/wireshark-${vers}.tar.bz2"
 verify="http://wiresharkdownloads.riverbed.com/wireshark/src/all-versions/SIGNATURES-${vers}.txt"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG='--with-qt=4 --with-gtk3=yes --with-pcap --with-zlib --with-ssl'
+OPT_CONFIG='--with-qt=4 --with-gtk3=yes --with-pcap --with-zlib --with-ssl --without-krb5'
 DOCS='AUTHORS CMakeOptions.txt COPYING CPackConfig.txt ChangeLog INSTALL INSTALL.configure NEWS README README.DECT README.aix README.bsd README.cmake README.hpux README.irix README.linux README.macos README.tru64 README.vmware README.windows'
 patchfiles=''
 compress=txz
@@ -142,6 +142,7 @@ if [ $opt_download -eq 1 ] ; then
     asc) gpg2 --verify ${i##*/} ;;
     sig) gpg2 --verify ${i##*/} ;;
     sha256sum) verify_checksum "sha256sum" ;;
+    *) gpg2 --verify ${i##*/} ;;
     esac
     if [ $? -ne 0 ]; then
       echo "archive verify was failed."
