@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=sqlite
-vers=3.14.2
-url="http://sqlite.org/2016/sqlite-autoconf-3140200.tar.gz"
+vers=3.15.0
+url="http://sqlite.org/2016/sqlite-autoconf-3150000.tar.gz"
 arch=`uname -m`
-build=P1
-src=sqlite-autoconf-3140200
-# SQLITE_SECURE_DELETE を定義する必要あり (firefox/thunderbird)．
-# --enable-threadsafe で有効になるのかな?
-OPT_CONFIG='--disable-static --enable-threadsafe --enable-readline --enable-dynamic-extensions'
+build=P2
+src=sqlite-autoconf-3150000
+
+OPT_CONFIG='--disable-static'
 DOCS='INSTALL README'
 patchfiles=''
 compress=txz
@@ -207,7 +206,8 @@ if [ $opt_config -eq 1 ] ; then
 
     if [ -x configure ] ; then
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
+       export LDFLAGS='-Wl,--as-needed'
+       # SQLITE_SECURE_DELETE を定義する必要あり (firefox/thunderbird)．
        export CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1 -DSQLITE_ENABLE_DBSTAT_VTAB=1"
         CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
@@ -223,7 +223,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      CFLAGS="-g -O2 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_COLUMN_METADATA=1" make -j1
+      make
     fi
   done
 fi
