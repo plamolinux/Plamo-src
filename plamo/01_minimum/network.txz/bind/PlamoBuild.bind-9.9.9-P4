@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=bind
-vers=9.9.9_P3
+vers=9.9.9_P4
 url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
@@ -296,14 +296,14 @@ if [ $opt_package -eq 1 ] ; then
 mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 if [ -f /etc/named.conf ]; then
-  rm /etc/named.conf.new
+  mv /etc/named.conf.new /etc/named.conf.dist
 else 
   mv /etc/named.conf.new /etc/named.conf
 fi
 
 for chk in localhost.rev master.localhost ; do
   if [ -f /var/named/$chk ]; then
-      rm /var/named/$chk.new
+      mv /var/named/$chk.new /var/named/$chk.dist
   else
       mv /var/named/$chk.new /var/named/$chk
   fi
