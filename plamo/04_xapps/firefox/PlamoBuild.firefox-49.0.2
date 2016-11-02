@@ -3,7 +3,7 @@ unset LS_BLOCK_SIZE
 export LANG=C
 ##############################################################
 pkgbase=firefox
-vers=49.0.1
+vers=49.0.2
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -12,7 +12,7 @@ src=firefox-${vers}
 #firefox_tag=FENNEC_${vers//./_}_RELEASE
 firefox_branch=l10n-mozilla-48.0
 DOCS='LICENSE README.txt other-licenses xpinstall'
-patchfiles='mozilla-1282843.patch firefox.desktop.patch'
+patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
 
