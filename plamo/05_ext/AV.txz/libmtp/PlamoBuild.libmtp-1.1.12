@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=libmtp
-vers=1.1.10
+vers=1.1.12
 url="http://jaist.dl.sourceforge.net/project/libmtp/libmtp/${vers}/libmtp-${vers}.tar.gz"
 verify=$url.asc
 commitid=
@@ -10,7 +10,7 @@ build=P1
 src=libmtp-${vers}
 OPT_CONFIG='--with-udev=/lib/udev'
 DOCS='AUTHORS COPYING ChangeLog INSTALL README README.windows.txt TODO'
-patchfiles='libmtp-group-permission.patch xperia-zl2.patch'
+patchfiles='libmtp-group-permission.patch update-player.patch'
 compress=txz
 ##############################################################
 
