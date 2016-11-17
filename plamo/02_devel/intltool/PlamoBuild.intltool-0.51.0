@@ -3,7 +3,7 @@
 pkgbase='intltool'
 vers='0.51.0'
 url="https://launchpad.net/intltool/trunk/${vers}/+download/intltool-${vers}.tar.gz"
-arch=`uname -m`
+arch=noarch
 build=P1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
