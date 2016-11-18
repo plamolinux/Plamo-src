@@ -4,7 +4,7 @@ pkgbase='kmod'
 vers='23'
 url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=P2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--bindir=/bin --with-xz --with-zlib"
 DOCS='COPYING NEWS README TODO'
@@ -97,7 +97,7 @@ if [ $opt_package -eq 1 ] ; then
   install -d $P/install
   cat <<EOF >> $P/install/initpkg
 if [ ! -f /etc/modprobe.d/plamo-default.conf ]; then
-  ( cd /etc/modprobe.d ; mv plamo-default.conf.new plamo-default.conf )
+  ( cd /etc/modprobe.d ; mv plamo-default.conf.dist plamo-default.conf )
 fi
 EOF
 
