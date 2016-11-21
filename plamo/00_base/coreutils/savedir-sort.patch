@@ -1,0 +1,12 @@
+diff -uNr coreutils-8.25.orig/src/copy.c coreutils-8.25/src/copy.c
+--- coreutils-8.25.orig/src/copy.c	2016-01-17 04:09:33.000000000 +0900
++++ coreutils-8.25/src/copy.c	2016-11-21 16:52:05.609505572 +0900
+@@ -709,7 +709,7 @@
+   struct cp_options non_command_line_options = *x;
+   bool ok = true;
+ 
+-  name_space = savedir (src_name_in, SAVEDIR_SORT_FASTREAD);
++  name_space = savedir (src_name_in, SAVEDIR_SORT_NONE);
+   if (name_space == NULL)
+     {
+       /* This diagnostic is a bit vague because savedir can fail in
