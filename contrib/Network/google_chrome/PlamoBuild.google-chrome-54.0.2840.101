@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=google_chrome
-vers=51.0.2704.84
+vers=54.0.2840.101
 verbld=1
 arch=`uname -m | sed -e 's/i.86/i386/'`
-url="https://dl.google.com/linux/chrome/rpm/stable/${arch}/google-chrome-stable-${vers}-${verbld}.${arch}.rpm"
+url="https://dl.google.com/linux/chrome/rpm/stable/${arch}/google-chrome-stable_current_${arch}.rpm"
 build=P1
 src=google-chrome-stable
 OPT_CONFIG=''
@@ -29,7 +29,7 @@ if [ ! -d $src ]; then
 fi
 rm -rf $src/*
 cd $src
-rpm2cpio ../${src}-${vers}-${verbld}.${arch}.rpm | cpio -ivd
+rpm2cpio ../${url##*/} | cpio -ivd
 
 rm -rf etc
 
