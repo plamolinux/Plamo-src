@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase=ntp
-vers=4.2.8p7
+vers=4.2.8p9
 url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 verify=$url.md5
 arch=`uname -m`
 build=P1
 src=ntp-${vers}
-OPT_CONFIG=''
+OPT_CONFIG="--docdir=/usr/share/doc/ntp-${vers}"
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.refclocks README.versions TODO readme.y2kfixes'
-patchfiles='ntp-initscript.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -87,14 +87,9 @@ verify_checksum() {
 }
 
 W=`pwd`
-WD=/tmp
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-      B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-      B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi      
+  B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
@@ -227,10 +222,10 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $docdir/$src
-  mkdir -p $P/etc
+  # install configuration file (ntp.conf)
+  mkdir -p $P/etc/rc.d/init.d
 
-  cat <<"EOF" > $P/etc/ntp.conf
+  cat <<"EOF" > $P/etc/ntp.conf.dist
 # peer configuration for your host
 # (expected to operate at stratum 3)
 server ntp1.jst.mfeed.ad.jp
@@ -239,22 +234,21 @@ server ntp3.jst.mfeed.ad.jp
 driftfile /etc/ntp.drift
 EOF
 
-  mkdir -p $P/etc/rc.d/init.d
-  if [ $arch = "x86_64" ]; then
-    cp -a $WD/build/$pkgbase $P/etc/rc.d/init.d
-  else
-    cp -a $WD/build32/$pkgbase $P/etc/rc.d/init.d
-  fi
-  chmod +x $P/etc/rc.d/init.d/$pkgbase
-  mkdir -p $docdir/$src
-  cp -a html $docdir/$src
+  install -m755 $W/ntp.init $P/etc/rc.d/init.d/ntp
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/ntp.conf ]; then
+  mv /etc/ntp.conf.dist /etc/ntp.conf
+fi
+EOF
 
   check_me=`whoami | grep root`
   if [ "$check_me.x" != ".x" ]; then
       chown root:root $P/etc/rc.d/init.d/$pkgbase
-      chown -R root:root $docdir/$src/html
   fi
 
+  # remove directories created by 'make install', which have no files
   rmdir $P/usr/sbin
   rmdir $P/usr/libexec
 
