@@ -1,13 +1,13 @@
 #!/bin/sh
 
 ######################################################################
-url="http://sylpheed.sraoss.jp/sylpheed/v3.3/sylpheed-3.3.0.tar.bz2"
+url="http://sylpheed.sraoss.jp/sylpheed/v3.5/sylpheed-3.5.1.tar.bz2"
 pkgbase=sylpheed
-vers=3.3.0
-arch=x86_64
+vers=3.5.1
+arch=`uname -m`
 build=P1
 src=$pkgbase-$vers
-OPT_CONFIG=""
+OPT_CONFIG="--enable-oniguruma"
 DOCS="README ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL
     NEWS TODO ChangeLog.ja INSTALL.ja README.es README.ja TODO.ja
     ChangeLog-1.0 ChangeLog-1.0.ja NEWS-1.0 NEWS-2.0 LICENSE
@@ -118,7 +118,7 @@ gzip_one() {
 
 compress() {
   for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/lib64 ; do strip_libdir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
   if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
   gzip_dir $infodir
   for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
@@ -156,7 +156,7 @@ prune_symlink() {
 
 convert() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
@@ -172,6 +172,7 @@ mandir=$P/usr/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
+case $arch in i686) libdir=lib ;; x86_64) libdir=lib64 ;; esac
 if [ $# -eq 0 ] ; then
   opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
@@ -210,7 +211,7 @@ if [ $opt_config -eq 1 ] ; then
       rm -rf config.cache config.log
     fi
     if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${prefix}'/lib64 \
+      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
           --infodir='${prefix}'/share/info \
           --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
@@ -264,9 +265,9 @@ if [ $opt_package -eq 1 ] ; then
   done
   convert
   tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/lib64 | tail -n+2`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/$libdir | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/include/sylpheed
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name sylpheed.mo`
+  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/locale -name *.mo`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/pixmaps | tail -n+2`
   tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/applications | tail -n+2`
   tar rvpf $pkg.tar -C $P usr/share/sylpheed
