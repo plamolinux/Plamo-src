@@ -166,7 +166,7 @@ install_tweak() {
   fi
 
   # ja 以外のlocaleファイルを削除
-  for loc_dir in `find $P/usr/share -name locale` ; do
+  for loc_dir in `find -type d $P/usr/share -name locale` ; do
     pushd $loc_dir
     for loc in * ; do
       if [ "$loc" != "ja" ]; then
