@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='flex'
-vers='2.6.0'
-url="http://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+vers='2.6.1'
+url="https://github.com/westes/flex/releases/download/v${vers}/flex-${vers}.tar.xz"
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS ONEWS README THANKS TODO'
-patchfiles='flex-2.6.0-comment-style.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
