@@ -4,7 +4,7 @@ pkgbase='iproute2'
 vers='4.9.0'
 url="https://www.kernel.org/pub/linux/utils/net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=P2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README README.decnet README.devel README.distribution README.iproute2+tc README.lnstat'
@@ -48,15 +48,6 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
-
-    # arpd requires Berkeley DB (in 01_minimum)
-    sed -i /ARPD/d Makefile
-    sed -i 's/arpd.8//' man/man8/Makefile
-    rm -v doc/arpd.sgml
-
-    # these require iptables (in 01_minimum/network.txz)
-    sed -i 's/m_xt.o//' tc/Makefile
-    sed -i 's/m_ipt.o//' tc/Makefile
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
