@@ -1,0 +1,96 @@
+diff -uprN kbd-1.15.orig/data/keymaps/i386/qwerty/cl2c-d.map kbd-1.15/data/keymaps/i386/qwerty/cl2c-d.map
+--- kbd-1.15.orig/data/keymaps/i386/qwerty/cl2c-d.map	1970-01-01 09:00:00.000000000 +0900
++++ kbd-1.15/data/keymaps/i386/qwerty/cl2c-d.map	2008-12-04 13:38:21.000000000 +0900
+@@ -0,0 +1,5 @@
++# cl2c-d.map swap Left-Ctrl & CapsLock
++# by manabe@papilio.tutics.tut.ac.jp
++# 24 Nov 1994
++keycode  29 = Caps_Lock
++keycode  58 = Control
+diff -uprN kbd-1.15.orig/data/keymaps/i386/qwerty/j106-d.map kbd-1.15/data/keymaps/i386/qwerty/j106-d.map
+--- kbd-1.15.orig/data/keymaps/i386/qwerty/j106-d.map	1970-01-01 09:00:00.000000000 +0900
++++ kbd-1.15/data/keymaps/i386/qwerty/j106-d.map	2008-12-04 13:38:40.000000000 +0900
+@@ -0,0 +1,48 @@
++# j106-d.map remap 106 high-keys
++# by manabe@papilio.tutics.tut.ac.jp
++# 24 Nov 1994
++# From: "Toshio 'Fukugoooooon!!!' Fukui" <fukui@celery.cs.ehime-u.ac.jp>
++# Date: Thu, 6 Jul 1995 14:17:41 +0900
++# Date: Wed, 19 Jul 1995 12:48:01 +0900
++		keycode	3 =	two			quotedbl
++		keycode	7 =	six			ampersand
++control		keycode	7 =	Control_underscore
++		keycode	8 =	seven			apostrophe
++		keycode	9 =	eight			parenleft
++		keycode	10 =	nine			parenright
++		keycode	11 =	zero			asciitilde
++control		keycode	11 =	nul
++	alt	keycode	11 =	Meta_zero
++		keycode	12 =	minus			equal
++	alt	keycode	12 =	Meta_minus
++shift	alt	keycode 12 =	Meta_equal
++		keycode	13 =	asciicircum		asciitilde
++control		keycode	13 =	Control_asciicircum
++	alt	keycode	13 =	Meta_asciicircum
++		keycode	26 =	at			grave
++control		keycode	26 =	nul
++	alt	keycode	26 =	Meta_at
++shift	alt	keycode	26 =	Meta_grave
++		keycode	27 =	bracketleft		braceleft
++control		keycode	27 =	Escape
++	alt	keycode	27 =	Meta_bracketleft
++shift	alt	keycode 27 =	Meta_braceleft
++		keycode	39 =	semicolon        	plus
++	alt	keycode	39 =	Meta_semicolon
++		keycode	40 =	colon			asterisk
++	alt	keycode	40 =	Meta_colon
++		keycode	41 =	Escape			Escape
++		keycode	43 =	bracketright		braceright
++control		keycode	43 =	Control_bracketright
++	alt	keycode	43 =	Meta_bracketright
++shift	alt	keycode	43 =	Meta_braceright
++		keycode	89 =	backslash		underscore
++control		keycode	89 =	Control_backslash
++	alt	keycode	89 =	Meta_backslash
++shift	alt	keycode	89 =	Meta_underscore
++		keycode	92 =	space
++		keycode	94 =	space
++		keycode	124 =	backslash		bar
++control		keycode	124 =	Control_backslash
++	alt	keycode	124 =	Meta_backslash
++shift	alt	keycode	124 =	Meta_bar
+diff -uprN kbd-1.15.orig/data/keymaps/i386/qwerty/j106kanji-d.map kbd-1.15/data/keymaps/i386/qwerty/j106kanji-d.map
+--- kbd-1.15.orig/data/keymaps/i386/qwerty/j106kanji-d.map	1970-01-01 09:00:00.000000000 +0900
++++ kbd-1.15/data/keymaps/i386/qwerty/j106kanji-d.map	2008-12-04 13:38:45.000000000 +0900
+@@ -0,0 +1,23 @@
++# j106kanji-d.map remap 106 kanji-keys
++# From: "Toshio 'Fukugoooooon!!!' Fukui" <fukui@celery.cs.ehime-u.ac.jp>
++# Date: Wed, 19 Jul 1995 12:48:01 +0900
++#keycode  41 = HANZEN
++#keycode  92 = Conv     Before
++#keycode  94 = NoConv    NoConv
++#keycode 112 = HIRAGANA  KATAKANA
++keycode  41 = F26       F26
++keycode  92 = F22       F24
++keycode  94 = F21       F21
++#keycode 112 = F23      F25
++#string NoConv = "\033[35~"
++#string Conv = "\033[36~"
++#string HIRAGANA = "\033[37~"
++#string Before = "\033[38~"
++#string KATAKANA = "\033[39~"
++#string HANZEN = "\033[40~"
++string F21 = "\033[35~"
++string F22 = "\033[36~"
++string F23 = "\033[37~"
++string F24 = "\033[38~"
++string F25 = "\033[39~"
++string F26 = "\033[40~"
+diff -uprN kbd-1.15.orig/data/keymaps/i386/qwerty/k2esc-d.map kbd-1.15/data/keymaps/i386/qwerty/k2esc-d.map
+--- kbd-1.15.orig/data/keymaps/i386/qwerty/k2esc-d.map	1970-01-01 09:00:00.000000000 +0900
++++ kbd-1.15/data/keymaps/i386/qwerty/k2esc-d.map	2008-12-04 13:38:53.000000000 +0900
+@@ -0,0 +1,4 @@
++# k2esc-d.map remap ESC key to HANKAKU key
++# by manabe@papilio.tutics.tut.ac.jp
++# 24 Nov 1994
++keycode  41 = Escape
