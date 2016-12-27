@@ -1,5 +1,7 @@
 #!/bin/sh
 
+NTPD_OPTS="-u ntp:ntp -c /etc/ntp.conf -p /var/run/ntpd.pid -g"
+
 status() {
   if pgrep ntpd >/dev/null 2>&1; then
     echo "NTP daemon is running"
@@ -17,7 +19,7 @@ start() {
   fi
   if [ -x /usr/bin/ntpd -a -f /etc/ntp.conf ] ; then
     ntpdate -s `sed -n '/^server/p' /etc/ntp.conf | cut -d' ' -f2`
-    ntpd -c /etc/ntp.conf
+    ntpd $NTPD_OPTS
   fi
 }
 
