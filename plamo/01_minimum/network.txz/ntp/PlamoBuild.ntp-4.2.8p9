@@ -5,9 +5,9 @@ vers=4.2.8p9
 url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 verify=$url.md5
 arch=`uname -m`
-build=P1
+build=P2
 src=ntp-${vers}
-OPT_CONFIG="--docdir=/usr/share/doc/ntp-${vers}"
+OPT_CONFIG="--docdir=/usr/share/doc/ntp-${vers} --enable-linuxcaps"
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.refclocks README.versions TODO readme.y2kfixes'
 patchfiles=''
 compress=txz
@@ -222,20 +222,15 @@ if [ $opt_package -eq 1 ] ; then
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # install configuration file (ntp.conf)
-  mkdir -p $P/etc/rc.d/init.d
+  # install init.d file
+  install -D -m 0755 $W/ntp.init $P/etc/rc.d/init.d/ntp
+  check_me=`whoami | grep root`
+  if [ "$check_me.x" != ".x" ]; then
+      chown root:root $P/etc/rc.d/init.d/$pkgbase
+  fi
 
-  cat <<"EOF" > $P/etc/ntp.conf.dist
-# peer configuration for your host
-# (expected to operate at stratum 3)
-server ntp1.jst.mfeed.ad.jp
-server ntp2.jst.mfeed.ad.jp
-server ntp3.jst.mfeed.ad.jp
-driftfile /etc/ntp.drift
-EOF
-
-  install -m755 $W/ntp.init $P/etc/rc.d/init.d/ntp
-
+  # install configuration file
+  install -D -m 0644 $W/ntp.conf $P/etc/ntp.conf.dist
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
 if [ ! -f /etc/ntp.conf ]; then
@@ -243,10 +238,16 @@ if [ ! -f /etc/ntp.conf ]; then
 fi
 EOF
 
-  check_me=`whoami | grep root`
-  if [ "$check_me.x" != ".x" ]; then
-      chown root:root $P/etc/rc.d/init.d/$pkgbase
-  fi
+  # create the directory that driftfile is placed
+  install -d -o 49 -g 49 -m 0755 $P/var/lib/ntp
+
+  cat <<EOF >> $P/install/initpkg
+if ! id ntp >/dev/null 2>&1; then
+  echo "Ntpd requires ntp user and group. Run following command"
+  echo "  sudo groupadd -g 49 ntp"
+  echo "  sudo useradd -u 49 -g ntp -s /bin/false ntp"
+fi
+EOF
 
   # remove directories created by 'make install', which have no files
   rmdir $P/usr/sbin
