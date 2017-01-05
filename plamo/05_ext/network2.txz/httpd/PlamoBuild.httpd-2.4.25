@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=httpd
-vers=2.4.23
-url="http://www.apache.org/dist/httpd/httpd-${vers}.tar.gz"
+vers=2.4.25
+url="http://archive.apache.org/dist/httpd/httpd-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --mandir=/usr/share/man"
+OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --enable-xml2enc --enable-proxy-html --mandir=/usr/share/man"
 DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
 patchfiles='httpdlogrotate_plamo.patch'
 compress=txz
