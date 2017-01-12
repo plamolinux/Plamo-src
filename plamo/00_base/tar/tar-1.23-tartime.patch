@@ -1,0 +1,23 @@
+--- tar-1.23/src/list.c.orig	2010-01-26 20:28:09.000000000 +0900
++++ tar-1.23/src/list.c	2010-03-11 14:39:08.000000000 +0900
+@@ -1001,9 +1001,9 @@
+ 	  code_ns_fraction (ns, buffer + strlen (buffer));
+ 	}
+       else
+-	sprintf (buffer, "%04ld-%02d-%02d %02d:%02d",
++	sprintf (buffer, "%04ld-%02d-%02d %02d:%02d:%02d",
+ 		 tm->tm_year + 1900L, tm->tm_mon + 1, tm->tm_mday,
+-		 tm->tm_hour, tm->tm_min);
++		 tm->tm_hour, tm->tm_min, tm->tm_sec);
+       return buffer;
+     }
+ 
+@@ -1044,7 +1044,7 @@
+ /* Width of printed time stamps.  It grows if longer time stamps are
+    found (typically, those with nanosecond resolution).  Like
+    USGWIDTH, some stairstepping may occur.  */
+-static int datewidth = sizeof "YYYY-MM-DD HH:MM" - 1;
++static int datewidth = sizeof "YYYY-MM-DD HH:MM:SS" - 1;
+ 
+ static bool volume_label_printed = false;
+ 
