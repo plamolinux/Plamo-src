@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- coding: euc-jp -*-
 
 import argparse, sys, os
 
@@ -132,7 +132,7 @@ def make_config(prefix, method, source):
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -153,107 +153,107 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
 fi
 '''
     if method == 'config' :
         if source == True :  # with source build
             body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
-    cd $B
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}
     '''.format(prefix)
         else:     # out of source build
             body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ ! -f .${{patch}} ]; then
-            patch -p1 < $W/$patch
-            touch .${{patch}}
-        fi
-    done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${{patch}} ]; then
+      patch -p1 < $W/$patch
+      touch .${{patch}}
+    fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
-    cd $B
-    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
     '''.format(prefix)
 
     elif method == 'cmake' :      # cmake では out of the tree build がデフォルト
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #   patch apply to source tree but make at out of source tree
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ -f .${{patch}} ]; then
-            patch -p1 < $W/$patch
-            touch .${{patch}}
-        fi
-    done
-    cd $B
-    export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG[$i]}} $S
-    '''.format(prefix)
+  cd $S
+  for patch in $patchfiles ; do
+    if [ -f .${{patch}} ]; then
+      patch -p1 < $W/$patch
+      touch .${{patch}}
+    fi
+  done
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG[$i]}} $S
+  '''.format(prefix)
 
     elif method == 'python' :
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
 #  copy srcs to build directory, patch and config in build dir
 ######################################################################
-    cd $B
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 
-    python setup.py config
-    '''
+  python setup.py config
+  '''
 
     elif method == 'perl' :
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
 #  copy srcs to build directory, patch and config in build dir
 ######################################################################
-    cd $B
-    for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
-    done
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 
-    perl Makefile.PL
-    '''
+  perl Makefile.PL
+  '''
     body_03 = '''
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
-    fi
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     '''
     config = body_01 + body_02 + body_03
@@ -263,12 +263,12 @@ def make_build(method):
     if method == 'python':
         body_01 = '''
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    python setup.py build
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  python setup.py build
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -280,13 +280,13 @@ if [ $opt_package -eq 1 ] ; then
     else:
         body_01 = '''
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
