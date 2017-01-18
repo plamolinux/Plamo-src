@@ -79,6 +79,11 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  install -d $P/usr/$libdir
+  ln -sfv ../../$libdir/$(readlink $P/$libdir/libbtrfs.so) \
+     $P/usr/$libdir/libbtrfs.so
+  rm -v $P/$libdir/libbtrfs.{a,so}
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
