@@ -1,177 +1,29 @@
 #!/bin/sh
-
-######################################################################
-url="http://www.jimpryor.net/linux/releases/dcron-4.5.tar.gz"
-pkgbase=dcron
-vers=4.5
+##############################################################
+pkgbase='dcron'
+vers='4.5'
+url="http://www.jimpryor.net/linux/releases/dcron-${vers}.tar.gz"
 arch=`uname -m`
-build=P4
-src=$pkgbase-$vers
+build=P2
+src="dcron-${vers}"
 OPT_CONFIG=""
-DOCS="README CHANGELOG CHANGELOG.working"
-######################################################################
+DOCS='CHANGELOG CHANGELOG.working README'
+patchfiles='init.patch'
+compress=txz
+##############################################################
 
-fscheck() {
-  PANGRAM="The quick brown fox jumps over the lazy dog."
-  echo -n "Checking for the filesystem ... "
-  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
-  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
-  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
-  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
-  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
-  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
-  tar cpf pangram.tar pangram
-  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
-  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
-  if cmp -s pangram1.tgz pangram2.tgz ; then
-    echo "OK"
-    rm -rf pangram pangram1.tgz pangram2.tgz
-  else
-    echo "NG"
-    cat <<- "EOF"
-	Hmm, packaging may not be done properly on this filesystem.
-	Would you please try again on a default filesystem, thanks!
-	
-	Happy packaging!!
-	
-	Quitting...
-	EOF
-    exit
-  fi
-}
+source /usr/share/plamobuild_functions.sh
 
-install2() {
-  install -d ${2%/*} ; install -m 644 $1 $2
-}
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
-strip_bindir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in * ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`file $i | grep "not stripped"`" ] ; then
-         echo "stripping -p $i"
-         strip -p $i
-      fi
-    done
-  ) fi
-}
 
-strip_libdir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    shopt -s nullglob
-    cd $1
-    for i in *.so *.so.* *.a ; do
-      echo "$i"
-      if [ -h $i ] ; then continue ; fi
-      if [ -n "`nm -a $i | grep " a "`" ] ; then
-        if [ $i != ${i%.a} ] ; then
-          echo -n "ranlib and "
-          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
-        fi
-        echo "stripping -gp $i"
-        strip -gp $i
-      fi
-    done
-  ) fi
-}
-
-gzip_dir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    cd $1
-    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    for i in $files ; do
-      echo "$i"
-      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
-      lnks=`ls -l $i | awk '{print $2}'`
-      if [ $lnks -gt 1 ] ; then
-        inum=`ls -i $i | awk '{print $1}'`
-        for j in `find . -maxdepth 1 -inum $inum` ; do
-          if [ ${j#./} == $i ] ; then
-            gzip -f $i
-          else
-            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
-          fi
-        done
-      elif [ -h $i ] ; then
-        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
-      else
-        gzip $i
-      fi
-    done
-    for i in $files ; do mv ${i%.gz}.gz $C ; done
-    for i in $files ; do mv $C/${i%.gz}.gz . ; done
-  ) fi
-}
-
-gzip_one() {
-  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
-}
-
-compress() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
-  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
-  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
-  gzip_dir $infodir
-  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
-}
-
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'\n'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
-}
-
-fscheck
-W=`pwd`
-for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
-done
-P=$W/work ; C=$W/pivot
-infodir=$P/usr/share/info
-mandir=$P/usr/share/man
-docdir=$P/usr/share/doc
-myname=`basename $0`
-pkg=$pkgbase-$vers-$arch-$build
-case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
 if [ $# -eq 0 ] ; then
-  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
@@ -184,152 +36,65 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $url ; do
-    case ${i##*.} in
-    tar) tar xvpf ${i##*/} ;;
-    gz) tar xvpzf ${i##*/} ;;
-    bz2) tar xvpjf ${i##*/} ;;
-    esac
-  done
+  download_sources
 fi
+
 if [ $opt_config -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
-  done
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
   cd $B
-  cp -p extra/crond.rc{,.orig}
-  cat <<- "EOF" | patch extra/crond.rc
-	3,5c3,5
-	< . /etc/rc.conf
-	< . /etc/rc.d/functions
-	< . /etc/conf.d/crond
-	---
-	> #. /etc/rc.conf
-	> #. /etc/rc.d/functions
-	> #. /etc/conf.d/crond
-	10c10
-	< 	stat_busy "Starting Cron Daemon"
-	---
-	> 	echo "Starting Cron Daemon"
-	15c15
-	< 	if [[ -z $PID ]] && env -i PATH="/sbin:/usr/sbin:/bin:/usr/bin" /usr/sbin/crond $CROND_ARGS; then
-	---
-	> 	if [[ -z $PID ]] && env -i PATH="/sbin:/usr/sbin:/bin:/usr/bin" /usr/sbin/crond -S -l info; then
-	19,20c19
-	< 		add_daemon crond
-	< 		stat_done
-	---
-	> 		echo "crond started"
-	22c21
-	< 		stat_fail
-	---
-	> 		echo "crond failed to start"
-	28c27
-	< 	stat_busy "Stopping Cron Daemon"
-	---
-	> 	echo "Stopping Cron Daemon"
-	30,31c29,30
-	< 		rm_daemon crond
-	< 		stat_done
-	---
-	> 		rm -f /var/run/crond.pid
-	> 		echo "crond stopped"
-	33c32
-	< 		stat_fail
-	---
-	> 		echo "crond failed to stop"
-	EOF
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      make clean
-    fi
-    if [ -f config.log ] ; then
-      rm -rf config.cache config.log
-    fi
-    if [ -x configure ] ; then
-      ./configure --prefix=/usr --libdir='${exec_prefix}'/$libdir \
-          --infodir='${prefix}'/share/info \
-          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
   done
+
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 fi
+    
 if [ $opt_build -eq 1 ] ; then
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      make PREFIX=/usr
-    fi
-  done
-fi
-if [ $opt_package -eq 1 ] ; then
-  if [ `id -u` -ne 0 ] ; then
-    read -p "Do you want to package as root? [y/N] " ans
-    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
-      cd $W ; /bin/su -c "$0 package" ; exit
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make PREFIX=/usr
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
   fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
-  touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f Makefile ] ; then
-      make -i install DESTDIR=$P
-    fi
-  done
-  install extra/run-cron $P/usr/sbin
-  install extra/prune-cronstamps $P/etc/cron.d
-  install -m 600 extra/root.crontab $P/var/spool/cron/crontabs/root
-  cat <<- "EOF" > $P/var/spool/cron/crontabs/nobody
-	# This updates the database for 'locate' every day:
-	40 4 * * * updatedb 1> /dev/null 2> /dev/null
-	EOF
-  chmod 600 $P/var/spool/cron/crontabs/nobody
-  chown nobody.nogroup $P/var/spool/cron/crontabs/nobody
-  install -d $P/etc/cron.{hourly,daily,weekly,monthly}
-  cat <<- "EOF" >> $P/etc/cron.daily/logrotate
-	logrotate /etc/logrotate.conf
-	EOF
-  chmod 755 $P/etc/cron.daily/logrotate
-  install -d $P/etc/rc.d/init.d
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -Dm755 -v extra/run-cron $P/usr/sbin/run-cron
+  install -Dm755 -v extra/prune-cronstamps $P/etc/cron.d/prune-cronstamps
+  install -Dm600 -v extra/root.crontab $P/var/spool/cron/crontabs/root
+  install -d -v $P/etc/cron.{hourly,daily,weekly,monthly}
+  install -d -v $P/etc/rc.d/init.d
   install -m 744 extra/crond.rc $P/etc/rc.d/init.d/crond
-  touch $W/i.et
-  cd $W
-  find $P ! -type l -newer i.st ! -newer i.et \
-      -exec touch -t `date '+%m%d0900'` {} \;
-  compress
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
-  done
-  convert
-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/sbin | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-  tar rvpf $pkg.tar -C $P etc/cron.{d,hourly,daily,weekly,monthly}
-  tar rvpf $pkg.tar -C $P etc/rc.d/init.d/crond
-  tar rvpf $pkg.tar -C $P var/spool/cron
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man8 | tail -n+2`
-  tar rvpf $pkg.tar -C $P usr/share/doc/$src
-  touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
-  mv $pkg.tar.xz $pkg.txz
-  read -p "Do you want to keep work files? [y/N] " ans
-  if [ "x$ans" != "xY" -a "x$ans" != "xy" ] ; then rm -rf $P $C i.[se]t ; fi
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
 fi
