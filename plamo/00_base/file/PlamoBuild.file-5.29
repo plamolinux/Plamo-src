@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='file'
-vers='5.28'
-url="ftp://ftp.astron.com/pub/file/file-5.28.tar.gz"
+vers='5.29'
+url="ftp://ftp.astron.com/pub/file/file-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
 src="file-${vers}"
