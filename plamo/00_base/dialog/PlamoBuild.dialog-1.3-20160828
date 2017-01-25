@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-pkgbase='dialog_1.3'
-vers='20160828'
-url="ftp://invisible-island.net/dialog/dialog-1.3-${vers}.tgz"
+pkgbase='dialog'
+vers='1.3_20160828'
+url="ftp://invisible-island.net/dialog/dialog-${vers/_/-}.tgz"
 arch=`uname -m`
 build=P1
-src="dialog-1.3-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+src="dialog-${vers/_/-}"
+OPT_CONFIG="--bindir=/bin --enable-nls --with-shared --with-ncursesw --enable-widec"
 DOCS='COPYING README dialog.lsm'
 patchfiles=''
 compress=txz
