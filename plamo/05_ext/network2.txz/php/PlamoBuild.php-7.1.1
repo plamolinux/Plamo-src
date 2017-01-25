@@ -1,13 +1,41 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=7.0.14
+vers=7.1.1
 url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
-OPT_CONFIG="--with-apxs2=/usr/bin/apxs --with-zlib --with-curl --with-gd --enable-gd-jis-conv --with-freetype-dir=/usr --with-jpeg-dir=/usr --enable-mbstring --enable-pdo --with-pdo-mysql=shared,/opt/mariadb --with-pdo-sqlite --with-config-file-path=$CONFDIR --enable-zip=shared --with-libzip --enable-ftp=shared --with-bz2=shared --with-db4=shared,/usr --with-gdbm=shared --enable-exif=shared --with-ldap=shared --enable-opcache=shared --enable-opcache-file --with-openssl=shared --enable-exif=shared --enable-calendar"
+OPT_CONFIG="
+	--with-apxs2=/usr/bin/apxs
+	--with-zlib
+	--with-curl=shared,/usr
+	--with-gd=shared,/usr
+	--enable-gd-jis-conv
+	--with-freetype-dir=/usr
+	--with-jpeg-dir=/usr
+	--enable-mbstring
+	--enable-mysqlnd=shared,/opt/mariadb
+	--with-mysqli=shared,mysqlnd
+	--enable-pdo
+	--with-pdo-mysql=shared,mysqlnd
+	--with-mysql-sock=$(/opt/mariadb/bin/mysql_config --socket 2>/dev/null)
+	--with-pdo-sqlite
+	--with-config-file-path=$CONFDIR
+	--enable-zip=shared
+	--with-libzip
+	--enable-ftp=shared
+	--with-bz2=shared
+	--with-db4=shared,/usr
+	--with-gdbm=shared
+	--enable-exif=shared
+	--with-ldap=shared
+	--enable-opcache=shared
+	--enable-opcache-file
+	--with-openssl=shared
+	--enable-exif=shared
+	--enable-calendar"
 if [ $arch == 'x86_64' ]; then
   OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
 fi
@@ -250,7 +278,7 @@ LoadModule php7_module        ${libdir}/httpd/modules/libphp7.so
 EOF
   mkdir -p $P/install
   cat <<EOF > $P/install/initpkg
-if [ ! -f $CONFDIR/extra/php5.conf ]; then
+if [ ! -f $CONFDIR/extra/php7.conf ]; then
   ( cd $CONFDIR ; cp extra.dist/php7.conf extra/php7.conf )
 fi
 if [ ! -f $CONFDIR/php.ini ]; then
