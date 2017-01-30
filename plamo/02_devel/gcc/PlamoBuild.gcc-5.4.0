@@ -1,0 +1,312 @@
+#!/bin/sh -x
+##############################################################
+url='http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-5.4.0/gcc-5.4.0.tar.bz2
+     http://isl.gforge.inria.fr/isl-0.16.tar.xz'
+pkgbase='gcc'
+vers='5.4.0'
+arch=`uname -m`
+build=P1
+src='gcc-5.4.0'
+
+if [ "$arch" = "x86_64" ]; then
+    OPT_CONFIG='--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --libexecdir=/usr/lib 
+   --enable-languages=c,c++,fortran,go,lto 
+   --enable-shared --enable-threads=posix --enable-libmpx --with-system-zlib --with-isl --enable-__cxa_atexit 
+   --disable-libunwind-exceptions  --disable-libstdcxx-pch --enable-clocale=gnu --enable-gnu-unique-object 
+   --enable-linker-build-id --enable-lto --enable-plugin --enable-install-libiberty --with-linker-hash-style=gnu 
+   --enable-gnu-indirect-function --disable-multilib --disable-werror  --enable-checking=release'
+
+else
+    OPT_CONFIG='--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --libexecdir=/usr/lib
+   --enable-languages=c,c++,fortran,go,lto
+   --enable-shared --enable-threads=posix --enable-libmpx --with-system-zlib --with-isl --enable-__cxa_atexit 
+   --disable-libunwind-exceptions  --disable-libstdcxx-pch --enable-clocale=gnu --enable-gnu-unique-object 
+   --enable-linker-build-id --enable-lto --enable-plugin --enable-install-libiberty --with-linker-hash-style=gnu 
+   --enable-gnu-indirect-function --disable-multilib --disable-werror  --enable-checking=release'
+fi
+DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
+# https://projects.archlinux.org/svntogit/packages.git/plain/trunk/Unlink-the-response-file.patch?h=packages/gcc
+patchfiles='Unlink-the-response-file.patch'
+compress=txz
+##############################################################'
+
+source /usr/share/plamobuild_functions.sh
+
+# 本来 WD=/tmp/build だけれど、仮想環境でビルドすると空き領域不足になる場合，
+# 実ディスクの上に作業領域を取る
+# WD=/home/kojima/Build
+# B=$WD
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    # Arch linux fixes
+    # https://projects.archlinux.org/svntogit/packages.git/plain/trunk/PKGBUILD?h=packages/gcc
+    #
+    _islver=0.16
+    pkgver=5.4.0
+    # link isl for in-tree build
+    if [ ! -L $W/$src/isl ]; then
+	pushd $W/$src
+	ln -sf ../isl-0.16 ./isl
+	popd
+    fi
+
+    # Do not run fixincludes
+    sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+    # Arch Linux installs x86_64 libraries /lib
+    [[ $arch == "x86_64" ]] && sed -i '/m64=/s/lib64/lib/' gcc/config/i386/t-linux64
+
+    echo ${pkgver} > gcc/BASE-VER
+    
+    # hack! - some configure tests for header files using "$CPP $CPPFLAGS"
+    sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" {libiberty,gcc}/configure
+
+    cd $B
+
+    # if [ -f $S/autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    # export CC="gcc -isystem /usr/include $target" 
+    # export CXX="g++ -isystem /usr/include $target "
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    # export CC="gcc -isystem /usr/include $target" 
+    # export CXX="g++ -isystem /usr/include $target "
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+  for i in cc1 cc1plus collect2 f951 lto1 ; do
+      strip $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/$i
+  done
+  strip -g $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/libgcc.a
+  # strip -g $P/usr/${libdir}/gcc/x86_64-unknown-linux-gnu/$vers/32/libgcc.a
+  for i in `find $P/usr/${libdir} -name "*.a"` ; do
+      strip -g $i
+  done
+
+  for i in `find $P/usr/${Libdir} -type f -a -name "*.a" `; do
+      strip -g $i
+  done
+  
+  cd $P
+  P2=$W/work2
+
+  if [ -d $P2 ]; then rm -rf $P2 ; fi
+  mkdir -p $P2
+  mv $P/* $P2/
+
+# for libgcc
+  echo "building libgcc"
+  pkgbase=libgcc
+  if [ -d $P ]; then rm -rf $P ; fi
+  pkg=$pkgbase-$vers-$arch-$build
+  mkdir -p $P/usr/${libdir}
+  for i in libgcc_s.so* libstdc++.so.6* ; do
+  cp -a $P2/usr/${libdir}/libgcc_s.so*  $P/usr/${libdir}
+  cp -a $P2/usr/${libdir}/libstdc++.so*  $P/usr/${libdir}
+      rm $P/usr/${libdir}/*gdb.py
+  done
+  convert_links
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# for GCC-core
+  echo "building gcc-core"
+  if [ -d $P ]; then rm -rf $P ; fi
+  pkgbase=gcc
+  pkg=$pkgbase-$vers-$arch-$build
+  mkdir -p $P/usr/bin $P/usr/${libdir}
+  for i in cpp cc gcc gccbug gcov gcov-tool ${arch}-pc-linux-gnu-gcc ${arch}-pc-linux-gnu-gcc-$vers ; do
+      mv $P2/usr/bin/$i $P/usr/bin
+  done
+  # wrappers for LTO. 
+  # need --enable-plugins at binutils configuration
+  for i in ar nm ranlib ; do
+      mv $P2/usr/bin/gcc-$i $P/usr/bin
+      mv $P2/usr/bin/${arch}-pc-linux-gnu-gcc-$i $P/usr/bin
+  done
+
+  mkdir -p $P/lib
+  ( cd $P/lib ; ln -sf ../usr/bin/cpp cpp )
+  mv $P2/usr/${libdir}/gcc $P/usr/${libdir}
+  mv $P2/usr/${libdir}/libgcc* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libgomp* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libmpx* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libssp* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libatomic* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libitm* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libcc1* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libcilkrts* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libasan* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libtsan* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/liblsan* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libubsan* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libvtv* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libiberty* $P/usr/${libdir}/
+
+  mkdir -p $P/usr/include
+  mv $P2/usr/include/libiberty $P/usr/include
+
+  mkdir -p $P/usr/share/{doc,info,man,locale}
+  mkdir -p $P/usr/share/man/man{1,7}
+  mkdir -p $P/usr/share/doc/gcc-$vers
+  mv $P2/usr/share/doc/gcc-$vers/* $P/usr/share/doc/gcc-$vers
+  for i in cpp cppinternals gcc gccinstall gccint libgomp libitm ; do
+      mv $P2/usr/share/info/$i.info $P/usr/share/info
+  done
+  mv $P2/usr/share/locale/* $P/usr/share/locale
+  for i in cpp gcc gcov ; do
+      mv $P2/usr/share/man/man1/$i.1.gz $P/usr/share/man/man1
+  done
+  for i in fsf-funding gfdl gpl ; do
+      mv $P2/usr/share/man/man7/$i.7.gz $P/usr/share/man/man7
+  done
+
+  convert_links
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+# for g++
+  echo "building gcc-g++"
+  popd
+  pkgbase=g++
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/include $P/usr/share
+  for i in c++ g++ ${arch}-pc-linux-gnu-c++ ${arch}-pc-linux-gnu-g++ ; do
+      mv $P2/usr/bin/$i $P/usr/bin
+  done
+  mkdir -p $P/usr/share/gdb/auto-load
+  mv $P2/usr/${libdir}/libstdc++.so.*-gdb.py $P/usr/share/gdb/auto-load
+  mv $P2/usr/${libdir}/libstdc++* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libsupc++* $P/usr/${libdir}/
+  mv $P2/usr/include/c++ $P/usr/include
+  mv $P2/usr/share/gcc-${vers} $P/usr/share/
+
+  mkdir -p $P/usr/share/man/man1
+  mv $P2/usr/share/man/man1/g++.1.gz $P/usr/share/man/man1
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+# for fortran
+  echo "building gcc-fortran"
+  popd
+  pkgbase=gfortran
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/share/man/man1 $P/usr/share/info
+  mv $P2/usr/bin/{gfortran,${arch}-pc-linux-gnu-gfortran} $P/usr/bin
+  mv $P2/usr/${libdir}/libgfortran* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libquadmath* $P/usr/${libdir}/
+  mv $P2/usr/share/info/gfortran.info $P/usr/share/info/
+  mv $P2/usr/share/info/libquadmath.info $P/usr/share/info/
+  mv $P2/usr/share/man/man1/gfortran.1.gz $P/usr/share/man/man1/
+
+  convert_links
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+
+# for GCC GO
+  echo "building gcc-go"
+  popd
+  pkgbase=gcc_go
+  pkg=$pkgbase-$vers-$arch-$build
+  if [ -d $P ]; then rm -rf $P ; fi
+  mkdir -p $P/usr/bin $P/usr/${libdir} $P/usr/share/man/man1 $P/usr/share/info
+  mv $P2/usr/bin/{gccgo,${arch}-pc-linux-gnu-gccgo} $P/usr/bin
+  mv $P2/usr/bin/{go,gofmt} $P/usr/bin
+  mv $P2/usr/${libdir}/libgo* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/libnetgo* $P/usr/${libdir}/
+  mv $P2/usr/${libdir}/go $P/usr/${libdir}/
+  mv $P2/usr/share/info/gccgo.info $P/usr/share/info/
+  for i in gccgo go gofmt ; do
+      mv $P2/usr/share/man/man1/$i.1.gz $P/usr/share/man/man1
+  done
+
+  convert_links
+  pushd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+
+fi
