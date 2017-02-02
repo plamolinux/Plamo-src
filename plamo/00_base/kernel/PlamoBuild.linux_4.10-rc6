@@ -1,0 +1,146 @@
+#!/bin/sh
+##############################################################
+pkgbase='kernel'
+vers='4.10.0_rc6'
+ar_vers="4.10-rc6"
+url="https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-${ar_vers}.tar.xz"
+arch=`uname -m`
+build=P1
+src="linux-${ar_vers}"
+OPT_CONFIG=""
+DOCS='COPYING MAINTAINERS README'
+patchfiles=''
+compress=txz
+
+aufs_repo="https://github.com/sfjro/aufs4-standalone.git"
+aufs_src=aufs4-standalone
+aufs_branch="aufs4.x-rcN"
+
+unicon_patch=vd_unicon-kernel-20161008-4.8.patch
+unicon_font=vd_unicon-kernel-fonts-20140614.patch.bz2
+
+overlayfs_patch=overlayfs-allow_unprivileged_mounts.patch
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $arch = "x86_64" ]; then
+  vers=${vers}_plamo64
+else
+  vers=${vers}_plamoSMP
+fi
+
+B=$S
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+
+  # aufs
+  if [ ! -d $aufs_src ]; then
+    git clone $aufs_repo
+  fi
+  cd $aufs_src
+  git checkout $aufs_branch
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi
+  tar xf ${url##*/}
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+
+  # aufs
+  patchfiles="aufs4-kbuild.patch aufs4-base.patch aufs4-mmap.patch aufs4-standalone.patch"
+  for p in $patchfiles
+  do
+    patch -Np1 -i $W/$aufs_src/$p
+  done
+  cp -av $W/$aufs_src/Documentation .
+  cp -av $W/$aufs_src/fs .
+  cp -av $W/$aufs_src/include/uapi/linux/aufs_type.h include/uapi/linux
+
+  # unicon
+  patch -Np1 -i $W/$unicon_patch
+  bunzip2 -c $W/$unicon_font | patch -Np1 -i -
+
+  # overlayfs
+  patch -Np1 -i $W/$overlayfs_patch
+
+  cp -v ../config-$arch .config
+
+  cp -p arch/x86/boot/install.sh{,.orig}
+  head -n-9 arch/x86/boot/install.sh.orig > arch/x86/boot/install.sh
+  sed -i '/INSTALLKERNEL/s@^@#@g' arch/x86/boot/install.sh
+  cat <<- "EOF" | patch arch/x86/boot/install.sh
+	48a49
+	> cp .config $4/config-$1
+	EOF
+  sed -i '/\(vmlinuz\|System.map\)$/s@$@-\$1@g' arch/x86/boot/install.sh
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  CCACHE=$(which ccache)
+  $CCACHE make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  install -d $P/boot
+  make install INSTALL_PATH=$P/boot
+  make modules_install INSTALL_MOD_PATH=$P
+ 
+  krel=${vers//_/-}
+  ln -s -v config-$krel $P/boot/config
+  ln -s -v vmlinuz-$krel $P/boot/vmlinuz
+  ln -s -v System.map-$krel $P/boot/System.map
+  rm -v $P/lib/modules/$krel/{source,build}
+  ln -s -v /usr/src/linux $P/lib/modules/$krel/source
+  ln -s -v /usr/src/linux $P/lib/modules/$krel/build
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+  pkg=kernel_headers-$vers-$arch-$build
+  cd $B
+  P=$W/work_headers
+  rm -rf $P && mkdir $P
+  make headers_install INSTALL_HDR_PATH=$P
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
