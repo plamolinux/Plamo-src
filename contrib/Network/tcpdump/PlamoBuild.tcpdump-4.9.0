@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-vers=4.7.3
+vers=4.9.0
 arch=`uname -m`
 url="http://www.tcpdump.org/release/tcpdump-${vers}.tar.gz"
 verify=$url.sig
