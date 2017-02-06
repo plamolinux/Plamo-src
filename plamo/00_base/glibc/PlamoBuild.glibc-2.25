@@ -1,21 +1,26 @@
 #!/bin/sh
 ##############################################################
-url='ftp://publicftp.p-knowledge.co.jp/gnu/glibc/glibc-2.23.tar.xz'
 pkgbase='glibc'
-vers='2.23'
+vers='2.25'
+url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 arch=`uname -m`
 build=P1
-src='glibc-2.23'
-if [ "$arch" = "x86_64" ]; then
-    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls'
-else
-    OPT_CONFIG='--enable-obsolete-rpc --disable-profile --enable-add-ons --enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls'
-fi
-DOCS='BUGS CONFORMANCE COPYING COPYING.LIB ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17 ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9 ChangeLog.old-ports ChangeLog.old-ports-aarch64 ChangeLog.old-ports-aix ChangeLog.old-ports-alpha ChangeLog.old-ports-am33 ChangeLog.old-ports-arm ChangeLog.old-ports-cris ChangeLog.old-ports-hppa ChangeLog.old-ports-ia64 ChangeLog.old-ports-linux-generic ChangeLog.old-ports-m68k ChangeLog.old-ports-microblaze ChangeLog.old-ports-mips ChangeLog.old-ports-powerpc ChangeLog.old-ports-tile INSTALL LICENSES NEWS PROJECTS README'
+src="glibc-${vers}"
+OPT_CONFIG="--enable-obsolete-rpc --disable-profile --enable-add-ons
+	--enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls
+	--build=${arch}-pc-linux --target=${arch}-pc-linux"
+DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
+	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
+	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
+	ChangeLog.old-ports ChangeLog.old-ports-aarch64 ChangeLog.old-ports-aix ChangeLog.old-ports-alpha ChangeLog.old-ports-am33
+	ChangeLog.old-ports-arm ChangeLog.old-ports-cris ChangeLog.old-ports-hppa ChangeLog.old-ports-ia64 ChangeLog.old-ports-linux-generic
+	ChangeLog.old-ports-m68k ChangeLog.old-ports-microblaze ChangeLog.old-ports-mips ChangeLog.old-ports-powerpc ChangeLog.old-ports-tile
+	INSTALL LICENSES NEWS PROJECTS README"
 
 # LFS's patch
-# http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.19-fhs-1.patch
-patchfiles='glibc-2.19-fhs-1.patch'
+# http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
+#patchfiles="glibc-${vers}-fhs-1.patch"
+patchfiles="glibc-2.24-fhs-1.patch"
 compress=txz
 ##############################################################
 
@@ -36,6 +41,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    wget http://www.linuxfromscratch.org/patches/lfs/development/glibc-${vers}-fhs-1.patch
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -45,7 +51,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
     cd $S
     for patch in $patchfiles ; do
-        if [ -f .${patch} ]; then
+        if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
             touch .${patch}
         fi
@@ -55,19 +61,17 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f $S/autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
 
     rm -f configparms
     if [ "$arch" = "x86_64" ]; then
-
 	echo "slibdir=/lib" >> configparms
 	echo "CFLAGS += -mtune=generic -O3 -pipe" >> configparms
     else
 	echo "CFLAGS += -march=i486 -mtune=native -O3 -pipe" >> configparms
     fi
 
-    $W/$src/configure --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --build="$arch"-pc-linux --target="$arch"-pc-linux ${OPT_CONFIG}
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --libexecdir=/usr/${libdir} ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -152,7 +156,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ "${arch}" == "x86_64" ]; then
       rm -rf $P/lib64
       mkdir -p $P/lib64
-      ( cd $P/lib64 ; ln ../lib/ld-2.23.so ld-linux-x86-64.so.2 )
+      ( cd $P/lib64 ; ln ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
 
       cat <<EOF > $P/etc/ld.so.conf.new
 /lib64

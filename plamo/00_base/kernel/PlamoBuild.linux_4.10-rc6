@@ -136,7 +136,7 @@ EOF
   cd $B
   P=$W/work_headers
   rm -rf $P && mkdir $P
-  make headers_install INSTALL_HDR_PATH=$P
+  make headers_install INSTALL_HDR_PATH=$P/usr
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
 y
