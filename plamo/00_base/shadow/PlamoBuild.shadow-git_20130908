@@ -6,10 +6,11 @@ url="https://github.com/shadow-maint/shadow.git
 pkgbase=shadow
 vers=git_20130908
 arch=`uname -m`
-build=P5
+build=P6
 src=$pkgbase
 OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
     --with-libcrack"
+patchfiles="CVE-2017-2616.patch"
 DOCS="COPYING ChangeLog NEWS README TODO"
 ######################################################################
 
@@ -209,6 +210,10 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
   cd $B
+  for patch in $patchfiles
+  do
+    patch -p1 < $W/$patch
+  done
   cp -p etc/pam.d/chfn etc/pam.d/chfn.orig
   cat <<- "EOF" | patch etc/pam.d/chfn
 	2a3
@@ -394,6 +399,11 @@ if [ $opt_package -eq 1 ] ; then
       done
     done
     if [ $i -eq 0 ] ; then
+      for patch in $patchfiles
+      do
+        install $W/$patch $docdir/$src/$patch
+        gzip_one $docdir/$src/$patch
+      done
       install $myname $docdir/$src
       touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
