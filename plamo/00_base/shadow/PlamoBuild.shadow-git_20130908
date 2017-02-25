@@ -12,6 +12,12 @@ OPT_CONFIG="--sysconfdir=/etc --enable-man --without-selinux
     --with-libcrack"
 patchfiles="CVE-2017-2616.patch"
 DOCS="COPYING ChangeLog NEWS README TODO"
+#
+# ビルド時以下が必要
+# plamo/05_ext/docbook.txz/libxslt
+# plamo/05_ext/docbook.txz/docbook_xml_4.1.2
+# plamo/05_ext/docbook.txz/docbook_xsl
+# plamo/05_ext/gnome_parts.txz/gnome_doc_utils
 ######################################################################
 
 fscheck() {
