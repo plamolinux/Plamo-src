@@ -1,16 +1,21 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers='4.2.1'
-url="http://pkg-shadow.alioth.debian.org/releases/shadow-${vers}.tar.xz"
+vers="4.4"
+url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack'
+OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='tweak_pamd.patch update_login_defs.patch'
+patchfiles='default-useradd.patch for-linux_pam_1.3.0.patch CVE-2017-2616.patch tweak_pamd.patch update_login_defs.patch'
 compress=txz
 ##############################################################
+# BuildRequirements:
+# plamo/05_ext/docbook.txz/libxslt
+# plamo/05_ext/docbook.txz/docbook_xml_4.1.2
+# plamo/05_ext/docbook.txz/docbook_xsl
+# plamo/05_ext/gnome_parts.txz/gnome_doc_utils
 
 source /usr/share/plamobuild_functions.sh
 
@@ -40,11 +45,11 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
+    cd $B
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
@@ -66,7 +71,6 @@ if [ $opt_config -eq 1 ] ; then
     # do not create mail spool when useradd
     sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
 
-    cd $B
     # if [ -f $S/autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
