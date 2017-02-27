@@ -6,9 +6,9 @@ url='http://ftp.gnu.org/gnu/gettext/gettext-0.19.7.tar.gz'
 verify=
 commitid=
 arch=`uname -m`
-build=P3
+build=P5
 src=gettext-${vers}
-OPT_CONFIG=''
+OPT_CONFIG='--with-included-libcroco --with-included-glib'
 DOCS="ChangeLog.0 DEPENDENCIES ChangeLog HACKING README INSTALL
     AUTHORS README.woe32 THANKS COPYING PACKAGING NEWS"
 patchfiles=''
