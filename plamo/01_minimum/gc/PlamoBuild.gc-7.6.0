@@ -6,7 +6,7 @@ url="http://www.hboehm.info/${pkgbase}/${pkgbase}_source/${pkgbase}-${vers}.tar.
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--enable-cplusplus --disable-static'
+OPT_CONFIG='--disable-static --enable-cplusplus'
 DOCS='AUTHORS ChangeLog README.QUICK README.md'
 patchfiles=''
 compress=txz
@@ -42,20 +42,24 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#   patch apply to source tree but make at out of source tree
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    if [ -f .${patch} ]; then
+    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
       touch .${patch}
     fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG[$i]} $S
-  
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -78,6 +82,14 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -D -v -m644 $S/doc/gc.man $P/usr/share/man/man3/gc_malloc.3
+  ln -sfv gc_malloc.3 $P/usr/share/man/man3/gc.3
+
+  # all files in /usr/share/gc is documents, so these are moved to docdir
+  install -d $P/usr/share/doc/$src
+  mv -v $P/usr/share/gc/* $P/usr/share/doc/$src/
+  rmdir -v $P/usr/share/gc/
 
 ################################
 #      install tweaks
