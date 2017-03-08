@@ -2,7 +2,7 @@
 export LANG=C
 ##############################################################
 pkgbase=nss
-vers=3.28.1
+vers=3.29.3
 url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_${vers//./_}_RTM/src/nss-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
@@ -10,7 +10,7 @@ src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS=''
 # http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.26-standalone-1.patch
-patchfiles='nss-3.28.1-standalone-1.patch'
+patchfiles='nss-3.29.2-standalone-1.patch'
 compress=txz
 ##############################################################
 
