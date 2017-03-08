@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase=sqlite
-vers=3.15.0
-url="http://sqlite.org/2016/sqlite-autoconf-3150000.tar.gz"
+vers=3.17.0
+url="http://sqlite.org/2017/sqlite-autoconf-3170000.tar.gz"
 arch=`uname -m`
-build=P2
-src=sqlite-autoconf-3150000
+build=P1
+src=sqlite-autoconf-3170000
 
 OPT_CONFIG='--disable-static'
 DOCS='INSTALL README'
