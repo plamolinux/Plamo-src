@@ -7,9 +7,10 @@ arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-libgcrypt --without-p11-kit --disable-static
-	--with-default-trust-store-file=/etc/ssl/cert/ca-bundle.crt"
+	--with-default-trust-store-file=/etc/ssl/cert/ca-bundle.crt
+        --with-included-unistring"
 DOCS='.clcopying ABOUT-NLS AUTHORS ChangeLog INSTALL INSTALL.md LICENSE NEWS README.md THANKS'
-patchfiles='CVE-2015-0282.patch CVE-2015-0294.patch cve-2014-0092.patch cve-2014-1959.patch cve-2014-3466.patch'
+patchfiles=""
 compress=txz
 ##############################################################
 
