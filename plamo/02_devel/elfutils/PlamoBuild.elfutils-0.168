@@ -6,7 +6,7 @@ url="https://sourceware.org/${pkgbase}/ftp/${vers}/${pkgbase}-${vers}.tar.bz2"
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--program-prefix="eu-"'
+OPT_CONFIG='--program-prefix=eu-'
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING-GPLV2 COPYING-LGPLV3 ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=""
 compress=txz
