@@ -1,8 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='binutils'
-vers='2.27'
+vers='2.28'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+verify=${url}.sig
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
@@ -11,6 +12,7 @@ DOCS='COPYING COPYING.LIB COPYING3 COPYING3.LIB ChangeLog MAINTAINERS README REA
 patchfiles=''
 compress=txz
 ##############################################################
+## build order: kernel_headers -> glibc -> binutils -> gcc -> binutils -> glibc
 
 source /usr/share/plamobuild_functions.sh
 
