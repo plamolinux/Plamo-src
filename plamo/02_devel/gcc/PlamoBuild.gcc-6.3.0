@@ -3,9 +3,10 @@
 pkgbase='gcc'
 vers='6.3.0'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.bz2"
+verify=${url}.sig
 islvers="0.16.1"
 arch=`uname -m`
-build=P1
+build=P2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--build=${arch}-pc-linux-gnu --host=${arch}-pc-linux-gnu
 	--libexecdir=/usr/lib --enable-languages=c,c++,fortran,go,lto
