@@ -168,15 +168,19 @@ download_sources() {
     else
       verify_specified_sig
     fi
-  done
-  for i in $url ; do
-    case ${i##*.} in
-      tar) tar xvpf ${i##*/} ;;
-      gz) tar xvpzf ${i##*/} ;;
-      bz2) tar xvpjf ${i##*/} ;;
-      *) tar xvf ${i##*/} ;;
-    esac
-  done
+    ;;
+  esac
+  case ${url##*/} in
+  *.tar*) tar xvf ${url##*/} ;;
+  *.zip) unzip ${url##*/} ;;
+  git)
+    ( cd $(basename ${url##*/} .git)
+      git checkout master
+      if [ -n "$commitid" ]; then
+        git checkout -b build $commitid
+      fi
+    ) ;;
+  esac
 }
 
 # obsolete
@@ -239,22 +243,13 @@ install_tweak() {
 
   # doc ファイルのインストールと圧縮
   cd $W
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  for doc in $DOCS ; do
+    install2 $S/$doc $docdir/$src/$doc
+    touch -r $S/$doc $docdir/$src/$doc
+    gzip_one $docdir/$src/$doc
   done
+  install $myname $docdir/$src
+  gzip_one $docdir/$src/$myname
 
   # パッチファイルのインストール
   for patch in $patchfiles ; do
@@ -275,15 +270,11 @@ install_tweak() {
 
 W=`pwd`
 WD=/tmp
-for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-    B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-    B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi
-done
-P=$W/work ; C=$W/pivot
+S=$W/$src
+B=$WD/build
+P=$W/work
+C=$W/pivot
+
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man
