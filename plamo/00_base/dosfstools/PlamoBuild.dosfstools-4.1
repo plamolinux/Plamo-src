@@ -3,11 +3,11 @@
 pkgbase='dosfstools'
 vers='4.1'
 url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.xz"
-verify=$url.sig
+verify=${url}.sig
 arch=`uname -m`
 build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-compat-symlinks --docdir=/usr/share/doc/$src"
+OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
@@ -37,18 +37,7 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  if [ ! -f ${url##*/} ]; then
-    wget $url
-  fi
-  if [ ! -f ${verify##*/} ]; then
-    wget $verify
-  fi
-  gpg2 --verify ${verify##*/}
-  if [ $? -ne 0 ]; then
-    echo "archive verify failed"
-    exit
-  fi
-  tar xvf ${url##*/}
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
