@@ -90,6 +90,65 @@ gzip_one() {
   gzip $1
 }
 
+verify_sig_auto() {
+  j=${url%.*}
+  for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+    if wget --spider $url.$sig ; then
+      wget $url.$sig
+      break
+    fi
+    if wget --spider $j.$sig ; then
+      case ${url##*.} in
+        gz) gunzip -c ${url##*/} > ${j##*/} ;;
+        bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
+        xz) unxz -c ${url##*/} > ${j##*/} ;;
+      esac
+      touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
+    fi
+  done
+  if [ -f ${url##*/}.$sig ] ; then
+    case $sig in
+      asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
+      sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
+      *) $sig -c ${url##*/}.$sig ;;
+    esac
+    if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+  fi
+}
+
+verify_specified_sig() {
+  # signature or digest file
+  sigfile=${verify##*/}
+  # suffix of $sigfile
+  sig_suffix=${sigfile##*.}
+  # verify target file
+  verified_file=$(basename $sigfile .${sig_suffix})
+  # downloaded file
+  source_file=${url##*/}
+  # compres type of source
+  compress_type=${source_file##*.}
+
+  if [ ! -f $sigfile ]; then
+    wget $verify
+  fi
+
+  if [ $source_file != $verified_file ]; then
+    case $compress_type in
+      gz) gunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
+      bz2) bunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
+      xz) unxz -c $source_file > $(basename $source_file .${compress_type}) ;;
+    esac
+  fi
+  case $sig_suffix in
+    asc|sig|sign) gpg2 --verify ${sigfile} ;;
+    sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
+    *) ${sig_suffix} -c ${sigfile};;
+  esac
+  if [ $? -ne 0 ]; then
+    echo "archive verify failed"
+    exit
+  fi
+}
 
 download_sources() {
   case ${url##*.} in
@@ -103,29 +162,11 @@ download_sources() {
   *)
     if [ ! -f ${url##*/} ] ; then
       wget $url
-      j=${url%.*}
-      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
-        if wget --spider $url.$sig ; then
-          wget $url.$sig
-          break
-        fi
-        if wget --spider $j.$sig ; then
-          case ${url##*.} in
-          gz) gunzip -c ${url##*/} > ${j##*/} ;;
-          bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
-          xz) unxz -c ${url##*/} > ${j##*/} ;;
-          esac
-          touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
-        fi
-      done
-      if [ -f ${url##*/}.$sig ] ; then
-        case $sig in
-        asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
-        sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
-        *) $sig -c ${url##*/}.$sig ;;
-        esac
-        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-      fi
+    fi
+    if [ -z "$verify" ] ; then
+      verify_sig_auto
+    else
+      verify_specified_sig
     fi
     ;;
   esac
@@ -142,6 +183,7 @@ download_sources() {
   esac
 }
 
+# obsolete
 verify_checksum() {
   echo "Verify Checksum..."
   checksum_command=$1
