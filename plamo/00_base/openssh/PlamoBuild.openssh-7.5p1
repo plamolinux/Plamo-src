@@ -1,0 +1,356 @@
+#!/bin/sh
+
+######################################################################
+pkgbase=openssh
+vers=7.5p1
+url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
+arch=`uname -m`
+build=P1
+src=$pkgbase-$vers
+patchfiles=""
+OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
+    --with-privsep-path=/var/lib/sshd --with-md5-passwords"
+DOCS="CREDITS INSTALL LICENCE OVERVIEW PROTOCOL PROTOCOL.agent
+    `echo PROTOCOL.{certkeys,chacha20poly1305,key,krl,mux}`
+    README `echo README.{dns,platform,privsep,tun}` TODO ChangeLog"
+template=20161020
+tmplurl=ftp://plamo.linet.gr.jp/pub/Plamo-src/admin
+compress=txz
+######################################################################
+
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping -p $i"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
+}
+
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+fscheck
+W=`pwd`
+for i in `seq 0 $((${#src[@]} - 1))` ; do
+  S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+done
+P=$W/work ; C=$W/pivot
+infodir=$P/usr/share/info
+mandir=$P/usr/share/man
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg=$pkgbase-$vers-$arch-$build
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
+if [ $# -eq 0 ] ; then
+  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  for i in $url ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i ; j=${i%.*}
+      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+        if wget --spider $j.$sig ; then
+          case ${i##*.} in
+          gz) gunzip -c ${i##*/} > ${j##*/} ;;
+          bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
+          xz) unxz -c ${i##*/} > ${j##*/} ;;
+          esac
+          touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
+        fi
+      done
+      if [ -f ${i##*/}.$sig ] ; then
+        case $sig in
+        asc|sig|sign) gpg2 --verify ${i##*/}.$sig ;;
+        sha256|sha1|md5) ${sig}sum -c ${i##*/}.$sig ;;
+        *) $sig -c ${i##*/}.$sig ;;
+        esac
+        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+      fi
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
+    gz|tgz) tar xvpzf ${i##*/} ;;
+    bz2|tbz) tar xvpjf ${i##*/} ;;
+    xz|txz) tar xvpJf ${i##*/} ;;
+    esac
+  done
+fi
+if [ $opt_config -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+  done
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    for j in ${patchfiles[$i]} ; do
+      case ${j##*.} in
+      gz) gunzip -c $W/$j | patch -Np1 -i - ;;
+      bz2) bunzip2 -c $W/j | patch -Np1 -i - ;;
+      xz) unxz -c $W/$j | patch -Np1 -i - ;;
+      *) patch -Np1 -i $W/$j ;;
+      esac
+    done
+  done
+  cd $B
+  cp -p sshd_config{,.orig}
+  sed -i -e 's@^#\(UsePAM\) no$@\1 yes@g' \
+      -e 's@^#\(PermitUserEnvironment\) no$@\1 yes@g' sshd_config
+  if [ $arch == x86_64 ] ; then
+    cp -p contrib/sshd.pam.generic{,.orig}
+    sed -i 's@/lib@/lib64@' contrib/sshd.pam.generic
+  fi
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make clean
+    fi
+    if [ -f config.log ] ; then
+      rm -rf config.cache config.log
+    fi
+    if [ -x configure ] ; then
+      ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+          --libdir='${exec_prefix}'/$libdir --infodir='${prefix}'/share/info \
+          --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    fi
+  done
+fi
+if [ $opt_build -eq 1 ] ; then
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make
+    fi
+  done
+fi
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  for i in `seq 0 $((${#B[@]} - 1))` ; do
+    cd ${B[$i]}
+    if [ -f Makefile ] ; then
+      make install DESTDIR=$P
+    fi
+  done
+  ln -s ssh $P/usr/bin/slogin
+  ln -s ssh.1 $mandir/man1/slogin.1
+  chgrp sys $P/var/lib/sshd
+  mv $P/etc/ssh/ssh_config{,.new} ; mv $P/etc/ssh/sshd_config{,.new}
+  mv $P/etc/ssh/{ssh{,d}_config.new,moduli} $C
+  mv $C/{ssh{,d}_config.new,moduli} $P/etc/ssh
+  install -d $P/etc/pam.d
+  install -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  install contrib/ssh-copy-id $P/usr/bin
+  install -m 644 contrib/ssh-copy-id.1 $mandir/man1
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et \
+      -exec touch -t `date '+%m%d0900'` {} \;
+  compress
+  strip_bindir $P/usr/libexec
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      tmpl=${myname%%.*}-template-$template
+      if [ -f ../admin/$tmpl ] ; then
+        cp -p ../admin/$tmpl $docdir/$src
+      else
+        ( cd $docdir/$src
+            curl -Rs -o $tmpl $tmplurl/${tmpl/${myname%%.*}/PlamoBuild} )
+      fi
+      spec=${myname%%.*}-spec
+      ( cd $docdir/$src ; diff -u $tmpl $myname > $spec )
+      touch -t `date '+%m%d0900'` $docdir/$src/$spec
+      gzip $docdir/$src/{$myname,$spec}
+      rm $docdir/$src/$tmpl
+      mv $docdir/$src/{$myname,$spec}.gz $C
+      mv $C/{$myname,$spec}.gz $docdir/$src
+    else
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+      ln $docdir/$src/$spec.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+  convert
+  cat <<- "EOF" >> $P/install/doinst.sh
+	
+	ssh_config() {
+	  mv etc/ssh/${1}_config.new /tmp
+	  if [ -f etc/ssh/${1}_config ] ; then
+	    mv /tmp/${1}_config.new etc/ssh/${1}_config.dist
+	  else
+	    mv /tmp/${1}_config.new etc/ssh/${1}_config
+	  fi
+	}
+	
+	for i in ssh sshd ; do ssh_config $i ; done
+	EOF
+  touch -t `date '+%m%d0900'` $P/install/doinst.sh
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+fi
