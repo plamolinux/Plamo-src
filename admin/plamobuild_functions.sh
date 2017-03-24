@@ -1,95 +1,3 @@
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert_links() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
-}
-
-
-install2() {
-  install -d ${2%/*} ; install -m 644 $1 $2
-}
-
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-        echo "stripping $chk with -g "
-        strip -g $chk
-      else
-        echo "stripping $chk"
-        strip $chk
-      fi
-    fi
-  done
-}
-
-gzip_dir() {
-  echo "compressing in $1"
-  if [ -d $1 ] ; then (
-    cd $1
-    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
-    for i in $files ; do
-      echo "$i"
-      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
-      lnks=`ls -l $i | awk '{print $2}'`
-      if [ $lnks -gt 1 ] ; then
-        inum=`ls -i $i | awk '{print $1}'`
-        for j in `find . -maxdepth 1 -inum $inum` ; do
-          if [ ${j#./} == $i ] ; then
-            gzip -f $i
-          else
-            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
-          fi
-        done
-      elif [ -h $i ] ; then
-        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
-      else
-        gzip $i
-      fi
-    done
-  ) fi
-}
-
-gzip_one() {
-  gzip $1
-}
-
 verify_sig_auto() {
   j=${url%.*}
   for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
@@ -198,7 +106,6 @@ verify_checksum() {
   exit 0
 }
 
-
 check_root() {
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
@@ -208,20 +115,102 @@ check_root() {
   fi
 }
 
+install2() {
+  install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_all() {
+  for chk in `find . ` ; do
+    chk_elf=`file $chk | grep ELF`
+    if [ "$chk_elf.x" != ".x" ]; then
+      chk_lib=`echo $chk | grep lib`
+      if [ "$chk_lib.x" != ".x" ]; then
+        echo "stripping $chk with -g "
+        strip -g $chk
+      else
+        echo "stripping $chk"
+        strip $chk
+      fi
+    fi
+  done
+}
+
+gzip_dir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    cd $1
+    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
+    # files=`ls -a --indicator-style=none | tail -n+3`
+    for i in $files ; do
+      echo "$i"
+      if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
+      lnks=`ls -l $i | awk '{print $2}'`
+      if [ $lnks -gt 1 ] ; then
+        inum=`ls -i $i | awk '{print $1}'`
+        for j in `find . -maxdepth 1 -inum $inum` ; do
+          if [ ${j#./} == $i ] ; then
+            gzip -f $i
+          else
+            rm -f ${j#./} ; ln $i.gz ${j#./}.gz
+          fi
+        done
+      elif [ -h $i ] ; then
+        target=`readlink $i` ; rm -f $i ; ln -s $target.gz $i.gz
+      else
+        gzip $i
+      fi
+    done
+  ) fi
+}
+
+gzip_one() {
+  gzip $1
+}
+
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert_links() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
 # インストール後の各種調整
 install_tweak() {
   # バイナリファイルを strip
   cd $P
   strip_all
-
-  # dir ファイルの削除
-  if [ -d $infodir ]; then
-    rm -f $infodir/dir
-    for info in $infodir/*
-    do
-      gzip_one $info
-    done
-  fi
 
   # ja 以外のlocaleファイルを削除
   for loc_dir in `find $P/usr/share -type d -name locale` ; do
@@ -233,6 +222,15 @@ install_tweak() {
     done
     popd
   done
+
+  # dir ファイルの削除
+  if [ -d $infodir ]; then
+    rm -f $infodir/dir
+    for info in $infodir/*
+    do
+      gzip_one $info
+    done
+  fi
 
   #  man ページを圧縮
   if [ -d $P/usr/share/man ]; then
