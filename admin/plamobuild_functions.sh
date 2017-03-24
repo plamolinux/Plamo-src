@@ -1,115 +1,75 @@
-verify_sig_auto() {
-  j=${url%.*}
-  for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
-    if wget --spider $url.$sig ; then
-      wget $url.$sig
-      break
-    fi
-    if wget --spider $j.$sig ; then
-      case ${url##*.} in
-        gz) gunzip -c ${url##*/} > ${j##*/} ;;
-        bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
-        xz) unxz -c ${url##*/} > ${j##*/} ;;
+verify_signature() {
+  i=$1 ; j=${i%.*}
+  if [ -n "$2" ] ; then
+    sigfile=${2##*/}    # signature or digest file
+    sig=${2##*.}        # suffix of $sigfile
+    if [ "$sigfile" != "${i##*/}.$sig" ] ; then
+      case ${i##*.} in
+      gz) gunzip -c ${i##*/} > ${j##*/} ;;
+      bz2) bunzip -c ${i##*/} > ${j##*/} ;;
+      xz) unxz -c ${i##*/} > ${j##*/} ;;
       esac
-      touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
+      touch -r ${i##*/} ${j##*/}
     fi
-  done
-  if [ -f ${url##*/}.$sig ] ; then
+    wget $2
+  else
+    for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+      if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
+      if wget --spider $j.$sig ; then
+        case ${i##*.} in
+        gz) gunzip -c ${i##*/} > ${j##*/} ;;
+        bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
+        xz) unxz -c ${i##*/} > ${j##*/} ;;
+        esac
+        touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
+      fi
+    done
+    sigfile=${i##*/}.$sig
+  fi
+  if [ -f $sigfile ] ; then
     case $sig in
-      asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
-      sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
-      *) $sig -c ${url##*/}.$sig ;;
+    asc|sig|sign) gpg2 --verify $sigfile ;;
+    sha256|sha1|md5) ${sig}sum -c $sigfile ;;
+    *) $sig -c $sigfile ;;
     esac
     if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
   fi
 }
 
-verify_specified_sig() {
-  # signature or digest file
-  sigfile=${verify##*/}
-  # suffix of $sigfile
-  sig_suffix=${sigfile##*.}
-  # verify target file
-  verified_file=$(basename $sigfile .${sig_suffix})
-  # downloaded file
-  source_file=${url##*/}
-  # compres type of source
-  compress_type=${source_file##*.}
-
-  if [ ! -f $sigfile ]; then
-    wget $verify
-  fi
-
-  if [ $source_file != $verified_file ]; then
-    case $compress_type in
-      gz) gunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
-      bz2) bunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
-      xz) unxz -c $source_file > $(basename $source_file .${compress_type}) ;;
-    esac
-  fi
-  case $sig_suffix in
-    asc|sig|sign) gpg2 --verify ${sigfile} ;;
-    sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
-    *) ${sig_suffix} -c ${sigfile};;
-  esac
-  if [ $? -ne 0 ]; then
-    echo "archive verify failed"
-    exit
-  fi
-}
-
 download_sources() {
-  case ${url##*.} in
-  git)
-    if [ ! -d $(basename ${url##*/} .git) ] ; then
-      git clone $url
-    else
-      ( cd $(basename ${url##*/} .git) ; git pull origin master )
-    fi
-    ;;
-  *)
-    if [ ! -f ${url##*/} ] ; then
-      wget $url
-    fi
-    if [ -z "$verify" ] ; then
-      verify_sig_auto
-    else
-      verify_specified_sig
-    fi
-    ;;
-  esac
-  case ${url##*/} in
-  *.tar*) tar xvf ${url##*/} ;;
-  *.zip) unzip ${url##*/} ;;
-  git)
-    ( cd $(basename ${url##*/} .git)
-      git checkout master
-      if [ -n "$commitid" ]; then
-        git checkout -b build $commitid
-      fi
-    ) ;;
-  esac
-}
-
-# obsolete
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
-    fi
+  url=($url)
+  for i in `seq 0 $((${#url[@]} - 1))` ; do
+    j=${url[$i]}
+    case ${j##*.} in
+    git) if [ ! -d `basename ${j##*/} .git` ] ; then git clone $j ; else
+        ( cd `basename ${j##*/} .git` ; git pull origin master ) ; fi ;;
+    *) if [ ! -f ${j##*/} ] ; then wget $j
+        verify_signature $j ${verify[$i]} ; fi ;;
+    esac
   done
-  exit 0
+  if [ -f gitlog2changelog ] ; then
+    if [ ! -x gitlog2changelog ] ; then chmod +x gitlog2changelog ; fi
+    PATH=$W:$PATH
+  fi
+  for i in `seq 0 $((${#url[@]} - 1))` ; do
+    j=${url[$i]}
+    case ${j##*.} in
+    tar) tar xvpf ${j##*/} ;;
+    gz|tgz) tar xvpzf ${j##*/} ;;
+    bz2|tbz) tar xvpjf ${j##*/} ;;
+    xz|txz) tar xvpJf ${j##*/} ;;
+    zip) unzip ${j##*/} ;;
+    git) ( cd `basename ${j##*/} .git`
+        git checkout origin/master ; git reset --hard ${commitid[$i]:-HEAD}
+        git set-file-times ; TZ=UTC gitlog2changelog) ;;
+    esac
+  done
 }
 
 check_root() {
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
-    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+    if [ "$ans" == "Y" -o "$ans" == "y" ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
@@ -120,16 +80,14 @@ install2() {
 }
 
 strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-        echo "stripping $chk with -g "
-        strip -g $chk
+  for i in `find $P` ; do
+    if [ -n "`file $i | grep "ELF"`" ] ; then
+      if [ -z "`grep "$libdir" $i`" ] ; then
+        echo "stripping $i with -p"
+        strip -p $i
       else
-        echo "stripping $chk"
-        strip $chk
+        echo "stripping $i with -gp"
+        strip -gp $i
       fi
     fi
   done
@@ -139,8 +97,7 @@ gzip_dir() {
   echo "compressing in $1"
   if [ -d $1 ] ; then (
     cd $1
-    files=`ls -f --indicator-style=none | sed '/^\.\{1,2\}$/d'`
-    # files=`ls -a --indicator-style=none | tail -n+3`
+    files=`ls -f --ind=n | sed '/^\.\{1,2\}$/d'`
     for i in $files ; do
       echo "$i"
       if [ ! -f $i -a ! -h $i -o $i != ${i%.gz} ] ; then continue ; fi
@@ -160,11 +117,13 @@ gzip_dir() {
         gzip $i
       fi
     done
+    for i in $files ; do mv ${i%.gz}.gz $C ; done
+    for i in $files ; do mv $C/${i%.gz}.gz . ; done
   ) fi
 }
 
 gzip_one() {
-  gzip $1
+  gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
 prune_symlink() {
@@ -175,8 +134,7 @@ prune_symlink() {
     for i in `find ${1#$P/} -type l` ; do
       target=`readlink $i`
       echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
+      echo $i$'\n'$target >> /tmp/iNsT-a.$$
     done
     COUNT=1
     LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
@@ -200,92 +158,53 @@ prune_symlink() {
 
 convert_links() {
   for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
-# インストール後の各種調整
+# various adjustment after install
 install_tweak() {
-  # バイナリファイルを strip
-  cd $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  # strip binary files
   strip_all
-
-  # ja 以外のlocaleファイルを削除
-  for loc_dir in `find $P/usr/share -type d -name locale` ; do
-    pushd $loc_dir
-    for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
-    done
-    popd
-  done
-
-  # dir ファイルの削除
-  if [ -d $infodir ]; then
-    rm -f $infodir/dir
-    for info in $infodir/*
-    do
-      gzip_one $info
-    done
+  # remove locale files except ja
+  if [ -d $P/usr/share/locale ] ; then
+    find $P/usr/share/locale -maxdepth 1 \
+        ! -name "locale" ! -name "ja*" -exec rm -rf {} \;
   fi
-
-  #  man ページを圧縮
-  if [ -d $P/usr/share/man ]; then
-    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-      gzip_dir $mdir
-    done
+  # remove dir file in $infodir and compress info files
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  #  compress man pages
+  if [ -d $P/usr/share/man ] ; then
+    find $P/usr/share/man -name "man?" -exec gzip_dir {} \;
   fi
-
-  # doc ファイルのインストールと圧縮
-  cd $W
-  for doc in $DOCS ; do
-    install2 $S/$doc $docdir/$src/$doc
-    touch -r $S/$doc $docdir/$src/$doc
-    gzip_one $docdir/$src/$doc
+  # install and compress doc files
+  for i in $DOCS ; do
+    install2 $S/$i $docdir/$src/$i
+    touch -r $S/$i $docdir/$src/$i
+    gzip_one $docdir/$src/$i
   done
   install $myname $docdir/$src
   gzip_one $docdir/$src/$myname
-
-  # パッチファイルのインストール
-  for patch in $patchfiles ; do
-    cp $W/$patch $docdir/$src/$patch
-    gzip_one $docdir/$src/$patch
+  # install and compress patch files
+  for i in $patchfiles ; do
+    install2 $W/$i $docdir/$src/$i
+    touch -r $W/$i $docdir/$src/$i
+    gzip_one $docdir/$src/$i
   done
-
-  # /usr/share/doc 以下のowner.group設定
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-    chown -R root.root $P/usr/share/doc
-  fi
-
+  # set owner.group in /usr/share/doc
+  if [ `id -u` -eq 0 ] ; then chown -R root.root $P/usr/share/doc ; fi
 }
 
-#####
 # set working directories
-
-W=`pwd`
-WD=/tmp
-S=$W/$src
-B=$WD/build
-P=$W/work
-C=$W/pivot
-
+W=`pwd` ; WD=/tmp
+S=$W/$src ; B=$WD/build
+P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
-
-if [ $arch = "x86_64" ]; then
-  target="-m64"
-  libdir="lib"
-  suffix=""
-else
-  target="-m32"
-  libdir="lib"
-  suffix=""
-fi
+case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac

@@ -34,10 +34,10 @@ def get_readmes(srcdir):
             if i.find(j) >= 0:
                 match = True
                 break
-                
+
         if match == False:
             newlist.append(i)
-                
+
     return newlist
 
 def get_patchfiles(srcdir):
@@ -69,7 +69,7 @@ def get_config_type(srcdir):
         elif file == 'Makefile.PL' :
             type = 'perl'
             break
-        
+
     if type == 'none' :
         print("cannot find proper configure methods.")
         print("PlamoBuild script is setup for configure, but you should adjust build script manually")
@@ -88,12 +88,12 @@ def get_basename_and_version(srcdir):
         version = parts[-1]
 
     return (basename, version)
-    
+
 def make_headers(url, srcdir, pkgbase, vers, readme, patchfiles, method):
     readme.sort()
     docs = " ".join(readme)
     patchs = " ".join(patchfiles)
-    
+
     if method == 'config' :
         header = '''#!/bin/sh
 ##############################################################
@@ -175,13 +175,13 @@ if [ $opt_config -eq 1 ] ; then
   #   sh ./autogen.sh
   # fi
   export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
+  export LDFLAGS='-Wl,--as-needed'
   ./configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}
     '''.format(prefix)
         else:     # out of source build
             body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
@@ -198,14 +198,14 @@ if [ $opt_config -eq 1 ] ; then
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
+  export LDFLAGS='-Wl,--as-needed'
   $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
     '''.format(prefix)
 
     elif method == 'cmake' :      # cmake では out of the tree build がデフォルト
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B
 ######################################################################
 #   patch apply to source tree but make at out of source tree
 ######################################################################
@@ -218,7 +218,7 @@ if [ $opt_config -eq 1 ] ; then
   done
   cd $B
   export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
+  export LDFLAGS='-Wl,--as-needed'
   cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG[$i]}} $S
   '''.format(prefix)
 
@@ -297,17 +297,17 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-'''      
+'''
     body_02 = '''
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
@@ -338,7 +338,7 @@ def main():
         method = 'perl'
     else :
         method = get_config_type(params.srcdir)
-        
+
     # print method
     (basename, version) = get_basename_and_version(params.srcdir)
     # print basename, version
@@ -365,13 +365,13 @@ def main():
         ans = raw_input("OverWrite? [y/N]: ")
         if ans != 'y' and ans != 'Y' :
             sys.exit("not overwrited. exits")
-            
+
     with open(script_name, 'w') as file:
         file.write(script)
 
     os.chmod(script_name, 0755)
 
-    
+
 if __name__ == "__main__":
     main()
 
