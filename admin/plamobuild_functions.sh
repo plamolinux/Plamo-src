@@ -1,3 +1,59 @@
+fscheck() {
+  PANGRAM="The quick brown fox jumps over the lazy dog."
+  echo -n "Checking for the filesystem ... "
+  mkdir pangram ; ( cd pangram ; touch $PANGRAM )
+  mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
+  tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
+  for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
+  tar cpf pangram.tar pangram
+  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
+  if cmp -s pangram1.tgz pangram2.tgz ; then
+    echo "OK"
+    rm -rf pangram pangram1.tgz pangram2.tgz
+  else
+    echo "NG"
+    cat <<- "EOF"
+	Hmm, packaging may not be done properly on this filesystem.
+	Would you please try again on a default filesystem, thanks!
+	
+	Happy packaging!!
+	
+	Quitting...
+	EOF
+    exit
+  fi
+}
+
+prepare() {
+  W=`pwd`
+  for i in `seq 0 $((${#src[@]} - 1))` ; do
+    S[$i]=$W/${src[$i]} ; B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  done
+  P=$W/work ; C=$W/pivot
+  infodir=$P/usr/share/info
+  mandir=$P/usr/share/man
+  docdir=$P/usr/share/doc
+  myname=`basename $0`
+  pkg=$pkgbase-$vers-$arch-$build
+  case $arch in x86_64) libdir=lib64 ;; *) libdir=lib ;; esac
+  if [ $# -eq 0 ] ; then
+    opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  else
+    opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+    for i in $@ ; do
+      case $i in
+      download) opt_download=1 ;;
+      config) opt_config=1 ;;
+      build) opt_build=1 ;;
+      package) opt_package=1 ;;
+      esac
+    done
+  fi
+}
+
 verify_signature() {
   i=$1 ; j=${i%.*}
   if [ -n "$2" ] ; then
@@ -66,7 +122,21 @@ download_sources() {
   done
 }
 
-check_root() {
+apply_patches() {
+  for i in `seq 0 $((${#B[@]} - 1))` ; do (
+    cd ${B[$i]}
+    for j in ${patchfiles[$i]} ; do
+      case ${j##*.} in
+      gz) gunzip -c $W/$j | patch -Np1 -i - ;;
+      bz2) bunzip2 -c $W/$j | patch -Np1 -i - ;;
+      xz) unxz -c $W/$j | patch -Np1 -i - ;;
+      *) patch -Np1 -i $W/$j ;;
+      esac
+    done
+  ) done
+}
+
+root_priv() {
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
     if [ "$ans" == "Y" -o "$ans" == "y" ] ; then
@@ -75,8 +145,46 @@ check_root() {
   fi
 }
 
+alias check_root=root_priv
+
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
+}
+
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then
+         echo "stripping $i with -p"
+         strip -p $i
+      fi
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping $i with -gp"
+        strip -gp $i
+      fi
+    done
+  ) fi
 }
 
 strip_all() {
@@ -126,6 +234,56 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
+compress() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr}/$libdir ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+}
+
+setup_docdir() {
+  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
+    for j in ${DOCS[$i]} ; do
+      for k in ${S[$i]}/$j ; do
+        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
+        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
+      done
+    done
+    if [ $i -eq 0 ] ; then
+      func=${myname%%.*}_functions
+      if [ -f functions ] ; then
+        install -m 644 functions $docdir/$src/$func
+        touch -t `date '+%m%d0900'` $docdir/$src/$func
+      else
+        cp -p /usr/share/plamo/functions $docdir/$src/$func
+      fi
+      install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      tmpl=${myname%%.*}-template-$template
+      if [ -f ../admin/$tmpl ] ; then
+        cp -p ../admin/$tmpl $docdir/$src
+      else
+        ( cd $docdir/$src
+            curl -Rs -o $tmpl $tmplurl/${tmpl/${myname%%.*}/PlamoBuild} )
+      fi
+      spec=$myname-spec
+      ( cd $docdir/$src ; diff -u $tmpl $myname > $spec )
+      touch -t `date '+%m%d0900'` $docdir/$src/$spec
+      rm $docdir/$src/$tmpl
+      gzip $docdir/$src/{$func,$myname,$spec}
+      mv $docdir/$src/{$func,$myname,$spec}.gz $C
+      mv $C/{$func,$myname,$spec}.gz $docdir/$src
+    else
+      ln $docdir/$src/$func.gz $docdir/${src[$i]}
+      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
+      ln $docdir/$src/$spec.gz $docdir/${src[$i]}
+    fi
+    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  done
+}
+
 prune_symlink() {
   echo "pruning symlink in $1"
   if [ -d $1 ] ; then (
@@ -161,6 +319,11 @@ convert_links() {
   for i in {$P,$P/usr}/$libdir ; do prune_symlink $i ; done
   prune_symlink $infodir
   for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+}
+
+cleanup() {
+  read -p "Do you want to keep work files? [y/N] " ans
+  if [ "$ans" != "Y" -a "$ans" != "y" ] ; then rm -rf $P $C i.[se]t ; fi
 }
 
 # various adjustment after install
