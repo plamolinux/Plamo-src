@@ -1,20 +1,16 @@
-#!/bin/sh
+#!/bin/sh 
 ##############################################################
-pkgbase=openssh
-vers=7.4p1
-url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
+pkgbase=lxc
+vers=2.0.7
+url="https://linuxcontainers.org/downloads/lxc/lxc-${vers}.tar.gz"
+verify=$url.asc
 commitid=
 arch=`uname -m`
 build=P1
-src=openssh-${vers}
-OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
-    --with-privsep-path=/var/lib/sshd --with-md5-passwords"
-DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
-    README README.dns README.platform README.privsep README.tun
-    PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
-    PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
-    TODO"
-patchfiles=''
+src=lxc-${vers}
+OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
+DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
+patchfiles="CVE-2017-5985.patch"
 compress=txz
 ##############################################################
 
@@ -74,8 +70,22 @@ gzip_one() {
 
 compress_all() {
   cd $P
-  strip_all
+  #strip_all
 }  
+
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
 
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
@@ -130,20 +140,27 @@ if [ $opt_download -eq 1 ] ; then
     *)
       if [ ! -f ${i##*/} ] ; then
         wget $i
-        for sig in asc sig{,n} {md5,sha{1,256}}{,sum} ; do
-          if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-        done
-        if [ -f ${i##*/}.$sig ] ; then
-          case $sig in
-          asc|sig) gpg2 --verify ${i##*/}.$sig ;;
-          md5|sha1|sha256) ${sig}sum -c ${i##*/}.$sig ;;
-          *) $sig -c ${i##*/}.$sig ;;
-          esac
-          if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-        fi
       fi
       ;;
     esac
+  done
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
   done
   for i in $url ; do
     case ${i##*.} in
@@ -165,8 +182,8 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
 ######################################################################
-# * ./configure ¤ò¹Ô¤¦Á°¤ËÅ¬ÍÑ¤·¤¿¤¤ÀßÄê¤ä¥Ñ¥Ã¥Á¤Ê¤É¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Ş¤¹¡£
+# * ./configure ã‚’è¡Œã†å‰ã«é©ç”¨ã—ãŸã„è¨­å®šã‚„ãƒ‘ãƒƒãƒãªã©ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«
+#   è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
@@ -174,25 +191,15 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-
-    # tweak sshd_config
-    sed -i -e "s/#PermitUserEnvironment no/PermitUserEnvironment yes/" \
-        -e "s/#UsePAM no/UsePAM yes/" sshd_config
-
-    # replace lib to lib64 when arch is x86_64
-    if [ $arch == "x86_64" ]; then
-      sed -i 's@/lib/@/lib64/@' contrib/sshd.pam.generic
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
 
     if [ -x configure ] ; then
       export LDFLAGS='-Wl,--as-needed' 
-      export CFLAGS="-isystem /usr/include $target"
-      export CPPFLAGS="-isystem /usr/include $target"
-      ./configure --prefix=/usr --libdir=/usr/${libdir} \
-                  --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      export CFLAGS="-isystem /usr/include $target" 
+      export CPPFLAGS="-isystem /usr/include $target "
+      ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     fi
     if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
@@ -225,6 +232,9 @@ if [ $opt_package -eq 1 ] ; then
   touch $W/i.st ; sleep 1
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
+    for mk in `find . -name "[Mm]akefile" ` ; do
+      sed -i -e 's|GCONFTOOL = /usr/bin/gconftool-2|GCONFTOOL = echo|' $mk
+    done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
@@ -234,53 +244,51 @@ if [ $opt_package -eq 1 ] ; then
       exit 255
     fi
   done
+
+  # install the script for mouting cgroupfs
+  install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
+  ( cd $P/etc/rc.d/init.d ; mv lxc zzz_lxc )
+  ( cd $P/etc/rc.d/init.d ; mv lxc-net zz_lxc-net )
+
+  # sysconfig
+  echo '#USE_LXC_BRIDGE="true"' > $P/etc/sysconfig/lxc-net
+
+  # convert manual to EUC-JP
+  sed -i "s@\(/usr/share/doc/\)lxc@\1$src@g" \
+      $mandir/{,ja/}man5/lxc.container.conf.5 $mandir/{,ja/}man7/lxc.7
+  re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
+  dt=`echo $(LANG=C date '+%a %b %e 09:00:00 %Z %G')`
+  find $mandir -type f -exec sed -i "/^\.TH/s@$re@$dt@g" {} \;
+  install -d $mandir/ja_JP.eucJP/man{1,5,7}
+  for i in `cd $mandir/ja ; find . -type f` ; do
+    nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
+  done
+  find $mandir/ja_JP.eucJP -type f -exec sed -i "s@UTF-8@EUC-JP@g" {} \;
+
+  # install API docs
+  install -d $docdir/$src
+  cp -a doc/api $docdir/$src/api
+
+  # README.plamo
+  install -m 644 $W/README.plamo $docdir/$src
+
+  # 
+  mv $docdir/lxc/examples $docdir/$src
+  rmdir $docdir/lxc
+
 ######################################################################
-# * make install ¤Ç¥³¥Ô¡¼¤µ¤ì¤Ê¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Ş¤¹¡£
+# * make install ã§ã‚³ãƒ”ãƒ¼ã•ã‚Œãªã„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
-
-  # slogin -> ssh
-  ln -s ssh $P/usr/bin/slogin
-  ln -s ssh.1 $mandir/man1/slogin.1
-
-  # owner of /var/lib/sshd is root:sys
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-    chown root:sys $P/var/lib/sshd
-  fi
-
-  mv $P/etc/ssh/ssh_config{,.dist}
-  mv $P/etc/ssh/sshd_config{,.dist}
-
-  install -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
-  install -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
-  install -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
-
   mkdir -p $P/install
-  cat <<- "EOF" >> $P/install/initpkg
-	if [ ! -f /etc/ssh/sshd_config ]; then
-	  cd /etc/ssh ; cp sshd_config.dist sshd_config
-	fi
-	if [ ! -f /etc/ssh/ssh_config ]; then
-	  cd /etc/ssh ; cp ssh_config.dist ssh_config
-	fi
-	EOF
-
+  cat <<EOF >> $P/install/initpkg
+if [ ! -d /var/lib/misc ]; then
+  mkdir -p /var/lib/misc
+fi
+EOF
   mkdir -p $docdir/$src
 
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-    pushd $loc_dir
-    for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
-    done
-    popd
-  done      
-
 ######################################################################
-# path ¤Ë lib ¤¬¤¢¤ë¥Ğ¥¤¥Ê¥ê¤Ï strip -g, ¤Ê¤¤¥Ğ¥¤¥Ê¥ê¤Ï strip ¤¹¤ë
+# path ã« lib ãŒã‚ã‚‹ãƒã‚¤ãƒŠãƒªã¯ strip -g, ãªã„ãƒã‚¤ãƒŠãƒªã¯ strip ã™ã‚‹
 ######################################################################
   cd $P
   compress_all
@@ -290,9 +298,9 @@ if [ $opt_package -eq 1 ] ; then
     done
   fi
 ######################################################################
-# * compress ÂĞ¾İ°Ê³°¤Ç°µ½Ì¤·¤¿¤¤¥Ç¥£¥ì¥¯¥È¥ê¤ä¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³
-#   ¤Ëµ­½Ò¤·¤Ş¤¹(strip_{bin,lib}dir ¤ä gzip_{dir,one} ¤ò»È¤¤¤Ş¤¹)¡£
-# * Â¾¤Î¥¢¡¼¥«¥¤¥Ö¤«¤éÄÉ²Ã¤·¤¿¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Ş¤¹¡£
+# * compress å¯¾è±¡ä»¥å¤–ã§åœ§ç¸®ã—ãŸã„ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“
+#   ã«è¨˜è¿°ã—ã¾ã™(strip_{bin,lib}dir ã‚„ gzip_{dir,one} ã‚’ä½¿ã„ã¾ã™)ã€‚
+# * ä»–ã®ã‚¢ãƒ¼ã‚«ã‚¤ãƒ–ã‹ã‚‰è¿½åŠ ã—ãŸã„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
   cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
@@ -312,14 +320,15 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
+
   for patch in $patchfiles ; do
     cp $W/$patch $docdir/$src/$patch
     gzip_one $docdir/$src/$patch
   done
 
 ############################################################
-#   /usr/share/doc °Ê²¼¤Ë¤Ï°ìÈÌ¥æ¡¼¥¶¤ÎID¤Î¤Ş¤Ş¤Î¥Õ¥¡¥¤¥ë¤¬
-#   Ê¶¤ì¤³¤ß¤¬¤Á¤Ê¤Î¤Ç
+#   /usr/share/doc ä»¥ä¸‹ã«ã¯ä¸€èˆ¬ãƒ¦ãƒ¼ã‚¶ã®IDã®ã¾ã¾ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒ
+#   ç´›ã‚Œã“ã¿ãŒã¡ãªã®ã§
 ############################################################
 
   chk_me=`whoami | grep root`
@@ -328,10 +337,10 @@ if [ $opt_package -eq 1 ] ; then
   fi
 
 ######################################################################
-# * convert ÂĞ¾İ°Ê³°¤Ç´¢¤ê¼è¤ê¤¿¤¤¥·¥ó¥Ü¥ê¥Ã¥¯¥ê¥ó¥¯¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Ş¤¹(prune_symlink ¤ò»È¤¤¤Ş¤¹)¡£
-# * ´°À®¤·¤¿ºî¶È¥Ç¥£¥ì¥¯¥È¥ê¤«¤é tar ¥¤¥á¡¼¥¸¤òºîÀ®¤¹¤ë¼ê½ç¤ò°Ê¹ß¤Ëµ­½Ò
-#   ¤·¤Ş¤¹(¤³¤À¤ï¤ê¤òµá¤á¤Ê¤¤¤Ê¤éÃ±¤Ë makepkg ¤Ç¤âÎÉ¤¤¤Ç¤¹)¡£
+# * convert å¯¾è±¡ä»¥å¤–ã§åˆˆã‚Šå–ã‚ŠãŸã„ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«
+#   è¨˜è¿°ã—ã¾ã™(prune_symlink ã‚’ä½¿ã„ã¾ã™)ã€‚
+# * å®Œæˆã—ãŸä½œæ¥­ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‹ã‚‰ tar ã‚¤ãƒ¡ãƒ¼ã‚¸ã‚’ä½œæˆã™ã‚‹æ‰‹é †ã‚’ä»¥é™ã«è¨˜è¿°
+#   ã—ã¾ã™(ã“ã ã‚ã‚Šã‚’æ±‚ã‚ãªã„ãªã‚‰å˜ã« makepkg ã§ã‚‚è‰¯ã„ã§ã™)ã€‚
 ######################################################################
 # tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
 # tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
