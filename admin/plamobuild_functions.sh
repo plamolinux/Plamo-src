@@ -341,7 +341,7 @@ install_tweak() {
   gzip_dir $infodir
   #  compress man pages
   if [ -d $P/usr/share/man ] ; then
-    find $P/usr/share/man -name "man?" -exec gzip_dir {} \;
+    for i in `find $P/usr/share/man -name "man?"` ; do gzip_dir $i ; done
   fi
   # install and compress doc files
   for i in $DOCS ; do
