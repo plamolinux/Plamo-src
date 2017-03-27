@@ -1,0 +1,62 @@
+diff -uNr shadow-4.2.1.orig/etc/pam.d/chage shadow-4.2.1/etc/pam.d/chage
+--- shadow-4.2.1.orig/etc/pam.d/chage	2014-03-02 02:50:05.000000000 +0900
++++ shadow-4.2.1/etc/pam.d/chage	2016-07-19 19:08:56.981536267 +0900
+@@ -1,4 +1,5 @@
+ #%PAM-1.0
+ auth		sufficient	pam_rootok.so
++auth		include		system-auth
+ account		required	pam_permit.so
+ password	include		system-auth
+diff -uNr shadow-4.2.1.orig/etc/pam.d/chfn shadow-4.2.1/etc/pam.d/chfn
+--- shadow-4.2.1.orig/etc/pam.d/chfn	2014-03-02 02:50:05.000000000 +0900
++++ shadow-4.2.1/etc/pam.d/chfn	2016-07-19 19:04:01.327205535 +0900
+@@ -1,4 +1,5 @@
+ #%PAM-1.0
+ auth		sufficient	pam_rootok.so
++auth		include		system-auth	
+ account		required	pam_permit.so
+ password	include		system-auth
+diff -uNr shadow-4.2.1.orig/etc/pam.d/chsh shadow-4.2.1/etc/pam.d/chsh
+--- shadow-4.2.1.orig/etc/pam.d/chsh	2014-03-02 02:50:05.000000000 +0900
++++ shadow-4.2.1/etc/pam.d/chsh	2016-07-19 19:04:18.261359694 +0900
+@@ -1,4 +1,5 @@
+ #%PAM-1.0
+ auth		sufficient	pam_rootok.so
++auth		include		system-auth
+ account		required	pam_permit.so
+ password	include		system-auth
+diff -uNr shadow-4.2.1.orig/etc/pam.d/login shadow-4.2.1/etc/pam.d/login
+--- shadow-4.2.1.orig/etc/pam.d/login	2014-03-02 02:50:05.000000000 +0900
++++ shadow-4.2.1/etc/pam.d/login	2016-07-19 19:06:58.372453836 +0900
+@@ -4,8 +4,10 @@
+ account		required	pam_nologin.so
+ account		include		system-auth
+ password	include		system-auth
+-session		required	pam_selinux.so close
++#session		required	pam_selinux.so close
+ session		include		system-auth
+ session		required	pam_loginuid.so
+-session		optional	pam_console.so
+-session		required	pam_selinux.so open
++session		optional	pam_unix.so
++#session		required	pam_selinux.so open
++session		required	pam_lastlog.so
++session		optional	pam_ck_connector.so nox11
+diff -uNr shadow-4.2.1.orig/etc/pam.d/su shadow-4.2.1/etc/pam.d/su
+--- shadow-4.2.1.orig/etc/pam.d/su	2014-03-02 02:50:05.000000000 +0900
++++ shadow-4.2.1/etc/pam.d/su	2016-07-19 19:07:33.370816912 +0900
+@@ -3,11 +3,11 @@
+ # Uncomment the following line to implicitly trust users in the "wheel" group.
+ #auth		sufficient	pam_wheel.so trust use_uid
+ # Uncomment the following line to require a user to be in the "wheel" group.
+-auth		required	pam_wheel.so use_uid
++#auth		required	pam_wheel.so use_uid
+ auth		include		system-auth
+ account		include		system-auth
+ password	include		system-auth
+-session		required	pam_selinux.so close
++#session		required	pam_selinux.so close
+ session		include		system-auth
+-session		required	pam_selinux.so open multiple
++#session		required	pam_selinux.so open multiple
+ session		optional	pam_xauth.so
