@@ -3,8 +3,9 @@
 pkgbase='eudev'
 vers='3.2.1'
 url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
 	--with-rootprefix= --with-rootlibdir=/lib
