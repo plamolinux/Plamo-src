@@ -90,42 +90,100 @@ gzip_one() {
   gzip $1
 }
 
-
-download_sources() {
-  for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i ; j=${i%.*}
-      for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
-        if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
-        if wget --spider $j.$sig ; then
-          case ${i##*.} in
-          gz) gunzip -c ${i##*/} > ${j##*/} ;;
-          bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
-          xz) unxz -c ${i##*/} > ${j##*/} ;;
-          esac
-          touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
-        fi
-      done
-      if [ -f ${i##*/}.$sig ] ; then
-        case $sig in
-        asc|sig|sign) gpg2 --verify ${i##*/}.$sig ;;
-        sha256|sha1|md5) ${sig}sum -c ${i##*/}.$sig ;;
-        *) $sig -c ${i##*/}.$sig ;;
-        esac
-        if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
-      fi
+verify_sig_auto() {
+  j=${url%.*}
+  for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+    if wget --spider $url.$sig ; then
+      wget $url.$sig
+      break
+    fi
+    if wget --spider $j.$sig ; then
+      case ${url##*.} in
+        gz) gunzip -c ${url##*/} > ${j##*/} ;;
+        bz2) bunzip2 -c ${url##*/} > ${j##*/} ;;
+        xz) unxz -c ${url##*/} > ${j##*/} ;;
+      esac
+      touch -r ${url##*/} ${j##*/} ; url=$j ; wget $url.$sig ; break
     fi
   done
-  for i in $url ; do
-    case ${i##*.} in
-      tar) tar xvpf ${i##*/} ;;
-      gz) tar xvpzf ${i##*/} ;;
-      bz2) tar xvpjf ${i##*/} ;;
-      *) tar xvf ${i##*/} ;;
+  if [ -f ${url##*/}.$sig ] ; then
+    case $sig in
+      asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
+      sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
+      *) $sig -c ${url##*/}.$sig ;;
     esac
-  done
+    if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
+  fi
 }
 
+verify_specified_sig() {
+  # signature or digest file
+  sigfile=${verify##*/}
+  # suffix of $sigfile
+  sig_suffix=${sigfile##*.}
+  # verify target file
+  verified_file=$(basename $sigfile .${sig_suffix})
+  # downloaded file
+  source_file=${url##*/}
+  # compres type of source
+  compress_type=${source_file##*.}
+
+  if [ ! -f $sigfile ]; then
+    wget $verify
+  fi
+
+  if [ $source_file != $verified_file ]; then
+    case $compress_type in
+      gz) gunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
+      bz2) bunzip -c $source_file > $(basename $source_file .${compress_type}) ;;
+      xz) unxz -c $source_file > $(basename $source_file .${compress_type}) ;;
+    esac
+  fi
+  case $sig_suffix in
+    asc|sig|sign) gpg2 --verify ${sigfile} ;;
+    sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
+    *) ${sig_suffix} -c ${sigfile};;
+  esac
+  if [ $? -ne 0 ]; then
+    echo "archive verify failed"
+    exit
+  fi
+}
+
+download_sources() {
+  case ${url##*.} in
+  git)
+    if [ ! -d $(basename ${url##*/} .git) ] ; then
+      git clone $url
+    else
+      ( cd $(basename ${url##*/} .git) ; git pull origin master )
+    fi
+    ;;
+  *)
+    if [ ! -f ${url##*/} ] ; then
+      wget $url
+    fi
+    if [ -z "$verify" ] ; then
+      verify_sig_auto
+    else
+      verify_specified_sig
+    fi
+    ;;
+  esac
+  case ${url##*/} in
+  *.tar*) tar xvf ${url##*/} ;;
+  *.zip) unzip ${url##*/} ;;
+  git)
+    ( cd $(basename ${url##*/} .git)
+      git checkout master
+      if [ -n "$commitid" ]; then
+        git checkout -b build $commitid
+      fi
+    ) ;;
+  esac
+}
+
+# obsolete
 verify_checksum() {
   echo "Verify Checksum..."
   checksum_command=$1
@@ -185,22 +243,13 @@ install_tweak() {
 
   # doc ファイルのインストールと圧縮
   cd $W
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  for doc in $DOCS ; do
+    install2 $S/$doc $docdir/$src/$doc
+    touch -r $S/$doc $docdir/$src/$doc
+    gzip_one $docdir/$src/$doc
   done
+  install $myname $docdir/$src
+  gzip_one $docdir/$src/$myname
 
   # パッチファイルのインストール
   for patch in $patchfiles ; do
@@ -221,15 +270,11 @@ install_tweak() {
 
 W=`pwd`
 WD=/tmp
-for i in `seq 0 $((${#src[@]} - 1))` ; do
-  S[$i]=$W/${src[$i]} 
-  if [ $arch = "x86_64" ]; then
-    B[$i]=$WD/build`test ${#src[@]} -eq 1 || echo $i`
-  else
-    B[$i]=$WD/build32`test ${#src[@]} -eq 1 || echo $i`
-  fi
-done
-P=$W/work ; C=$W/pivot
+S=$W/$src
+B=$WD/build
+P=$W/work
+C=$W/pivot
+
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
 xmandir=$P/usr/X11R7/share/man

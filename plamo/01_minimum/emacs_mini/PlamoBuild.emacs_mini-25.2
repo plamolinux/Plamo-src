@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='bvi'
-vers='1.4.0'
-url="http://downloads.sourceforge.net/bvi/bvi-${vers}.src.tar.gz"
+pkgbase='emacs'
+vers='25.2'
+rc="_rc1"
+url="http://alpha.gnu.org/pub/gnu/${pkgbase}/pretest/${pkgbase}-${vers}${rc}.tar.xz"
 arch=`uname -m`
-build=P3
+build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=''
-DOCS='COPYING README'
-patchfiles=''
+OPT_CONFIG='--without-all --without-x'
+DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
+patchfiles='emacs-24.2-add_txz.patch'
 compress=txz
 ##############################################################
 
@@ -40,21 +41,25 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -90,10 +95,49 @@ if [ $opt_package -eq 1 ] ; then
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
-  convert_links
 
+  P2=$P
+
+  # emacs_mini
+  P=${P2}_mini
+  rm -rf ${P}
+  install -d -v $P/usr/bin
+  install -d -v $P/usr/share/doc
+  mv -v $P2/usr/bin/emacs-${vers} $P/usr/bin/emacs_mini-$vers
+  ln -s -v emacs_mini-${vers} $P/usr/bin/emacs_mini
+  mv -v $P2/usr/share/doc/$src $P/usr/share/doc/${pkgbase}_mini-$vers
+  convert_links
+  pushd $P
+  /sbin/makepkg ../${pkgbase}_mini-${vers}${rc}-$arch-$build.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # emacs_bin
+  P=${P2}_bin
+  rm -rf $P
+  install -d -v $P/usr
+  mv -v $P2/usr/bin $P/usr/bin
+  rm -v $P/usr/bin/emacs
+  mv -v $P2/usr/libexec $P/usr/libexec
+
+  pushd $P
+  /sbin/makepkg ../${pkgbase}_bin-${vers}${rc}-$arch-$build.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # emacs_lib
+  P=$P2
+  chk_me=$(whoami | grep root)
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root:root $P/usr/share/emacs/${vers}/etc
+      chown -R root:root $P/usr/share/emacs/${vers}/lisp
+  fi
   cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
+  /sbin/makepkg ../${pkgbase}_lib-${vers}${rc}-$arch-$build.$compress <<EOF
 y
 1
 EOF

@@ -1,0 +1,4200 @@
+diff -urNp linux-4.8/drivers/tty/vt/consolemap.c linux-4.8.UNICON/drivers/tty/vt/consolemap.c
+--- linux-4.8/drivers/tty/vt/consolemap.c	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/tty/vt/consolemap.c	2016-10-08 14:01:06.000000000 +0900
+@@ -23,7 +23,11 @@
+ #include <linux/consolemap.h>
+ #include <linux/vt_kern.h>
+ 
++#ifdef CONFIG_UNICON
++unsigned short translations[][256] = {
++#else
+ static unsigned short translations[][256] = {
++#endif
+   /* 8-bit Latin-1 mapped to Unicode -- trivial mapping */
+   {
+     0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
+diff -urNp linux-4.8/drivers/tty/vt/selection.c linux-4.8.UNICON/drivers/tty/vt/selection.c
+--- linux-4.8/drivers/tty/vt/selection.c	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/tty/vt/selection.c	2016-10-08 14:01:06.000000000 +0900
+@@ -216,6 +216,31 @@ int set_selection(const struct tiocl_sel
+ 	switch (sel_mode)
+ 	{
+ 		case TIOCL_SELCHAR:	/* character-by-character selection */
++#ifdef CONFIG_UNICON
++		{
++			unsigned char c;
++			int num = 0;
++			int ps1 = ps;
++
++			while(1)
++			{
++				c = sel_pos(ps1);
++			        if(!(c & 0x80))
++					break;
++
++				num++;
++				if (!(ps1 % vc->vc_size_row))
++					break;
++				ps1 -= 2;
++			}
++			if(num != 0)
++			{
++				if(num%2)
++					pe += 2;
++				else ps -= 2;
++			}
++		}
++#endif
+ 			new_sel_start = ps;
+ 			new_sel_end = pe;
+ 			break;
+@@ -224,7 +249,11 @@ int set_selection(const struct tiocl_sel
+ 			for (new_sel_start = ps; ; ps -= 2)
+ 			{
+ 				if ((spc && !isspace(sel_pos(ps))) ||
++#ifdef CONFIG_UNICON
++				(!spc && !inword(sel_pos(ps))&& !(sel_pos(ps)&0x80)))
++#else
+ 				    (!spc && !inword(sel_pos(ps))))
++#endif
+ 					break;
+ 				new_sel_start = ps;
+ 				if (!(ps % vc->vc_size_row))
+@@ -234,7 +263,12 @@ int set_selection(const struct tiocl_sel
+ 			for (new_sel_end = pe; ; pe += 2)
+ 			{
+ 				if ((spc && !isspace(sel_pos(pe))) ||
++#ifdef CONFIG_UNICON
++				(!spc && !inword(sel_pos(pe))&& !(sel_pos(pe) & 0x80)))
++#else
++
+ 				    (!spc && !inword(sel_pos(pe))))
++#endif
+ 					break;
+ 				new_sel_end = pe;
+ 				if (!((pe + 2) % vc->vc_size_row))
+diff -urNp linux-4.8/drivers/tty/vt/vt.c linux-4.8.UNICON/drivers/tty/vt/vt.c
+--- linux-4.8/drivers/tty/vt/vt.c	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/tty/vt/vt.c	2016-10-08 14:27:03.000000000 +0900
+@@ -100,6 +100,11 @@
+ #include <linux/device.h>
+ #include <linux/io.h>
+ #include <linux/uaccess.h>
++#include <linux/version.h>
++#ifdef CONFIG_UNICON
++#include <linux/fb_doublebyte.h>
++extern unsigned short translations[][256];
++#endif
+ #include <linux/kdb.h>
+ #include <linux/ctype.h>
+ 
+@@ -300,6 +305,21 @@ static inline unsigned short *screenpos(
+ 	return p;
+ }
+ 
++#ifdef CONFIG_UNICON
++static inline unsigned short *screenpos_ext(struct vc_data *vc, int offset, int viewed)
++{
++	unsigned short *p;
++
++	if (!viewed)
++		p = (unsigned short *)(vc->vc_origin + offset + vc->vc_screenbuf_size);
++	else if (!vc->vc_sw->con_screen_pos)
++		p = (unsigned short *)(vc->vc_visible_origin + offset + vc->vc_screenbuf_size);
++	else
++		p = vc->vc_sw->con_screen_pos(vc, -offset-1);
++	return p;
++}
++#endif
++
+ /* Called  from the keyboard irq path.. */
+ static inline void scrolldelta(int lines)
+ {
+@@ -330,6 +350,13 @@ static void scrup(struct vc_data *vc, un
+ 	scr_memmovew(d, s, (b - t - nr) * vc->vc_size_row);
+ 	scr_memsetw(d + (b - t - nr) * vc->vc_cols, vc->vc_video_erase_char,
+ 		    vc->vc_size_row * nr);
++#ifdef CONFIG_UNICON
++	d += (vc->vc_screenbuf_size>>1);
++	s += (vc->vc_screenbuf_size>>1);
++	scr_memmovew(d, s, (b - t - nr) * vc->vc_size_row);
++	scr_memsetw(d + (b - t - nr) * vc->vc_cols, (vc->vc_video_erase_char & 0xff),
++		    vc->vc_size_row * nr);
++#endif
+ }
+ 
+ static void scrdown(struct vc_data *vc, unsigned int t, unsigned int b, int nr)
+@@ -347,6 +374,11 @@ static void scrdown(struct vc_data *vc,
+ 	step = vc->vc_cols * nr;
+ 	scr_memmovew(s + step, s, (b - t - nr) * vc->vc_size_row);
+ 	scr_memsetw(s, vc->vc_video_erase_char, 2 * step);
++#ifdef CONFIG_UNICON
++	s += (vc->vc_screenbuf_size>>1);
++	scr_memmovew(s + step, s, (b - t - nr) * vc->vc_size_row);
++	scr_memsetw(s, (vc->vc_video_erase_char & 0xff), 2 * step);
++#endif
+ }
+ 
+ static void do_update_region(struct vc_data *vc, unsigned long start, int count)
+@@ -369,6 +401,10 @@ static void do_update_region(struct vc_d
+ 		int startx = xx;
+ 		u16 *q = p;
+ 		while (xx < vc->vc_cols && count) {
++#ifdef CONFIG_UNICON
++			//line by line, so the following putcs will be assured to
++			//handle only in-line string.
++#endif
+ 			if (attrib != (scr_readw(p) & 0xff00)) {
+ 				if (p > q)
+ 					vc->vc_sw->con_putcs(vc, q, p-q, yy, startx);
+@@ -506,16 +542,30 @@ void invert_screen(struct vc_data *vc, i
+ void complement_pos(struct vc_data *vc, int offset)
+ {
+ 	static int old_offset = -1;
++#ifdef CONFIG_UNICON
++	static unsigned short old = 0;
++	static unsigned short oldx = 0, oldy = 0;
++	static unsigned short *p_ext = NULL;
++	static unsigned short old_ext = 0;
++#else
+ 	static unsigned short old;
+ 	static unsigned short oldx, oldy;
++#endif
+ 
+ 	WARN_CONSOLE_UNLOCKED();
+ 
+ 	if (old_offset != -1 && old_offset >= 0 &&
+ 	    old_offset < vc->vc_screenbuf_size) {
+ 		scr_writew(old, screenpos(vc, old_offset, 1));
++#ifdef CONFIG_UNICON
++		//scr_writew(old_ext, screenpos_ext(vc, old_offset, 1));
++#endif
+ 		if (con_should_update(vc))
++#ifdef CONFIG_UNICON
++			vc->vc_sw->con_putc(vc, (old_ext<<16) | old, oldy, oldx);
++#else
+ 			vc->vc_sw->con_putc(vc, old, oldy, oldx);
++#endif
+ 		notify_update(vc);
+ 	}
+ 
+@@ -526,13 +576,23 @@ void complement_pos(struct vc_data *vc,
+ 		unsigned short new;
+ 		unsigned short *p;
+ 		p = screenpos(vc, offset, 1);
++#ifdef CONFIG_UNICON
++		p_ext = screenpos_ext(vc, offset, 1);
++#endif
+ 		old = scr_readw(p);
++#ifdef CONFIG_UNICON
++		old_ext = scr_readw(p_ext);
++#endif
+ 		new = old ^ vc->vc_complement_mask;
+ 		scr_writew(new, p);
+ 		if (con_should_update(vc)) {
+ 			oldx = (offset >> 1) % vc->vc_cols;
+ 			oldy = (offset >> 1) / vc->vc_cols;
++#ifdef CONFIG_UNICON
++			vc->vc_sw->con_putc(vc, (old_ext<<16) | new, oldy, oldx);
++#else
+ 			vc->vc_sw->con_putc(vc, new, oldy, oldx);
++#endif
+ 		}
+ 		notify_update(vc);
+ 	}
+@@ -544,6 +604,11 @@ static void insert_char(struct vc_data *
+ 
+ 	scr_memmovew(p + nr, p, (vc->vc_cols - vc->vc_x - nr) * 2);
+ 	scr_memsetw(p, vc->vc_video_erase_char, nr * 2);
++#ifdef CONFIG_UNICON
++	scr_memmovew(p + nr + (vc->vc_screenbuf_size>>1), p + (vc->vc_screenbuf_size>>1),
++			(vc->vc_cols - vc->vc_x - nr) * 2);
++	scr_memsetw(p + (vc->vc_screenbuf_size>>1), (vc->vc_video_erase_char & 0xff), nr * 2);
++#endif
+ 	vc->vc_need_wrap = 0;
+ 	if (con_should_update(vc))
+ 		do_update_region(vc, (unsigned long) p,
+@@ -555,8 +620,16 @@ static void delete_char(struct vc_data *
+ 	unsigned short *p = (unsigned short *) vc->vc_pos;
+ 
+ 	scr_memcpyw(p, p + nr, (vc->vc_cols - vc->vc_x - nr) * 2);
++#ifdef CONFIG_UNICON
++	scr_memcpyw(p + (vc->vc_screenbuf_size>>1), p + nr + (vc->vc_screenbuf_size>>1),
++			(vc->vc_cols - vc->vc_x - nr) * 2);
++#endif
+ 	scr_memsetw(p + vc->vc_cols - vc->vc_x - nr, vc->vc_video_erase_char,
+ 			nr * 2);
++#ifdef CONFIG_UNICON
++	scr_memsetw(p + vc->vc_cols - vc->vc_x - nr + (vc->vc_screenbuf_size>>1),
++			(vc->vc_video_erase_char & 0xff), nr * 2);
++#endif
+ 	vc->vc_need_wrap = 0;
+ 	if (con_should_update(vc))
+ 		do_update_region(vc, (unsigned long) p,
+@@ -579,7 +652,11 @@ static void add_softcursor(struct vc_dat
+ 	if ((type & 0x40) && ((i & 0x700) == ((i & 0x7000) >> 4))) i ^= 0x0700;
+ 	scr_writew(i, (u16 *) vc->vc_pos);
+ 	if (con_should_update(vc))
++#ifdef CONFIG_UNICON
++		vc->vc_sw->con_putc(vc, scr_readw((u16 *) vc->vc_pos+ (vc->vc_screenbuf_size>>1))<<16 | (i & 0xffff), vc->vc_y, vc->vc_x);
++#else
+ 		vc->vc_sw->con_putc(vc, i, vc->vc_y, vc->vc_x);
++#endif
+ }
+ 
+ static void hide_softcursor(struct vc_data *vc)
+@@ -587,8 +664,13 @@ static void hide_softcursor(struct vc_da
+ 	if (softcursor_original != -1) {
+ 		scr_writew(softcursor_original, (u16 *)vc->vc_pos);
+ 		if (con_should_update(vc))
++#ifdef CONFIG_UNICON
++			vc->vc_sw->con_putc(vc, scr_readw((u16 *) vc->vc_pos+ (vc->vc_screenbuf_size>>1))<<16 | softcursor_original,
++					vc->vc_y, vc->vc_x);
++#else
+ 			vc->vc_sw->con_putc(vc, softcursor_original,
+ 					vc->vc_y, vc->vc_x);
++#endif
+ 		softcursor_original = -1;
+ 	}
+ }
+@@ -785,7 +867,11 @@ int vc_allocate(unsigned int currcons)	/
+ 	if (!*vc->vc_uni_pagedir_loc)
+ 		con_set_default_unimap(vc);
+ 
++#ifdef CONFIG_UNICON
++	vc->vc_screenbuf = kmalloc(vc->vc_screenbuf_size * 2, GFP_KERNEL);
++#else
+ 	vc->vc_screenbuf = kmalloc(vc->vc_screenbuf_size, GFP_KERNEL);
++#endif
+ 	if (!vc->vc_screenbuf)
+ 		goto err_free;
+ 
+@@ -846,7 +932,7 @@ static int vc_do_resize(struct tty_struc
+ {
+ 	unsigned long old_origin, new_origin, new_scr_end, rlth, rrem, err = 0;
+ 	unsigned long end;
+-	unsigned int old_rows, old_row_size;
++	unsigned int old_rows, old_row_size, old_screen_size;
+ 	unsigned int new_cols, new_rows, new_row_size, new_screen_size;
+ 	unsigned int user;
+ 	unsigned short *newscreen;
+@@ -870,12 +956,19 @@ static int vc_do_resize(struct tty_struc
+ 	if (new_cols == vc->vc_cols && new_rows == vc->vc_rows)
+ 		return 0;
+ 
++#ifdef CONFIG_UNICON
++	newscreen = kmalloc(new_screen_size*2, GFP_USER);
++#else
+ 	newscreen = kmalloc(new_screen_size, GFP_USER);
++#endif
+ 	if (!newscreen)
+ 		return -ENOMEM;
+ 
+ 	old_rows = vc->vc_rows;
+ 	old_row_size = vc->vc_size_row;
++#ifdef CONFIG_UNICON
++	old_screen_size = vc->vc_screenbuf_size;
++#endif
+ 
+ 	err = resize_screen(vc, new_cols, new_rows, user);
+ 	if (err) {
+@@ -917,15 +1010,30 @@ static int vc_do_resize(struct tty_struc
+ 	while (old_origin < end) {
+ 		scr_memcpyw((unsigned short *) new_origin,
+ 			    (unsigned short *) old_origin, rlth);
+-		if (rrem)
++#ifdef CONFIG_UNICON
++		scr_memcpyw((unsigned short *) (new_origin + new_screen_size),
++			    (unsigned short *) (old_origin + old_screen_size),
++			    rlth);
++#endif
++		if (rrem) {
+ 			scr_memsetw((void *)(new_origin + rlth),
+ 				    vc->vc_video_erase_char, rrem);
++#ifdef CONFIG_UNICON
++			scr_memsetw((void *)(new_origin + rlth + new_screen_size),
++				    (vc->vc_video_erase_char & 0xff), rrem);
++#endif
++		}
+ 		old_origin += old_row_size;
+ 		new_origin += new_row_size;
+ 	}
+-	if (new_scr_end > new_origin)
++	if (new_scr_end > new_origin) {
+ 		scr_memsetw((void *)new_origin, vc->vc_video_erase_char,
+ 			    new_scr_end - new_origin);
++#ifdef CONFIG_UNICON
++		scr_memsetw((void *)(new_origin + new_screen_size), (vc->vc_video_erase_char & 0xff),
++			    new_scr_end - new_origin);
++#endif
++	}
+ 	kfree(vc->vc_screenbuf);
+ 	vc->vc_screenbuf = newscreen;
+ 	vc->vc_screenbuf_size = new_screen_size;
+@@ -1189,6 +1297,9 @@ static void csi_J(struct vc_data *vc, in
+ 			return;
+ 	}
+ 	scr_memsetw(start, vc->vc_video_erase_char, 2 * count);
++#ifdef CONFIG_UNICON
++	scr_memsetw(start + (vc->vc_screenbuf_size>>1), (vc->vc_video_erase_char & 0xff), 2 * count);
++#endif
+ 	if (con_should_update(vc))
+ 		do_update_region(vc, (unsigned long) start, count);
+ 	vc->vc_need_wrap = 0;
+@@ -1216,6 +1327,9 @@ static void csi_K(struct vc_data *vc, in
+ 			return;
+ 	}
+ 	scr_memsetw(start, vc->vc_video_erase_char, 2 * count);
++#ifdef CONFIG_UNICON
++	scr_memsetw(start + (vc->vc_screenbuf_size>>1), (vc->vc_video_erase_char & 0xff), 2 * count);
++#endif
+ 	vc->vc_need_wrap = 0;
+ 	if (con_should_update(vc))
+ 		do_update_region(vc, (unsigned long) start, count);
+@@ -1230,6 +1344,9 @@ static void csi_X(struct vc_data *vc, in
+ 	count = (vpar > vc->vc_cols - vc->vc_x) ? (vc->vc_cols - vc->vc_x) : vpar;
+ 
+ 	scr_memsetw((unsigned short *)vc->vc_pos, vc->vc_video_erase_char, 2 * count);
++#ifdef CONFIG_UNICON
++	scr_memsetw((unsigned short *)vc->vc_pos + (vc->vc_screenbuf_size>>1), (vc->vc_video_erase_char & 0xff), 2 * count);
++#endif
+ 	if (con_should_update(vc))
+ 		vc->vc_sw->con_clear(vc, vc->vc_y, vc->vc_x, 1, count);
+ 	vc->vc_need_wrap = 0;
+@@ -1926,7 +2043,13 @@ static void do_con_trol(struct tty_struc
+ 			if (vc->vc_ques) {
+ 				clear_selection();
+ 				if (vc->vc_par[0])
++#ifdef CONFIG_UNICON
++					// force the low byte to be zero
++
++					vc->vc_complement_mask = vc->vc_par[0] << 8;
++#else
+ 					vc->vc_complement_mask = vc->vc_par[0] << 8 | vc->vc_par[1];
++#endif
+ 				else
+ 					vc->vc_complement_mask = vc->vc_s_complement_mask;
+ 				return;
+@@ -2188,6 +2311,12 @@ static int do_con_write(struct tty_struc
+ 	uint8_t inverse;
+ 	uint8_t width;
+ 	u16 himask, charmask;
++#ifdef CONFIG_UNICON
++	/* added by Arthur Ma, for multiple font support */
++	struct double_byte * doublebyte_default = NULL;
++#define GB_LEFT 0x8000
++#define GB_RIGHT 0xc000
++#endif
+ 
+ 	if (in_interrupt())
+ 		return count;
+@@ -2202,6 +2331,12 @@ static int do_con_write(struct tty_struc
+ 		return 0;
+ 	}
+ 
++#ifdef CONFIG_UNICON
++	/* added by Arthur Ma, for multiple font support */
++	if (UniconFontManager != NULL)
++		doublebyte_default = UniconFontManager->getfont (vc->vc_num);
++#endif
++
+ 	currcons = vc->vc_num;
+ 	if (!vc_cons_allocated(currcons)) {
+ 		/* could this happen? */
+@@ -2386,6 +2521,58 @@ rescan_last_byte:
+ 					     ((vc_attr << 8) & ~himask) + ((tc & 0x100) ? himask : 0) + (tc & 0xff) :
+ 					     (vc_attr << 8) + tc,
+ 					   (u16 *) vc->vc_pos);
++#ifdef CONFIG_UNICON
++#define HIGH_WORD	((u16 *) ((long)vc->vc_pos + vc->vc_screenbuf_size))
++#define HIGH_WORD_PREV	((u16 *) ((long)vc->vc_pos - 2 + vc->vc_screenbuf_size))
++#define HIGH_WORD_NEXT	((u16 *) ((long)vc->vc_pos + 2 + vc->vc_screenbuf_size))
++				/*
++				 * following condiction we do not tread the char
++				 * as double byte.
++				 * 1. default encoding is NULL. The encode module
++				 *    not install yet.
++				 * 2. Current char set is not the default one.
++				 *    We are possible drawing a table lines right
++				 *    now.
++				 *					-Chris
++				 */
++				if (doublebyte_default && vc->vc_translate == translations[0]
++					&& (vc->vc_pos==vc->vc_origin||!(scr_readw(HIGH_WORD_PREV)&DB_HALF_MASK))
++					&& doublebyte_default->is_left(tc)){
++					/*
++					 * possible the left char of the Double
++					 * Byte, but we don't know yet, because
++					 * the right char is unknow right now.
++					 * So mark it as Half char, the possible
++					 * candidate
++				         *				-Chris
++					 */
++					scr_writew(DB_HALF_MASK,HIGH_WORD);
++
++				} else if(doublebyte_default&& vc->vc_translate == translations[0]
++					&& scr_readw(HIGH_WORD_PREV)==DB_HALF_MASK
++					&& doublebyte_default->is_right(tc)) {
++					scr_writew(DB_LEFT|(tc & 0xff),HIGH_WORD_PREV);
++					scr_writew(DB_RIGHT|(scr_readw((u16*)(vc->vc_pos-2))&0xff),HIGH_WORD);
++					if (con_should_update(vc) && draw_x < 0) {
++						draw_from = vc->vc_pos-2;
++						if (vc->vc_x>0) {
++							draw_x = vc->vc_x-1;
++						} else {
++							draw_to = vc->vc_pos;
++							draw_x = vc->vc_cols -1;
++							vc->vc_y--;
++						con_flush(vc, draw_from, draw_to, &draw_x);
++							vc->vc_y++;
++							draw_x = 0;
++							draw_from = vc->vc_pos;
++						}
++					}
++				} else if(doublebyte_default) {
++					/* normal ASCII or table lines,
++					   clean hight byte */
++					scr_writew(0,HIGH_WORD);
++				}
++#endif
+ 				if (con_should_update(vc) && draw_x < 0) {
+ 					draw_x = vc->vc_x;
+ 					draw_from = vc->vc_pos;
+@@ -2443,6 +2630,11 @@ static void console_callback(struct work
+ 	if (want_console >= 0) {
+ 		if (want_console != fg_console &&
+ 		    vc_cons_allocated(want_console)) {
++#ifdef CONFIG_UNICON
++			extern void (*Unicon_TtyChangeUpdate) (int nTty);
++			if (Unicon_TtyChangeUpdate != NULL)
++				(*Unicon_TtyChangeUpdate) (want_console);
++#endif
+ 			hide_cursor(vc_cons[fg_console].d);
+ 			change_console(vc_cons[want_console].d);
+ 			/* we only changed when the console had already
+@@ -2603,6 +2795,9 @@ static void vt_console_print(struct cons
+ 				continue;
+ 		}
+ 		scr_writew((vc->vc_attr << 8) + c, (unsigned short *)vc->vc_pos);
++#ifdef CONFIG_UNICON
++		scr_writew(0, (unsigned short *)vc->vc_pos + (vc->vc_screenbuf_size>>1));
++#endif
+ 		notify_write(vc, c);
+ 		cnt++;
+ 		if (myx == vc->vc_cols - 1) {
+@@ -2999,7 +3194,11 @@ static int __init con_init(void)
+ 		INIT_WORK(&vc_cons[currcons].SAK_work, vc_SAK);
+ 		tty_port_init(&vc->port);
+ 		visual_init(vc, currcons, 1);
++#ifdef CONFIG_UNICON
++		vc->vc_screenbuf = kzalloc(2 * vc->vc_screenbuf_size, GFP_NOWAIT);
++#else
+ 		vc->vc_screenbuf = kzalloc(vc->vc_screenbuf_size, GFP_NOWAIT);
++#endif
+ 		vc_init(vc, vc->vc_rows, vc->vc_cols,
+ 			currcons || !vc->vc_sw->con_save_screen);
+ 	}
+@@ -4264,6 +4463,12 @@ void putconsxy(struct vc_data *vc, unsig
+ 	set_cursor(vc);
+ }
+ 
++#ifdef CONFIG_UNICON
++/*
++ Now, the unicon doesn't support vcs!
++ To support it, first change the vc_screen.c!
++*/
++#endif
+ u16 vcs_scr_readw(struct vc_data *vc, const u16 *org)
+ {
+ 	if ((unsigned long)org == vc->vc_pos && softcursor_original != -1)
+@@ -4289,6 +4494,18 @@ void vcs_scr_updated(struct vc_data *vc)
+  *	Visible symbols for modules
+  */
+ 
++#ifdef CONFIG_UNICON
++int (*Unicon_fnKeyHook)
++         (struct tty_struct *tty, unsigned char ch, char flag) = NULL;
++int (*Unicon_fnLowerKeyHook) (unsigned char ch) = NULL;
++void (*Unicon_TtyChangeUpdate) (int nTty) = NULL;
++EXPORT_SYMBOL(Unicon_fnLowerKeyHook);
++EXPORT_SYMBOL(Unicon_fnKeyHook);
++EXPORT_SYMBOL(Unicon_TtyChangeUpdate);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++EXPORT_SYMBOL(vc_cons);
++#endif
++#endif
+ EXPORT_SYMBOL(color_table);
+ EXPORT_SYMBOL(default_red);
+ EXPORT_SYMBOL(default_grn);
+diff -urNp linux-4.8/drivers/video/console/bitblit.c linux-4.8.UNICON/drivers/video/console/bitblit.c
+--- linux-4.8/drivers/video/console/bitblit.c	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/console/bitblit.c	2016-10-08 14:01:06.000000000 +0900
+@@ -19,6 +19,10 @@
+ #include <asm/types.h>
+ #include "fbcon.h"
+ 
++#ifdef CONFIG_UNICON
++#include "unicon.c"
++extern struct display fb_display[MAX_NR_CONSOLES];
++#endif
+ /*
+  * Accelerated handlers.
+  */
+@@ -201,7 +205,211 @@ static void bit_putcs(struct vc_data *vc
+ 		kfree(buf);
+ 
+ }
++#ifdef CONFIG_UNICON
++static void bit_putcs_tl(struct vc_data *vc, struct fb_info *info,
++		      const unsigned short *s, int count, int yy, int xx,
++		      int fg, int bg, struct double_byte * doublebyte_default)
++{
++/*	void (*move_unaligned)(struct fb_info *info, struct fb_pixmap *buf,
++			       u8 *dst, u32 d_pitch, u8 *src, u32 idx,
++			       u32 height, u32 shift_high, u32 shift_low,
++			       u32 mod);
++	void (*move_aligned)(struct fb_info *info, struct fb_pixmap *buf,
++			     u8 *dst, u32 d_pitch, u8 *src, u32 s_pitch,
++			     u32 height);*/
++	unsigned short charmask = vc->vc_hi_font_mask ? 0x1ff : 0xff;
++	unsigned int width = (vc->vc_font.width + 7) >> 3;
++	unsigned int cellsize = vc->vc_font.height * width;
++	unsigned int maxcnt = info->pixmap.size/cellsize;
++	unsigned int scan_align = info->pixmap.scan_align - 1;
++	unsigned int buf_align = info->pixmap.buf_align - 1;
++	unsigned int shift_low = 0, mod = vc->vc_font.width % 8;
++	unsigned int shift_high = 8, pitch, cnt, size, k;
++	unsigned int idx = vc->vc_font.width >> 3;
++	unsigned int attribute = get_attribute(info, scr_readw(s));
++	struct fb_image image;
++	u8 *src, *dst, *buf = NULL;
++	u_char * fontdata_save;
++	int index, c,i;
++	int extendedchar;
++	fontdata_save = vc->vc_font.data;
++
++	if (attribute) {
++		buf = kmalloc(cellsize, GFP_KERNEL);
++		if (!buf)
++			return;
++	}
++
++	image.fg_color = fg;
++	image.bg_color = bg;
++
++	image.dx = xx * vc->vc_font.width;
++	image.dy = yy * vc->vc_font.height;
++	image.height = vc->vc_font.height;
++	image.depth = 1;
++
++	/*if (info->pixmap.outbuf && info->pixmap.inbuf) {
++		move_aligned = fb_iomove_buf_aligned;
++		move_unaligned = fb_iomove_buf_unaligned;
++	} else {
++		move_aligned = fb_sysmove_buf_aligned;
++		move_unaligned = fb_sysmove_buf_unaligned;
++	}*/
++	while (count) {
++		if (count > maxcnt)
++			cnt = k = maxcnt;
++		else
++			cnt = k = count;
++
++		image.width = vc->vc_font.width * cnt;
++		pitch = ((image.width + 7) >> 3) + scan_align;
++		pitch &= ~scan_align;
++		size = pitch * image.height + buf_align;
++		size &= ~buf_align;
++		dst = fb_get_buffer_offset(info, &info->pixmap, size);
++		image.data = dst;
++		if (mod) {
++			for(i = 0; i < k; s++, i++){
++				c = (scr_readw (hibyte_pos (vc, s)) << 16) | scr_readw (s);
++				extendedchar = c & (DB_VALIDATE<<16);
++				if (extendedchar){
++					if ( c & (DB_RIGHT_MASK << 16) ) // right half
++						index = doublebyte_default->font_index((c>>16)&0xff, (c&0xff)) + 16;
++					else
++					index = doublebyte_default->font_index((c&0xff),(c>>16)&0xff);
++				}
++				if (extendedchar && index >=0 && index < doublebyte_default->charcount){
++					vc->vc_font.data = doublebyte_default->font_data +index;
++					c = (c & 0xff00);
++				}else{
++					c = c & 0xffff;
++					vc->vc_font.data = fontdata_save;
++				}
++				src = vc->vc_font.data + (c&charmask)*cellsize;
++
++				if (attribute) {
++					update_attr(buf, src, attribute, vc);
++					src = buf;
++				}
++
++				fb_pad_unaligned_buffer(dst, pitch, src, idx,
++						image.height, shift_high,
++						shift_low, mod);
++				shift_low += mod;
++				dst += (shift_low >= 8) ? width : width - 1;
++				shift_low &= 7;
++				shift_high = 8 - shift_low;
++			}
++		} else {
++			for(i = 0; i < k; s++, i++){
++				c = (scr_readw (hibyte_pos (vc, s)) << 16) | scr_readw (s);
++				extendedchar = c & (DB_VALIDATE<<16);
++				if (extendedchar){
++					if ( c & (DB_RIGHT_MASK << 16) ) // right half
++						index = doublebyte_default->font_index((c>>16)&0xff, (c&0xff)) + 16;
++					else
++					index = doublebyte_default->font_index((c&0xff),(c>>16)&0xff);
++				}
++				if (extendedchar && index >=0 && index < doublebyte_default->charcount){
++					vc->vc_font.data = doublebyte_default->font_data +index;
++					c = (c & 0xff00);
++				}else{
++					c = c & 0xffff;
++					vc->vc_font.data = fontdata_save;
++				}
++				src = vc->vc_font.data + (c&charmask)*cellsize;
++
++				if (attribute) {
++					update_attr(buf, src, attribute, vc);
++					src = buf;
++				}
++
++				fb_pad_aligned_buffer(dst, pitch, src, idx, image.height);
++				dst += width;
++			}
++		}
++		info->fbops->fb_imageblit(info, &image);
++		image.dx += cnt * vc->vc_font.width;
++		count -= cnt;
++	}
++
++	if (buf)
++		kfree(buf);
+ 
++	vc->vc_font.data = fontdata_save;
++}
++static void bit_putcs_wrap(struct vc_data *vc, struct fb_info *info,
++		      const unsigned short *s, int count, int ypos, int xpos,
++		      int fg, int bg)
++{
++	int n,yy;
++	struct display *p = &fb_display[vc->vc_num];
++	const unsigned short * str = s;
++	struct double_byte * doublebyte_default = NULL;
++
++	yy = real_y(p, ypos);
++	
++	if (UniconFontManager != NULL)
++		doublebyte_default = UniconFontManager->getfont (vc->vc_num);
++
++	if (!doublebyte_default)
++	{
++		bit_putcs(vc, info, s, count, yy, xpos, fg, bg);
++		return;
++	}
++
++	/*
++	 * 2009/01/23
++	 * modified by Toshi for gpm
++	 */
++	if(count == 1)
++	{
++		u32 extendedchar, index, c;
++		u8* fontdata_save;
++		u16 chr[2] = {0, 0};
++
++		fontdata_save = vc->vc_font.data;
++		c = (s >= (u16*)vc->vc_origin) && (s < (u16*)vc->vc_scr_end);
++		c = c ? (scr_readw (hibyte_pos (vc, s)) << 16) | scr_readw (s) : (s[1] << 16) | s[0];
++	
++		extendedchar = c & (DB_VALIDATE<<16);
++		if (extendedchar) {
++			if ( c & (DB_RIGHT_MASK << 16)) {// right half
++				index = doublebyte_default->font_index((c>>16)&0xff, (c&0xff)) + 16;
++			} else {
++				index = doublebyte_default->font_index((c&0xff),(c>>16)&0xff);
++			}
++
++			if (index >=0 && index < doublebyte_default->charcount) {
++				vc->vc_font.data = doublebyte_default->font_data +index;
++				c &= 0xff00;
++			}
++		}
++
++		chr[0] = (u16)c;
++		bit_putcs(vc, info, &chr[0], 1, yy, xpos, fg, bg);
++
++		vc->vc_font.data = fontdata_save;
++		return;
++	}
++
++	while (count > 0) {
++		n = fbcon_get_dchar_len (vc, p, str, count);
++		if (n != 0)
++		bit_putcs_tl(vc, info, str, n, yy, xpos,
++				fg, bg, doublebyte_default);
++		str += n;
++		xpos += n;
++		count -= n;
++		n = fbcon_get_schar_len (vc, p, str, count);
++		if (n != 0)
++			bit_putcs(vc, info, str, n, yy, xpos ,fg ,bg);
++		str += n;
++		xpos += n;
++		count -= n;
++	}
++}
++#endif
+ static void bit_clear_margins(struct vc_data *vc, struct fb_info *info,
+ 			      int bottom_only)
+ {
+@@ -244,6 +452,11 @@ static void bit_cursor(struct vc_data *v
+ 	int attribute, use_sw = (vc->vc_cursor_type & 0x10);
+ 	int err = 1;
+ 	char *src;
++#ifdef CONFIG_UNICON
++	int extendedchar = 0;
++	u_char * fontdata_save;
++	struct double_byte * doublebyte_default = NULL;
++#endif
+ 
+ 	cursor.set = 0;
+ 
+@@ -256,7 +469,33 @@ static void bit_cursor(struct vc_data *v
+ 			y += softback_lines;
+ 	}
+ 
++#ifdef CONFIG_UNICON
++	if (UniconFontManager != NULL)
++		doublebyte_default = UniconFontManager->getfont (vc->vc_num);
++
++	fontdata_save = vc->vc_font.data;
++	if(doublebyte_default != NULL){
++		c = (scr_readw (hibyte_pos (vc, (u16 *) vc->vc_pos)) << 16) |
++			scr_readw((u16 *) vc->vc_pos);
++		extendedchar = c & (DB_VALIDATE<<16);
++		if (extendedchar) {
++			int index;
++			if ( c & (DB_RIGHT_MASK << 16)) {// right half
++				index = doublebyte_default->font_index((c>>16)&0xff, (c&0xff)) + 16;
++			} else {
++				index = doublebyte_default->font_index((c&0xff),(c>>16)&0xff);
++			}
++			if (index >=0 && index < doublebyte_default->charcount) {
++				vc->vc_font.data = doublebyte_default->font_data +index;
++				c = (c & 0xff00);
++			}else c = c & 0xffff;
++		} else {
++			c = c & 0xffff;
++		}
++	}else c = scr_readw((u16 *) vc->vc_pos);
++#else
+  	c = scr_readw((u16 *) vc->vc_pos);
++#endif
+ 	attribute = get_attribute(info, c);
+ 	src = vc->vc_font.data + ((c & charmask) * (w * vc->vc_font.height));
+ 
+@@ -386,6 +625,10 @@ static void bit_cursor(struct vc_data *v
+ 		soft_cursor(info, &cursor);
+ 
+ 	ops->cursor_reset = 0;
++#ifdef CONFIG_UNICON
++	if (doublebyte_default != NULL && extendedchar)
++		vc->vc_font.data = fontdata_save;
++#endif
+ }
+ 
+ static int bit_update_start(struct fb_info *info)
+@@ -404,7 +647,11 @@ void fbcon_set_bitops(struct fbcon_ops *
+ {
+ 	ops->bmove = bit_bmove;
+ 	ops->clear = bit_clear;
++#ifdef CONFIG_UNICON
++	ops->putcs = bit_putcs_wrap;
++#else
+ 	ops->putcs = bit_putcs;
++#endif
+ 	ops->clear_margins = bit_clear_margins;
+ 	ops->cursor = bit_cursor;
+ 	ops->update_start = bit_update_start;
+diff -urNp linux-4.8/drivers/video/console/fbcon.c linux-4.8.UNICON/drivers/video/console/fbcon.c
+--- linux-4.8/drivers/video/console/fbcon.c	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/console/fbcon.c	2016-10-08 14:01:06.000000000 +0900
+@@ -92,7 +92,11 @@ enum {
+ 	FBCON_LOGO_DONTSHOW	= -3	/* do not show the logo */
+ };
+ 
++#ifdef CONFIG_UNICON
++struct display fb_display[MAX_NR_CONSOLES];
++#else
+ static struct display fb_display[MAX_NR_CONSOLES];
++#endif
+ 
+ static signed char con2fb_map[MAX_NR_CONSOLES];
+ static signed char con2fb_map_boot[MAX_NR_CONSOLES];
+@@ -102,7 +106,11 @@ static int logo_lines;
+    enums.  */
+ static int logo_shown = FBCON_LOGO_CANSHOW;
+ /* Software scrollback */
++#ifdef CONFIG_UNICON
++int fbcon_softback_size = 32768;
++#else
+ static int fbcon_softback_size = 32768;
++#endif
+ static unsigned long softback_buf, softback_curr;
+ static unsigned long softback_in;
+ static unsigned long softback_top, softback_end;
+@@ -191,6 +199,11 @@ static void fbcon_start(void);
+ static void fbcon_exit(void);
+ static struct device *fbcon_device;
+ 
++#ifdef CONFIG_UNICON
++#include <linux/fb_doublebyte.h>
++const unsigned short * hibyte_pos(struct vc_data *vc, const unsigned short *p);
++#endif
++
+ #ifdef CONFIG_FRAMEBUFFER_CONSOLE_ROTATION
+ static inline void fbcon_set_rotation(struct fb_info *info)
+ {
+@@ -966,7 +979,11 @@ static const char *fbcon_startup(void)
+ 			if (!softback_buf) {
+ 				softback_buf =
+ 				    (unsigned long)
++#ifdef CONFIG_UNICON
++				    kmalloc(fbcon_softback_size * 2,
++#else
+ 				    kmalloc(fbcon_softback_size,
++#endif
+ 					    GFP_KERNEL);
+ 				if (!softback_buf) {
+ 					fbcon_softback_size = 0;
+@@ -1275,11 +1292,17 @@ static void fbcon_putcs(struct vc_data *
+ 			int count, int ypos, int xpos)
+ {
+ 	struct fb_info *info = registered_fb[con2fb_map[vc->vc_num]];
++#ifndef CONFIG_UNICON
+ 	struct display *p = &fb_display[vc->vc_num];
++#endif
+ 	struct fbcon_ops *ops = info->fbcon_par;
+ 
+ 	if (!fbcon_is_inactive(vc, info))
++#ifdef CONFIG_UNICON
++		ops->putcs(vc, info, s, count, ypos, xpos,
++#else
+ 		ops->putcs(vc, info, s, count, real_y(p, ypos), xpos,
++#endif
+ 			   get_color(vc, info, scr_readw(s), 1),
+ 			   get_color(vc, info, scr_readw(s), 0));
+ }
+@@ -1289,7 +1312,11 @@ static void fbcon_putc(struct vc_data *v
+ 	unsigned short chr;
+ 
+ 	scr_writew(c, &chr);
++#ifdef CONFIG_UNICON
++	fbcon_putcs(vc, (unsigned short *)&c, 1, ypos, xpos);
++#else
+ 	fbcon_putcs(vc, &chr, 1, ypos, xpos);
++#endif
+ }
+ 
+ static void fbcon_clear_margins(struct vc_data *vc, int bottom_only)
+@@ -1589,11 +1616,17 @@ static void fbcon_redraw_softback(struct
+ 		unsigned short c;
+ 		int x = 0;
+ 		unsigned short attr = 1;
++#ifdef CONFIG_UNICON
++		unsigned short c_ext;
++#endif
+ 
+ 		start = s;
+ 		le = advance_row(s, 1);
+ 		do {
+ 			c = scr_readw(s);
++#ifdef CONFIG_UNICON
++			c_ext = scr_readw(hibyte_pos(vc,s));
++#endif
+ 			if (attr != (c & 0xff00)) {
+ 				attr = c & 0xff00;
+ 				if (s > start) {
+@@ -1603,7 +1636,11 @@ static void fbcon_redraw_softback(struct
+ 					start = s;
+ 				}
+ 			}
++#ifdef CONFIG_UNICON
++			if (c == scr_readw(d) && c_ext == scr_readw(hibyte_pos(vc,d))) {
++#else
+ 			if (c == scr_readw(d)) {
++#endif
+ 				if (s > start) {
+ 					fbcon_putcs(vc, start, s - start,
+ 						    line, x);
+@@ -1728,9 +1765,15 @@ static void fbcon_redraw(struct vc_data
+ 		unsigned short c;
+ 		int x = 0;
+ 		unsigned short attr = 1;
++#ifdef CONFIG_UNICON
++	unsigned short c_ext;
++#endif
+ 
+ 		do {
+ 			c = scr_readw(s);
++#ifdef CONFIG_UNICON
++			c_ext = scr_readw(hibyte_pos(vc,s));
++#endif
+ 			if (attr != (c & 0xff00)) {
+ 				attr = c & 0xff00;
+ 				if (s > start) {
+@@ -1740,7 +1783,11 @@ static void fbcon_redraw(struct vc_data
+ 					start = s;
+ 				}
+ 			}
++#ifdef CONFIG_UNICON
++			if (c == scr_readw(d) && c_ext == scr_readw(hibyte_pos(vc,d))) {
++#else
+ 			if (c == scr_readw(d)) {
++#endif
+ 				if (s > start) {
+ 					fbcon_putcs(vc, start, s - start,
+ 						     line, x);
+@@ -1752,6 +1799,9 @@ static void fbcon_redraw(struct vc_data
+ 				}
+ 			}
+ 			scr_writew(c, d);
++#ifdef CONFIG_UNICON
++			scr_writew(scr_readw(s+(vc->vc_screenbuf_size>>1)),d+(vc->vc_screenbuf_size>>1));
++#endif
+ 			console_conditional_schedule();
+ 			s++;
+ 			d++;
+@@ -1781,6 +1831,9 @@ static inline void fbcon_softback_note(s
+ 
+ 	while (count) {
+ 		scr_memcpyw((u16 *) softback_in, p, vc->vc_size_row);
++#ifdef CONFIG_UNICON
++		scr_memcpyw((u16 *)softback_in+(fbcon_softback_size>>1),p+(vc->vc_screenbuf_size>>1),vc->vc_size_row);
++#endif
+ 		count--;
+ 		p = advance_row(p, 1);
+ 		softback_in += vc->vc_size_row;
+@@ -1903,6 +1956,15 @@ static int fbcon_scroll(struct vc_data *
+ 							(b - count)),
+ 				    vc->vc_video_erase_char,
+ 				    vc->vc_size_row * count);
++#ifdef CONFIG_UNICON
++			/* SCROLL_REDRAW */
++			scr_memsetw((unsigned short *) (vc->vc_origin +
++							vc->vc_size_row *
++							(b - count) +
++							vc->vc_screenbuf_size),
++				    vc->vc_video_erase_char & 0xff,
++				    vc->vc_size_row * count);
++#endif
+ 			return 1;
+ 		}
+ 		break;
+@@ -1992,6 +2054,15 @@ static int fbcon_scroll(struct vc_data *
+ 							t),
+ 				    vc->vc_video_erase_char,
+ 				    vc->vc_size_row * count);
++#ifdef CONFIG_UNICON
++			/* SCROLL_REDRAW */
++			scr_memsetw((unsigned short *) (vc->vc_origin +
++							vc->vc_size_row *
++							t +
++							vc->vc_screenbuf_size),
++				    vc->vc_video_erase_char & 0xff,
++				    vc->vc_size_row * count);
++#endif
+ 			return 1;
+ 		}
+ 	}
+@@ -2691,6 +2762,20 @@ static u16 *fbcon_screen_pos(struct vc_d
+ 	unsigned long p;
+ 	int line;
+ 	
++#ifdef CONFIG_UNICON
++	if (offset < 0) {
++		offset = -offset - 1;
++		if (vc->vc_num != fg_console || !softback_lines)
++			return (u16 *)(vc->vc_origin + offset + vc->vc_screenbuf_size);
++		line = offset / vc->vc_size_row;
++		if (line >= softback_lines)
++			return (u16 *)(vc->vc_origin + offset - softback_lines * vc->vc_size_row + vc->vc_screenbuf_size);
++		p = softback_curr + offset;
++		if (p >= softback_end)
++			p += softback_buf - softback_end;
++		return (u16 *)(p+fbcon_softback_size);
++	}
++#endif
+ 	if (vc->vc_num != fg_console || !softback_lines)
+ 		return (u16 *) (vc->vc_origin + offset);
+ 	line = offset / vc->vc_size_row;
+@@ -2798,6 +2883,11 @@ static void fbcon_scrolldelta(struct vc_
+ 					q -= vc->vc_size_row;
+ 					scr_memcpyw((u16 *) q, (u16 *) p,
+ 						    vc->vc_size_row);
++#ifdef CONFIG_UNICON
++					scr_memcpyw((u16* )(q+vc->vc_screenbuf_size),
++						(u16* )(p+fbcon_softback_size),
++						vc->vc_size_row);
++#endif
+ 				}
+ 				softback_in = softback_curr = p;
+ 				update_region(vc, vc->vc_origin,
+@@ -3653,4 +3743,9 @@ module_exit(fb_console_exit);
+ 
+ #endif
+ 
++#ifdef CONFIG_UNICON
++EXPORT_SYMBOL(con2fb_map);
++EXPORT_SYMBOL(fbcon_putc);
++#endif
++
+ MODULE_LICENSE("GPL");
+diff -urNp linux-4.8/drivers/video/console/unicon.c linux-4.8.UNICON/drivers/video/console/unicon.c
+--- linux-4.8/drivers/video/console/unicon.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/console/unicon.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,70 @@
++
++#include <linux/fb_doublebyte.h>
++
++extern int fbcon_softback_size;
++DBFontManager *UniconFontManager = NULL;
++EXPORT_SYMBOL (UniconFontManager);
++
++const unsigned short * hibyte_pos(struct vc_data *vc, const unsigned short *p)
++{
++	unsigned long pos=(long)p;
++	if (pos >= vc->vc_origin && pos < vc->vc_scr_end) {
++		/* pos in the vc buffer - Chrisl 99.11.12*/
++		return (unsigned short*)(pos+vc->vc_screenbuf_size);
++	} else if (vc->vc_num == fg_console){
++		/*&& softback_lines,because the scroll will first change
++		softback_lines, then call this function, so it is ignored here
++							    -JimChen 99.11.12*/
++		return (unsigned short*)(pos+fbcon_softback_size);
++	} else {
++		/* Should not happen */
++		printk("Warnning, changing not active console\n");
++		return p;
++	}
++}
++
++static int fbcon_get_dchar_len (struct vc_data *vc,
++                                struct display *p,
++                                const unsigned short *s, int count)
++{
++        int n, i;
++        struct double_byte * doublebyte_default = NULL;
++        unsigned short charmask = vc->vc_hi_font_mask ? 0x1ff : 0xff;
++
++        if (UniconFontManager != NULL)
++                doublebyte_default = UniconFontManager->getfont (vc->vc_num);
++        if (!doublebyte_default)
++                return 0;
++
++        for (n = 0, i = 0; i < count; i++, s++){
++                if (doublebyte_default->is_left (*s & charmask) == 1 ||
++                    doublebyte_default->is_right (*s & charmask) == 1)
++                        n++;
++        else
++                break;
++        }
++        return n;
++}
++
++static int fbcon_get_schar_len (struct vc_data *vc,
++                                struct display *p,
++                                const unsigned short *s, int count)
++{
++        int n, i;
++        struct double_byte * doublebyte_default = NULL;
++        unsigned short charmask = vc->vc_hi_font_mask ? 0x1ff : 0xff;
++
++        if (UniconFontManager != NULL)
++                doublebyte_default = UniconFontManager->getfont (vc->vc_num);
++        if (!doublebyte_default)
++                return count;
++
++        for (n = 0, i = 0; i < count; i++, s++){
++                if (doublebyte_default->is_left (*s & charmask) == 0 &&
++                    doublebyte_default->is_right (*s & charmask) == 0)
++                        n++;
++                else
++                        break;
++        }
++        return n;
++}
+diff -urNp linux-4.8/drivers/video/fbdev/Kconfig linux-4.8.UNICON/drivers/video/fbdev/Kconfig
+--- linux-4.8/drivers/video/fbdev/Kconfig	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/Kconfig	2016-10-08 14:01:06.000000000 +0900
+@@ -237,6 +237,17 @@ config FB_GRVGA
+ 	---help---
+ 	This enables support for the SVGACTRL framebuffer in the GRLIB IP library from Aeroflex Gaisler.
+ 
++config UNICON
++	bool "UNICON console support"
++	depends on FB
++	select FRAMEBUFFER_CONSOLE
++	help
++	  This is UNICON CJK display system lower level driver and API.
++	  Unikey and CJK font modules are included in the UNICON package.
++	  If you want to use UNICON, say Y here. If unsure, say N.
++
++	source "drivers/video/fbdev/unicon/Kconfig"
++
+ config FB_CIRRUS
+ 	tristate "Cirrus Logic support"
+ 	depends on FB && (ZORRO || PCI)
+diff -urNp linux-4.8/drivers/video/fbdev/Makefile linux-4.8.UNICON/drivers/video/fbdev/Makefile
+--- linux-4.8/drivers/video/fbdev/Makefile	2016-10-03 08:24:33.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/Makefile	2016-10-08 14:01:06.000000000 +0900
+@@ -8,6 +8,10 @@ obj-y				+= core/
+ 
+ obj-$(CONFIG_EXYNOS_VIDEO)     += exynos/
+ 
++ifeq ($(CONFIG_UNICON),y)
++subdir-m			  += unicon
++endif
++
+ obj-$(CONFIG_FB_MACMODES)      += macmodes.o
+ obj-$(CONFIG_FB_WMT_GE_ROPS)   += wmt_ge_rops.o
+ 
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/COPYING linux-4.8.UNICON/drivers/video/fbdev/unicon/COPYING
+--- linux-4.8/drivers/video/fbdev/unicon/COPYING	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/COPYING	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,341 @@
++
++		    GNU GENERAL PUBLIC LICENSE
++		       Version 2, June 1991
++
++ Copyright (C) 1989, 1991 Free Software Foundation, Inc.
++                          675 Mass Ave, Cambridge, MA 02139, USA
++ Everyone is permitted to copy and distribute verbatim copies
++ of this license document, but changing it is not allowed.
++
++			    Preamble
++
++  The licenses for most software are designed to take away your
++freedom to share and change it.  By contrast, the GNU General Public
++License is intended to guarantee your freedom to share and change free
++software--to make sure the software is free for all its users.  This
++General Public License applies to most of the Free Software
++Foundation's software and to any other program whose authors commit to
++using it.  (Some other Free Software Foundation software is covered by
++the GNU Library General Public License instead.)  You can apply it to
++your programs, too.
++
++  When we speak of free software, we are referring to freedom, not
++price.  Our General Public Licenses are designed to make sure that you
++have the freedom to distribute copies of free software (and charge for
++this service if you wish), that you receive source code or can get it
++if you want it, that you can change the software or use pieces of it
++in new free programs; and that you know you can do these things.
++
++  To protect your rights, we need to make restrictions that forbid
++anyone to deny you these rights or to ask you to surrender the rights.
++These restrictions translate to certain responsibilities for you if you
++distribute copies of the software, or if you modify it.
++
++  For example, if you distribute copies of such a program, whether
++gratis or for a fee, you must give the recipients all the rights that
++you have.  You must make sure that they, too, receive or can get the
++source code.  And you must show them these terms so they know their
++rights.
++
++  We protect your rights with two steps: (1) copyright the software, and
++(2) offer you this license which gives you legal permission to copy,
++distribute and/or modify the software.
++
++  Also, for each author's protection and ours, we want to make certain
++that everyone understands that there is no warranty for this free
++software.  If the software is modified by someone else and passed on, we
++want its recipients to know that what they have is not the original, so
++that any problems introduced by others will not reflect on the original
++authors' reputations.
++
++  Finally, any free program is threatened constantly by software
++patents.  We wish to avoid the danger that redistributors of a free
++program will individually obtain patent licenses, in effect making the
++program proprietary.  To prevent this, we have made it clear that any
++patent must be licensed for everyone's free use or not licensed at all.
++
++  The precise terms and conditions for copying, distribution and
++modification follow.
++
++		    GNU GENERAL PUBLIC LICENSE
++   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
++
++  0. This License applies to any program or other work which contains
++a notice placed by the copyright holder saying it may be distributed
++under the terms of this General Public License.  The "Program", below,
++refers to any such program or work, and a "work based on the Program"
++means either the Program or any derivative work under copyright law:
++that is to say, a work containing the Program or a portion of it,
++either verbatim or with modifications and/or translated into another
++language.  (Hereinafter, translation is included without limitation in
++the term "modification".)  Each licensee is addressed as "you".
++
++Activities other than copying, distribution and modification are not
++covered by this License; they are outside its scope.  The act of
++running the Program is not restricted, and the output from the Program
++is covered only if its contents constitute a work based on the
++Program (independent of having been made by running the Program).
++Whether that is true depends on what the Program does.
++
++  1. You may copy and distribute verbatim copies of the Program's
++source code as you receive it, in any medium, provided that you
++conspicuously and appropriately publish on each copy an appropriate
++copyright notice and disclaimer of warranty; keep intact all the
++notices that refer to this License and to the absence of any warranty;
++and give any other recipients of the Program a copy of this License
++along with the Program.
++
++You may charge a fee for the physical act of transferring a copy, and
++you may at your option offer warranty protection in exchange for a fee.
++
++  2. You may modify your copy or copies of the Program or any portion
++of it, thus forming a work based on the Program, and copy and
++distribute such modifications or work under the terms of Section 1
++above, provided that you also meet all of these conditions:
++
++    a) You must cause the modified files to carry prominent notices
++    stating that you changed the files and the date of any change.
++
++    b) You must cause any work that you distribute or publish, that in
++    whole or in part contains or is derived from the Program or any
++    part thereof, to be licensed as a whole at no charge to all third
++    parties under the terms of this License.
++
++    c) If the modified program normally reads commands interactively
++    when run, you must cause it, when started running for such
++    interactive use in the most ordinary way, to print or display an
++    announcement including an appropriate copyright notice and a
++    notice that there is no warranty (or else, saying that you provide
++    a warranty) and that users may redistribute the program under
++    these conditions, and telling the user how to view a copy of this
++    License.  (Exception: if the Program itself is interactive but
++    does not normally print such an announcement, your work based on
++    the Program is not required to print an announcement.)
++
++These requirements apply to the modified work as a whole.  If
++identifiable sections of that work are not derived from the Program,
++and can be reasonably considered independent and separate works in
++themselves, then this License, and its terms, do not apply to those
++sections when you distribute them as separate works.  But when you
++distribute the same sections as part of a whole which is a work based
++on the Program, the distribution of the whole must be on the terms of
++this License, whose permissions for other licensees extend to the
++entire whole, and thus to each and every part regardless of who wrote it.
++
++Thus, it is not the intent of this section to claim rights or contest
++your rights to work written entirely by you; rather, the intent is to
++exercise the right to control the distribution of derivative or
++collective works based on the Program.
++
++In addition, mere aggregation of another work not based on the Program
++with the Program (or with a work based on the Program) on a volume of
++a storage or distribution medium does not bring the other work under
++the scope of this License.
++
++  3. You may copy and distribute the Program (or a work based on it,
++under Section 2) in object code or executable form under the terms of
++Sections 1 and 2 above provided that you also do one of the following:
++
++    a) Accompany it with the complete corresponding machine-readable
++    source code, which must be distributed under the terms of Sections
++    1 and 2 above on a medium customarily used for software interchange; or,
++
++    b) Accompany it with a written offer, valid for at least three
++    years, to give any third party, for a charge no more than your
++    cost of physically performing source distribution, a complete
++    machine-readable copy of the corresponding source code, to be
++    distributed under the terms of Sections 1 and 2 above on a medium
++    customarily used for software interchange; or,
++
++    c) Accompany it with the information you received as to the offer
++    to distribute corresponding source code.  (This alternative is
++    allowed only for noncommercial distribution and only if you
++    received the program in object code or executable form with such
++    an offer, in accord with Subsection b above.)
++
++The source code for a work means the preferred form of the work for
++making modifications to it.  For an executable work, complete source
++code means all the source code for all modules it contains, plus any
++associated interface definition files, plus the scripts used to
++control compilation and installation of the executable.  However, as a
++special exception, the source code distributed need not include
++anything that is normally distributed (in either source or binary
++form) with the major components (compiler, kernel, and so on) of the
++operating system on which the executable runs, unless that component
++itself accompanies the executable.
++
++If distribution of executable or object code is made by offering
++access to copy from a designated place, then offering equivalent
++access to copy the source code from the same place counts as
++distribution of the source code, even though third parties are not
++compelled to copy the source along with the object code.
++
++  4. You may not copy, modify, sublicense, or distribute the Program
++except as expressly provided under this License.  Any attempt
++otherwise to copy, modify, sublicense or distribute the Program is
++void, and will automatically terminate your rights under this License.
++However, parties who have received copies, or rights, from you under
++this License will not have their licenses terminated so long as such
++parties remain in full compliance.
++
++  5. You are not required to accept this License, since you have not
++signed it.  However, nothing else grants you permission to modify or
++distribute the Program or its derivative works.  These actions are
++prohibited by law if you do not accept this License.  Therefore, by
++modifying or distributing the Program (or any work based on the
++Program), you indicate your acceptance of this License to do so, and
++all its terms and conditions for copying, distributing or modifying
++the Program or works based on it.
++
++  6. Each time you redistribute the Program (or any work based on the
++Program), the recipient automatically receives a license from the
++original licensor to copy, distribute or modify the Program subject to
++these terms and conditions.  You may not impose any further
++restrictions on the recipients' exercise of the rights granted herein.
++You are not responsible for enforcing compliance by third parties to
++this License.
++
++  7. If, as a consequence of a court judgment or allegation of patent
++infringement or for any other reason (not limited to patent issues),
++conditions are imposed on you (whether by court order, agreement or
++otherwise) that contradict the conditions of this License, they do not
++excuse you from the conditions of this License.  If you cannot
++distribute so as to satisfy simultaneously your obligations under this
++License and any other pertinent obligations, then as a consequence you
++may not distribute the Program at all.  For example, if a patent
++license would not permit royalty-free redistribution of the Program by
++all those who receive copies directly or indirectly through you, then
++the only way you could satisfy both it and this License would be to
++refrain entirely from distribution of the Program.
++
++If any portion of this section is held invalid or unenforceable under
++any particular circumstance, the balance of the section is intended to
++apply and the section as a whole is intended to apply in other
++circumstances.
++
++It is not the purpose of this section to induce you to infringe any
++patents or other property right claims or to contest validity of any
++such claims; this section has the sole purpose of protecting the
++integrity of the free software distribution system, which is
++implemented by public license practices.  Many people have made
++generous contributions to the wide range of software distributed
++through that system in reliance on consistent application of that
++system; it is up to the author/donor to decide if he or she is willing
++to distribute software through any other system and a licensee cannot
++impose that choice.
++
++This section is intended to make thoroughly clear what is believed to
++be a consequence of the rest of this License.
++
++  8. If the distribution and/or use of the Program is restricted in
++certain countries either by patents or by copyrighted interfaces, the
++original copyright holder who places the Program under this License
++may add an explicit geographical distribution limitation excluding
++those countries, so that distribution is permitted only in or among
++countries not thus excluded.  In such case, this License incorporates
++the limitation as if written in the body of this License.
++
++  9. The Free Software Foundation may publish revised and/or new versions
++of the General Public License from time to time.  Such new versions will
++be similar in spirit to the present version, but may differ in detail to
++address new problems or concerns.
++
++Each version is given a distinguishing version number.  If the Program
++specifies a version number of this License which applies to it and "any
++later version", you have the option of following the terms and conditions
++either of that version or of any later version published by the Free
++Software Foundation.  If the Program does not specify a version number of
++this License, you may choose any version ever published by the Free Software
++Foundation.
++
++  10. If you wish to incorporate parts of the Program into other free
++programs whose distribution conditions are different, write to the author
++to ask for permission.  For software which is copyrighted by the Free
++Software Foundation, write to the Free Software Foundation; we sometimes
++make exceptions for this.  Our decision will be guided by the two goals
++of preserving the free status of all derivatives of our free software and
++of promoting the sharing and reuse of software generally.
++
++			    NO WARRANTY
++
++  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
++FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
++OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
++PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
++OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
++TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE
++PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
++REPAIR OR CORRECTION.
++
++  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
++WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
++REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
++INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
++OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
++TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
++YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
++PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGES.
++
++		     END OF TERMS AND CONDITIONS
++
++	Appendix: How to Apply These Terms to Your New Programs
++
++  If you develop a new program, and you want it to be of the greatest
++possible use to the public, the best way to achieve this is to make it
++free software which everyone can redistribute and change under these terms.
++
++  To do so, attach the following notices to the program.  It is safest
++to attach them to the start of each source file to most effectively
++convey the exclusion of warranty; and each file should have at least
++the "copyright" line and a pointer to where the full notice is found.
++
++    <one line to give the program's name and a brief idea of what it does.>
++    Copyright (C) 19yy  <name of author>
++
++    This program is free software; you can redistribute it and/or modify
++    it under the terms of the GNU General Public License as published by
++    the Free Software Foundation; either version 2 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU General Public License for more details.
++
++    You should have received a copy of the GNU General Public License
++    along with this program; if not, write to the Free Software
++    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++
++Also add information on how to contact you by electronic and paper mail.
++
++If the program is interactive, make it output a short notice like this
++when it starts in an interactive mode:
++
++    Gnomovision version 69, Copyright (C) 19yy name of author
++    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
++    This is free software, and you are welcome to redistribute it
++    under certain conditions; type `show c' for details.
++
++The hypothetical commands `show w' and `show c' should show the appropriate
++parts of the General Public License.  Of course, the commands you use may
++be called something other than `show w' and `show c'; they could even be
++mouse-clicks or menu items--whatever suits your program.
++
++You should also get your employer (if you work as a programmer) or your
++school, if any, to sign a "copyright disclaimer" for the program, if
++necessary.  Here is a sample; alter the names:
++
++  Yoyodyne, Inc., hereby disclaims all copyright interest in the program
++  `Gnomovision' (which makes passes at compilers) written by James Hacker.
++
++  <signature of Ty Coon>, 1 April 1989
++  Ty Coon, President of Vice
++
++This General Public License does not permit incorporating your program into
++proprietary programs.  If your program is a subroutine library, you may
++consider it more useful to permit linking proprietary applications with the
++library.  If this is what you want to do, use the GNU Library General
++Public License instead of this License.
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/CREDITS linux-4.8.UNICON/drivers/video/fbdev/unicon/CREDITS
+--- linux-4.8/drivers/video/fbdev/unicon/CREDITS	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/CREDITS	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,38 @@
++This is at least a partial credits-file of people that have
++contributed to the Linux UNICON subsystems, including tools and
++drivers.
++
++The format of this file was shamelessly stolen from the CREDITS file
++in the Linux kernel distribution.
++
++It is sorted by name and formatted to allow easy grepping and
++beautification by scripts.  The fields are: name (N), email (E),
++web-address (W), PGP key ID and fingerprint (P), description (D), and
++snail-mail address (S).
++
++----------
++N: ChenJun
++E: jimc@turbolinux.com.cn
++D: Original author of unicon display support in the console driver.
++   Table character etc.
++
++N: Li Qi Cheng
++E: chrisl at gnuchina dot org
++D: Original author of unicon display support in the console driver.
++
++N: Ma Jun
++E: arthur.ma@turbolinux.com.cn
++D: Original author of input C/S method and international of the 
++   Unicon project
++   Imm C/S struct architecture
++   Font Manager & Unikey
++   Font modules
++   SmallFont Utility
++   Unicon Tools
++
++N: Yu Min Jian
++E: yumingjian@china.com
++D: Original author of unicon grasp server
++
++----------
++End of the Linux UNICON CREDITS file.
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/ChangeLog.TL linux-4.8.UNICON/drivers/video/fbdev/unicon/ChangeLog.TL
+--- linux-4.8/drivers/video/fbdev/unicon/ChangeLog.TL	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/ChangeLog.TL	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,59 @@
++2001-05-30  Ma Lin<merlin at turbolinux.com.cn>
++	    * Unicon-3.0.3 released
++	    Kernel patches for 2.4.5 and 2.2.19
++	    2.4 Kernel patch cleanup, some bugfix.
++2001-05-23  Ma Lin<merlin at turbolinux.com.cn>
++	    More documents updated.
++	    Unicon startup scripts updated.
++	    Fixed some install problem.
++2001-02-27  Ma Lin<merlin at turbolinux.com.cn>
++	    unicon-3.0.2pl2
++	    Documents updated.
++	    Fixed compile problem under gcc2.96.
++	    kernel patches for 2.4.2 and 2.2.19pre15
++2001-02-26  Ma Lin<merlin at turbolinux.com.cn>
++	    * unicon-3.0.2 released
++	    fix a few Makefile and spell problems.
++	    add unicon start scripts.
++2001-02-19  Ma Lin<merlin at turbolinux.com.cn>
++	    rearrange IMM directory structure
++	    update pinyin.map and sysphrase.txt  
++	    kernel patch for 2.4.1 
++	    some other bug-fixes and document-updates.
++2001-02-15  Ma Lin<merlin at turbolinux.com.cn>
++	    add cxterm IMM module and cit files.
++2000-11-22  Arthur ma <arthur.ma@turbolinux.com.cn>
++            * unicon-3.0.1 released
++            fix a bug on GB==>GBK input switch
++            remove CFLAG "-V2.7.2.3" in Makefile.in
++            add kernel 2.4-test11 patch
++            add kernel 2.2.18-pre22 patch 
++	    clean up Makefile and configure script.
++2000-09-20  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            release 2.4-test8 patch
++            add usb patch
++2000-08-11  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            kernel font manager bugs
++2000-06-8   Arthur Ma <arthur.ma@turbolinux.com.cn>
++            fix memeory leak
++2000-05-11  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            delete multiple display of the same phrase.
++2000-05-08  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            * release unicon1.1
++2000-05-01  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            port to kernel 2.2.15 
++2000-04-21  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            fix the unikey to fit Muti-processor
++2000-03-21  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            input method C/S
++2000-02-21  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            disable the OS forward key (fix bugs about Ctrl-F1)
++2000-02-10  Arthur Ma <arthur.ma@turbolinux.com.cn>
++            Keyboard States monitor
++1999-09-21  Justin Yu  <justiny@turbolinux.com.cn>
++            * First Public Released 0.1
++1999-09-17
++            * Add Help 
++1999-09-07
++            * Change the share memory in xl_pinyin.c to 
++              conventional memory
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/Kconfig linux-4.8.UNICON/drivers/video/fbdev/unicon/Kconfig
+--- linux-4.8/drivers/video/fbdev/unicon/Kconfig	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/Kconfig	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,34 @@
++config UNICON_GB
++	tristate "UNICON GB Font support"
++	depends on UNICON
++	default m
++
++config UNICON_GBK
++	tristate "UNICON GBK Font support"
++	depends on UNICON
++	default m
++
++config UNICON_BIG5
++	tristate "UNICON Big5 Font support"
++	depends on UNICON
++	default m
++
++config UNICON_EUCJP
++	tristate "UNICON EUC-JP Font support"
++	depends on UNICON
++	default m
++
++config UNICON_JIS
++	tristate "UNICON JIS Font support"
++	depends on UNICON
++	default m
++
++config UNICON_SJIS
++	tristate "UNICON Shift-JIS Font support"
++	depends on UNICON
++	default m
++
++config UNICON_KSCM
++	tristate "UNICON KSCM Font support"
++	depends on UNICON
++	default m
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/Makefile linux-4.8.UNICON/drivers/video/fbdev/unicon/Makefile
+--- linux-4.8/drivers/video/fbdev/unicon/Makefile	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/Makefile	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,21 @@
++# Makefile for the UNICON
++
++unikey-objs := xl_fm.o xl_hzfb.o xl_keyhooks.o xl_keymasks.o xl_unikey.o
++                  
++obj-m				:= unikey.o
++obj-$(CONFIG_UNICON_GB)		+= encode-gb.o
++obj-$(CONFIG_UNICON_GBK)	+= encode-gbk.o
++obj-$(CONFIG_UNICON_BIG5)	+= encode-big5.o
++obj-$(CONFIG_UNICON_EUCJP)	+= encode-eucjp.o
++obj-$(CONFIG_UNICON_JIS)	+= encode-jis.o
++obj-$(CONFIG_UNICON_SJIS)	+= encode-sjis.o
++obj-$(CONFIG_UNICON_KSCM)	+= encode-kscm.o
++
++unikey.o: $(unikey-objs)
++	$(LD) -r -o $@ $(unikey-objs)
++
++ifeq ($(VERSION),2)
++ifneq ($(PATCHLEVEL),6)
++include $(TOPDIR)/Rules.make
++endif
++endif
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-big5.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-big5.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-big5.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-big5.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,85 @@
++
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_big5_16.h"
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_big5(int left, int right)
++{
++    int rec;
++    rec = (left - 0xa1) * (0xff - 0x40) + right - 0x40;
++    return rec << 5;
++}
++
++static int is_hz_left(int c)
++{
++	return (c >= 0xa1 && c <= 0xfa);
++}
++
++static int is_hz_right(int c)
++{
++	return (c >= 40 && c <= 0xff);
++}
++
++#ifdef MODULE
++static struct double_byte db_big5 =
++#else
++struct double_byte db_big5 =
++#endif
++{
++	0,
++	"BIG5",
++	is_hz_left,
++	is_hz_right,
++	index_big5,
++	16,16,
++	max_big5_16,
++	font_big5_16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++       if (UniconFontManager == 0)
++            return 1;
++       if (UniconFontManager->registerfont (XL_DB_BIG5, &db_big5) == 0)
++            return 1;
++        return 0;
++}
++	
++void cleanup_module(void)
++{
++       if (UniconFontManager == 0)
++            return;
++       UniconFontManager->unregisterfont (XL_DB_BIG5);
++}
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-eucjp.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-eucjp.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-eucjp.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-eucjp.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,93 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_eucjp16.h"
++#define min1 0xa1
++#define max1 0xfe
++// 0x2121 -- 0x7424
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_euc(int left, int right)
++{
++        if ( left == 0x8E )
++                left = 0;
++        else
++                left &= 0x7F;
++        right &= 0x7F;
++
++        if (left > 0x29)
++                return ((right - 0x40 + (left - 0x25) * 96) << 5);
++        else
++        return ((right - 0x20 + (left - 0x20) * 96) << 5);
++}
++
++static int is_hz_left(int c)
++{
++        return ( c >= min1 && c<=max1);
++}
++
++static int is_hz_right(int c)
++{
++        return ( c >= min1 && c<=max1);
++}
++
++#ifdef MODULE
++static struct double_byte db_eucjp =
++#else
++struct double_byte db_eucjp =
++#endif
++{
++	0,
++	"EUCJP",
++	is_hz_left,
++	is_hz_right,
++	index_euc,
++	16,16,
++	max_jis16,
++	font_jis16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return 1;
++        if (UniconFontManager->registerfont (XL_DB_EUCJP, &db_eucjp) == 0)
++            return 1;
++        return 0;
++}
++	
++void cleanup_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return;
++        UniconFontManager->unregisterfont (XL_DB_EUCJP);
++}	
++#endif
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-gb.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-gb.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-gb.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-gb.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,79 @@
++
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_gb16.h"
++#define min1 0xa1
++#define max1 0xfe
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_gb(int left, int right)
++{
++	return ((left-min1)*94+right-min1) << 5;
++}
++static int is_hz(int c)
++{
++	return ( c >= min1 && c<=max1);
++}
++#ifdef MODULE
++static struct double_byte db_gb =
++#else
++struct double_byte db_gb =
++#endif
++
++{
++	0,
++	"GB",
++	is_hz,
++	is_hz,
++	index_gb,
++	16,16,
++	max_gb16,
++	font_gb16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++	if (UniconFontManager == 0)
++            return 1;
++	if (UniconFontManager->registerfont (XL_DB_GB, &db_gb) == 0)
++            return 1;
++	return 0;
++}
++
++void cleanup_module(void)
++{
++	if (UniconFontManager == 0)
++            return;
++	UniconFontManager->unregisterfont (XL_DB_GB);
++}	
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-gbk.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-gbk.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-gbk.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-gbk.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,96 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++ /**************************************************************************
++      the GBK standard internal code is
++          start at 33088  ===> 0x8140
++          end   at 65279  ===> 0xfeff
++                Arthur Ma   arthur.ma@turbolinux.com.cn
++  */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_gbk16.h"
++#define min1          0x81
++#define max1          0xfe
++#define min2          0x40
++#define max2          0xff
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_gbk (int left, int right)
++{
++    int n;
++    n = (left - 0x81) * 192;
++    if (right <= 0xff && right >= 0x40)
++        n += (right - 0x40);
++    return n << 5;
++}
++
++static int is_hz_left(int c)
++{
++        return (c >= min1 && c <= max1);
++}
++
++static int is_hz_right(int c)
++{
++        return (c >= min2 && c <= max2); 
++}
++
++#ifdef MODULE
++static struct double_byte db_gbk =
++#else
++struct double_byte db_gbk =
++#endif
++{
++	0,
++	"GBK",
++        is_hz_left,
++        is_hz_right,
++	index_gbk,
++	16,16,
++	max_gbk16,
++	font_gbk16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++        if (UniconFontManager == NULL)
++            return 1;
++        if (UniconFontManager->registerfont (XL_DB_GBK, &db_gbk) == 0)
++            return 1;
++        return 0;
++}
++
++void cleanup_module(void)
++{
++        if (UniconFontManager == NULL)
++            return;
++        UniconFontManager->unregisterfont (XL_DB_GBK);
++}	
++#endif
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-jis.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-jis.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-jis.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-jis.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,99 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++/*
++ * changelog
++ * Sat Jan 25 2003 Go Taniguchi <go@turbolinux.co.jp>
++ * 	support jisx0213-1
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_jis16.h"
++// 0x2121 -- 0x7e79
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_jis(int left, int right)
++{
++    int rec;
++    left = left & 0x7f;
++    right = right & 0x7f;
++    rec = (left - 0x21) * (0x7e - 0x21 + 1) + right - 0x21;
++    return rec << 5;
++}
++
++static int is_hz_left(int c)
++{
++    if (c < 0x80)
++        return 0;
++    c = c & 0x7f;
++    return (c >= 0x21 && c <= 0x7e);
++}
++
++static int is_hz_right(int c)
++{
++    if (c < 0x80)
++        return 0;
++    c = c & 0x7f;
++    return (c >= 21 && c <= 0x7e);
++}
++
++#ifdef MODULE
++static struct double_byte db_jis =
++#else
++struct double_byte db_jis =
++#endif
++{
++	0,
++	"JIS",
++	is_hz_left,
++	is_hz_right,
++	index_jis,
++	16,16,
++	max_jis16,
++	font_jis16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return 1;
++        if (UniconFontManager->registerfont (XL_DB_JIS, &db_jis) == 0)
++            return 1;
++        return 0;
++}
++	
++void cleanup_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return;
++        UniconFontManager->unregisterfont (XL_DB_JIS);
++}	
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-kscm.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-kscm.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-kscm.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-kscm.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,99 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_kscm16.h"
++// 0x2121 -- 0x7d7e
++
++/*
++   the KSC5601 standard internal code is
++     start at 8481   ===> 0x2121
++     end   at 32126  ===> 0x7d7e
++*/
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int index_kscm(int left, int right)
++{
++    int rec;
++    left = left & 0x7f;
++    right = right & 0x7f;
++    rec = (left - 0x21) * (0x7e - 0x21 + 1) + right - 0x21;
++    return rec << 5;
++}
++
++static int is_hz_left(int c)
++{
++    if (c < 0x80)
++        return 0;
++    c = c & 0x7f;
++    return (c >= 0x21 && c <= 0x7d);
++}
++
++static int is_hz_right(int c)
++{
++    if (c < 0x80)
++        return 0;
++    c = c & 0x7f;
++    return (c >= 21 && c <= 0x7e);
++}
++
++#ifdef MODULE
++static struct double_byte db_kscm =
++#else
++struct double_byte db_kscm =
++#endif
++{
++	0,
++	"kscm",
++	is_hz_left,
++	is_hz_right,
++	index_kscm,
++	16,16,
++	max_kscm16,
++	font_kscm16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++        if (UniconFontManager == 0)
++            return 1;
++        if (UniconFontManager->registerfont (XL_DB_KSCM, &db_kscm) == 0)
++            return 1;
++        return 0;
++}
++	
++void cleanup_module(void)
++{
++        if (UniconFontManager == 0)
++            return;
++        UniconFontManager->unregisterfont (XL_DB_KSCM);
++}
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/encode-sjis.c linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-sjis.c
+--- linux-4.8/drivers/video/fbdev/unicon/encode-sjis.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/encode-sjis.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,111 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/module.h>
++#include <linux/fb_doublebyte.h>
++#include "font_eucjp16.h"
++#define min1 0x81
++#define max1 0xfc
++// 0x2121 -- 0x7424
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++static int is_hz_left(int c)
++{
++        return ((c >= 0x81 && c <= 0x9f) || (c >= 0xe0 && c <= 0xfc));
++}
++
++static int is_hz_right(int c)
++{
++        return ((c >= 0x40 && c <= 0x7e) || (c >= 0x80 && c <= 0xfc));
++}
++
++static int index_sjis(int left, int right)
++{
++        int ch1, ch2;
++
++        if ( !is_hz_left(left) || !is_hz_right(right) ) return -512;
++
++        ch1 = left;
++        ch2 = right;
++
++        if ( ch1 <= 0x9f )
++                ch1 -= 0x71;
++        else
++                ch1 -= 0xb1;
++        ch1 *= 2;
++        ++ch1;
++
++        if ( ch2 >= 0x7f )
++                --ch2;
++        if ( ch2 >= 0x9e ) {
++                ch2 -= 0x7d;
++                ++ch1;
++        } else {
++                ch2 -= 0x1f;
++        }
++
++        if (ch1 > 0x29)
++                return ((ch2 - 0x40 + (ch1 - 0x25) * 96) << 5);
++        else
++                return ((ch2 - 0x20 + (ch1 - 0x20) * 96) << 5);
++}
++
++#ifdef MODULE
++static struct double_byte db_sjis =
++#else
++struct double_byte db_sjis =
++#endif
++{
++	0,
++	"SJIS",
++	is_hz_left,
++	is_hz_right,
++	index_sjis,
++	16,16,
++	max_jis16,
++	font_jis16
++};
++
++#ifdef MODULE
++int init_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return 1;
++        if (UniconFontManager->registerfont (XL_DB_SJIS, &db_sjis) == 0)
++            return 1;
++        return 0;
++}
++	
++void cleanup_module(void)
++{
++        if (UniconFontManager == (DBFontManager *) 0)
++            return;
++        UniconFontManager->unregisterfont (XL_DB_SJIS);
++}	
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/unikey.h linux-4.8.UNICON/drivers/video/fbdev/unicon/unikey.h
+--- linux-4.8/drivers/video/fbdev/unicon/unikey.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/unikey.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,106 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#ifndef UNIDEV_H
++#define UNIDEV_H
++
++#include <linux/ioctl.h> 
++#include <linux/version.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,15,0))
++#include "../../console/fbcon.h"
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
++#include "../console/fbcon.h"
++#endif
++
++typedef struct __ChinesePut_T__
++{
++    int x, y;
++    unsigned char c1, c2;
++    long cl;
++}
++ChinesePut_T;
++
++typedef struct __AsciiPut_T__
++{
++    int x, y;
++    unsigned char ch;
++    long cl;
++}
++AsciiPut_T;
++
++typedef struct __VtInfo_T__
++{
++    int vt_has_resized;
++    int width, height;
++}
++VtInfo_T;
++
++typedef struct __VtFont_T__
++{
++    int tty;
++    int font_type;
++    int input_method_notify;
++} VtFont_T;
++
++#define DEVICE_FILE_NAME "/dev/unikey"
++#define MAJOR_NUM 10
++#define MINOR_NUM 202
++#define UNIKEY_IOCTL 100
++#define UNI_INPUT_GET_INFO    _IOR(UNIKEY_IOCTL, 0, char *)
++#define UNI_INPUT_SET_INFO    _IOR(UNIKEY_IOCTL, 1, char *)
++#define UNI_INPUT_REGISTER    _IOR(UNIKEY_IOCTL, 2, char *)
++#define UNI_INPUT_UNREGISTER  _IOR(UNIKEY_IOCTL, 3, char *)
++
++#define UNI_INPUT_PUT_ASCII   _IOR(UNIKEY_IOCTL, 4, AsciiPut_T *)
++#define UNI_INPUT_PUT_CHINESE _IOR(UNIKEY_IOCTL, 5, ChinesePut_T *)
++#define UNI_INPUT_CLS_BOTTOM  _IOR(UNIKEY_IOCTL, 6, char *)
++#define UNI_INPUT_GET_VT_INFO _IOR(UNIKEY_IOCTL, 7, VtInfo_T *)
++
++#define UNI_INPUT_SET_CUR_TTY _IOR(UNIKEY_IOCTL, 8, VtInfo_T *)
++#define UNI_INPUT_SET_RESIZE_FLAG _IOR(UNIKEY_IOCTL, 9, char *)
++#define UNI_INPUT_SET_UNRESIZE_FLAG _IOR(UNIKEY_IOCTL, 10, char *)
++#define UNI_SET_CURRENT_FONT  _IOR(UNIKEY_IOCTL, 11, VtFont_T *)
++
++#define MAXTTYS		6
++#define SUCCESS         0
++#define DEVICE_NAME     "unikey"
++#define BUF_LEN         80
++#define MAX_CHAR        8
++
++/* op */
++#define FLUSH_BOTTOM         1
++#define FLUSH_INPUTMETHOD    2
++
++typedef struct __TTY_KEY_T__
++{
++    u_char nTty;
++    u_char op; //bFlushInput;
++    u_char buf[MAX_CHAR];
++    u_char nTotal;
++}
++TTY_KEY_T;
++extern int nCurTty;
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_fm.c linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_fm.c
+--- linux-4.8/drivers/video/fbdev/unicon/xl_fm.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_fm.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,186 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++/* This is the main entry of font manager of UNICON */
++
++#include <linux/slab.h>
++#include <linux/tty.h>
++#include <linux/proc_fs.h>
++#include <linux/ctype.h>
++#include <linux/vt_kern.h>
++#include <linux/version.h>
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++#include <linux/console_struct.h>
++#endif
++#include <linux/fb_doublebyte.h>
++
++
++// #define __XL_DEBUG__
++typedef struct DBFontRegister_T
++{
++    int font_type;
++    struct double_byte *p;
++} DBFont;
++
++static DBFont TtyDbFont[MAX_TTY];
++static DBFont aDbFont[MAX_FONT];
++
++static void XL_InitDBFont (void);
++static int XL_RegisterDBFont (int font_type, struct double_byte *p);
++static int XL_UnregisterDBFont (int font_type);
++static int XL_IsAvailable (int font_type);
++static struct double_byte *XL_GetTtyDBFont (int tty);
++static int XL_SetTtyDbFont (int tty,  int font_type);
++static void ReleaseAllTtyFont (int font_type);
++
++static void XL_InitDBFont ()
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_InitDBFont () \n");
++#endif
++    memset (aDbFont, 0, sizeof (aDbFont) * MAX_FONT);
++    memset (TtyDbFont, 0, sizeof (TtyDbFont) * MAX_TTY);
++}
++
++static int XL_RegisterDBFont (int font_type, struct double_byte *p)
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_RegisterDBFont (font_type=%d, double_byte=0x%x)\n", font_type, (long) p);
++#endif
++    if (font_type < 0 || font_type >= MAX_FONT)
++        return 0;
++    if (aDbFont[font_type].p != NULL)
++        return 0;
++    aDbFont[font_type].font_type = font_type;
++    aDbFont[font_type].p = p;
++    return 1;
++}
++
++static int XL_UnregisterDBFont (int font_type)
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_UnregisterDBFont (font_type=%d)\n", font_type);
++#endif
++    if (font_type < 0 || font_type >= MAX_FONT)
++        return 0;
++    ReleaseAllTtyFont (font_type);
++    memset (&aDbFont[font_type], 0, sizeof (DBFont));
++    return 1;
++}
++
++static int XL_IsAvailable (int font_type)
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_IsAvailable (font_type=%d)\n", font_type);
++#endif
++    if (font_type < 0 || font_type >= MAX_FONT)
++        return 0;
++    if (aDbFont[font_type].p != NULL)
++        return 1;
++    return 0;
++}
++ 
++static struct double_byte *XL_GetTtyDBFont (int tty)
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_GetTtyDBFont (tty=%d)\n", tty);
++#endif
++    if (tty < 0 || tty >= MAX_TTY)
++        return NULL;
++   if (TtyDbFont[tty].p != NULL)
++       return TtyDbFont[tty].p;
++   else
++       return NULL;
++} 
++
++static int XL_SetTtyDbFont (int tty,  int font_type)
++{
++#ifdef __XL_DEBUG__
++    printk ("XL_SetTtyDBFont (tty=%d, font_type=%d)\n", tty, font_type);
++#endif
++    if (font_type < 0 || font_type >= MAX_FONT)
++        return 0;
++    if (tty < 0 || tty >= MAX_TTY)
++        return 0;
++    if (XL_IsAvailable (font_type) == 0)
++        return 0;
++    TtyDbFont[tty].font_type = font_type;
++    TtyDbFont[tty].p = aDbFont[font_type].p;
++    return 1;
++}
++
++static void ReleaseAllTtyFont (int font_type)
++{
++    int i;
++#ifdef __XL_DEBUG__
++    printk ("ReleaseAllTtyFont (font_type=%d)\n", font_type);
++#endif
++    if (font_type < 0 || font_type >= MAX_FONT)
++        return;
++    for (i = 0; i < MAX_TTY; i++)
++    {
++        if (TtyDbFont[i].font_type == font_type)
++            memset (&TtyDbFont[i], 0, sizeof (DBFont));
++    }
++}
++
++static DBFontManager UniconFontManagerAbc = 
++{
++     /* init */
++     XL_InitDBFont,           /* init */
++
++     /* font manager */
++     XL_RegisterDBFont,       /* register */
++     XL_UnregisterDBFont,     /* unregister */
++     XL_IsAvailable,          /* test available */
++
++     /* tty font manager */
++     XL_GetTtyDBFont,
++     XL_SetTtyDbFont,
++};
++
++void UniconFontManagerOpen (void)
++{
++#ifdef __XL_DEBUG__
++    printk ("void UniconFontManagerOpen ()\n");
++#endif
++    UniconFontManager = &UniconFontManagerAbc; 
++}
++
++void UniconFontManagerClose (void)
++{
++#ifdef __XL_DEBUG__
++    printk ("void UniconFontManagerClose ()\n");
++#endif
++/*
++    ReleaseAllTtyFont (XL_DB_GB);
++    ReleaseAllTtyFont (XL_DB_GBK);
++    ReleaseAllTtyFont (XL_DB_BIG5);
++    ReleaseAllTtyFont (XL_DB_JIS);
++    ReleaseAllTtyFont (XL_DB_KSCM);
++ */
++    UniconFontManager = 0;
++}
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_funckeys.h linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_funckeys.h
+--- linux-4.8/drivers/video/fbdev/unicon/xl_funckeys.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_funckeys.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,54 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#ifndef  __XL_FUNCKEY_H__
++#define  __XL_FUNCKEY_H__
++/* 
++    printscreen    0xe0, 0xe0, 0x37, 0xe0, 0xb7, 0xe0
++    pause break    0xe1 0x45, 0xe1, 0xc5
++    insert         0xe0 0x52  0xe0 0xd2
++    home           0xe0 0x47 0xe0  0xc7
++    pageup         0xe0 0x49 0xe0  0x79
++    delete         0xe0 0x53 0xe0  0xd3
++    end            0xe0 0x4f 0xe0  0xcf
++    pagedown       0xe0 0x51 0xe0  0xd1
++    up             0xe0 0x48  0xe0 0xc8
++    down           0xe0 0x50 0xe0 0xd0
++    left           0xe0 0x4b 0xe0 0xcb
++    right          0xe0 0x4d 0xe0 0xcd
++    wakeup         0xe0 0x63 0xe0 0xe3
++    sleep          0xe0 0x5f 0xe0 0xdf
++    power          0xe0 0x5e 0xe0 0xde
++    /              0xe0 0x35 0xe0 0xb5
++    right enter    0xe0 0x1c 0xe0 0x9c
++    windows special keys support
++    left1          0xe0 0x5b 0xe0 0xdb
++    right1         0xe0 0x5c 0xe0 0xdc
++    right2         0xe0 0x5d 0xe0 0xdd
++*/
++    scrolllock     0x46, 0xc6
++    numlock        0x45 0xc5
++#endif
++    
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_hzfb.c linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_hzfb.c
+--- linux-4.8/drivers/video/fbdev/unicon/xl_hzfb.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_hzfb.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,156 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/sched.h>
++#include <linux/tty.h>
++#include <linux/tty_flip.h>
++#include <linux/errno.h>
++#include <linux/kd.h>
++#include <linux/slab.h>
++#include <linux/mm.h>
++#include <linux/fb.h>
++#include <linux/vt_kern.h>
++#include <linux/version.h>
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++#include <linux/console_struct.h>
++#endif
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,15,0))
++#include "../../console/fbcon.h"
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
++#include "../console/fbcon.h"
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0))
++#include <video/fbcon.h>
++#endif
++
++#include "xl_hzfb.h"
++#include <linux/fb_doublebyte.h>
++
++extern signed char con2fb_map[MAX_NR_CONSOLES];
++extern struct display fb_display[MAX_NR_CONSOLES];
++
++int GetCurrentTTY (void)
++{
++   struct vc *q = &vc_cons [fg_console];
++   struct vc_data *d = q->d;
++   int unit = d->vc_num;
++   return unit + 1;
++}
++
++struct fb_info *GetRgisteredFb (void)
++{
++   struct vc *q = &vc_cons [fg_console];
++   struct vc_data *d = q->d;
++   int unit = d->vc_num;
++   return registered_fb[(int) con2fb_map[unit]];
++}
++
++int HzFbInit (HzFb_T *fbinfo)
++{
++   struct vc *q = &vc_cons [fg_console];
++   struct vc_data *d = q->d;
++   int unit = d->vc_num;
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
++   struct fb_info *info = registered_fb[(int) con2fb_map[unit]];
++#else
++   struct display *p = &fb_display [unit];
++#endif
++
++   if(!info)
++   {
++       printk("Please use vga=xxx as kernel's command\n");
++       return 1;
++   }
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
++   fbinfo->width = info->var.xres;
++   fbinfo->height = info->var.yres; 
++   fbinfo->fb_mem = info->screen_base;
++   fbinfo->mem_len = d->vc_screenbuf_size;
++   fbinfo->bits_per_pixel = info->var.bits_per_pixel;
++   fbinfo->line_length = info->fix.line_length;
++#else
++   fbinfo->width = p->var.xres;
++   fbinfo->height = p->var.yres; 
++   fbinfo->fb_mem = p->screen_base;
++   fbinfo->mem_len = d->vc_screenbuf_size;
++   fbinfo->bits_per_pixel = p->var.bits_per_pixel;
++   fbinfo->line_length = p->line_length;
++#endif
++
++   return 0;
++}
++
++int HzFbExit (HzFb_T *fbinfo)
++{
++    return 0;
++}
++
++void FbPutAscii (HzFb_T *fbinfo, int x0, int y0, long color, unsigned char ch)
++{
++    struct vc *q = &vc_cons [fg_console];
++    struct vc_data *conp = q->d;
++    int c, ypos, xpos;
++
++    c = ch | (color & 0xff) << 8; 
++    xpos = x0; 
++    ypos = y0;
++
++    fbcon_putc(conp, c, ypos, xpos);
++}
++ 
++void FbPutChinese (HzFb_T *fbinfo, int x0, int y0, 
++	           long color, unsigned char ch, unsigned char cl)
++{
++    struct vc *q = &vc_cons [fg_console];
++    struct vc_data *conp = q->d;
++    int c, ypos, xpos;
++
++    c = ch | ((color & 0xff) << 8)| ((cl+DB_LEFT) << 16) ;
++    xpos = x0;
++    ypos = y0;
++
++    fbcon_putc(conp, c, ypos, xpos);
++
++    xpos ++;
++    c = cl | ((color & 0xff) << 8)| ((ch+DB_RIGHT) << 16) ;
++    fbcon_putc(conp, c, ypos, xpos);
++}
++
++void FbClearRect (HzFb_T *fbinfo, unsigned char cl, int y1, int y2)
++{
++   int i;
++   for (i = 0; i < fbinfo->width/8; i++) 
++       FbPutAscii (fbinfo, i, y1, cl, ' ');
++}
++
++int GetFbHeight (HzFb_T *fbinfo)
++{
++    return fbinfo->height; 
++}
++
++int GetFbWidth (HzFb_T *fbinfo)
++{
++    return fbinfo->width; 
++}
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_hzfb.h linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_hzfb.h
+--- linux-4.8/drivers/video/fbdev/unicon/xl_hzfb.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_hzfb.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,57 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#ifndef __XL_HZFB_H__
++
++typedef struct _hzfb 
++{
++    //geometry
++    u_int width;                //real screen
++    u_int height;
++
++    //memory
++    unsigned char *fb_mem;
++    u_int mem_len;
++
++    //graphics
++    u_int bits_per_pixel;
++    u_int line_length;
++} HzFb_T;
++
++extern int HzFbInit(HzFb_T *fbinfo);
++extern int HzFbExit(HzFb_T *fbinfo);
++extern void FbPutAscii (HzFb_T *fbinfo, int x, int y, 
++                        long color, unsigned char c);
++extern void FbPutChinese (HzFb_T *fbinfo, int x, int y,
++                        long color, unsigned char c1, unsigned char c2);
++extern void FbClearRect (HzFb_T *fbinfo, unsigned char color, int y1, int y2);
++extern int GetFbHeight (HzFb_T *fbinfo);
++extern int GetFbWidth (HzFb_T *fbinfo);
++extern int GetCurrentTTY (void);
++extern struct fb_info *GetRgisteredFb (void);
++
++#endif /* __XL_HZFB_H__ */
++
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_key.h linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_key.h
+--- linux-4.8/drivers/video/fbdev/unicon/xl_key.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_key.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,106 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++/* key -- key processing module */
++
++#ifndef	KEY_H
++#define	KEY_H
++
++/* special function key use to active input method */
++#define NR_SPEC_KEY     18
++
++#define CTRL_ALT_0      200
++#define CTRL_ALT_1      201
++#define CTRL_ALT_2      202
++#define CTRL_ALT_3      203
++#define CTRL_ALT_4      204
++#define CTRL_ALT_5      205
++#define CTRL_ALT_6      206
++#define CTRL_ALT_7      207
++#define CTRL_ALT_8      208
++#define CTRL_ALT_9      209
++
++#define CTRL_ALT_A      210
++#define CTRL_ALT_X      211
++#define CTRL_ALT_P      212
++#define CTRL_ALT_N      213
++#define CTRL_ALT_R      214
++
++#define CTRL_SPACE      215
++#define SHIFT_SPACE     216
++#define SCROLL_LOCK     217
++
++#define ALT_F1		220
++#define CTRL_ALT_F1	220
++#define ALT_F2		221
++#define	CTRL_ALT_F2	221
++#define ALT_F3		222
++#define	CTRL_ALT_F3	222
++#define ALT_F4          223
++#define CTRL_ALT_F4     223
++#define ALT_F5          224
++#define CTRL_ALT_F5     224
++#define ALT_F6          225
++#define CTRL_ALT_F6     225
++#define ALT_F7          226
++#define CTRL_ALT_F7     226
++
++/* system menu trigger */
++#define CTRL_F5         227  
++#define ALT_SPACE       228
++#define F1_HELP         229
++
++/* User Defined Phrase Support */
++#define SHIFT_TAB        230
++
++/* Hotkeys for switching. Refer xl_keymasks.h */
++/* Rat: add 2001.07.31 */
++#define CTRL_COMMA      231  //Half/FullChar Switch
++#define CTRL_ALT_G      232  //Simplified Chinese
++#define CTRL_ALT_B      233  //Tradtional Chinese
++#define CTRL_ALT_J      234  //Japanese
++#define CTRL_ALT_K      235  //Korean
++#define CTRL_ALT_V      236  //Vietnamese
++#define CTRL_LEFTSHIFT  237  //Circulate Inputmethods
++#define CTRL_ALT_LEFTSHIFT  238  //Reverse Circulate Inputmethods
++#define CTRL_PLUS       239  //Define user words
++#define KEY_UP          240  //Arrow Up
++#define KEY_DOWN        241  //Arrow Down
++#define KEY_LEFT        242  //Arrow Left
++#define KEY_RIGHT       243  //Arrow Right
++#define KEY_INS         244
++#define KEY_DEL         245
++#define KEY_HOME        246
++#define KEY_END         247
++#define KEY_PGU         248
++#define KEY_PGD         249
++#define CTRL_F3         250
++
++void SetupKeymap(void);
++void RestoreKeymap(void);
++void KeymapInit(void);
++void KeymapCleanup(void);
++void ProcessNormalModeKey(int tty_fd,unsigned char c);
++#endif
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_keyhooks.c linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keyhooks.c
+--- linux-4.8/drivers/video/fbdev/unicon/xl_keyhooks.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keyhooks.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,96 @@
++
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/tty.h>
++#include <linux/tty_flip.h>
++#include <linux/kernel.h>
++#include <linux/slab.h>
++#include <linux/major.h>
++#include <linux/version.h>
++#include <linux/string.h>
++#include <linux/errno.h>
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,9))
++#include <linux/fb.h>
++#endif
++
++#include "unikey.h"
++
++static struct tty_struct *pCurrentTty = NULL;
++extern void OnTtyChangeUpdate (int nTty);
++
++extern int (*Unicon_fnKeyHook) (struct tty_struct *tty, \
++                                unsigned char ch, char flag);
++extern int (*Unicon_fnLowerKeyHook) (unsigned char ch);
++extern void handle_scancode(unsigned char scancode, int down);
++extern void (*Unicon_TtyChangeUpdate) (int nTty);
++extern short int bHasClosed[MAXTTYS];
++
++void Unicon_InitTTY (void)
++{
++    Unicon_TtyChangeUpdate = OnTtyChangeUpdate;
++}
++
++void Unicon_ExitTTY (void)
++{
++    Unicon_fnKeyHook = NULL;
++    Unicon_fnLowerKeyHook = NULL;
++    Unicon_TtyChangeUpdate = NULL;
++}
++
++int Unicon_fnSendKey (unsigned char ch, char flag)
++{
++   struct tty_struct *tty = pCurrentTty;
++   char mbz = 0;
++   if (tty == NULL) {
++       return -1;
++   }
++   tty->ldisc->ops->receive_buf(tty, &ch, &mbz, 1);
++#ifdef DEBUG
++   printk ("will sending %c, 0x%x\n", ch, ch);
++#endif
++   return 1;
++}
++
++int Unicon_fnSendKeys (int nTty, unsigned char *ch, int Total)
++{
++    int i;
++#ifdef DEBUG
++   printk ("will sending %d keys \n", Total);
++#endif
++    for (i = 0; i < Total; i++, ch++)
++    {
++        Unicon_fnSendKey (*ch, TTY_NORMAL);
++    }
++    return Total;
++}
++
++extern int nCurTty;
++extern int bFunKeyPressed;
++extern int ScancodeToKeycode (unsigned char scancode, 
++                              unsigned char *keycode);
++extern void WriteTtyKey (int nTTY, unsigned char ch);
++extern int alt_shift_ctrl (unsigned char scancode);
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_keyhooks.h linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keyhooks.h
+--- linux-4.8/drivers/video/fbdev/unicon/xl_keyhooks.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keyhooks.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,34 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#ifndef __XL_KEYHOOKS__
++
++extern void Unicon_InitTTY (void);
++extern void Unicon_ExitTTY (void);
++extern int Unicon_fnSendKey (unsigned char ch, char flag);
++extern int Unicon_fnSendKeys (int nTty, unsigned char *ch, int Total);
++
++#endif
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_keymasks.c linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keymasks.c
+--- linux-4.8/drivers/video/fbdev/unicon/xl_keymasks.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_keymasks.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,402 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/fs.h>
++
++#include <linux/version.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,9))
++#include <linux/fb.h>
++#endif
++
++#include "xl_key.h"
++#include "unikey.h"
++
++#define  LR_CTRL_KEY_DOWN            0x1d
++#define  LR_CTRL_KEY_UP              (LR_CTRL_KEY_DOWN + 0x80)
++
++#define  L_SHIFT_KEY_DOWN            0x2a
++#define  L_SHIFT_KEY_UP              (L_SHIFT_KEY_DOWN + 0x80)
++#define  R_SHIFT_KEY_DOWN            0x36
++#define  R_SHIFT_KEY_UP              (R_SHIFT_KEY_DOWN + 0x80)
++
++#define  L_ALT_KEY_DOWN              0x38
++#define  L_ALT_KEY_UP                (L_ALT_KEY_DOWN + 0x80)
++#define  NUMLOCK_DOWN                0x45
++#define  NUMLOCK_UP                  0xC5
++
++#define  S_KEY_1_DOWN                0x02
++#define  S_KEY_2_DOWN                0x03
++#define  S_KEY_3_DOWN                0x04
++#define  S_KEY_4_DOWN                0x05
++#define  S_KEY_5_DOWN                0x06
++#define  S_KEY_6_DOWN                0x07
++#define  S_KEY_7_DOWN                0x08
++#define  S_KEY_8_DOWN                0x09
++#define  S_KEY_9_DOWN                0x0a
++#define  S_KEY_0_DOWN                0x0b
++
++#define  S_KEY_A_DOWN                0x1e
++#define  S_KEY_X_DOWN                0x2d
++#define  S_KEY_P_DOWN                0x19
++#define  S_KEY_N_DOWN                0x31
++#define  S_KEY_R_DOWN                0x13
++
++#define SPACE_KEY_DOWN               0x39
++#define F1_KEY_DOWN                  0x3b
++#define F1_KEY_UP                    (0x3b + 0x80)
++
++#define F2_KEY_DOWN                  0x3c
++#define F3_KEY_DOWN                  0x3d
++#define F4_KEY_DOWN                  0x3e
++#define F5_KEY_DOWN                  0x3f
++#define F6_KEY_DOWN                  0x40
++#define F7_KEY_DOWN                  0x41
++
++#define PERIOD_KEY_DOWN              0x34
++#define TAB_KEY_DOWN                 0xf
++#define TAB_KEY_UP                   0x8f
++//Rat:add 20010731
++#define PLUS_KEY_DOWN                0x0d
++#define COMMA_KEY_DOWN               0x33
++#define HOME_KEY_DOWN                0x47
++#define UP_ARROW_DOWN		     0x48
++#define PAGEUP_KEY_DOWN              0x49
++#define DOWN_ARROW_DOWN              0x50
++#define LEFT_ARROW_DOWN              0x4b
++#define RIGHT_ARROW_DOWN             0x4d
++#define END_KEY_DOWN                 0x4f
++#define PAGEDOWN_KEY_DOWN            0x51
++#define INSERT_KEY_DOWN              0x52
++#define DELETE_KEY_DOWN              0x53
++
++#define ALPHA_G_DOWN                 0x22
++#define ALPHA_H_DOWN                 0x23
++#define ALPHA_J_DOWN                 0x24
++#define ALPHA_K_DOWN                 0x25
++#define ALPHA_V_DOWN                 0x2f
++#define ALPHA_B_DOWN                 0x30
++
++extern void NotifyTtyToUpdate (void);
++extern short int bHasClosed[MAXTTYS];
++extern void ClearButtonBar (void);
++int bFunKeyPressed = 0;
++void OnTtyChangeUpdate (int nTty);
++static int ctrl_pressed = 0, shift_pressed = 0, alt_pressed = 0;
++
++int alt_shift_ctrl (unsigned char scancode)
++{
++#ifdef DEBUG
++    printk ("keyboard::scancode = 0x%x\n", scancode);
++#endif
++    switch (scancode)
++    {
++        case LR_CTRL_KEY_DOWN:
++             ctrl_pressed = 1;
++             break;
++        case LR_CTRL_KEY_UP:
++             ctrl_pressed = 0;
++             break;
++        case L_SHIFT_KEY_DOWN:
++             shift_pressed = 1;
++             break;
++        case L_SHIFT_KEY_UP:
++             shift_pressed = 0;
++             break;
++        case L_ALT_KEY_DOWN:
++             alt_pressed = 1;
++             break;
++        case L_ALT_KEY_UP:
++             alt_pressed = 0;
++             break;
++        default:
++             return 0;
++    }
++#ifdef DEBUG
++    printk ("ctrl=%d, alt=%d, shift=%d\n",
++                   ctrl_pressed,
++                   alt_pressed,
++                   shift_pressed);
++#endif
++    return 1;
++}
++
++int GetTotalIgnore (unsigned char scancode)
++{
++    static u_char table[] = 
++    {
++        0x1c, 0x35, 
++        0x45, 0x47, 0x48, 0x49, 0x4b, 0x4d, 0x4f, 
++        0x50, 0x51, 0x52, 0x53, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
++        0x63, 
++    };
++    static int total = sizeof (table) / sizeof (u_char);
++    int i;
++    for (i = 0; i < total; i++)
++        if (table[i] == scancode || 
++            (table[i] + 0x80) == scancode)
++            return 1;
++    if (scancode == 0xe0 || scancode == 0xb7)
++        return 2;
++    return 0;
++}
++
++int ScancodeToKeycode (unsigned char scancode, 
++                       unsigned char *keycode)
++{
++    static int right_shift_pressed = 0, 
++               has_key_input_after_shift = 0;
++    static int nkey = 0, multi_key = 0;
++    static int bFunKeyPressed_flag = 0;
++
++#ifdef DEBUG
++    printk ("keyboard::scancode = 0x%x\n", scancode);
++#endif
++    if (bFunKeyPressed_flag == 1)
++    {
++        multi_key = GetTotalIgnore (scancode);
++        bFunKeyPressed_flag = 0;
++    }
++    else if (scancode == 0xe0 || scancode == 0xe1)
++    {
++        multi_key = 0; 
++        bFunKeyPressed = 1;
++        bFunKeyPressed_flag = 1;
++        nkey = 1;
++        if (right_shift_pressed == 1)
++            has_key_input_after_shift = 1;
++        return 0;
++    }
++    if (bFunKeyPressed == 1 && multi_key != 0 && nkey <= multi_key)
++    {
++        nkey ++;
++        return 0;
++    }
++    bFunKeyPressed = 0;
++    nkey = multi_key = 0; 
++    switch (scancode)
++    {
++        case R_SHIFT_KEY_DOWN: 
++             right_shift_pressed = 1; 
++             has_key_input_after_shift = 0;
++             break;
++        case R_SHIFT_KEY_UP: 
++             right_shift_pressed = 0; 
++             if (has_key_input_after_shift == 0)
++             {
++                 *keycode = CTRL_SPACE; 
++                 has_key_input_after_shift = 0;
++                 return 2;
++             }
++             has_key_input_after_shift = 0;
++             break;
++        case F3_KEY_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed != 1)
++             {
++                 *keycode = CTRL_F3;
++                 return 4;
++             }
++             break;
++        case F5_KEY_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed != 1)
++             {
++                 *keycode = CTRL_F5;
++                 return 4;
++             }
++             break;
++        case F1_KEY_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed != 1)
++             {
++                 *keycode = F1_HELP;
++                 return 4; 
++             }
++             break;
++        case S_KEY_0_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_0;
++                 return 4;
++             }
++             break;
++        case S_KEY_1_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_1;
++                 return 4;
++             }
++             break;
++        case S_KEY_2_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_2;
++                 return 4;
++             }
++             break;
++        case S_KEY_3_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_3;
++                 return 4;
++             }
++             break;
++        case S_KEY_4_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_4;
++                 return 4;
++             }
++             break;
++        case S_KEY_5_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_5;
++                 return 4;
++             }
++             break;
++        case S_KEY_6_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_6;
++                 return 4;
++             }
++             break;
++        case S_KEY_7_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_7;
++                 return 4;
++             }
++             break;
++        case S_KEY_8_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_8;
++                 return 4;
++             }
++             break;
++        case S_KEY_9_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_9;
++                 return 4;
++             }
++             break;
++       case SPACE_KEY_DOWN:
++             if (ctrl_pressed == 1)
++             {
++                 *keycode = CTRL_SPACE;
++                 return 1;
++/*
++                 if (bHasClosed[nCurTty - 1] == 1)
++                     bHasClosed[nCurTty - 1] = 0;
++                 else
++                     bHasClosed[nCurTty - 1] = 1;
++                 OnTtyChangeUpdate (nCurTty-1);
++                 return 3;
++*/
++             }
++             else if (shift_pressed == 1)
++             {
++                 *keycode = SHIFT_SPACE;
++                 return 1;
++             }
++             break;
++       case PERIOD_KEY_DOWN:
++             if (ctrl_pressed == 1)
++             {
++                 *keycode = ALT_SPACE;
++                 return 4;
++             }
++             break;
++       case L_SHIFT_KEY_DOWN:
++             if (ctrl_pressed == 1)
++             {
++                 *keycode = CTRL_LEFTSHIFT;
++                 return 4;
++             }
++             break;
++       case ALPHA_G_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_G;
++                 return 4;
++             }
++             break;
++       case ALPHA_B_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_B;
++                 return 4;
++             }
++             break;
++       case ALPHA_J_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_J;
++                 return 4;
++             }
++             break;
++       case ALPHA_K_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_K;
++                 return 4;
++             }
++             break;
++       case ALPHA_V_DOWN:
++             if (ctrl_pressed == 1 && alt_pressed == 1)
++             {
++                 *keycode = CTRL_ALT_V;
++                 return 4;
++             }
++             break;
++       case COMMA_KEY_DOWN:
++             if (ctrl_pressed == 1)
++             {
++                 *keycode = CTRL_COMMA;
++                 return 4;
++             }
++             break;
++       case PLUS_KEY_DOWN:
++             if (ctrl_pressed == 1)
++             {
++                 *keycode = CTRL_PLUS;
++                 return 4;
++             }
++             break;
++      case TAB_KEY_DOWN:
++             if (shift_pressed == 1)
++             {
++                 *keycode = SHIFT_TAB;
++                 return 4;
++             }
++    };
++    if (right_shift_pressed == 1 && 
++        !(scancode == R_SHIFT_KEY_UP || scancode == R_SHIFT_KEY_DOWN)) 
++        has_key_input_after_shift = 1;
++    else
++        has_key_input_after_shift = 0;
++    return 0;
++}
++
+diff -urNp linux-4.8/drivers/video/fbdev/unicon/xl_unikey.c linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_unikey.c
+--- linux-4.8/drivers/video/fbdev/unicon/xl_unikey.c	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/drivers/video/fbdev/unicon/xl_unikey.c	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,511 @@
++/*
++ *
++ * UNICON - The Console Chinese & I18N
++ * Copyright (c) 1999-2000
++ *
++ * This file is part of UNICON, a console Chinese & I18N
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ *
++ * See the file COPYING directory of this archive
++ * Author: see CREDITS
++ */
++
++#include <linux/version.h>
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++#include <linux/config.h>
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
++#include <linux/autoconf.h>
++#else
++#include <generated/autoconf.h>
++#endif
++#include <linux/slab.h>
++#include <linux/tty.h>
++#include <linux/sysctl.h>
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++#include <linux/swapctl.h>
++#endif
++#include <linux/proc_fs.h>
++#include <linux/ctype.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/wait.h>
++#include <linux/poll.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/fs.h>       
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++#include <linux/wrapper.h>  
++#endif
++#include <linux/fb_doublebyte.h>
++#include <linux/miscdevice.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,9))
++#include <linux/fb.h>
++#endif
++
++#include "unikey.h"
++#include "xl_keyhooks.h"
++
++#define  FAILURE   -1
++
++#ifdef MODULE_LICENSE
++MODULE_LICENSE("GPL");
++#endif
++
++#ifndef KERNEL_VERSION
++#define KERNEL_VERSION(a,b,c) ((a)*65536+(b)*256+(c))
++#endif
++
++#include <asm/uaccess.h>
++#include "unikey.h"
++#include "xl_hzfb.h"
++
++//local variables
++int Device_Open = 0;
++static TTY_KEY_T ui[MAXTTYS];
++short int bHasClosed[MAXTTYS];
++
++static spinlock_t unikey_read_lock;
++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0))
++    static wait_queue_head_t inq;  /* read and write queues */
++#else
++    static struct wait_queue *inq;  /* read and write queues */
++#endif
++
++static int vt_has_resized = 0;
++int nCurTty = 1;
++int bFlushInput = 1;
++HzFb_T our_fbhzinfo;
++
++static int bFlushInputMethod = 0;
++static int FlushInputMethodTty = 0;
++static int FlushInputMethodFontType = 0;
++
++static int device_open(struct inode *inode, struct file *file)
++{
++#ifdef DEBUG
++	printk ("device_open(%p,%p)\n", inode, file);
++#endif
++//      if (Device_Open)
++//          return -EBUSY;
++	Device_Open++;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++	MOD_INC_USE_COUNT;
++#endif
++	return SUCCESS;
++}
++
++
++static int device_release(struct inode *inode, struct file *file)
++{
++#ifdef DEBUG
++	printk ("device_release(%p,%p)\n", inode, file);
++#endif
++ 
++	Device_Open --;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
++	MOD_DEC_USE_COUNT;
++#endif
++
++	return 0;
++}
++
++static ssize_t device_read(
++	struct file *file,
++	char *buffer,
++	size_t length,
++	loff_t *offset)
++{
++        int n; 
++        unsigned long flags;
++        static TTY_KEY_T a;
++        size_t ret;
++
++#ifdef DEBUG
++	printk("device_read(%p,%p,%d)\n", file, buffer, length);
++#endif
++        spin_lock_irqsave(&unikey_read_lock, flags);
++        ret = copy_from_user(&a, (TTY_KEY_T *)buffer, sizeof(TTY_KEY_T));
++        //n = nCurTty - 1;
++        n = a.nTty;
++        ui[n].nTty = a.nTty;
++        if (bFlushInputMethod == 1)
++        {
++            if (bFlushInput == 1)
++                ui[n].op |= FLUSH_BOTTOM;
++            ui[n].op |= (FLUSH_INPUTMETHOD | FlushInputMethodFontType << 4);
++            ui[n].nTty = FlushInputMethodTty;
++	    ret = copy_to_user((TTY_KEY_T *)buffer, &ui[n], sizeof(TTY_KEY_T)); 
++            ui[n].nTotal = 0;
++            ui[n].op = 0;
++            bFlushInputMethod = 0;
++        }    
++        else if (n >= 0 && n < MAXTTYS)
++        {
++            if (bFlushInput == 1)
++                ui[n].op |= FLUSH_BOTTOM;
++	    ret = copy_to_user((TTY_KEY_T *)buffer, &ui[n], sizeof(TTY_KEY_T)); 
++            ui[n].nTotal = 0;
++            ui[n].op = 0;
++        }
++        else
++        {
++            memset (&a, 0, sizeof (TTY_KEY_T));
++	    ret = copy_to_user((TTY_KEY_T *)buffer, &a, sizeof(TTY_KEY_T)); 
++        }
++        bFlushInput = 0;
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++	return sizeof (TTY_KEY_T);//SUCCESS;
++}
++
++static ssize_t device_write(
++	struct file *file,
++	const char *buffer,
++	size_t length,
++	loff_t *offset)
++{
++        static TTY_KEY_T a;
++        int n;
++        unsigned long flags;
++        size_t ret;
++
++#ifdef DEBUG
++        printk ("device_write(%p,%s,%d)", file, buffer, length);
++#endif
++        spin_lock_irqsave(&unikey_read_lock, flags);
++	ret = copy_from_user(&a, (TTY_KEY_T *)buffer, sizeof(TTY_KEY_T));
++        n = Unicon_fnSendKeys (a.nTty, a.buf, a.nTotal);
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++        return n;
++}
++
++static unsigned int device_poll (struct file *file, 
++                                 struct poll_table_struct *poll_table)
++{
++    int i;
++    unsigned long flags;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    i = nCurTty - 1;
++    if (i >= 0 && i < MAXTTYS)
++    {
++        if (bFlushInput == 1 || ui[i].nTotal != 0 || bFlushInputMethod != 0)
++        {
++            spin_unlock_irqrestore(&unikey_read_lock, flags);
++            return 1;
++        }
++    }
++    poll_wait (file, &inq, poll_table);
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++    return 0;
++}
++ 
++void device_put_ascii (AsciiPut_T * p)
++{
++    AsciiPut_T a;
++    unsigned long flags;
++    size_t ret;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    if (bHasClosed [nCurTty - 1] == 1)
++    {
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++        return;
++    }
++    ret = copy_from_user(&a, p, sizeof(AsciiPut_T));
++    FbPutAscii (&our_fbhzinfo, a.x, a.y, a.cl, a.ch); 
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++}
++
++void device_put_chinese (ChinesePut_T * p)
++{
++    ChinesePut_T a;
++    unsigned long flags;
++    size_t ret;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    if (bHasClosed [nCurTty - 1] == 1)
++    {
++       spin_unlock_irqrestore(&unikey_read_lock, flags);
++       return;
++    }
++    ret = copy_from_user(&a, p, sizeof(ChinesePut_T));
++    FbPutChinese (&our_fbhzinfo, a.x, a.y, a.cl, a.c1, a.c2); 
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++}
++
++void  device_cls_input_bottom (char *cl)
++{
++    unsigned color;
++    unsigned long flags;
++    size_t ret;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    if (bHasClosed [nCurTty - 1] == 0)
++        ret = copy_from_user(&color, cl, sizeof(unsigned char));
++    else
++        color = 0;
++
++    FbClearRect (&our_fbhzinfo, color,
++                 our_fbhzinfo.height/16-1, 
++                 our_fbhzinfo.height/16);
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++}
++
++void  device_get_vt_info (VtInfo_T * p)
++{
++    VtInfo_T a;
++    unsigned long flags;
++    size_t ret;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    a.width = our_fbhzinfo.width;
++    a.height = our_fbhzinfo.height;
++    a.vt_has_resized = vt_has_resized;
++    ret = copy_to_user(p, &a, sizeof(VtInfo_T)); 
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++}
++
++void device_set_current_tty (int *pnTty)
++{
++    int a;
++    unsigned long flags;
++    size_t ret;
++
++    spin_lock_irqsave(&unikey_read_lock, flags);
++    ret = copy_from_user(&a, pnTty, sizeof(int));
++    if (a >= 1 && a <= MAXTTYS)
++        nCurTty = a;
++    spin_unlock_irqrestore(&unikey_read_lock, flags);
++}
++
++void device_set_resize_flag (void)
++{
++    vt_has_resized = 1;
++}
++
++void device_clear_resize_flag (void)
++{
++    vt_has_resized = 0;
++}
++
++void device_set_font (VtFont_T * p)
++{
++//    printk ("device_set_font::tty=%d,font_type=%d,input_method_notify=%d\n",
++//             p->tty, p->font_type,p->input_method_notify);
++    UniconFontManager->setfont (p->tty, p->font_type);
++    if (p->input_method_notify == 1)
++    {
++        unsigned long flags;
++        spin_lock_irqsave(&unikey_read_lock, flags);
++        bFlushInputMethod = 1;
++        FlushInputMethodTty = p->tty;
++        FlushInputMethodFontType = p->font_type;
++        // ui[p->tty].op = FLUSH_INPUTMETHOD | p->font_type << 4;
++        // ui[nCurTty - 1].op = FLUSH_INPUTMETHOD | p->font_type << 4;
++        // ui[nCurTty - 1].op = FLUSH_INPUTMETHOD | p->font_type << 4;
++        wake_up_interruptible (&inq);
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++    }
++}
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++long device_unlocked_ioctl(
++#else
++int device_ioctl(
++	struct inode *inode,
++#endif
++	struct file *file,
++	unsigned int ioctl_num,
++	unsigned long ioctl_param)
++{
++	int i;
++
++	switch (ioctl_num) {
++		case UNI_INPUT_GET_INFO:
++			i = device_read(file, (char *)ioctl_param, 0, 0);
++			break;
++		case UNI_INPUT_SET_INFO:
++			device_write(file, (char *)ioctl_param, 0, 0); 
++			break;
++                case UNI_INPUT_PUT_ASCII:
++                        device_put_ascii ((AsciiPut_T *) ioctl_param);
++                        break;
++                case UNI_INPUT_PUT_CHINESE:
++                        device_put_chinese ((ChinesePut_T *) ioctl_param);
++                        break;
++                case UNI_INPUT_CLS_BOTTOM:
++                        device_cls_input_bottom ((char *) ioctl_param);
++                        break;
++                case UNI_INPUT_GET_VT_INFO:
++                        device_get_vt_info ((VtInfo_T *) ioctl_param);
++                        break;
++                case UNI_INPUT_SET_CUR_TTY:
++                        device_set_current_tty ((int *) ioctl_param);
++                        break;
++                case UNI_INPUT_SET_RESIZE_FLAG:
++                        device_set_resize_flag ();
++                        break;
++                case UNI_INPUT_SET_UNRESIZE_FLAG:
++                        device_clear_resize_flag ();
++                        break;
++                case UNI_SET_CURRENT_FONT:
++                        device_set_font ((VtFont_T *) ioctl_param);
++                        break;
++		default:
++			break;
++	}
++	return SUCCESS;
++}
++
++struct file_operations Fops = {
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
++	.owner =	THIS_MODULE,
++	.read =		device_read,
++	.write =	device_write,
++	.poll =		device_poll,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++	.unlocked_ioctl = device_unlocked_ioctl,
++#else
++	.ioctl =	device_ioctl,
++#endif
++	.open =		device_open,
++	.release =	device_release,
++#else
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0))
++	THIS_MODULE,
++#endif
++	NULL,			/* seek */
++	device_read,		/* read */
++	device_write,		/* write */
++	NULL,			/* readdir */
++	device_poll,		/* select */
++	device_ioctl,		/* ioctl */
++	NULL,			/* mmap */
++	device_open,		/* open */
++	NULL,			/* flush */
++	device_release,		/* close */
++	NULL,			// int (*fsync) ;
++	NULL,			// int (*fasync);
++	NULL,			// int (*lock) 
++	NULL,			// ssize_t (*readv) 
++	NULL,			// ssize_t (*writev) 
++#endif
++};
++
++static struct miscdevice unikey_device = {
++	MINOR_NUM,
++	DEVICE_NAME,
++	&Fops
++};
++
++extern void UniconFontManagerOpen (void);
++int __init unikey_init_module (void)
++{
++        int i;
++
++	if(GetRgisteredFb() == NULL){
++		printk("No Framebuffer console, exit\n");
++		return -ENOTTY;
++	}
++        Device_Open = 0;
++        for (i = 0; i < MAXTTYS; i++)
++        {
++            ui[i].nTty = i;
++            ui[i].nTotal = 0;
++            ui[i].op = FLUSH_BOTTOM;
++            bHasClosed[i] = 0;
++        }
++	/* Register the character device */
++	misc_register(&unikey_device);
++        Unicon_InitTTY ();
++	if(HzFbInit (&our_fbhzinfo))
++	{
++		Unicon_ExitTTY ();
++		misc_deregister(&unikey_device);
++		return -EINVAL;
++	}
++
++        UniconFontManagerOpen ();
++        printk ("Unikey successfully installed.\n");
++#ifdef DEBUG
++        printk ("our fbhzinfo:\n");
++        printk ("width = %d\n", our_fbhzinfo.width);
++        printk ("height = %d\n", our_fbhzinfo.height);
++        printk ("line_length = %d\n", our_fbhzinfo.line_length);
++        printk ("bit_per_pixels = %d\n", our_fbhzinfo.bits_per_pixel);
++        printk ("fb mem = 0x%x\n", our_fbhzinfo.fb_mem);
++#endif
++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0)) /* maybe it's wrong */
++        spin_lock_init(&unikey_read_lock);
++        init_waitqueue_head (&inq);
++#endif
++	return 0;
++}
++
++extern void UniconFontManagerClose (void);
++void __exit unikey_cleanup_module (void)
++{
++        UniconFontManagerClose ();
++        HzFbExit (&our_fbhzinfo);
++        Unicon_ExitTTY ();
++	// Unregister the device
++	misc_deregister(&unikey_device);
++        printk ("Unikey successfully uninstalled.\n");
++}
++
++module_init(unikey_init_module);
++module_exit(unikey_cleanup_module);
++
++void WriteTtyKey (int nTTY, unsigned char ch)
++{
++    unsigned long flags;
++#ifdef DEBUG
++     printk ("ch = %c, 0x%x, TTY = %d\n", ch, ch, nTTY);
++#endif
++    if (Device_Open == 0) 
++        Unicon_fnSendKey (ch, TTY_NORMAL);
++    else 
++    {
++        spin_lock_irqsave(&unikey_read_lock, flags);
++        if (ui[nTTY-1].nTotal > MAX_CHAR)
++        {
++            spin_unlock_irqrestore(&unikey_read_lock, flags);
++            return;
++        }
++        ui[nTTY-1].buf[ui[nTTY-1].nTotal++] = ch;
++        wake_up_interruptible (&inq); 
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++    }
++}
++
++void OnTtyChangeUpdate (int nTty)
++{
++    unsigned long flags;
++#ifdef DEBUG
++    printk (KERN_DEBUG"New Tty = %d\n", nTty);
++#endif
++    if ((nTty < MAXTTYS && nTty >= 0))
++    {
++        spin_lock_irqsave(&unikey_read_lock, flags);
++        nCurTty = nTty + 1;
++        bFlushInput = 1;
++        ui[nTty].op = FLUSH_BOTTOM;
++        wake_up_interruptible (&inq);
++        spin_unlock_irqrestore(&unikey_read_lock, flags);
++    }
++    else
++        nCurTty = nTty + 1;
++}
+diff -urNp linux-4.8/include/linux/fb_doublebyte.h linux-4.8.UNICON/include/linux/fb_doublebyte.h
+--- linux-4.8/include/linux/fb_doublebyte.h	1970-01-01 09:00:00.000000000 +0900
++++ linux-4.8.UNICON/include/linux/fb_doublebyte.h	2016-10-08 14:01:06.000000000 +0900
+@@ -0,0 +1,79 @@
++/*
++ * linux/include/linux/fb_widechar.h
++ *
++ * Copyright (C) 1999		Christopher Li, Jim Chen
++ *				GNU/Linux Research Center
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file COPYING in the main directory of this archive
++ * for more details.
++ *
++ *
++ */
++
++#ifndef _LINUX_FB_DOUBLEBYTE_H
++#define _LINUX_FB_DOUBLEBYTE_H
++
++#include <linux/proc_fs.h>
++#include <linux/tty.h>
++#include <linux/vt_kern.h>
++
++#define DB_VALIDATE	0x8000
++#define DB_RIGHT_MASK 	0x4000
++#define DB_HALF_MASK	0x2000
++#define DB_SYMBOL       0x1000
++#define DB_ASCII	0
++
++#define DB_RIGHT 	(DB_VALIDATE|DB_RIGHT_MASK)
++#define DB_LEFT		(DB_VALIDATE)
++#define DB_NUM		8
++
++#define DB_INDEX_ERROR -512
++struct double_byte
++{
++	unsigned int	num;
++	char 		name[16];
++	int 		(*is_left)(int );
++	int 		(*is_right)(int );
++	int 		(*font_index)(int left,int right);
++	unsigned int   	width,height;	/* right now only support 16x16 */
++	int		charcount;
++	unsigned char * font_data;
++};
++
++extern void fbcon_putc (struct vc_data *conp, int c, int ypos, int xpos);
++
++#define MAX_TTY        6
++#define MAX_FONT       7
++
++/* font_type */
++#define XL_DB_GB       0
++#define XL_DB_BIG5     1
++#define XL_DB_JIS      2
++#define XL_DB_KSCM     3
++#define XL_DB_GBK      4
++#define XL_DB_EUCJP    5
++#define XL_DB_SJIS     6
++
++// typedef void *         double_byte;
++// typedef unsigned char  UCHAR;
++
++typedef struct DBFontManager_T
++{
++    void          (*init) (void);
++
++    /* Font Register Manager */
++    int           (*registerfont) (int font_type, struct double_byte *p);
++    int           (*unregisterfont) (int font_type);
++    int           (*isinstalled) (int font_type);
++
++    /* Tty Font Manager */
++    struct double_byte * (*getfont) (int tty);
++    int           (*setfont) (int tty, int font_type);
++
++} DBFontManager;
++
++extern DBFontManager *UniconFontManager;
++
++#endif
++

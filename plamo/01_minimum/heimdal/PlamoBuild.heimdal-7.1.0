@@ -1,13 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gettext'
-vers='0.19.8.1'
-url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+pkgbase='heimdal'
+vers='7.1.0'
+url="https://www.h5l.org/dist/src/${pkgbase}-${vers}.tar.gz"
 arch=`uname -m`
-build=P3
+build=P1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-emacs --with-included-glib --with-included-libcroco'
-DOCS='AUTHORS COPYING ChangeLog ChangeLog.0 HACKING INSTALL NEWS README README.woe32 THANKS'
+# program-prefix=
+OPT_CONFIG="--disable-static --enable-shared
+	--with-sqlite3=/usr"
+DOCS='ChangeLog ChangeLog.1998 ChangeLog.1999 ChangeLog.2000 ChangeLog.2001 ChangeLog.2002 ChangeLog.2003 ChangeLog.2004 ChangeLog.2005 ChangeLog.2006 LICENSE NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -15,7 +17,7 @@ compress=txz
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -36,54 +38,40 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
-    done
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 
-    cd $B
-    # if [ -f $S/autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-    export EMACS=$(which emacs 2> /dev/null || which emacs_mini 2> /dev/null)
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr \
-                 --sysconfdir=/etc \
-                 --localstatedir=/var \
-                 --mandir='${prefix}'/share/man \
-                 --docdir='${prefix}'/share/doc/${src} \
-                 ${OPT_CONFIG[$i]}
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
-    fi
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-
-    # Set LANG=C when $(GCJ) runs
-    sed -i 's@$(GCJ)@LANG=C &@g' gettext-tools/src/Makefile
-    
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -92,6 +80,10 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mv -v $P/usr/bin/su $P/usr/bin/ksu
+  mv -v $P/usr/share/man/man1/su.1 $P/usr/share/man/man1/ksu.1
+  mv -v $P/usr/share/man/cat1/su.1 $P/usr/share/man/cat1/ksu.1
 
 ################################
 #      install tweaks

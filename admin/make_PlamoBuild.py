@@ -100,6 +100,7 @@ def make_headers(url, srcdir, pkgbase, vers, readme, patchfiles, method):
 pkgbase='{1}'
 vers='{2}'
 url="{0}"
+verify=""
 arch=`uname -m`
 build=P1
 src="{3}"
@@ -115,6 +116,7 @@ compress=txz
 pkgbase='{1}'
 vers='{2}'
 url="{0}"
+verify=""
 arch=`uname -m`
 build=P1
 src="{3}"
