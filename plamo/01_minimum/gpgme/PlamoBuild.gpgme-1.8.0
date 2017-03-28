@@ -3,11 +3,11 @@
 pkgbase='gpgme'
 vers='1.8.0'
 url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-verify=""
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=""
 DOCS='AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'
 patchfiles=''
 compress=txz
@@ -52,6 +52,10 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+  if [ ! -f .patch ] ; then
+    sed 's#@libsuffix@#.so#' -i lang/cpp/src/GpgmeppConfig.cmake.in.in
+    touch .patch
+  fi
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
