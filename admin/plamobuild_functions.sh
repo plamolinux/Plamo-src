@@ -39,7 +39,7 @@ convert_links() {
 
 
 install2() {
-  install -d ${2%/*} ; install -m 644 $1 $2
+  install -d -v ${2%/*} ; install -v -m 644 $1 $2
 }
 
 strip_all() {
@@ -248,7 +248,7 @@ install_tweak() {
     touch -r $S/$doc $docdir/$src/$doc
     gzip_one $docdir/$src/$doc
   done
-  install $myname $docdir/$src
+  install -v $myname $docdir/$src
   gzip_one $docdir/$src/$myname
 
   # パッチファイルのインストール
