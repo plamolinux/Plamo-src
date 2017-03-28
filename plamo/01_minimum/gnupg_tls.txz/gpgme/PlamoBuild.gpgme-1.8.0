@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gnupg'
-vers='2.1.19'
-url="https://${pkgbase}.org/ftp/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.sig"
+pkgbase='gpgme'
+vers='1.8.0'
+url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-symcryptrun --enable-maintainer-mode --docdir=/usr/share/doc/${src}"
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.CC0 COPYING.LIB COPYING.other ChangeLog ChangeLog-2011 INSTALL NEWS README README.GIT THANKS TODO'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -52,10 +52,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  if [ ! -f .Makefile.in.patch ]; then
-    sed -e '/noinst_SCRIPTS = gpg-zip/c sbin_SCRIPTS += gpg-zip' -i tools/Makefile.in
-    touch .Makefile.in.patch
-  fi
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -87,11 +83,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  ln -sv gpg2 $P/usr/bin/gpg
-  ln -sv gpgv2 $P/usr/bin/gpgv
-  ln -sv gpg2.1.gz $P/usr/share/man/man1/gpg.1.gz
-  ln -sv gpgv2.1.gz $P/usr/share/man/man1/gpgv.1.gz
 
 ################################
 #      install tweaks
