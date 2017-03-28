@@ -4,7 +4,7 @@ pkgbase='glibc'
 vers='2.25'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 arch=`uname -m`
-build=P2
+build=P3
 src="glibc-${vers}"
 OPT_CONFIG="--enable-obsolete-rpc --disable-profile --enable-add-ons
 	--enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls
@@ -20,7 +20,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
 #patchfiles="glibc-${vers}-fhs-1.patch"
-patchfiles="glibc-2.24-fhs-1.patch"
+patchfiles="glibc-2.25-fhs-1.patch"
 compress=txz
 ##############################################################
 
