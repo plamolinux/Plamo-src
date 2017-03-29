@@ -1,0 +1,63 @@
+#!/bin/sh
+# Time-stamp: <2008-09-02 11:31:18 kojima>
+
+# This file is derived from avahi.
+# Start/stop/restart daemon in init.d/XXXX
+
+DESC="gpm (General Purpose Mouse)"
+NAME="gpm"
+DAEMON1="/usr/sbin/gpm -m /dev/input/mice -t imps2"
+DAEMON2="/usr/bin/gpm-root"
+
+status() {
+  if [ -n "`ps axww | gawk '{print $5}' | grep $NAME`" ] ; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+start() {
+  echo "Starting $DESC:"
+  $DAEMON1 &
+  $DAEMON2 &
+}
+
+stop() {
+  echo "Stopping $DESC:"
+  killall gpm
+  killall gpm-root
+}
+
+case "$1" in
+start)
+  if status ; then
+    echo "$DESC is already running (will not start it twice)."
+  else
+    start
+  fi
+  ;;
+stop)
+  if status ; then
+    stop
+  else
+    echo "$DESC seems already stopped."
+  fi
+  ;;
+restart)
+  stop
+  start
+  ;;
+status)
+  if status ; then
+    echo "$DESC is currently running."
+  else
+    echo "$DESC is not running."
+  fi
+  ;;
+*)
+  echo "Usage: $0 {start|stop|status|restart}"
+  exit 1
+  ;;
+esac
+exit 0
