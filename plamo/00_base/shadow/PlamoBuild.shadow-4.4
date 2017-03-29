@@ -4,11 +4,11 @@ pkgbase='shadow'
 vers="4.4"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='default-useradd.patch for-linux_pam_1.3.0.patch CVE-2017-2616.patch tweak_pamd.patch update_login_defs.patch'
+patchfiles='default-useradd.patch for-linux_pam_1.3.0.patch CVE-2017-2616.patch tweak_pamd.patch update_login_defs.patch disable-nls-manpages.patch'
 compress=txz
 ##############################################################
 # BuildRequirements:
@@ -51,10 +51,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
     cd $B
     for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
+      patch -p1 < $W/$patch
     done
 
     # do not make groups command, because coreutils has groups command
@@ -71,12 +68,14 @@ if [ $opt_config -eq 1 ] ; then
     # do not create mail spool when useradd
     sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
 
-    # if [ -f $S/autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    #if [ -f $S/autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
+    autoreconf -i
+
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -104,12 +103,12 @@ if [ $opt_package -eq 1 ] ; then
   # install adduser command
   install $W/shadow-adduser-20160122 $P/usr/sbin/adduser
 
-  # convert japanese man pages to euc-jp
-  install -d $mandir/ja_JP.eucJP/man{1,5,8}
-  for i in `cd $mandir/ja ; find . -type f` ; do
-      nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
+  # mkdir man dirs
+  install -v -d $mandir/ja
+  for d in $( cd man/ja ; ls -d man? )
+  do
+    cp -av man/ja/$d $P/usr/share/man/ja/$d 
   done
-  mv $mandir/ja $mandir/ja_JP.UTF-8
 
   # initpkg
   mkdir -p $P/install
