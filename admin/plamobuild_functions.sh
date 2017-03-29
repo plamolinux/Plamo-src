@@ -163,10 +163,10 @@ download_sources() {
     if [ ! -f ${url##*/} ] ; then
       wget $url
     fi
-    if [ -z "$verify" ] ; then
-      verify_sig_auto
-    else
+    if [ -n "$verify" ] ; then
       verify_specified_sig
+    elif [ $USE_VERIFY_SIG_AUTO ] ; then
+      verify_sig_auto
     fi
     ;;
   esac
