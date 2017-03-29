@@ -1,8 +1,5 @@
 #!/bin/sh
-# Time-stamp: <2008-09-02 11:31:18 kojima>
-
-# This file is derived from avahi.
-# Start/stop/restart daemon in init.d/XXXX
+# Time-stamp: <2017-03-29 15:02:10 root>
 
 DESC="gpm (General Purpose Mouse)"
 NAME="gpm"
