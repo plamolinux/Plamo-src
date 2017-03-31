@@ -140,7 +140,7 @@ verify_specified_sig() {
     esac
   fi
   case $sig_suffix in
-    asc|sig|sign) gpg2 --verify ${sigfile} ;;
+    asc|sig|sign|dsc) gpg2 --verify ${sigfile} ;;
     sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
     *) ${sig_suffix} -c ${sigfile};;
   esac
