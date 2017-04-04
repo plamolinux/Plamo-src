@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase=ntp
-vers=4.2.8p9
-url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
-verify=$url.md5
+pkgbase=os_prober
+vers=1.74
+url="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.tar.xz"
+verify="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.dsc"
+commitid=
 arch=`uname -m`
-build=P2
-src=ntp-${vers}
-OPT_CONFIG="--docdir=/usr/share/doc/ntp-${vers} --enable-linuxcaps"
-DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.refclocks README.versions TODO readme.y2kfixes'
-patchfiles=''
+build=P1
+src=os-prober
+OPT_CONFIG=''
+DOCS='README TODO'
+patchfiles='plamo-detect.patch'
 compress=txz
 ##############################################################
 
@@ -23,11 +24,11 @@ strip_all() {
     if [ "$chk_elf.x" != ".x" ]; then
       chk_lib=`echo $chk | grep lib`
       if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
+        echo "stripping $chk with -g "
+        strip -g $chk
       else
-         echo "stripping $chk"
-         strip $chk
+        echo "stripping $chk"
+        strip $chk
       fi
     fi
   done
@@ -72,24 +73,14 @@ compress_all() {
   strip_all
 }  
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      return 1
-    fi
-  done
-  return 0
-}
-
 W=`pwd`
 for i in `seq 0 $((${#src[@]} - 1))` ; do
   S[$i]=$W/${src[$i]} 
-  B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  if [ $arch = "x86_64" ]; then
+    B[$i]=$W/build`test ${#src[@]} -eq 1 || echo $i`
+  else
+    B[$i]=$W/build32`test ${#src[@]} -eq 1 || echo $i`
+  fi      
 done
 P=$W/work ; C=$W/pivot
 infodir=$P/usr/share/info
@@ -100,13 +91,13 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
+  target="-m64"
+  libdir="lib64"
+  suffix="64"
 else
-    target="-m32"
-    libdir="lib"
-    suffix=""
+  target="-m32"
+  libdir="lib"
+  suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -124,31 +115,40 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget $i ; fi
-  done
-  for i in $verify ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
-  done
-  for i in $verify ; do
     case ${i##*.} in
-    asc) gpg2 --verify ${i##*/} ;;
-    sig) gpg2 --verify ${i##*/} ;;
-    md5) verify_checksum "md5sum" ;;
-    sha256sum) verify_checksum "sha256sum" ;;
+    git)
+      if [ ! -d `basename ${i##*/} .git` ] ; then
+        git clone $i
+      else
+        ( cd `basename ${i##*/} .git` ; git pull origin master )
+      fi
+      ;;
+    *)
+      if [ ! -f ${i##*/} ] ; then
+        wget $i
+      fi
+      if [ -n $verify ] ; then
+        if [ ! -f ${verify##*/} ] ; then
+          wget $verify
+        fi
+        gpg --verify ${verify##*/}
+        if [ $? -ne 0 ]; then
+          echo "verify failed"
+          exit 1
+        fi
+      fi
     esac
-    if [ $? -ne 0 ]; then
-      echo "archive verify was failed."
-      exit 1
-    else
-      echo "archive verify was successed."
-    fi
   done
   for i in $url ; do
     case ${i##*.} in
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
+    git) ( cd `basename ${i##*/} .git`
+        git checkout master
+        if [ -n "$commitid" ] ; then
+          git reset --hard $commitid
+        fi
+        git set-file-times ) ;;
     *) tar xvpf ${i##*/} ;;
     esac
   done
@@ -165,38 +165,20 @@ if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+      patch -p1 < $W/$patch
     done
-
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
-
-    if [ -f setup.py ]; then
-        python ./setup.py config        
-    elif [ -f Makefile.PL ]; then
-        perl ./Makefile.PL
-    elif [ -x configure ] ; then
-       export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-       export LDFLAGS='-Wl,--as-needed' 
-       export CC="gcc -isystem /usr/include $target" 
-       export CXX="g++ -isystem /usr/include $target "
-       ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py build
-    elif [ -f Makefile ] ; then
+    if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make -j3
+    fi
+    if [ $? != 0 ]; then
+      echo "make error. $0 script stop"
+      exit 255
     fi
   done
 fi
@@ -209,61 +191,61 @@ if [ $opt_package -eq 1 ] ; then
   fi
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
-  touch $W/i.st ; sleep 1
-  for i in `seq 0 $((${#B[@]} - 1))` ; do
-    cd ${B[$i]}
-    if [ -f setup.py ]; then
-        python setup.py install --root $P
-    elif [ -f Makefile ] ; then
-      export LDFLAGS='-Wl,--as-needed'
-      make install DESTDIR=$P
-    fi
+  cd $B
+
+  install -v -Dm755 linux-boot-prober "$P"/usr/bin/linux-boot-prober
+  install -v -Dm755 os-prober "$P"/usr/bin/os-prober
+  install -v -Dm755 newns "$P"/usr/lib/os-prober/newns
+  install -v -Dm755 common.sh $P/usr/share/os-prober/common.sh  
+
+  for dir in os-probes os-probes/mounted os-probes/init linux-boot-probes linux-boot-probes/mounted; do
+    install -v -dm755 "$P/usr/lib/$dir"
+    install -v -m755 -t "$P/usr/lib/$dir" "$dir"/common/*
+    [[ -d "$dir"/x86 ]] && cp -vr "$dir"/x86/* "$P/usr/lib/$dir"
   done
+
+  install -v -Dm755 os-probes/mounted/powerpc/20macosx "$P"/usr/lib/os-probes/mounted/20macosx
+
+  install -v -dm755 "$P"/var/lib/os-prober
+
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # install init.d file
-  install -D -m 0755 $W/ntp.init $P/etc/rc.d/init.d/ntp
-  check_me=`whoami | grep root`
-  if [ "$check_me.x" != ".x" ]; then
-      chown root:root $P/etc/rc.d/init.d/$pkgbase
+  mkdir -p $docdir/$pkgbase-${vers}
+  if [ -d $P/usr/share/omf ]; then
+    mkdir -p $P/install
+    for omf in $P/usr/share/omf/* ; do
+      omf_name=`basename $omf`
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
+fi
+EOF
+    done
   fi
 
-  # install configuration file
-  install -D -m 0644 $W/ntp.conf $P/etc/ntp.conf.dist
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/ntp.conf ]; then
-  mv /etc/ntp.conf.dist /etc/ntp.conf
+  if [ -d $P/etc/gconf/schemas ]; then
+    mkdir -p $P/install
+    for schema in $P/etc/gconf/schemas/* ; do
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+  ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
 fi
 EOF
-
-  # create the directory that driftfile is placed
-  install -d -o 49 -g 49 -m 0755 $P/var/lib/ntp
-
-  cat <<EOF >> $P/install/initpkg
-if ! id ntp >/dev/null 2>&1; then
-  echo "Ntpd requires ntp user and group. Run following command"
-  echo "  sudo groupadd -g 49 ntp"
-  echo "  sudo useradd -u 49 -g ntp -s /bin/false ntp"
-fi
-EOF
-
-  # remove directories created by 'make install', which have no files
-  rmdir $P/usr/sbin
-  rmdir $P/usr/libexec
+    done
+  fi
 
 # remove locales except ja
 # 
   for loc_dir in `find $P -name locale` ; do
-      pushd $loc_dir
-      for loc in * ; do
-          if [ "$loc" != "ja" ]; then
-              rm -rf $loc
-          fi
-      done
-      popd
-   done      
+    pushd $loc_dir
+    for loc in * ; do
+      if [ "$loc" != "ja" ]; then
+        rm -rf $loc
+      fi
+    done
+    popd
+  done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
@@ -271,9 +253,9 @@ EOF
   cd $P
   compress_all
   if [ -d $P/usr/share/man ]; then
-      for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-          gzip_dir $mdir
-      done
+    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+      gzip_dir $mdir
+    done
   fi
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
@@ -281,26 +263,16 @@ EOF
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
   cd $W
-  for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
-    for j in ${DOCS[$i]} ; do
-      for k in ${S[$i]}/$j ; do
-        install2 $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        touch -r $k $docdir/${src[$i]}/${k#${S[$i]}/}
-        gzip_one $docdir/${src[$i]}/${k#${S[$i]}/}
-      done
-    done
-    if [ $i -eq 0 ] ; then
-      install $myname $docdir/$src
-      gzip_one $docdir/$src/$myname
-    else
-      ln $docdir/$src/$myname.gz $docdir/${src[$i]}
-    fi
-    ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
+  for i in $DOCS
+  do
+    install2 $S/$i $docdir/$src/$i
+    touch -r $S/$i $docdir/$src/$i
+    gzip_one $docdir/$src/$i
   done
 
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
 
 ############################################################
@@ -310,7 +282,7 @@ EOF
 
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
+    chown -R root.root $P/usr/share/doc
   fi
 
 ######################################################################
@@ -319,11 +291,6 @@ EOF
 # * 完成した作業ディレクトリから tar イメージを作成する手順を以降に記述
 #   します(こだわりを求めないなら単に makepkg でも良いです)。
 ######################################################################
-# tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
-# tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
-# tar rvpf $pkg.tar -C $P usr/share/doc/$src
-# touch -t `date '+%m%d0900'` $pkg.tar ; gzip $pkg.tar ; touch $pkg.tar.gz
-# mv $pkg.tar.gz $pkg.tgz
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
 y

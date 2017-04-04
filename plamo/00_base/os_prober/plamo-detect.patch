@@ -1,0 +1,13 @@
+diff -uNr os-prober.orig/os-probes/mounted/common/90linux-distro os-prober/os-probes/mounted/common/90linux-distro
+--- os-prober.orig/os-probes/mounted/common/90linux-distro	2017-01-28 06:49:14.000000000 +0900
++++ os-prober/os-probes/mounted/common/90linux-distro	2017-03-31 19:31:46.014730308 +0900
+@@ -137,6 +137,9 @@
+ 	elif [ -e "$dir/etc/devuan_version" ]; then
+ 		short="Devuan"
+ 		long="$(printf "Devuan GNU/Linux (%s)\n" "$(cat "$dir/etc/devuan_version")")"
++	elif [ -e "$dir/etc/plamo-release" ]; then
++		short="Plamo"
++		long="$(cat "$dir/etc/plamo-release")"
+ 	else
+ 		short="Linux"
+ 		long="unknown Linux distribution"
