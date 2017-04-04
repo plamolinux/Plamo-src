@@ -5,7 +5,7 @@ vers=4.2.8p10
 url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 verify=$url.md5
 arch=`uname -m`
-build=P2
+build=P1
 src=ntp-${vers}
 OPT_CONFIG="--docdir=/usr/share/doc/ntp-${vers} --enable-linuxcaps"
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.refclocks README.versions TODO readme.y2kfixes'
