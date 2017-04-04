@@ -116,6 +116,20 @@ verify_sig_auto() {
   fi
 }
 
+# ex:
+# set
+# digest="md5sum:ca03b7c4ba6733658b7cec4b08572458" (command_for_digest:digest)
+# then
+# compare $(md5sum ${url##*/}) and digest
+check_digest() {
+  IFS=":"
+  set -- $digest
+  sum=$( $1 ${url##*/} | awk '{ print $1 }')
+  if [ $sum != $2 ]; then
+    exit 1
+  fi
+}
+
 verify_specified_sig() {
   # signature or digest file
   sigfile=${verify##*/}
@@ -163,7 +177,9 @@ download_sources() {
     if [ ! -f ${url##*/} ] ; then
       wget $url
     fi
-    if [ -n "$verify" ] ; then
+    if [ -n "$digest" ] ; then
+      check_digest
+    elif [ -n "$verify" ] ; then
       verify_specified_sig
     elif [ $USE_VERIFY_SIG_AUTO ] ; then
       verify_sig_auto
