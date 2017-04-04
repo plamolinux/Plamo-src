@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase='os_prober'
 vers='1.74'
-url="http://http.debian.net/debian/pool/main/o/os-prober-${vers}/os-prober_${vers}.tar.xz"
+url="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.tar.xz"
 verify="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.dsc"
 arch=`uname -m`
 build=B1
