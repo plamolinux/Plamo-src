@@ -125,6 +125,7 @@ check_digest() {
   IFS=":"
   set -- $digest
   sum=$( $1 ${url##*/} | awk '{ print $1 }')
+  IFS=$' \t\n'
   if [ $sum != $2 ]; then
     exit 1
   fi
