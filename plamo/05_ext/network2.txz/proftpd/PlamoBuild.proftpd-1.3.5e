@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=proftpd
-vers=1.3.5b
+vers=1.3.5e
 url="ftp://ftp.proftpd.org/distrib/source/proftpd-${vers}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
