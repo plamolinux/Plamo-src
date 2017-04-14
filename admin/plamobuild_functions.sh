@@ -54,37 +54,35 @@ prepare() {
   fi
 }
 
+try_expand() {
+  case ${1##*.} in
+  gz) gunzip -c $1 > $2 ;;
+  bz2) bunzip2 -c $1 > $2 ;;
+  xz) unxz -c $1 > $2 ;;
+  esac
+  touch -r $1 $2
+}
+
 verify_signature() {
   i=$1 ; j=${i%.*}
   if [ -n "$2" ] ; then
-    sigfile=${2##*/}    # signature or digest file
-    sig=${2##*.}        # suffix of $sigfile
+    sigfile=${2##*/} ; sig=${2##*.}
     if [ "$sigfile" != "${i##*/}.$sig" ] ; then
-      case ${i##*.} in
-      gz) gunzip -c ${i##*/} > ${j##*/} ;;
-      bz2) bunzip -c ${i##*/} > ${j##*/} ;;
-      xz) unxz -c ${i##*/} > ${j##*/} ;;
-      esac
-      touch -r ${i##*/} ${j##*/}
+      try_expand ${i##*/} ${j##*/}
     fi
     wget $2
   else
-    for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+    for sig in asc sig{,n} dsc {sha{256,1},md5}{,sum} ; do
       if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
       if wget --spider $j.$sig ; then
-        case ${i##*.} in
-        gz) gunzip -c ${i##*/} > ${j##*/} ;;
-        bz2) bunzip2 -c ${i##*/} > ${j##*/} ;;
-        xz) unxz -c ${i##*/} > ${j##*/} ;;
-        esac
-        touch -r ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
+        try_expand ${i##*/} ${j##*/} ; i=$j ; wget $i.$sig ; break
       fi
     done
     sigfile=${i##*/}.$sig
   fi
   if [ -f $sigfile ] ; then
     case $sig in
-    asc|sig|sign) gpg2 --verify $sigfile ;;
+    asc|sig|sign|dsc) gpg2 --verify $sigfile ;;
     sha256|sha1|md5) ${sig}sum -c $sigfile ;;
     *) $sig -c $sigfile ;;
     esac
@@ -160,8 +158,8 @@ strip_bindir() {
       echo "$i"
       if [ -h $i ] ; then continue ; fi
       if [ -n "`file $i | grep "not stripped"`" ] ; then
-         echo "stripping $i with -p"
-         strip -p $i
+        echo "stripping $i with -p"
+        strip -p $i
       fi
     done
   ) fi
