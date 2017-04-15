@@ -71,6 +71,14 @@ verify_signature() {
       try_expand ${i##*/} ${j##*/}
     fi
     wget $2
+  elif [ -n "$3" ] ; then
+    sig=${3%:*} ; sigfile=${i##*/}.$sig
+    echo "${3#*:}  ${i##*/}" > $sigfile
+    touch -r ${i##*/} $sigfile
+  elif [ -n "$4" ] ; then
+    sig=${4%=*} ; sigfile=${i##*/}.$sig
+    echo "${4#*=}  ${i##*/}" > $sigfile
+    touch -r ${i##*/} $sigfile
   else
     for sig in asc sig{,n} dsc {sha{256,1},md5}{,sum} ; do
       if wget --spider $i.$sig ; then wget $i.$sig ; break ; fi
@@ -93,12 +101,12 @@ verify_signature() {
 download_sources() {
   url=($url)
   for i in `seq 0 $((${#url[@]} - 1))` ; do
-    j=${url[$i]}
+    j=${url[$i]%%#*}
     case ${j##*.} in
     git) if [ ! -d `basename ${j##*/} .git` ] ; then git clone $j ; else
         ( cd `basename ${j##*/} .git` ; git pull origin master ) ; fi ;;
-    *) if [ ! -f ${j##*/} ] ; then wget $j
-        verify_signature $j ${verify[$i]} ; fi ;;
+    *) if [ ! -f ${j##*/} ] ; then wget $j ; verify_signature $j \
+        "${verify[$i]}" "${digest[$i]}" "${url[$i]#*#}" ; fi ;;
     esac
   done
   if [ -f gitlog2changelog ] ; then
@@ -106,7 +114,7 @@ download_sources() {
     PATH=$W:$PATH
   fi
   for i in `seq 0 $((${#url[@]} - 1))` ; do
-    j=${url[$i]}
+    j=${url[$i]%%#*}
     case ${j##*.} in
     tar) tar xvpf ${j##*/} ;;
     gz|tgz) tar xvpzf ${j##*/} ;;
