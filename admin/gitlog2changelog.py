@@ -2,9 +2,18 @@
 # Copyright 2008 Marcus D. Hanwell <marcus@cryos.org>
 # Distributed under the terms of the GNU General Public License v2 or later
 
-# Modified by (C) 2012-2015 TAMUKI Shoichi <tamuki@linet.gr.jp>
+# Modified by (C) 2012-2017 TAMUKI Shoichi <tamuki@linet.gr.jp>
 
-import os, re, subprocess, shlex
+import os, re, unicodedata, subprocess, shlex
+
+def get_chr_width(c):
+	return 2 if unicodedata.east_asian_width(c) in ["F", "W", "A"] else 1
+
+def get_str_width(s):
+	w = 0
+	for c in s:
+		w += get_chr_width(c)
+	return w
 
 # Execute git log with the desired command line options.
 fin = os.popen("git log --date=short --stat --summary "
@@ -26,6 +35,10 @@ commitSet = ""
 
 # The main part of the loop
 for line in fin:
+	try:
+		line = unicode(line, "utf-8")
+	except NameError:
+		pass
 	# The commit line marks the start of a new commit object.
 	if re.search("^commit ", line):
 		# Start all over again...
@@ -96,7 +109,10 @@ for line in fin:
 			commitSet = ""
 		elif authorLine != prevAuthorLine:
 			# Write out the commit lines
-			fout.write(commitSet + "\n")
+			try:
+				fout.write(commitSet.encode("utf-8") + "\n")
+			except TypeError:
+				fout.write(commitSet + "\n")
 			fout.write("\n" + authorLine + "\n")
 			commitSet = ""
 
@@ -112,14 +128,19 @@ for line in fin:
 			commit += "\n\t* " if i == 0 else "\n\t  "
 			if lv == 1:
 				commit += "  "
-			if i + 68 - lv * 2 >= lc:
+			if get_str_width(commitLine[i:]) <= 68 - lv * 2:
 				i2 = lc - 1
+				n = lc - i
 			else:
+				w = n = 0
+				while w < 68 - lv * 2:
+					w += get_chr_width(commitLine[i + n])
+					n += 1
 				p = -1
-				for s in re.finditer("\s", commitLine[i:i + 69 - lv * 2]):
+				for s in re.finditer("\s", commitLine[i:i + n + 1]):
 					p = i + s.start()
-				i2 = i + 67 - lv * 2 if p == -1 else p
-			p = commitLine.find("\n", i, i + 68 - lv * 2)
+				i2 = i + n - 1 if p == -1 else p
+			p = commitLine.find("\n", i, i + n)
 			if 0 <= p < i2:
 				i2 = p
 			if i == j:
@@ -145,7 +166,10 @@ for line in fin:
 		prevAuthorLine = authorLine
 
 # Write out the commit lines
-fout.write(commitSet + "\n")
+try:
+	fout.write(commitSet.encode("utf-8") + "\n")
+except TypeError:
+	fout.write(commitSet + "\n")
 
 # Write out the relay message
 #fout.write("\nFor the changes before 1.0.0, see ChangeLog.1\n")
