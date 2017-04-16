@@ -101,12 +101,12 @@ verify_signature() {
 download_sources() {
   url=($url)
   for i in `seq 0 $((${#url[@]} - 1))` ; do
-    j=${url[$i]%%#*}
+    j=${url[$i]%%#*} ; k=`[[ ${url[$i]} =~ \# ]] && echo ${url[$i]#*#}`
     case ${j##*.} in
     git) if [ ! -d `basename ${j##*/} .git` ] ; then git clone $j ; else
         ( cd `basename ${j##*/} .git` ; git pull origin master ) ; fi ;;
-    *) if [ ! -f ${j##*/} ] ; then wget $j ; verify_signature $j \
-        "${verify[$i]}" "${digest[$i]}" "${url[$i]#*#}" ; fi ;;
+    *) if [ ! -f ${j##*/} ] ; then wget $j
+        verify_signature $j "${verify[$i]}" "${digest[$i]}" "$k" ; fi ;;
     esac
   done
   if [ -f gitlog2changelog ] ; then
