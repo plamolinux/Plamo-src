@@ -72,6 +72,18 @@ for line in fin:
 		# The sign off line is ignored
 		elif re.search("^    Signed-off-by: ", line):
 			pass
+		elif re.search("^    Acked-by: ", line):
+			pass
+		elif re.search("^    Cc: ", line):
+			pass
+		elif re.search("^    Reported-by: ", line):
+			pass
+		elif re.search("^    Tested-by: ", line):
+			pass
+		elif re.search("^    Reviewed-by: ", line):
+			pass
+		elif re.search("^    Suggested-by: ", line):
+			pass
 		else:
 			if messageItem:
 				if not message.endswith("\n"):
@@ -105,7 +117,10 @@ for line in fin:
 		# author on this day
 		authorLine = date + "  " + author
 		if not prevAuthorLine:
-			fout.write(authorLine + "\n")
+			try:
+				fout.write(authorLine.encode("utf-8") + "\n")
+			except TypeError:
+				fout.write(authorLine + "\n")
 			commitSet = ""
 		elif authorLine != prevAuthorLine:
 			# Write out the commit lines
@@ -113,7 +128,10 @@ for line in fin:
 				fout.write(commitSet.encode("utf-8") + "\n")
 			except TypeError:
 				fout.write(commitSet + "\n")
-			fout.write("\n" + authorLine + "\n")
+			try:
+				fout.write("\n" + authorLine.encode("utf-8") + "\n")
+			except TypeError:
+				fout.write("\n" + authorLine + "\n")
 			commitSet = ""
 
 		# Assemble the actual commit message line(s) and limit the line length
