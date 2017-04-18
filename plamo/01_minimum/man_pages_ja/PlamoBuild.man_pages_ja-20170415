@@ -1,0 +1,773 @@
+#!/bin/sh
+##############################################################
+pkgbase='man_pages_ja'
+vers='20170415'
+url="https://linuxjm.osdn.jp/man-pages-ja-${vers}.tar.gz"
+verify=""
+arch=noarch
+build=B1
+src="man-pages-ja-${vers}"
+OPT_CONFIG=''
+DOCS='INSTALL README'
+patchfiles=''
+compress=txz
+##############################################################
+# TODO: インストールするマニュアルの選択は仮なのでパッケージが揃った辺りで見直す必要あり
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "Nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  install -v -d 755 -o root -g root $P/usr/share/man/ja_JP.UTF-8/man{1,2,3,4,5,6,7,8}
+  install -v -o root -g root -m 644 manual/acl/man5/acl.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/addftinfo.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/addr2line.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/adduser.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/afmtodit.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/agetty.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/apmd/man1/apm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/apmd/man8/apmd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/apmd/man1/apmsleep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/ar.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/arch.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/arp.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/as.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/at/man5/at.allow.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/at/man1/at.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/at/man8/atd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/at/man1/atq.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/at/man1/atrm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/at/man8/atrun.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/autofs/man5/auto.master.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/expect/man1/autoexpect.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/autofs/man5/autofs.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/autofs/man8/autofs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/autofs/man8/automount.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/badblocks.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/base32.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/base64.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/basename.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_bash/man1/bash.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_bash/man1/bashbug.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/at/man1/batch.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_bc/man1/bc.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/blkid.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/blockdev.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_bash/man1/builtins.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bunzip2.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzcat.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzcmp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzdiff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzegrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzexe.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzfgrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzgrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzip2.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzip2recover.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzless.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/bzip2/man1/bzmore.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/cal.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man1/cancel.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/cardctl.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man1/cardinfo.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/cardmgr.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/cat.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gcc/man1/cccp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/cfdisk.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/acl/man1/chacl.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man1/chage.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ppp/man8/chat.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man1/chattr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/chcon.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man1/chfn.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/chgrp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/chkdupexe.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/chmod.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/chown.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/chpasswd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/chroot.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man1/chsh.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/ci.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/cksum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/clear.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/cmp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/co.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/col.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/colcrt.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/colrm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/column.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/com_err.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/comm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man1/compile_et.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/quota/man8/convertquota.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/cp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_cpio/man1/cpio.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gcc/man1/cpp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cron/man8/cron.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/cron/man1/crontab.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cron/man5/crontab.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/csplit.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/ctrlaltdel.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ncurses/man3/curs_window.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/cut.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cvsup/man1/cvpasswd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cvsup/man1/cvsup.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cvsup/man8/cvsupd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/cytune.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/date.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_bc/man1/dc.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/dd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/ddate.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/debugfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/reiserfsprogs/man8/debugreiserfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ucd-snmp/man3/default_store.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/df.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/dhcp/man8/dhclient-script.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/dhcp/man5/dhclient.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/dhcp/man5/dhclient.leases.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/dhcp/man8/dhclient.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/dhcp/man5/dhcp-eval.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/dhcp/man5/dhcp-options.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/dhcpcd/man8/dhcpcd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/diff3.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/diff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/dir.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/dircolors.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/dirname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/display-services.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ld.so/man3/dlclose.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/ld.so/man3/dlerror.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/ld.so/man3/dlopen.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/ld.so/man3/dlsym.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/util-linux/man8/dmesg.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/net-tools/man1/dnsdomainname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man1/domainname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/dpasswd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/du.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/dump_cis.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/dumpe2fs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/e2fsck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/e2image.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/e2label.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual//man8/ebtables.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/echo.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_ed/man1/ed.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/quota/man8/edquota.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_grep/man1/egrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/eject/man1/eject.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/elvtune.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/env.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/eqn.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man5/ethers.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/expand.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/expect/man1/expect.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man1/expiry.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/exportfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man5/exports.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/expr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/factor.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man5/faillog.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/shadow/man8/faillog.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/false.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/fastboot.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/fasthalt.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/fdformat.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/fdisk.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/fetchmail/man1/fetchmail.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/fetchmail/man8/fetchmailconf.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_grep/man1/fgrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/file/man1/file.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/filefrag.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_findutils/man1/find.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/findfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/flex/man1/flex.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/flock.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/fmt.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/fold.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/free.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/fsck.minix.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/fsck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man5/fstab.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/ftl_check.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/ftl_format.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/psmisc/man1/fuser.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gcc/man1/g++.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gcc/man1/g77.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/gasp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gawk/man1/gawk.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gcc/man1/gcc.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gdb/man1/gdb.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gdbm/man3/gdbm.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_gdb/man1/gdbserver.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/acl/man1/getfacl.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/getopt.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man3/getspnam.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/shadow/man1/gpasswd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/gprof.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_grep/man1/grep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grn.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grodvi.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/groff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_char.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man5/groff_font.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_man.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_mdoc.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_me.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_mm.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_mmse.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_ms.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/groff_mwww.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/GNU_groff/man5/groff_out.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man5/groff_tmac.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grog.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grohtml.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grolbp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grolj4.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grops.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/grotty.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/groupadd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/groupdel.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/groupmod.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man1/groups.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/grpck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/grpconv.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/grpunconv.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/gunzip.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/gzexe.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/gzip.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/halt.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/hdparm/man8/hdparm.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/head.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/hexdump.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/hostid.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man1/hostname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man3/hosts_access.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man5/hosts_access.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man5/hosts_options.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/hpftodit.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/hwclock.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man4/i82365.4 $P/usr/share/man/ja_JP.UTF-8/man4
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/id.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/ide_info.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/ident.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/ifconfig.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/ifport.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/ifuser.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_gawk/man1/igawk.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_indent/man1/indent.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/indxbib.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man1/info.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man5/info.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/SysVinit/man8/init.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/initctl.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/SysVinit/man5/initscript.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/SysVinit/man5/inittab.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man1/install-info.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/install.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/iptables/man8/ip6tables-restore.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/ip6tables-save.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/ip6tables.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ipchains/man8/ipchains.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/ipcrm.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/ipcs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/iptables-apply.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/iptables-extensions.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/iptables-restore.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man8/iptables-save.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/iptables/man1/iptables-xml.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/iptables/man8/iptables.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/isosize.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/join.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/kill.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/killall5.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/psmisc/man1/killall.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man1/last.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man1/lastb.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/lastlog.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ld.so/man8/ld.so.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/ld.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ld.so/man8/ldconfig.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ld.so/man1/ldd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_less/man1/less.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_less/man1/lesskey.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/libblkid.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/file/man3/libmagic.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/libtool.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/libtoolize.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/lilo/man5/lilo.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/lilo/man8/lilo.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man5/limits.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/util-linux/man1/line.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/link.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/lkbib.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/ln.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_findutils/man1/locate.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_findutils/man5/locatedb.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/lockd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/logger.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man5/login.access.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/shadow/man5/login.defs.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/shadow/man1/login.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/logname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/logoutd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/logsave.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/look.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/lookbib.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/losetup.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/cups/man1/lp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man8/lpadmin.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/cups/man8/lpc.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/lpr-linux/man8/lpd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/cups/man1/lpoptions.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man1/lpq.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man1/lpr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man1/lprm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/cups/man1/lpstat.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/lpr-linux/man1/lptest.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/ls.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man1/lsattr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procinfo/man8/lsdev.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pciutils/man8/lspci.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/lspnp.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/file/man4/magic.4 $P/usr/share/man/ja_JP.UTF-8/man4
+  install -v -o root -g root -m 644 manual/GNU_make/man1/make.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man1/makeinfo.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/mcookie.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/md5sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/merge.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man1/mesg.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/microcode_ctl/man8/microcode_ctl.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/net-tools/man8/mii-tool.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man1/mk_cmds.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/mkdir.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/mke2fs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/mkfifo.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/mkfs.bfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/mkfs.minix.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/mkfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/mklost+found.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/mknod.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/mkpasswd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/reiserfsprogs/man8/mkreiserfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/lilo/man8/mkrescue.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/mkswap.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/mktemp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/mmroff.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/util-linux/man1/more.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/mount.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/mountd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_cpio/man1/mt.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/mv.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/namei.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/nameif.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ncftp/man1/ncftp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/need.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/neqn.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/netstat.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man1/newgrp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/newusers.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man5/nfs.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/nfs-utils/man7/nfsd.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nfsd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nfsstat.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nhfsgraph.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nhfsnums.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nhfsrun.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/nhfsstone.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/nice.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man1/nisdomainname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/nl.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/nlmconv.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/nm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/nohup.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/nproc.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/nroff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/numfmt.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/objcopy.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/objdump.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/od.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/pack_cis.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man1/passwd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man5/passwd.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/paste.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_patch/man1/patch.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/pathchk.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/pcinitrd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man5/pcmcia.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man4/pcmcia_core.4 $P/usr/share/man/ja_JP.UTF-8/man4
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/pfbtops.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/pg.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/pgrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/pic.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/psmisc/man1/pidof.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/pidof.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/pinky.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/pivot_root.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/pkill.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/plipconfig.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/pmap.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man5/porttime.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/SysVinit/man8/poweroff.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ppp/man8/pppd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ppp/man8/pppdump.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/ppp/man8/pppstats.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/pr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/lpr-linux/man5/printcap.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/printenv.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/printf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procinfo/man8/procinfo.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procmail/man1/procmail.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procmail/man5/procmailex.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/procmail/man5/procmailrc.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/procmail/man5/procmailsc.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/util-linux/man8/provide.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/ps.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/psmisc/man1/pstree.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_atfork.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_getdetachstate.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_getinheritsched.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_getschedparam.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_getschedpolicy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_getscope.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_setdetachstate.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_setinheritsched.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_setschedparam.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_setschedpolicy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_attr_setscope.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cancel.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cleanup_pop.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cleanup_pop_restore_np.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cleanup_push.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cleanup_push_defer_np.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_broadcast.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_signal.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_timedwait.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_cond_wait.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_condattr_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_condattr_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_create.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_detach.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_equal.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_exit.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_getschedparam.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_join.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_key_create.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_kill.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_kill_other_threads_np.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutex_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutex_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutex_lock.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutex_trylock.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutex_unlock.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutexattr_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutexattr_getkind_np.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutexattr_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_mutexattr_setkind_np.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_once.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_self.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_setcancelstate.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_setcanceltype.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_setschedparam.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_sigmask.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/pthread_testcancel.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/ptx.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man3/pw_auth.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/shadow/man8/pwauth.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/pwck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/pwconv.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/pwd.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/pwdx.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/pwunconv.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man8/quot.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man1/quota.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/quota/man8/quotacheck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man8/quotaon.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/ramsize.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/ranlib.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/rarp.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/raw.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_bash/man1/rbash.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcs.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcsclean.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcsdiff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man5/rcsfile.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcsfreeze.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcsintro.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rcsmerge.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/rdev.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/readlink.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/readprofile.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/realpath.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/reboot.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_ed/man1/red.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/refer.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/reiserfsprogs/man8/reiserfsck.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/reiserfsprogs/man8/reiserfstune.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/rename.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/renice.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man8/repquota.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/reset.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/resize2fs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/reiserfsprogs/man8/resize_reiserfs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/rev.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_rcs/man1/rlog.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/rm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/rmdir.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man7/roff.7 $P/usr/share/man/ja_JP.UTF-8/man7
+  install -v -o root -g root -m 644 manual/util-linux/man8/rootflags.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/net-tools/man8/route.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rpc.lockd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rpc.mountd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rpc.nfsd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rpc.rquotad.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rpc.statd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-server/man8/rpc.ugidd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rpm/man8/rpm2cpio.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rpm/man8/rpm.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rpm/man8/rpmbuild.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rpm/man8/rpmcache.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rpm/man8/rpmgraph.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man3/rquota.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/rquotad.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/rssh/man5/rssh.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/rssh/man1/rssh.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/runcon.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/runlevel.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_screen/man1/screen.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/script.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/scriptreplay.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/scsi_info.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/gnumaniak/man1/sdiff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_sed/man1/sed.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_destroy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_getvalue.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_init.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_post.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_trywait.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sem_wait.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/seq.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/acl/man1/setfacl.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/setfdprm.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pciutils/man8/setpci.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man8/setpnp.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/quota/man8/setquota.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/setserial/man8/setserial.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/setsid.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/setterm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/sfdisk.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man1/sg.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sha1sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sha224sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sha256sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sha384sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sha512sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man3/shadow.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/shadow/man5/shadow.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/shadow/man8/shadowconfig.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_sharutils/man1/shar.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/showmount.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/shred.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/shuf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/shutdown.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/glibc-linuxthreads/man3/sigwait.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/util-linux/man8/simpleinit.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/size.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/skill.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/slabtop.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man8/slattach.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sleep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/sln.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/snice.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ucd-snmp/man5/snmp.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/ucd-snmp/man5/snmp_config.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/ucd-snmp/man1/snmpbulkget.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ucd-snmp/man1/snmpconf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ucd-snmp/man5/snmpd.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/ucd-snmp/man1/snmpdf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ucd-snmp/man5/snmptrapd.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/ucd-snmp/man8/snmptrapd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procinfo/man8/socklist.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/soelim.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sort.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/split.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pcmcia-cs/man5/stab.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/stat.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/nfs-utils/man8/statd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/stdbuf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/strings.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_binutils/man1/strip.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/stty.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man1/su.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man5/suauth.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/sudo/man5/sudo.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/sudo/man8/sudo.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/sudo/man8/sudoedit.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/sudo/man5/sudoers.ldap.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/sudo/man5/sudoers.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/sudo/man8/sudoreplay.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/SysVinit/man8/sulogin.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sum.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/swapoff.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/swapon.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/sync.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man5/sysctl.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/procps/man8/sysctl.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tac.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tail.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/tailf.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_tar/man1/tar.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/tbl.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man8/tcpd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man8/tcpdchk.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/tcp_wrappers/man8/tcpdmatch.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/tcpdump/man1/tcpdump.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/tcsh/man1/tcsh.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tee.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man8/telinit.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/test.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man1/texi2dvi.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man1/texindex.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_texinfo/man5/texinfo.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/tfmtodit.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/timeout.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/tload.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/top.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/touch.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tr.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_groff/man1/troff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/true.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/truncate.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tsort.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/tty.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man8/tune2fs.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man8/tunelp.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/nfs-server/man8/ugidd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/util-linux/man1/ul.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/umount.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/uname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/unexpand.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/uniq.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/unlink.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_sharutils/man1/unshar.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/pciutils/man8/update-pciids.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_findutils/man1/updatedb.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/procps/man1/uptime.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/shadow/man8/useradd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/userdel.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/usermod.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/users.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_sharutils/man1/uudecode.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/uudeview/man1/uudeview.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_sharutils/man1/uuencode.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_sharutils/man5/uuencode.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/uudeview/man1/uuenview.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_clear.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_compare.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_copy.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_generate.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_is_null.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_parse.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_time.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man3/uuid_unparse.3 $P/usr/share/man/ja_JP.UTF-8/man3
+  install -v -o root -g root -m 644 manual/e2fsprogs/man1/uuidgen.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/ucd-snmp/man5/variables.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/vdir.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man8/vidmode.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/vigr.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/shadow/man8/vipw.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/sudo/man8/visudo.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man8/vmstat.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/eject/man1/volname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/vsftpd/man5/vsftpd.conf.5 $P/usr/share/man/ja_JP.UTF-8/man5
+  install -v -o root -g root -m 644 manual/vsftpd/man8/vsftpd.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/w.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/SysVinit/man1/wall.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/quota/man8/warnquota.8 $P/usr/share/man/ja_JP.UTF-8/man8
+  install -v -o root -g root -m 644 manual/procps/man1/watch.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/wc.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/whereis.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/who.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/whoami.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/util-linux/man1/write.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/apmd/man1/xapm.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_findutils/man1/xargs.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/uudeview/man1/xdeview.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_coreutils/man1/yes.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/net-tools/man1/ypdomainname.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zcat.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zcmp.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zdiff.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zforce.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zgrep.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zless.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/zmore.1 $P/usr/share/man/ja_JP.UTF-8/man1
+  install -v -o root -g root -m 644 manual/GNU_gzip/man1/znew.1 $P/usr/share/man/ja_JP.UTF-8/man1
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
