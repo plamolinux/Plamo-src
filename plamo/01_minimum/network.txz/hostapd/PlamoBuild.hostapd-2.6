@@ -3,13 +3,13 @@
 pkgbase='hostapd'
 vers='2.6'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
-verify=""
+verify="$url.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING README'
-patchfiles=''
+patchfiles='hostapd-2.3-noscan.patch openvswitch.patch'
 compress=txz
 ##############################################################
 
@@ -50,21 +50,19 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 < $W/$patch
   done
 
+  cd $B/hostapd
+  cp $W/config .config
+
+  sed -i 's#/etc/hostapd#/etc/hostapd/hostapd#' hostapd.conf
+
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
+  cd $B/hostapd
+  export CFLAGS="$CFLAGS $(pkg-config --cflags libnl-3.0)"
   export LDFLAGS='-Wl,--as-needed'
   make -j3
   if [ $? != 0 ]; then
@@ -76,9 +74,39 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  cd $B/hostapd
+
+  install -d -v $P/usr/sbin
+  install -v -m 755 hostapd $P/usr/sbin/hostapd
+  install -v -m 755 hostapd_cli $P/usr/sbin/hostapd_cli
+
+  install -D -v -m644 hostapd.8 $P/usr/share/man/man8/hostapd.8
+  install -D -v -m644 hostapd_cli.1 $P/usr/share/man/man1/hostapd_cli.1
+
+  install -d -v $docdir/$src
+  install -v -m 644 -t ${docdir}/${src} \
+          hostapd.{accept,conf,deny,eap_user,radius_clients,sim_db,vlan,wpa_psk} \
+          wired.conf hlr_auc_gw.milenage_db
+
+  install -d -v $P/etc/hostapd
+  install -v -m 644 $W/hostapd.conf $P/etc/hostapd/hostapd.conf.dist
+  install -v -m 644 $W/hostapd.accept $P/etc/hostapd/hostapd.accept.dist
+  install -v -m 644 $W/hostapd.deny $P/etc/hostapd/hostapd.deny.dist
+  install -v -m 644 $W/hostapd.wpa_psk $P/etc/hostapd/hostapd.wpa_psk.dist
+  
+  install -D -v -m 644 $W/hostapd.init $P/etc/rc.d/init.d/hostapd
+
+  install -d -v $P/install
+  cat <<EOF >> $P/install/initpkg
+( cd /etc/hostapd
+  for f in hostapd.conf hostapd.deny hostapd.accept hostapd.wpa_psk
+  do
+    if [ ! -f /etc/hostapd/\$f ]; then
+      cp \${f}.dist \$f
+    fi
+  done
+)
+EOF
 
 ################################
 #      install tweaks
