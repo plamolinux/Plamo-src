@@ -4,11 +4,11 @@ pkgbase='util_linux'
 vers='2.29.2'
 url="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=B1
 src="util-linux-${vers}"
 OPT_CONFIG="--disable-setpriv --disable-last
     --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
-    --disable-sulogin --disable-su --enable-write --disable-pylibmount
+    --disable-sulogin --disable-su --enable-write --disable-pylibmount --disable-wall
     --without-user --without-python --without-systemd --without-systemdsystemunitdir"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
 patchfiles=''
