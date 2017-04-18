@@ -1,5 +1,5 @@
 #!/bin/bash
-# Time-stamp: <2017-01-12 18:25:20 karma>
+# Time-stamp: <2017-04-18 17:50:55 root>
 
 # This file is derived from  avahi.
 # Start/stop/restart daemon in init.d/XXXX
@@ -8,7 +8,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DESC="unbound"
 NAME="unbound"
 DAEMON="/usr/sbin/unbound"
-PIDFILE="/var/run/unbound.pid"
+PIDFILE="/run/unbound.pid"
 
 start()
 {
