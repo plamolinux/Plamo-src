@@ -1,0 +1,52 @@
+#!/bin/sh
+
+DESC="dnsmasq"
+DAEMON="/usr/sbin/dnsmasq"
+PIDFILE="/run/dnsmasq.pid"
+DAEMON_OPTS="--pid-file=${PIDFILE}"
+
+start() {
+  if [ -x "${DAEMON}" ] ; then
+    MSG=$($DAEMON --test 2>&1)
+    if [ $? -ne 0 ]; then
+      echo $MSG
+      exit 1
+    fi
+    $DAEMON $DAEMON_OPTS
+  fi
+}
+
+stop() {
+  kill $(cat ${PIDFILE})
+}
+
+status() {
+  PID=$(pgrep -f $DAEMON)
+  if [ $? -eq 0 ]; then
+    echo "$DESC is currently running. (pid: $PID)"
+  else
+    echo "$DESC is not running."
+  fi
+}
+
+case "$1" in
+start)
+  start
+  ;;
+stop)
+  stop
+  ;;
+restart)
+  stop
+  sleep 1
+  start
+  ;;
+status)
+  status
+  ;;
+*)
+  echo $"Usage: $0 {start|stop|restart}"
+  exit 1
+  ;;
+esac
+exit 0
