@@ -5,7 +5,7 @@ vers=3.18.0
 url="http://sqlite.org/2017/sqlite-autoconf-3180000.tar.gz"
 arch=`uname -m`
 build=P1
-src=sqlite-autoconf-3170000
+src=sqlite-autoconf-3180000
 
 OPT_CONFIG='--disable-static'
 DOCS='INSTALL README'
