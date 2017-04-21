@@ -228,7 +228,20 @@ else
   GPP="g++"
 fi
 
+check_rust()
+{
+    which rustc >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+	echo "You need rust."
+	echo "You have to exec curl https://sh.rustup.rs -sSf | sh"
+	exit 1
+    fi
+}
+
 if [ $opt_config -eq 1 ] ; then
+
+  check_rust
+    
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
