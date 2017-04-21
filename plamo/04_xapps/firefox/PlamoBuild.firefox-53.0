@@ -14,6 +14,8 @@ patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
 
+echo $PATH
+
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
@@ -230,7 +232,7 @@ fi
 
 check_rust()
 {
-    which rustc >/dev/null 2>&1
+    rust_path=$(dirname $(which rustc))
     if [ $? -ne 0 ]; then
 	echo "You need rust."
 	echo "You have to exec curl https://sh.rustup.rs -sSf | sh"
@@ -238,10 +240,9 @@ check_rust()
     fi
 }
 
-if [ $opt_config -eq 1 ] ; then
+check_rust
 
-  check_rust
-    
+if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
@@ -350,7 +351,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
     if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
-      cd $W ; /bin/su -c "$0 package" ; exit
+	#cd $W ; /bin/su -c "$0 package" ; exit
+	sudo -E PATH=$rust_path:$PATH sh $0 package ; exit 0
     fi
   fi
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
@@ -364,7 +366,7 @@ if [ $opt_package -eq 1 ] ; then
     done
     export LDFLAGS='-Wl,--as-needed'
     #export MOZ_OBJDIR=$W/obj
-    make -f client.mk install DESTDIR=$P
+    make -f client.mk install DESTDIR=$P INSTALL_SDK=install
     #make install DESTDIR=$P
     install -v -m755 -d $P/usr/${libdir}/mozilla/plugins
   done
