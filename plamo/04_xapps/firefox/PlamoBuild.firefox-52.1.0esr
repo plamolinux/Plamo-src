@@ -3,7 +3,7 @@ unset LS_BLOCK_SIZE
 export LANG=C
 ##############################################################
 pkgbase=firefox
-vers=53.0
+vers=52.1.0esr
 url="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -13,8 +13,6 @@ DOCS='LICENSE README.txt other-licenses xpinstall'
 patchfiles='firefox.desktop.patch'
 compress=txz
 ##############################################################
-
-echo $PATH
 
 install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
@@ -240,7 +238,7 @@ check_rust()
     fi
 }
 
-check_rust
+#check_rust
 
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
@@ -351,8 +349,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
     if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
-	#cd $W ; /bin/su -c "$0 package" ; exit
-	sudo -E PATH=$rust_path:$PATH sh $0 package ; exit 0
+	cd $W ; /bin/su -c "$0 package" ; exit
+	#sudo -E PATH=$rust_path:$PATH sh $0 package ; exit 0
     fi
   fi
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
