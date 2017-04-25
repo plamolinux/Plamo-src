@@ -256,7 +256,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     hg -v clone http://hg.mozilla.org/releases/l10n/mozilla-release/ja/
-    ( cd ja ; hg update default )
+    ( cd ja ; hg update tip )
     if [ ! -d ../l10n ]; then
       mkdir ../l10n
     else
