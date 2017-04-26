@@ -1,0 +1,50 @@
+#!/bin/sh
+
+NTPD_OPTS="-u ntp:ntp -c /etc/ntp.conf -p /var/run/ntpd.pid -g"
+
+status() {
+  if pgrep ntpd >/dev/null 2>&1; then
+    echo "NTP daemon is running"
+    exit 0
+  else
+    echo "NTP daemon is not running"
+    exit 1
+  fi
+}
+
+start() {
+  if pgrep ntpd >/dev/null 2>&1; then
+    echo "NTP daemon already running.  NTP start aborted."
+    exit 0
+  fi
+  if [ -x /usr/bin/ntpd -a -f /etc/ntp.conf ] ; then
+    ntpdate -s `sed -n '/^server/p' /etc/ntp.conf | cut -d' ' -f2`
+    ntpd $NTPD_OPTS
+  fi
+}
+
+stop() {
+  killall ntpd
+}
+
+case "$1" in
+start)
+  start
+  ;;
+stop)
+  stop
+  ;;
+restart)
+  stop
+  sleep 3
+  start
+  ;;
+status)
+  status
+  ;;
+*)
+  echo $"Usage: $0 {start|stop|restart|status}"
+  exit 1
+  ;;
+esac
+exit 0
