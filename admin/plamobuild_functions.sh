@@ -123,7 +123,8 @@ download_sources() {
     zip) unzip ${j##*/} ;;
     git) ( cd `basename ${j##*/} .git`
         git checkout origin/master ; git reset --hard ${commitid[$i]:-HEAD}
-        git set-file-times ; LANG=ja_JP.UTF-8 TZ=UTC gitlog2changelog) ;;
+        git set-file-times ; if [ -z "`git ls-files ChangeLog`" ] ; then
+        LANG=ja_JP.UTF-8 TZ=UTC gitlog2changelog ; fi ) ;;
     esac
   done
 }
