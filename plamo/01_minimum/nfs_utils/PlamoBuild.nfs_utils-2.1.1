@@ -80,6 +80,28 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  install -D -m 644 -v $S/utils/mount/nfsmount.conf $P/etc/nfsmount.conf
+  install -D -m 644 -v $S/nfs.conf $P/etc/nfs.conf
+
+  install -D -m 644 -v $W/exports $P/etc/exports
+  install -D -m 644 -v $W/id_resolver.conf $P/etc/request-key.d/id_resolver.conf
+
+  install -d -v $P/etc/exports.d
+  install -d -m 555 -v $P/var/lib/nfs/rpc_pipefs
+  install -d -v $P/var/lib/nfs/v4recovery
+
+  install -D -m 755 -v $W/nfs4_setup.sh $P/sbin/nfs4_setup.sh
+
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+nfs_chk=\$(grep nfs /etc/services)
+if [ "\${nfs_chk}.x" = ".x" ]; then
+    echo "adding nfs service into /etc/services"
+    echo "nfs        2049/tcp" >> /etc/services
+    echo "nfs        2049/udp" >> /etc/services
+fi
+EOF
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
