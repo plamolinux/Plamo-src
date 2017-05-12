@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase=postfix
-vers=2.11.8
+vers=2.11.9
 url="http://mirror.postfix.jp/postfix-release/official/postfix-${vers}.tar.gz"
 verify=$url.sig
 arch=`uname -m`
-build=P3
+build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS='HISTORY IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-2.10 TLS_TODO pflogsumm_quickfix.txt postfix-install'
@@ -248,19 +248,13 @@ if [ $opt_package -eq 1 ] ; then
   ( cd $P/usr/lib ; ln -sf ../../../usr/sbin/sendmail sendmail )
 
   # move config files to /etc/postfix/new
-  echo -n "move config files to /etc/postfix/new"
-  mkdir -p $P/etc/postfix/new
-  ( cd $P/etc/postfix
-      for file in `find . -type f`
-      do
-          mv $P/etc/postfix/$file $P/etc/postfix/new/$file
-      done
-  )
+  echo -n "move config files to /etc/postfix.dist"
+  mv -v $P/etc/postfix $P/etc/postfix.dist
   echo " done."
 
   # make /etc/alias
   echo -n "make /etc/aliases file"
-  cat > $P/etc/aliases-new <<EOF
+  cat > $P/etc/aliases.dist <<EOF
 #
 #       @(#)aliases     8.2 (Berkeley) 3/5/94
 #
@@ -300,7 +294,7 @@ EOF
 
   # additional plamo original configuration to main.cf
   echo -n "add plamo original configuration to main.cf"
-  (cd $P/etc/postfix/new
+  (cd $P/etc/postfix.dist
       cat >> main.cf <<"EOF"
 
 # Plamo local configurations(for fml and SMTP auth with SASL2)
@@ -324,7 +318,7 @@ EOF
   echo " done."
 
   # enable submission port
-  ( cd $P/etc/postfix/new
+  ( cd $P/etc/postfix.dist
     sed -i -e 's/^#submission/submission/' master.cf
   )
 
@@ -342,10 +336,7 @@ EOF
   cat >> $P/install/initpkg <<"EOF"
 ( cd /etc
   if [ ! -f aliases ] ; then
-    mv aliases-new aliases
-  else
-    echo "/etc/aliases exists"
-    rm aliases-new
+    cp aliases.dist aliases
   fi
 )
 
@@ -362,14 +353,17 @@ EOF2
   fi
 )
 
+if [ ! -d /etc/postfix ]; then
+  cp -a /etc/postfix.dist /etc/postfix
+fi
+
 ( cd /etc/postfix
-  for conf_file in `ls /etc/postfix/new/`
+  for conf_file in `ls /etc/postfix.dist/`
   do
     if [ ! -f $conf_file ]; then
-      mv new/$conf_file .
+      cp /etc/postfix.dist/$conf_file .
     fi
   done
-  rm -rf new
 )
 
 /usr/sbin/postfix upgrade-configuration
