@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gcc'
-vers='6.3.0'
+vers='7.1.0'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.bz2"
 verify=${url}.sig
-islvers="0.16.1"
+islvers="0.18"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"

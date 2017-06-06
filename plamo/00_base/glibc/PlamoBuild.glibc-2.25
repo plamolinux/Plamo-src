@@ -4,7 +4,7 @@ pkgbase='glibc'
 vers='2.25'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 arch=`uname -m`
-build=P4
+build=B1
 src="glibc-${vers}"
 OPT_CONFIG="--enable-obsolete-rpc --disable-profile --enable-add-ons
 	--enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls
