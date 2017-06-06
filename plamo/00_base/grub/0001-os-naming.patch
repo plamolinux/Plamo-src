@@ -1,0 +1,15 @@
+diff -uNr grub-2.02.orig/util/grub.d/10_linux.in grub-2.02/util/grub.d/10_linux.in
+--- grub-2.02.orig/util/grub.d/10_linux.in	2017-04-24 18:15:50.000000000 +0900
++++ grub-2.02/util/grub.d/10_linux.in	2017-05-11 18:10:06.363164754 +0900
+@@ -29,9 +29,9 @@
+ CLASS="--class gnu-linux --class gnu --class os"
+ 
+ if [ "x${GRUB_DISTRIBUTOR}" = "x" ] ; then
+-  OS=GNU/Linux
++  OS=Linux
+ else
+-  OS="${GRUB_DISTRIBUTOR} GNU/Linux"
++  OS="${GRUB_DISTRIBUTOR} Linux"
+   CLASS="--class $(echo ${GRUB_DISTRIBUTOR} | tr 'A-Z' 'a-z' | cut -d' ' -f1|LC_ALL=C sed 's,[^[:alnum:]_],_,g') ${CLASS}"
+ fi
+ 

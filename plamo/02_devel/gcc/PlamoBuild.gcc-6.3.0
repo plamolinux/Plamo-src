@@ -6,7 +6,7 @@ url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar
 verify=${url}.sig
 islvers="0.16.1"
 arch=`uname -m`
-build=P2
+build=P3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--build=${arch}-pc-linux-gnu --host=${arch}-pc-linux-gnu
 	--libexecdir=/usr/lib --enable-languages=c,c++,fortran,go,lto
@@ -19,7 +19,7 @@ OPT_CONFIG="--build=${arch}-pc-linux-gnu --host=${arch}-pc-linux-gnu
 	--enable-gnu-indirect-function --disable-multilib
 	--disable-werror  --enable-checking=release"
 DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.jit ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
-patchfiles=
+patchfiles='disable-lib64-ld.patch'
 compress=txz
 ##############################################################
 

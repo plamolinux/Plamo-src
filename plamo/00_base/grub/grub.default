@@ -1,0 +1,19 @@
+# Default menu entry
+GRUB_DEFAULT=0
+# Time after the menu displayed
+GRUB_TIMEOUT=10
+# Time before displaying the menu
+#GRUB_HIDDEN_TIMEOUT=0
+# Display countdown or not
+#GRUB_HIDDEN_TIMEOUT_QUIET=false
+# Command line arguments for default linux entry
+GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+## default until Plamo 6.x
+## GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
+# Command line arguments for all linux entry
+#GRUB_CMDLINE_LINUX=
+# Distributor
+GRUB_DISTRIBUTOR=Plamo
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
