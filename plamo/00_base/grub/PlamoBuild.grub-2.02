@@ -140,14 +140,19 @@ if [ $opt_package -eq 1 ] ; then
     make install DESTDIR=$P
   done
 
+  echo "Installing grub default file"
   install -D -m 644 -v $W/grub.default $P/etc/default/grub
 
+  echo "Remove debug related files"
   for d in i386-pc i386-efi x86_64-efi
   do
       rm -v -f $P/usr/${libdir}/grub/${d}/*.module
       rm -v -f $P/usr/${libdir}/grub/${d}/*.image
       rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
   done
+
+  echo "Installing plamo tools for grub"
+  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar.gz -C $P
 
 ################################
 #      install tweaks

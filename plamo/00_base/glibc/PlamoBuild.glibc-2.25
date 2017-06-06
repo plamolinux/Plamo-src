@@ -4,11 +4,11 @@ pkgbase='glibc'
 vers='2.25'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 arch=`uname -m`
-build=P3
+build=P4
 src="glibc-${vers}"
 OPT_CONFIG="--enable-obsolete-rpc --disable-profile --enable-add-ons
 	--enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls
-	--build=${arch}-pc-linux --target=${arch}-pc-linux"
+	--build=${arch}-pc-linux --target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
 	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
@@ -19,8 +19,8 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
-#patchfiles="glibc-${vers}-fhs-1.patch"
-patchfiles="glibc-2.25-fhs-1.patch"
+fhs_patchfile="glibc-${vers}-fhs-1.patch"
+patchfiles="$fhs_patchfile"
 compress=txz
 ##############################################################
 
@@ -41,7 +41,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    wget http://www.linuxfromscratch.org/patches/lfs/development/glibc-${vers}-fhs-1.patch
+    if [ ! -f $fhs_patchfile ]; then
+      wget http://www.linuxfromscratch.org/patches/lfs/development/${fhs_patchfile}
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -65,7 +67,6 @@ if [ $opt_config -eq 1 ] ; then
 
     rm -f configparms
     if [ "$arch" = "x86_64" ]; then
-	echo "slibdir=/lib" >> configparms
 	echo "CFLAGS += -mtune=generic -O3 -pipe" >> configparms
     else
 	echo "CFLAGS += -march=i486 -mtune=native -O3 -pipe" >> configparms
@@ -108,7 +109,7 @@ if [ $opt_package -eq 1 ] ; then
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-  install_tweak
+  #install_tweak
 
   for i in `find $P/usr/${libdir} -type f -a -name "*.a" `; do
       echo "stripping static lib $i"
@@ -119,16 +120,14 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P2 ]; then
       rm -rf $P2
   fi
-  mkdir -p $P2
   echo "moving files into work2 dir"
-  mv -v $P/* $P2
+  mv -v $P $P2
 
 ##### for glibc2
-  rm -rf $P
-  mkdir -p $P/usr/${libdir}
+  mkdir -v -p $P/usr/${libdir}
 
   mv -v $P2/etc $P
-  rm -f $P/etc/{localtime,ld.so.cache}
+  rm -v -f $P/etc/{localtime,ld.so.cache}
 
   mv -v $P2/${libdir} $P
   strip -g $P/${libdir}/*.so
