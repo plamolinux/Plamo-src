@@ -4,9 +4,9 @@ url='http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.25.tar.xz'
 pkgbase=gtk+_2
 vers=2.24.25
 arch=`uname -m`
-build=P2
+build=P5
 src=gtk+-2.24.25
-OPT_CONFIG=''
+OPT_CONFIG='--with-xinput=yes'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.gtk-async-file-chooser ChangeLog.gtk-printing ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-10 ChangeLog.pre-2-12 ChangeLog.pre-2-14 ChangeLog.pre-2-16 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-2-8 HACKING INSTALL NEWS NEWS.pre-1-0 README README.commits README.win32'
 patchfiles=''
 compress=txz
