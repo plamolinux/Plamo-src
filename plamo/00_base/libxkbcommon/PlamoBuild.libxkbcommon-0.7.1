@@ -1,9 +1,12 @@
 #!/bin/sh
+# 注意: ビルドには 04_x11 が必要
+#   - 具体的には libxcb
+#   - --disable-x11 すれば 00 のみでビルド可能だが 04 で X11 サポート必要
+#     なのでとりあえずこのままにしておく
 ##############################################################
 pkgbase='libxkbcommon'
 vers='0.7.1'
-url="http://xkbcommon.org/download/${pkgbase}-${vers}.tar.xz"
-verify=""
+url="https://xkbcommon.org/download/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -15,12 +18,12 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# ���Υ�����ץȤǻȤ�1ʸ���ѿ��ΰ�̣
-#
-# $W : ���Υ�����ץȤ�ư���������ȥǥ��쥯�ȥ�
-# $S : �����������ɤΤ���ǥ��쥯�ȥ�(�ǥե����: $W/${src})
-# $B : �ӥ���ѥǥ��쥯�ȥ�(�ǥե����: /tmp/build{,32})
-# $P : �ӥ�ɤ����ե�����򥤥󥹥ȡ��뤹��ǥ��쥯�ȥ�ʥǥե����: $W/work)
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -37,44 +40,41 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
 
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
