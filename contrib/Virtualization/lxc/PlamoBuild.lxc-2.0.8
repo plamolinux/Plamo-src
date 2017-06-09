@@ -1,16 +1,16 @@
-#!/bin/sh
+#!/bin/sh 
 ##############################################################
-pkgbase=lxcfs
-vers=2.0.4
-url="https://linuxcontainers.org/downloads/lxcfs/lxcfs-${vers}.tar.gz"
-verify=${url}.asc
+pkgbase=lxc
+vers=2.0.8
+url="https://linuxcontainers.org/downloads/lxc/lxc-${vers}.tar.gz"
+verify=$url.asc
 commitid=
 arch=`uname -m`
 build=P1
-src=lxcfs-${vers}
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog NEWS README README.md'
-patchfiles=''
+src=lxc-${vers}
+OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
+DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
+patchfiles="CVE-2017-5985.patch"
 compress=txz
 ##############################################################
 
@@ -70,7 +70,7 @@ gzip_one() {
 
 compress_all() {
   cd $P
-  strip_all
+  #strip_all
 }  
 
 verify_checksum() {
@@ -182,8 +182,8 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
   done
 ######################################################################
-# * ./configure ¤ò¹Ô¤¦Á°¤ËÅ¬ÍÑ¤·¤¿¤¤ÀßÄê¤ä¥Ñ¥Ã¥Á¤Ê¤É¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Ş¤¹¡£
+# * ./configure ã‚’è¡Œã†å‰ã«é©ç”¨ã—ãŸã„è¨­å®šã‚„ãƒ‘ãƒƒãƒãªã©ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«
+#   è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     cd ${B[$i]}
@@ -191,12 +191,11 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
     done
 
-    #if [ -f bootstrap.sh ] ; then
-    #  sh ./bootstrap.sh
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
     #fi
 
     if [ -x configure ] ; then
-      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
       export LDFLAGS='-Wl,--as-needed' 
       export CFLAGS="-isystem /usr/include $target" 
       export CPPFLAGS="-isystem /usr/include $target "
@@ -245,50 +244,51 @@ if [ $opt_package -eq 1 ] ; then
       exit 255
     fi
   done
+
+  # install the script for mouting cgroupfs
+  install -m 644 $W/cgroups-mount $P/etc/rc.d/init.d
+  ( cd $P/etc/rc.d/init.d ; mv lxc zzz_lxc )
+  ( cd $P/etc/rc.d/init.d ; mv lxc-net zz_lxc-net )
+
+  # sysconfig
+  echo '#USE_LXC_BRIDGE="true"' > $P/etc/sysconfig/lxc-net
+
+  # convert manual to EUC-JP
+  sed -i "s@\(/usr/share/doc/\)lxc@\1$src@g" \
+      $mandir/{,ja/}man5/lxc.container.conf.5 $mandir/{,ja/}man7/lxc.7
+  re="\w\{3\} \w\{3\} \w\{1,2\} \w\{2\}:\w\{2\}:\w\{2\} \w\{3\} \w\{4\}"
+  dt=`echo $(LANG=C date '+%a %b %e 09:00:00 %Z %G')`
+  find $mandir -type f -exec sed -i "/^\.TH/s@$re@$dt@g" {} \;
+  install -d $mandir/ja_JP.eucJP/man{1,5,7}
+  for i in `cd $mandir/ja ; find . -type f` ; do
+    nkf -We $mandir/ja/$i > $mandir/ja_JP.eucJP/$i
+  done
+  find $mandir/ja_JP.eucJP -type f -exec sed -i "s@UTF-8@EUC-JP@g" {} \;
+
+  # install API docs
+  install -d $docdir/$src
+  cp -a doc/api $docdir/$src/api
+
+  # README.plamo
+  install -m 644 $W/README.plamo $docdir/$src
+
+  # 
+  mv $docdir/lxc/examples $docdir/$src
+  rmdir $docdir/lxc
+
 ######################################################################
-# * make install ¤Ç¥³¥Ô¡¼¤µ¤ì¤Ê¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Ş¤¹¡£
+# * make install ã§ã‚³ãƒ”ãƒ¼ã•ã‚Œãªã„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
-  mkdir -p $P/var/lib/lxcfs
-  mkdir -p $P/etc/rc.d/init.d
-  install -m 755 $W/z_lxcfs $P/etc/rc.d/init.d/z_lxcfs
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -d /var/lib/misc ]; then
+  mkdir -p /var/lib/misc
+fi
+EOF
   mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-    mkdir -p $P/install
-    for omf in $P/usr/share/omf/* ; do
-      omf_name=`basename $omf`
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-    done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-    mkdir -p $P/install
-    for schema in $P/etc/gconf/schemas/* ; do
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-  ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-    done
-  fi
-
-# remove locales except ja
-# 
-  for loc_dir in `find $P -name locale` ; do
-    pushd $loc_dir
-    for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
-    done
-    popd
-  done      
 
 ######################################################################
-# path ¤Ë lib ¤¬¤¢¤ë¥Ğ¥¤¥Ê¥ê¤Ï strip -g, ¤Ê¤¤¥Ğ¥¤¥Ê¥ê¤Ï strip ¤¹¤ë
+# path ã« lib ãŒã‚ã‚‹ãƒã‚¤ãƒŠãƒªã¯ strip -g, ãªã„ãƒã‚¤ãƒŠãƒªã¯ strip ã™ã‚‹
 ######################################################################
   cd $P
   compress_all
@@ -298,9 +298,9 @@ EOF
     done
   fi
 ######################################################################
-# * compress ÂĞ¾İ°Ê³°¤Ç°µ½Ì¤·¤¿¤¤¥Ç¥£¥ì¥¯¥È¥ê¤ä¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³
-#   ¤Ëµ­½Ò¤·¤Ş¤¹(strip_{bin,lib}dir ¤ä gzip_{dir,one} ¤ò»È¤¤¤Ş¤¹)¡£
-# * Â¾¤Î¥¢¡¼¥«¥¤¥Ö¤«¤éÄÉ²Ã¤·¤¿¤¤¥Õ¥¡¥¤¥ë¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ëµ­½Ò¤·¤Ş¤¹¡£
+# * compress å¯¾è±¡ä»¥å¤–ã§åœ§ç¸®ã—ãŸã„ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“
+#   ã«è¨˜è¿°ã—ã¾ã™(strip_{bin,lib}dir ã‚„ gzip_{dir,one} ã‚’ä½¿ã„ã¾ã™)ã€‚
+# * ä»–ã®ã‚¢ãƒ¼ã‚«ã‚¤ãƒ–ã‹ã‚‰è¿½åŠ ã—ãŸã„ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«è¨˜è¿°ã—ã¾ã™ã€‚
 ######################################################################
   cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
@@ -320,14 +320,15 @@ EOF
     ( cd $docdir ; find ${src[$i]} -type d -exec touch -r $W/{} {} \; )
   done
 
+
   for patch in $patchfiles ; do
     cp $W/$patch $docdir/$src/$patch
     gzip_one $docdir/$src/$patch
   done
 
 ############################################################
-#   /usr/share/doc °Ê²¼¤Ë¤Ï°ìÈÌ¥æ¡¼¥¶¤ÎID¤Î¤Ş¤Ş¤Î¥Õ¥¡¥¤¥ë¤¬
-#   Ê¶¤ì¤³¤ß¤¬¤Á¤Ê¤Î¤Ç
+#   /usr/share/doc ä»¥ä¸‹ã«ã¯ä¸€èˆ¬ãƒ¦ãƒ¼ã‚¶ã®IDã®ã¾ã¾ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒ
+#   ç´›ã‚Œã“ã¿ãŒã¡ãªã®ã§
 ############################################################
 
   chk_me=`whoami | grep root`
@@ -336,10 +337,10 @@ EOF
   fi
 
 ######################################################################
-# * convert ÂĞ¾İ°Ê³°¤Ç´¢¤ê¼è¤ê¤¿¤¤¥·¥ó¥Ü¥ê¥Ã¥¯¥ê¥ó¥¯¤¬¤¢¤ë¾ì¹ç¤Ï¤³¤³¤Ë
-#   µ­½Ò¤·¤Ş¤¹(prune_symlink ¤ò»È¤¤¤Ş¤¹)¡£
-# * ´°À®¤·¤¿ºî¶È¥Ç¥£¥ì¥¯¥È¥ê¤«¤é tar ¥¤¥á¡¼¥¸¤òºîÀ®¤¹¤ë¼ê½ç¤ò°Ê¹ß¤Ëµ­½Ò
-#   ¤·¤Ş¤¹(¤³¤À¤ï¤ê¤òµá¤á¤Ê¤¤¤Ê¤éÃ±¤Ë makepkg ¤Ç¤âÎÉ¤¤¤Ç¤¹)¡£
+# * convert å¯¾è±¡ä»¥å¤–ã§åˆˆã‚Šå–ã‚ŠãŸã„ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ãŒã‚ã‚‹å ´åˆã¯ã“ã“ã«
+#   è¨˜è¿°ã—ã¾ã™(prune_symlink ã‚’ä½¿ã„ã¾ã™)ã€‚
+# * å®Œæˆã—ãŸä½œæ¥­ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‹ã‚‰ tar ã‚¤ãƒ¡ãƒ¼ã‚¸ã‚’ä½œæˆã™ã‚‹æ‰‹é †ã‚’ä»¥é™ã«è¨˜è¿°
+#   ã—ã¾ã™(ã“ã ã‚ã‚Šã‚’æ±‚ã‚ãªã„ãªã‚‰å˜ã« makepkg ã§ã‚‚è‰¯ã„ã§ã™)ã€‚
 ######################################################################
 # tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
 # tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
