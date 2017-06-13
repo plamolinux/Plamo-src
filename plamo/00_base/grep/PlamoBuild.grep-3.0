@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='grep'
-vers='2.27'
+vers='3.0'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2009 INSTALL NEWS README README-alpha README-release THANKS TODO thanks-gen'
