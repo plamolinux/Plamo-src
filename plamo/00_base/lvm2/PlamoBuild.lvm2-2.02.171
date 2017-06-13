@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lvm2"
-vers='2.02.167'
-url="ftp://sources.redhat.com/pub/lvm2/releases/LVM2.${vers}.tgz"
+vers='2.02.171'
+url="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.${vers}.tgz"
+verify="${url}.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="LVM2.${vers}"
 OPT_CONFIG="--exec-prefix= --enable-applib --enable-cmdlib
 	--with-default-pid-dir=/run --with-default-dm-run-dir=/run
@@ -41,6 +42,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
