@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='e2fsprogs'
-vers='1.43.3'
+vers='1.43.4'
 url="https://www.kernel.org/pub/linux/kernel/people/tytso/${pkgbase}/v${vers}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-elf-shlibs --disable-libuuid --disable-libblkid
 	--disable-fsck --disable-uuidd --with-root-prefix=\"\" --bindir=/bin"
