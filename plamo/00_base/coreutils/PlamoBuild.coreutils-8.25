@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='coreutils'
-vers='8.25'
-url="http://ftp.gnu.org/gnu/coreutils/coreutils-8.25.tar.xz"
+vers='8.27'
+url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
 arch=`uname -m`
-build=P4
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-install-program=arch
 	--enable-no-install-program=uptime,kill
