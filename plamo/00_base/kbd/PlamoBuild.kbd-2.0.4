@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='kbd'
-vers='2.0.3'
+vers='2.0.4'
 url="https://www.kernel.org/pub/linux/utils/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/utils/kbd/kbd-${vers}.tar.sign"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
-# http://www.linuxfromscratch.org/patches/lfs/development/kbd-2.0.3-backspace-1.patch
-patchfiles='kbd-2.0.3-backspace-1.patch kbd-1.15-plamo-compat.patch'
+backspace_patch_url="http://www.linuxfromscratch.org/patches/lfs/development/kbd-${vers}-backspace-1.patch"
+patchfiles="${backspace_patch_url##*/} kbd-1.15-plamo-compat.patch"
 compress=txz
 ##############################################################
 
@@ -37,7 +38,10 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
+  if [ ! -f ${backspace_patch_url##*/} ]; then
+    wget $backspace_patch_url
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
