@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='logrotate'
-vers='3.9.1'
-url="https://fedorahosted.org/releases/l/o/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+vers='3.11.0'
+url="https://github.com/logrotate/logrotate/releases/download/${vers}/logrotate-${vers}.tar.xz"
+digest="md5sum:3a9280e4caeb837427a2d54518fbcdac"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.HPUX README.Solaris'
