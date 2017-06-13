@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='kmod'
-vers='23'
+vers='24'
 url="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-${vers}.tar.sign"
 arch=`uname -m`
-build=P2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--bindir=/bin --with-xz --with-zlib"
 DOCS='COPYING NEWS README TODO'
