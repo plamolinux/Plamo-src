@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iproute2'
-vers='4.9.0'
+vers='4.11.0'
 url="https://www.kernel.org/pub/linux/utils/net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=P2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README README.decnet README.devel README.distribution README.iproute2+tc README.lnstat'
