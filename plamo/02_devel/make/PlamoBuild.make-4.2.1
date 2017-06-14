@@ -3,8 +3,9 @@
 pkgbase='make'
 vers='4.2.1'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README.Amiga README.DOS README.OS2 README.VMS README.W32 README.customs'
