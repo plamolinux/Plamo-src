@@ -3,8 +3,9 @@
 pkgbase='gzip'
 vers='1.8'
 url="http://ftp.gnu.org/gnu/gzip/gzip-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog ChangeLog-2007 INSTALL NEWS README README-release THANKS TODO'
