@@ -3,8 +3,9 @@
 pkgbase='tar'
 vers='1.29'
 url="http://ftp.gnu.org/gnu/tar/tar-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog.1 INSTALL NEWS README THANKS TODO'
