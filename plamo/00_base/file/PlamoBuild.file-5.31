@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='file'
-vers='5.29'
+vers='5.31'
 url="ftp://ftp.astron.com/pub/file/file-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="file-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
