@@ -2,10 +2,11 @@
 ##############################################################
 pkgbase='cracklib'
 vers='2.9.6'
-url="https://github.com/cracklib/cracklib}/releases/download/cracklib-${vers}/cracklib-${vers}.tar.gz"
+url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-${vers}.tar.gz"
+digest="md5sum:c52f463585d85924b28cdc1e373ae06d"
 w_url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-words-2.9.6.gz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --without-python --with-default-dict=/lib/cracklib/pw_dict'
 DOCS='ABOUT-NLS AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README README-DAWG README-LICENSE README-WORDS'
@@ -38,6 +39,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${w_url##*/} ]; then
+	wget $w_url
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then

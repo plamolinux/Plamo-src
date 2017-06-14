@@ -3,10 +3,11 @@
 pkgbase='acl'
 vers='2.2.52'
 url="http://download.savannah.gnu.org/releases/${pkgbase}/${pkgbase}-${vers}.src.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--enable-gettext=yes'
+OPT_CONFIG="--bindir=/bin --disable-static --libexecdir=/usr/lib --enable-gettext=yes --enable-lib64=no"
 DOCS='README'
 patchfiles=''
 compress=txz
@@ -83,6 +84,11 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install install-lib install-dev DIST_ROOT=$P PKG_DOC_DIR='${prefix}'/share/doc/${src}
+
+  chmod -v 755 $P/usr/${libdir}/libacl.so
+  install -v -d $P/${libdir}
+  mv -v $P/usr/${libdir}/libacl.so.* $P/${libdir}/
+  ln -sfv ../../lib/$(readlink $P/usr/lib/libacl.so) $P/usr/lib/libacl.so
 
 ################################
 #      install tweaks
