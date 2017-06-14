@@ -3,8 +3,9 @@
 pkgbase='gawk'
 vers='4.1.4'
 url="http://ftp.gnu.org/gnu/gawk/gawk-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog.0 INSTALL
