@@ -3,8 +3,9 @@
 pkgbase='findutils'
 vers='4.6.0'
 url="http://ftp.gnu.org/pub/gnu/findutils/findutils-${vers}.tar.gz"
+digest="sha1sum:f18e8aaee3f3d4173a1f598001003be8706d28b0"
 arch=`uname -m`
-build=P3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2013 INSTALL NEWS README README-alpha README-hacking THANKS TODO tool-versions.txt'
