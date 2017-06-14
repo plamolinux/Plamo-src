@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xz'
-vers='5.2.2'
+vers='5.2.3'
 url="http://tukaani.org/xz/xz-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static'
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 ChangeLog INSTALL INSTALL.generic NEWS README THANKS TODO'
