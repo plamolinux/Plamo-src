@@ -3,8 +3,9 @@
 pkgbase='groff'
 vers='1.22.3'
 url="http://ftp.gnu.org/gnu/groff/groff-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--without-x'
 DOCS="COPYING ChangeLog ChangeLog.115 ChangeLog.116 ChangeLog.117
