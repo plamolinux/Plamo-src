@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dialog'
-vers='1.3_20160828'
+vers='1.3_20170509'
 url="ftp://invisible-island.net/dialog/dialog-${vers/_/-}.tgz"
+digest="sha256sum:2ff1ba74c632b9d13a0d0d2c942295dd4e8909694eeeded7908a467d0bcd4756"
 arch=`uname -m`
-build=P1
+build=B1
 src="dialog-${vers/_/-}"
 OPT_CONFIG="--bindir=/bin --enable-nls --with-shared --with-ncursesw --enable-widec"
 DOCS='COPYING README dialog.lsm'
@@ -13,6 +14,8 @@ compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
+
+OPT_CONFIG="${OPT_CONFIG} --libdir=/${libdir}"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -37,6 +40,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
