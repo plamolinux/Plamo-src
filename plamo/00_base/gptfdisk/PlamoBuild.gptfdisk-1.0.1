@@ -3,8 +3,10 @@
 pkgbase='gptfdisk'
 vers='1.0.1'
 url="http://downloads.sourceforge.net/project/${pkgbase}/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:d7f3d306b083123bcc6f5941efade586"
+patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/gptfdisk-1.0.1-convenience-1.patch"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
 DOCS='COPYING NEWS README'
@@ -37,6 +39,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${patch_url##*/} ]; then
+    wget $patch_url
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
