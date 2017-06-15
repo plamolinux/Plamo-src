@@ -3,8 +3,9 @@
 pkgbase='dhcp'
 vers='4.3.5'
 url="ftp://ftp.isc.org/isc/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-srv-lease-file=/var/lib/dhcpd/dhcpd.leases
 	--with-srv6-lease-file=/var/lib/dhcpd/dhcpd6.leases
