@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iputils'
-vers='s20160308'
+vers='s20161105'
 url="https://github.com/iputils/iputils/archive/${vers}.tar.gz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='INSTALL README.md'
