@@ -1,19 +1,23 @@
 #!/bin/sh
 ##############################################################
-pkgbase='SGMLSpm'
+pkgbase='perl_SGMLSpm'
 vers='1.1'
 url="http://search.cpan.org/CPAN/authors/id/R/RA/RAAB/${pkgbase}-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="SGMLSpm-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
-
 source /usr/share/plamobuild_functions.sh
+
+export PERL_MM_USE_DEFAULT=1 \
+       PERL_AUTOINSTALL=--skipdeps \
+       PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='"$P"'" \
+       PERL_MB_OPT="--installdirs vendor --destdir '"$P"'" \
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -74,6 +78,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  find $P -name .packlist -o -name perllocal.pod -delete
+  ln -sv /usr/bin/sgmlspl.pl $P/usr/bin/sgmlspl
 
 ################################
 #      install tweaks

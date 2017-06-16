@@ -11,6 +11,7 @@ DOCS='INSTALL README.md'
 patchfiles=''
 compress=txz
 ##############################################################
+# 06_ext/docbook.txz ¤È perl_append.txz/perl_SGMLSpm É¬Í×
 
 source /usr/share/plamobuild_functions.sh
 
