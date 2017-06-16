@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase='perl_SGMLSpm'
 vers='1.1'
-url="http://search.cpan.org/CPAN/authors/id/R/RA/RAAB/${pkgbase}-${vers}.tar.gz"
+url="http://search.cpan.org/CPAN/authors/id/R/RA/RAAB/SGMLSpm-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
@@ -12,12 +12,8 @@ DOCS='COPYING ChangeLog README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
-source /usr/share/plamobuild_functions.sh
 
-export PERL_MM_USE_DEFAULT=1 \
-       PERL_AUTOINSTALL=--skipdeps \
-       PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='"$P"'" \
-       PERL_MB_OPT="--installdirs vendor --destdir '"$P"'" \
+source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -43,6 +39,12 @@ fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
 fi
+
+
+export PERL_MM_USE_DEFAULT=1 \
+       PERL_AUTOINSTALL=--skipdeps \
+       PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='"$P"'" \
+       PERL_MB_OPT="--installdirs vendor --destdir '"$P"'"
 
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
@@ -79,7 +81,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  find $P -name .packlist -o -name perllocal.pod -delete
+  find $P \( -name .packlist -o -name perllocal.pod \) -delete
   ln -sv /usr/bin/sgmlspl.pl $P/usr/bin/sgmlspl
 
 ################################
