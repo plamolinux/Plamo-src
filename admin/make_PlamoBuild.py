@@ -239,6 +239,12 @@ if [ $opt_config -eq 1 ] ; then
 
     elif method == 'perl' :
         body_02 = '''
+
+export PERL_MM_USE_DEFAULT=1 \\
+       PERL_AUTOINSTALL=--skipdeps \\
+       PERL_MM_OPT="INSTALLDIRS=vendor DESTDIR='"$P"'" \\
+       PERL_MB_OPT="--installdirs vendor --destdir '"$P"'"
+
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
@@ -297,7 +303,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-'''      
+'''
     body_02 = '''
 ################################
 #      install tweaks
@@ -320,6 +326,12 @@ EOF
 
 fi
 '''
+    if method == 'perl':
+        body_perl = '''
+  find $P \( -name .packlist -o -name perllocal.pod \) -delete
+'''
+        body_02 = body_perl + body_02
+
     body = body_01 + body_02
     return body
 
