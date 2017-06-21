@@ -4,11 +4,12 @@ pkgbase='libcap'
 vers='2.25'
 url="https://kernel.org/pub/linux/libs/security/linux-privs/${pkgbase}2/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CHANGELOG License README pam_cap/capability.conf'
-patchfiles=''
+# libcap-2.25-gperf.patch: see https://bugs.gentoo.org/show_bug.cgi?id=604802#c8
+patchfiles='libcap-2.25-gperf.patch'
 compress=txz
 ##############################################################
 
@@ -53,7 +54,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    export CFLAGS="$CFLAGS -I/usr/include/linux"
+    make KERNEL_HEADERS=/usr/include
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -65,12 +67,17 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P lib=/lib RAISE_SETFCAP=no
+  make DESTDIR=$P lib=/${libdir} RAISE_SETFCAP=no install
+
+  chmod -v 755 $P/${libdir}/libcap.so
+
   # move static lib to /usr/lib
   install -d $P/usr/${libdir}
-  mv $P/${libdir}/libcap.a $P/usr/${libdir}/
-  rm -f $P/${libdir}/libcap.so
-  ln -s /${libdir}/libcap.so.2 $P/usr/${libdir}/libcap.so
+  mv -v $P/${libdir}/libcap.a $P/usr/${libdir}/
+
+  # create link in /usr/lib
+  rm -vf $P/${libdir}/libcap.so
+  ln -sv /${libdir}/$(readlink $P/${libdir}/libcap.so.2) $P/usr/${libdir}/libcap.so
 
 ################################
 #      install tweaks
