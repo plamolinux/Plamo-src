@@ -3,7 +3,7 @@ unset LS_BLOCK_SIZE
 export LANG=C
 ##############################################################
 pkgbase=thunderbird
-vers=45.8.0
+vers=52.2.0
 url="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 #verify=$url.asc
 arch=`uname -m`
@@ -273,14 +273,14 @@ ac_add_options --enable-safe-browsing
 ac_add_options --enable-startup-notification
 ac_add_options --enable-gio
 # disable feature
-ac_add_options --disable-gstreamer
-ac_add_options --disable-gnomevfs
+#ac_add_options --disable-gstreamer
+#ac_add_options --disable-gnomevfs
 ac_add_options --disable-gnomeui
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-tests
-ac_add_options --disable-mochitest
-ac_add_options --disable-installer
+#ac_add_options --disable-mochitest
+#ac_add_options --disable-installer
 
 ## Branding
 ac_add_options --with-branding=mail/branding/aurora
@@ -293,8 +293,8 @@ ac_add_options --enable-ui-locale=ja
 mk_add_options MOZ_MAKE_FLAGS="-j3"
 ac_add_options --enable-strip
 ac_add_options --disable-install-strip
-ac_add_options --disable-static 
-ac_add_options --enable-shared 
+#ac_add_options --disable-static 
+#ac_add_options --enable-shared 
 
 EOF
 
@@ -305,7 +305,7 @@ EOF
     else
       cat >> mozconfig << EOF
 ac_add_options --host=i686-pc-linux-gnu
-ac_add_options --build=i686-pc-linux-gnu
+#ac_add_options --build=i686-pc-linux-gnu
 mk_add_options CONFIG_GUESS=i686-pc-linux-gnu
 export USE_ARCH=32
 EOF
