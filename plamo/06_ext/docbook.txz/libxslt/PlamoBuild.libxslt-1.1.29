@@ -3,9 +3,9 @@
 pkgbase='libxslt'
 vers='1.1.29'
 url="ftp://xmlsoft.org/XSLT/${pkgbase}-${vers}.tar.gz"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
