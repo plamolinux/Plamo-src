@@ -5,7 +5,7 @@ vers='7.5p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
     --with-privsep-path=/var/lib/sshd --with-md5-passwords"
@@ -96,21 +96,23 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   # slogin -> ssh
-  ln -s ssh $P/usr/bin/slogin
-  ln -s ssh.1 $mandir/man1/slogin.1
+  ln -sv ssh $P/usr/bin/slogin
+  ln -sv ssh.1 $mandir/man1/slogin.1
 
   # owner of /var/lib/sshd is root:sys
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-      chown root:sys $P/var/lib/sshd
+      chown -v root:sys $P/var/lib/sshd
   fi
 
-  mv $P/etc/ssh/ssh_config{,.dist}
-  mv $P/etc/ssh/sshd_config{,.dist}
+  mv -v $P/etc/ssh/ssh_config{,.dist}
+  mv -v $P/etc/ssh/sshd_config{,.dist}
 
-  install -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
-  install -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
-  install -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
+  install -v -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  install -v -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
+  install -v -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
+
+  install -v -D -m 644 $W/sshd.init $P/etc/rc.d/init.d/sshd
 
   mkdir -p $P/install
   cat <<- "EOF" >> $P/install/initpkg

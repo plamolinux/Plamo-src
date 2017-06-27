@@ -1,0 +1,63 @@
+#!/bin/bash
+NAME="sshd"
+DESC=$NAME
+DAEMON="/usr/sbin/sshd"
+
+start()
+{
+  echo -n "Starting $DESC: $DAEMON "
+  $DAEMON
+  echo "done."
+}
+
+status()
+{
+  pgrep -f $DAEMON > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      return 0
+  else
+      return 1
+  fi
+}
+
+stop()
+{
+  if ( ! status ); then
+     echo "$DESC seems already stopped"
+  else
+     echo -n "Stopping $DESC: "
+     pkill -f $DAEMON
+     echo "done."
+  fi
+}
+
+restart()
+{
+  stop
+  start
+}
+
+case "$1" in
+'start')
+  if ( ! status ); then
+    start
+  else
+    echo "$DESC is already running (will not start it twice)."
+  fi
+  ;;
+'stop')
+  stop
+  ;;
+'restart')
+  restart
+  ;;
+'status')
+  if ( status ); then
+    echo "$DESC is currently running"
+  else
+    echo "$DESC is not running."
+  fi
+  ;;
+*)
+  echo "usage $0 start|stop|status|restart"
+esac
