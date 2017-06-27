@@ -3,8 +3,9 @@
 pkgbase='ncurses'
 vers='6.0'
 url="https://ftp.gnu.org/gnu/ncurses/ncurses-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P6
+build=B1
 src="ncurses-${vers}"
 OPT_CONFIG="--with-shared --without-debug --enable-widec 
     --without-normal --with-manpage-format=normal --disable-ext-colors"
