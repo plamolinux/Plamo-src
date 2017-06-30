@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='curl'
-vers='7.54.0'
+vers='7.54.1'
 url="https://curl.haxx.se/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
-            --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt --without-nghttp2 --enable-threaded-resolver
+            --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
             --with-random=/dev/urandom"
 DOCS='COPYING README RELEASE-NOTES'
 patchfiles=''

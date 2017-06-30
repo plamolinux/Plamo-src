@@ -3,10 +3,11 @@
 pkgbase='wget'
 vers='1.19.1'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --with-ssl=openssl'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles='CVE-2017-6508.patch'
 compress=txz
