@@ -5,7 +5,7 @@ vers='7.5p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
     --with-privsep-path=/var/lib/sshd --with-md5-passwords"
@@ -14,7 +14,8 @@ DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
     PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
     TODO"
-patchfiles=''
+openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-7.5p1-openssl-1.1.0-1.patch"
+patchfiles="${openssl_patch_url##*/}"
 compress=txz
 ##############################################################
 
@@ -43,6 +44,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${openssl_patch_url##*/} ]; then
+        wget ${openssl_patch_url}
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
