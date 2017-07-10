@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='os_prober'
-vers='1.74'
+vers='1.75'
 url="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.tar.xz"
 verify="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.dsc"
 arch=`uname -m`
 build=B1
-src="os-prober"
+src="os-prober-${vers}"
 OPT_CONFIG=''
 DOCS='README TODO'
 patchfiles='plamo-detect.patch'
