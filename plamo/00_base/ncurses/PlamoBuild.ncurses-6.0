@@ -2,13 +2,14 @@
 ##############################################################
 pkgbase='ncurses'
 vers='6.0'
-url="https://ftp.gnu.org/gnu/ncurses/ncurses-${vers}.tar.gz"
+url="http://ftp.jaist.ac.jp/pub/GNU/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
-src="ncurses-${vers}"
-OPT_CONFIG="--with-shared --without-debug --enable-widec 
-    --without-normal --with-manpage-format=normal --disable-ext-colors"
+build=B2
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--with-shared --without-debug --without-normal --enable-pc-files --enable-widec
+			  --with-cxx-binding --with-cxx-shared
+			  --with-manpage-format=normal"
 DOCS='AUTHORS COPYING INSTALL NEWS README README.MinGW README.emx'
 patchfiles=''
 compress=txz
@@ -16,12 +17,15 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# $B$3$N%9%/%j%W%H$G;H$&(B1$BJ8;zJQ?t$N0UL#(B
-# 
-# $W : $B$3$N%9%/%j%W%H$rF0$+$9%+%l%s%H%G%#%l%/%H%j(B
-# $S : $B%=!<%9%3!<%I$N$"$k%G%#%l%/%H%j(B($B%G%U%)%k%H(B: $W/${src})
-# $B : $B%S%k%IMQ%G%#%l%/%H%j(B($B%G%U%)%k%H(B: /tmp/build{,32})
-# $P : $B%S%k%I$7$?%U%!%$%k$r%$%s%9%H!<%k$9$k%G%#%l%/%H%j!J%G%U%)%k%H(B: $W/work)
+OPT_CONFIG="$OPT_CONFIG --with-pkg-config-libdir=/usr/${libdir}/pkgconfig"
+
+# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+#
+# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
+# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
+# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
+# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -37,44 +41,44 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
-    done
-
-    cd $B
-    # if [ -f $S/autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
     fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -84,15 +88,22 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  ln -s ncursesw6-config $P/usr/bin/ncurses6-config
-  ln -s libncursesw.so.$vers $P/$libdir/libncurses.so.6
-  ln -s libncurses.so.6 $P/$libdir/libncurses.so
-  ln -s libncursesw.so.$vers $P/$libdir/libcurses.so.6
-  ln -s libcurses.so.6 $P/$libdir/libcurses.so
-  ln -s libncursesw.so.$vers $P/$libdir/libncursesw.so.5
-  ln -s libpanelw.so.$vers $P/$libdir/libpanelw.so.5
-  ln -s libmenuw.so.$vers $P/$libdir/libmenuw.so.5
-  ln -s libformw.so.$vers $P/$libdir/libformw.so.5
+  install -v -d $P/lib
+  mv -v $P/usr/lib/libncursesw.so.6* $P/lib
+  ln -sfv ../../lib/$(readlink $P/usr/lib/libncursesw.so) $P/usr/lib/libncursesw.so
+
+  for lib in ncurses form panel menu ; do
+    rm -vf                    $P/usr/lib/lib${lib}.so
+    echo "INPUT(-l${lib}w)" > $P/usr/lib/lib${lib}.so
+    ln -sfv ${lib}w.pc        $P/usr/lib/pkgconfig/${lib}.pc
+  done
+
+  rm -vf                     $P/usr/lib/libcursesw.so
+  echo "INPUT(-lncursesw)" > $P/usr/lib/libcursesw.so
+  ln -sfv libncurses.so      $P/usr/lib/libcurses.so
+
+  install -v -d ${docdir}/${src}
+  cp -v -R $S/doc/* $P/usr/share/doc/${src}
 
 ################################
 #      install tweaks
