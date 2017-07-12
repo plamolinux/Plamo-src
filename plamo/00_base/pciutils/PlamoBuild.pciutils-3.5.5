@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='pciutils'
-vers='3.5.4'
+vers="3.5.5"
 url="https://www.kernel.org/pub/software/utils/pciutils/pciutils-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/software/utils/pciutils/pciutils-${vers}.tar.sign"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING ChangeLog README README.Windows TODO pciutils.lsm'
@@ -77,7 +77,7 @@ if [ $opt_package -eq 1 ] ; then
        SHARED=yes \
        MANDIR=/usr/share/man \
        ZLIB=no
-  chmod $P/usr/lib/libpci.so
+  chmod -v 755 $P/usr/lib/libpci.so
 
   wget -O $P/usr/share/hwdata/pci.ids http://pciids.sourceforge.net/v2.2/pci.ids
 
