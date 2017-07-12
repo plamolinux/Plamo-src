@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ncurses'
-vers='6.0'
-url="http://ftp.jaist.ac.jp/pub/GNU/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="${url}.sig"
+vers="6.0_20170708"
+url="http://invisible-mirror.net/archives/ncurses/current/ncurses-${vers/_/-}.tgz"
+verify="${url}.asc"
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
+build=B1
+src="${pkgbase}-${vers/_/-}"
 OPT_CONFIG="--with-shared --without-debug --without-normal --enable-pc-files --enable-widec
 			  --with-cxx-binding --with-cxx-shared
 			  --with-manpage-format=normal"
 DOCS='AUTHORS COPYING INSTALL NEWS README README.MinGW README.emx'
-patchfiles=''
+patchfiles=""
 compress=txz
 ##############################################################
 
@@ -25,7 +25,6 @@ OPT_CONFIG="$OPT_CONFIG --with-pkg-config-libdir=/usr/${libdir}/pkgconfig"
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -42,6 +41,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then

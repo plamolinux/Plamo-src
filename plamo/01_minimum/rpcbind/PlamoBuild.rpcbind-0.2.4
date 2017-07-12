@@ -6,11 +6,12 @@ url="http://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 digest="md5sum:cf10cd41ed8228fc54c316191c1f07fe"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --bindir=/sbin"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles='rpcbind-sunrpc.patch'
+# CVE-2017-8779 patch is introduced in https://github.com/guidovranken/rpcbomb
+patchfiles="rpcbind-sunrpc.patch CVE-2017-8779.patch"
 compress=txz
 ##############################################################
 
