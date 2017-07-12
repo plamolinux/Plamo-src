@@ -3,8 +3,9 @@
 pkgbase='popt'
 vers='1.16'
 url="http://rpm5.org/files/popt/popt-${vers}.tar.gz"
+digest="md5sum:3743beefa3dd6247a73f8f7a32c14c33"
 arch=`uname -m`
-build=P2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static'
 DOCS='ABOUT-NLS COPYING README'
