@@ -104,7 +104,8 @@ download_sources() {
     j=${url[$i]%%#*} ; k=`[[ ${url[$i]} =~ \# ]] && echo ${url[$i]#*#}`
     case ${j##*.} in
     git) if [ ! -d `basename ${j##*/} .git` ] ; then git clone $j ; else
-        ( cd `basename ${j##*/} .git` ; git pull origin master ) ; fi ;;
+        ( cd `basename ${j##*/} .git`
+        git pull origin ${branch[$i]:-master} ) ; fi ;;
     *) if [ ! -f ${j##*/} ] ; then wget $j
         verify_signature $j "${verify[$i]}" "${digest[$i]}" "$k" ; fi ;;
     esac
@@ -122,7 +123,8 @@ download_sources() {
     xz|txz) tar xvpJf ${j##*/} ;;
     zip) unzip ${j##*/} ;;
     git) ( cd `basename ${j##*/} .git`
-        git checkout origin/master ; git reset --hard ${commitid[$i]:-HEAD}
+        git checkout origin/${branch[$i]:-master}
+        git reset --hard ${commitid[$i]:-HEAD}
         git set-file-times ; if [ -z "`git ls-files ChangeLog`" ] ; then
         LANG=ja_JP.UTF-8 TZ=UTC gitlog2changelog ; fi ) ;;
     esac
