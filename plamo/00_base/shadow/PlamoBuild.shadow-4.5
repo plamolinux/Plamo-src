@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers="4.4"
+vers="4.5"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
+digest="md5sum:c350da50c2120de6bb29177699d89fe3"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='default-useradd.patch for-linux_pam_1.3.0.patch CVE-2017-2616.patch tweak_pamd.patch update_login_defs.patch disable-nls-manpages.patch'
+patchfiles='tweak_pamd.patch update_login_defs.patch disable-nls-manpages.patch'
 compress=txz
 ##############################################################
 # BuildRequirements:
