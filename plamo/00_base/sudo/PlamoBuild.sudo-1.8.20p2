@@ -1,8 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sudo'
-vers='1.8.19p2'
-url="http://www.${pkgbase}.ws/dist/${pkgbase}-${vers}.tar.gz"
+vers='1.8.20p2'
+url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:03da8e711caca6fd93e57751bfb74adc"
 verify=""
 arch=`uname -m`
 build=P1
