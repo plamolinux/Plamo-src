@@ -1,0 +1,5 @@
+#!/bin/sh
+# Sets up your time zone configuration.
+
+cd /
+usr/lib/setup/setup.timeconfig $*

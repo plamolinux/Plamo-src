@@ -1,0 +1,118 @@
+#!/bin/sh
+##############################################################
+pkgbase='timezone'
+vers='2017b'
+url="https://www.iana.org/time-zones/repository/releases/tzdata${vers}.tar.gz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='LICENSE NEWS README'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  if [ ! -f ${url##*/} ]; then
+    wget $url
+  fi
+  if [ ! -f ${verify##*/} ]; then
+    wget $verify
+  fi
+  gpg --verify ${verify##*/}
+  if [ $? -ne 0 ]; then
+      echo "archive verify failed"
+      exit 1
+  fi
+  mkdir $src
+  tar xvf ${url##*/} -C $src
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  echo "There is nothing to do."
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "There is nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $S
+
+  timezones=('africa' 'antarctica' 'asia' 'australasia'
+	     'europe' 'northamerica' 'southamerica'
+             'pacificnew' 'etcetera' 'backward'
+             'systemv' 'factory')
+
+  if [ -x /usr/sbin/zic ]; then
+    ZIC="/usr/sbin/zic"
+  elif which zic ; then
+    ZIC=$(which zic)
+  fi
+  if [ -z $ZIC ]; then
+    echo "zic command is not found"
+    exit 1
+  fi
+
+  ZONEINFO=/usr/share/zoneinfo
+  install -d -v $P/${ZONEINFO}
+  install -d -v $P/${ZONEINFO}/{posix,right}
+  
+  $ZIC -y ./yearistype.sh -d $P/${ZONEINFO} -L /dev/null ${timezones[@]}
+  $ZIC -y ./yearistype.sh -d $P/${ZONEINFO}/posix -L /dev/null ${timezones[@]}
+  $ZIC -y ./yearistype.sh -d $P/${ZONEINFO}/right -L leapseconds ${timezones[@]}
+
+  install -m444 -v -t $P/${ZONEINFO} iso3166.tab zone1970.tab zone.tab
+  $ZIC -y ./yearistype.sh -d $P/${ZONEINFO} -p America/New_York
+
+  # plamo files
+  install -v -D -m755 $W/timeconfig $P/usr/sbin/timeconfig
+  install -v -D -m755 $W/setup.timeconfig $P/usr/lib/setup/setup.timeconfig
+  install -v -D -m755 $W/esetup.timeconfig $P/usr/lib/setup/esetup.timeconfig
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
