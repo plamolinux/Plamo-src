@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase=dovecot
-vers=2.2.18
+vers=2.2.31
 url="http://dovecot.org/releases/${vers:0:3}/dovecot-${vers}.tar.gz"
 verify=$url.sig
 arch=`uname -m`
