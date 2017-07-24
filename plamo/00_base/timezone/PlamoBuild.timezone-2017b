@@ -5,7 +5,7 @@ vers='2017b'
 url="https://www.iana.org/time-zones/repository/releases/tzdata${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='LICENSE NEWS README'
@@ -95,6 +95,10 @@ if [ $opt_package -eq 1 ] ; then
   install -v -D -m755 $W/timeconfig $P/usr/sbin/timeconfig
   install -v -D -m755 $W/setup.timeconfig $P/usr/lib/setup/setup.timeconfig
   install -v -D -m755 $W/esetup.timeconfig $P/usr/lib/setup/esetup.timeconfig
+
+  install -v -d $P/var/log/setup
+  ln -s /usr/lib/setup/setup.timeconfig $P/var/log/setup/setup.timeconfig
+  ln -s /usr/lib/setup/esetup.timeconfig $P/var/log/setup/esetup.timeconfig
 
 ################################
 #      install tweaks
