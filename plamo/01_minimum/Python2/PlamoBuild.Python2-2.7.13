@@ -2,12 +2,14 @@
 ##############################################################
 pkgbase='Python2'
 vers='2.7.13'
-url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
+url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="Python-${vers}"
 OPT_CONFIG="--enable-shared --with-system-expat --with-system-ffi
-	--with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4"
+	--with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4
+	--enable-optimizations"
 DOCS='LICENSE README'
 patchfiles=''
 compress=txz
