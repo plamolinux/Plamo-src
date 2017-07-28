@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bc'
-vers='1.06.95'
-url="http://alpha.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+vers='1.07.1'
+url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-readline --infodir=\${prefix}/share/info"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README'
-patchfiles='bc-1.06.95-void_uninitialized.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
