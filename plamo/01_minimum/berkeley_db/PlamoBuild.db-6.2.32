@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='db'
-vers='6.2.23'
+vers='6.2.32'
 url="http://download.oracle.com/berkeley-db/db-${vers}.tar.gz"
+digest="md5sum:33491b4756cb44b91c3318b727e71023"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--enable-compat185
