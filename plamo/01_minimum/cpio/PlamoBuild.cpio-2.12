@@ -3,8 +3,9 @@
 pkgbase='cpio'
 vers='2.12'
 url="http://ftp.gnu.org/gnu/cpio/cpio-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
-build=P3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
