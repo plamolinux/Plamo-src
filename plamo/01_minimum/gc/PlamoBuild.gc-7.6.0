@@ -3,8 +3,9 @@
 pkgbase='gc'
 vers='7.6.0'
 url="http://www.hboehm.info/${pkgbase}/${pkgbase}_source/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:bf46ccbdaccfa3186c2ab87191c8855a"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-cplusplus'
 DOCS='AUTHORS ChangeLog README.QUICK README.md'
