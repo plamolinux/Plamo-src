@@ -3,8 +3,9 @@
 pkgbase='bvi'
 vers='1.4.0'
 url="http://downloads.sourceforge.net/bvi/bvi-${vers}.src.tar.gz"
+digest="sha1sum:7b3c0760f0779dba920e08eafcf2fe23a09d70da"
 arch=`uname -m`
-build=P3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README'
