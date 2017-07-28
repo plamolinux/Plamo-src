@@ -2,10 +2,10 @@
 ##############################################################
 pkgbase='emacs'
 vers='25.2'
-rc="_rc1"
-url="http://alpha.gnu.org/pub/gnu/${pkgbase}/pretest/${pkgbase}-${vers}${rc}.tar.xz"
+url="https://ftp.gnu.org/pub/gnu/emacs/emacs-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--without-all --without-x'
 DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
