@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='expat'
-vers='2.2.0'
+vers='2.2.2'
 url="http://jaist.dl.sourceforge.net/project/${pkgbase}/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.bz2"
+digest="sha1sum:891cee988b38d5d66953f62f94c3150b8810a70a"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='CMake.README COPYING README'
-patchfiles="expat-2.2.0-CVE-2016-0718-regression.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
