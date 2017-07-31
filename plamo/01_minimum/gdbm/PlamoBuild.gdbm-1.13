@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gdbm'
-vers='1.12'
+vers='1.13'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-libgdbm-compat'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
