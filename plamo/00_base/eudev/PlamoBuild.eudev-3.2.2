@@ -5,7 +5,7 @@ vers='3.2.2'
 url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
 	--with-rootprefix= --with-rootlibdir=/lib
@@ -88,6 +88,20 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  # rules from LFS
+  install -v -m 0644 $W/55-setclock.rules $P/"$libdir"/udev/rules.d/55-setclock.rules
+
+  # Don't rename eth0 to enp0s3
+  rm -v $P/"$libdir"/udev/rules.d/80-net-name-slot.rules
+
+  # init scripts
+  install -v -d $P/etc/rc.d/init.d
+  install -v -m 0755 $W/eudev.init $P/etc/rc.d/init.d/eudev
+  install -v -m 0755 $W/eudev_retry.init $P/etc/rc.d/init.d/eudev_retry
+  install -v -d $P/etc/rc.d/rcS.d
+  ln -v -sf ../init.d/eudev $P/etc/rc.d/rcS.d/S10eudev
+  ln -v -sf ../init.d/eudev_retry $P/etc/rc.d/rcS.d/S50eudev_retry
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg

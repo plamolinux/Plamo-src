@@ -1,0 +1,3 @@
+# This causes the system clock to be set as soon as /dev/rtc becomes available.
+SUBSYSTEM=="rtc", ACTION=="add", MODE="0644", RUN+="/etc/rc.d/init.d/setclock start"
+KERNEL=="rtc", ACTION=="add", MODE="0644", RUN+="/etc/rc.d/init.d/setclock start"
