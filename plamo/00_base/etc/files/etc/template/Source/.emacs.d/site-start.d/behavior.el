@@ -1,47 +1,47 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Plam Linux emacs ÀßÄê¥Õ¥¡¥¤¥ë (Æ°ºî´ØÏ¢)
+ï»¿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Plam Linux emacs è¨­å®šãƒ•ã‚¡ã‚¤ãƒ« (å‹•ä½œé–¢é€£)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; ÍúÎò¤ÎÊİÂ¸¸Ä¿ô
+;;; å±¥æ­´ã®ä¿å­˜å€‹æ•°
 ;(setq history-length 1000)
-;;; GC ¤ò¸º¤é¤¹
+;;; GC ã‚’æ¸›ã‚‰ã™
 ;(setq gc-cons-threshold (* 10 gc-cons-threshold))
 
-;;; yes,no ¤òÅú¤¨¤ë¤«¤ï¤ê¤Ë¡¤y,n ¤Ë¤¹¤ë
+;;; yes,no ã‚’ç­”ãˆã‚‹ã‹ã‚ã‚Šã«ï¼Œy,n ã«ã™ã‚‹
 ;(fset 'yes-or-no-p 'y-or-n-p)
 
-;;; .save.. ¤È¤¤¤¦¥Õ¥¡¥¤¥ë¤òºî¤é¤Ê¤¤
+;;; .save.. ã¨ã„ã†ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œã‚‰ãªã„
 ;(setq auto-save-list-file-name nil)
 ;(setq auto-save-list-file-prefix nil)
 
-;;; ~¤Ä¤­¤Î¥Ğ¥Ã¥¯¥¢¥Ã¥×¥Õ¥¡¥¤¥ë¤òºî¤é¤Ê¤¤
+;;; ~ã¤ãã®ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œã‚‰ãªã„
 ;(setq make-backup-files nil)
 
 ;;; visible-bell
 ;(setq visible-bell t)
 
-;;; µ¯Æ°Ä¾¸å¤Î *scratch* buffer ¤ËÆş¤ëÊ¸»úÎó¤ò¤Ê¤¯¤¹
+;;; èµ·å‹•ç›´å¾Œã® *scratch* buffer ã«å…¥ã‚‹æ–‡å­—åˆ—ã‚’ãªãã™
 ;(setq initial-scratch-message nil)
 
-;;; startup message ¤ò¾Ã¤¹
+;;; startup message ã‚’æ¶ˆã™
 ;(setq inhibit-startup-message t)
 
-;;; gzip¤µ¤ì¤¿ÆüËÜ¸ì¤Îinfo¤ò¸«¤ë
+;;; gzipã•ã‚ŒãŸæ—¥æœ¬èªã®infoã‚’è¦‹ã‚‹
 (auto-compression-mode t)
 
-;;; shell-mode ¤Ç ^M ¤ò½Ğ¤µ¤Ê¤¯¤¹¤ë¡¥
+;;; shell-mode ã§ ^M ã‚’å‡ºã•ãªãã™ã‚‹ï¼
 (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m nil t)
 
-;;; shell-mode ¤Ç¥Ñ¥¹¥ï¡¼¥ÉÆşÎÏ¤ò±£¤¹
+;;; shell-mode ã§ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å…¥åŠ›ã‚’éš ã™
 (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt)
-(setq comint-password-prompt-regexp "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|login \\|Kerberos \\|CVS \\|UNIX \\| SMB \\|^\\|\\[sudo\\] \\)¥Ñ¥¹¥ï¡¼¥É\\|[Pp]assword\\( (again)\\)?\\|pass phrase\\|\\(Enter\\|Repeat\\|Bad\\) passphrase\\)\\(?:, try again\\)?\\(?: for [^:]+\\)?:\\s *\\'")
+(setq comint-password-prompt-regexp "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|login \\|Kerberos \\|CVS \\|UNIX \\| SMB \\|^\\|\\[sudo\\] \\)ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰\\|[Pp]assword\\( (again)\\)?\\|pass phrase\\|\\(Enter\\|Repeat\\|Bad\\) passphrase\\)\\(?:, try again\\)?\\(?: for [^:]+\\)?:\\s *\\'")
 
-;;; C-x b ¤ÇÊä´°¤¹¤ë¾ì¹ç¤ËÁ°Êı°ìÃ×¤Ç¤Ê¤¯ÉôÊ¬°ìÃ×¤È¤¹¤ë
+;;; C-x b ã§è£œå®Œã™ã‚‹å ´åˆã«å‰æ–¹ä¸€è‡´ã§ãªãéƒ¨åˆ†ä¸€è‡´ã¨ã™ã‚‹
 (iswitchb-mode 1)
 (setq read-buffer-function 'iswitchb-read-buffer)
 (setq iswitchb-prompt-newbuffer nil)
 
-;;; URL ¤Î°·¤¤
+;;; URL ã®æ‰±ã„
 (setq browse-url-browser-function 'browse-url-generic
       browse-url-generic-program "exo-open")
 

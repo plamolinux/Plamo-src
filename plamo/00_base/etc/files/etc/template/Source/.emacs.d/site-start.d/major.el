@@ -1,4 +1,4 @@
-;;; text-mode
+ï»¿;;; text-mode
 ;(add-hook 'text-mode-hook
 ;	  '(lambda ()
 ;	     (turn-on-auto-fill)
@@ -14,10 +14,10 @@
 ;;	     (c-set-style "whitesmith")
 ;;	     (c-set-style "ellemtel")
 ;;	     (c-set-style "linux")
-	     ; ´Á»ú¤òÄÉ²Ã¤·¤¿»ş¤Ë¡Ä¡¤
-	     ; Ê¸»ú¥³¡¼¥É¤ò¼ÁÌä¤·¤Æ¤«¤éÊİÂ¸¤·¤Æ¤Û¤·¤¤¾ì¹ç¡¥
+	     ; æ¼¢å­—ã‚’è¿½åŠ ã—ãŸæ™‚ã«â€¦ï¼Œ
+	     ; æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’è³ªå•ã—ã¦ã‹ã‚‰ä¿å­˜ã—ã¦ã»ã—ã„å ´åˆï¼
 ;;	     (my-set-file-encoding default-buffer-file-coding-system)
-	     ; EUC¤ÇÂ®¹¶¤ÇÊİÂ¸¤¹¤ë¾ì¹ç¡¥
+	     ; EUCã§é€Ÿæ”»ã§ä¿å­˜ã™ã‚‹å ´åˆï¼
 	     (my-set-file-encoding-quick 'euc-japan)
 	     (setq c-basic-offset 4)
 ;;	     (setq tab-width 4)
@@ -27,10 +27,10 @@
 ;;; fortran-mode
 (add-hook 'fortran-mode-hook
 	  '(lambda ()
-	     ; ´Á»ú¤òÄÉ²Ã¤·¤¿»ş¤Ë¡Ä¡¤
-	     ; Ê¸»ú¥³¡¼¥É¤ò¼ÁÌä¤·¤Æ¤«¤éÊİÂ¸¤·¤Æ¤Û¤·¤¤¾ì¹ç¡¥
+	     ; æ¼¢å­—ã‚’è¿½åŠ ã—ãŸæ™‚ã«â€¦ï¼Œ
+	     ; æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’è³ªå•ã—ã¦ã‹ã‚‰ä¿å­˜ã—ã¦ã»ã—ã„å ´åˆï¼
 ;;	     (my-set-file-encoding default-buffer-file-coding-system)
-	     ; EUC¤ÇÂ®¹¶¤ÇÊİÂ¸¤¹¤ë¾ì¹ç¡¥
+	     ; EUCã§é€Ÿæ”»ã§ä¿å­˜ã™ã‚‹å ´åˆï¼
 	     (my-set-file-encoding-quick 'euc-japan)
 	     ) t)
 

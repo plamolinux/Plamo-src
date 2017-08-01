@@ -1,6 +1,6 @@
 !
-!  X¤ÎÍøÍÑ»ş¤Ë¡¤Eisu_toggle ¤È
-!  Control_L ¤È¤òÆş¤ìÂØ¤¨¤Ş¤¹¡¥
+!  Xã®åˆ©ç”¨æ™‚ã«ï¼ŒEisu_toggle ã¨
+!  Control_L ã¨ã‚’å…¥ã‚Œæ›¿ãˆã¾ã™ï¼
 !
 remove  Lock            = Eisu_toggle
 remove  Control         = Control_L

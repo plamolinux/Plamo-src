@@ -1,4 +1,4 @@
-;;;
+﻿;;;
 ;;; mu-cite
 ;;;
 (autoload 'mu-cite-original "mu-cite" nil t)

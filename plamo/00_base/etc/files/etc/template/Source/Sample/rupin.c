@@ -5,14 +5,14 @@
 
 int main()
 {
-    char *rupin = "¥ë¥Ñ¥ó¤ÎÅ¨¤Ï¥ë¥Ñ¥ó" ;
+    char *rupin = "ãƒ«ãƒ‘ãƒ³ã®æ•µã¯ãƒ«ãƒ‘ãƒ³" ;
     char one[4] ={'\0','\0','\0','\0'} ;
     int win,i,len,fsize,ff ;
 
     len=strlen(rupin) ;
-    /* 800¡ß600¤Î¥¦¥£¥ó¥É¥¦¤ò³«¤¯ */
+    /* 800Ã—600ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’é–‹ã */
     win = gopen(800,600) ;
-    /* ¥ì¥¤¥ä¤ÎÀßÄê */
+    /* ãƒ¬ã‚¤ãƒ¤ã®è¨­å®š */
     layer(win,0,1) ;
     i=gsetfontset(win,"-kochi-kochi gothic-medium-r-normal--560-*-*-*-*-*-*-*") ;
     if( i ){
@@ -22,11 +22,11 @@ int main()
     else ff=1 ;
     for( i=0 ; i < len/2 ; i++ ){
 	strncpy(one,rupin+i*2,2) ;
-	/* ¥¦¥£¥ó¥É¥¥Æâ¤ò¾Ãµî */
+	/* ã‚¦ã‚£ãƒ³ãƒ‰ã‚¥å†…ã‚’æ¶ˆå» */
 	gclr(win) ;
-	/* Ê¸»ú¤òÉÁ¤¯ */
+	/* æ–‡å­—ã‚’æã */
 	drawstr(win,100+20,600/2-560/2+560/6,FONTSET,0,one) ;
-	/* ¥ì¥¤¥ä¤Î¥³¥Ô¡¼ */
+	/* ãƒ¬ã‚¤ãƒ¤ã®ã‚³ãƒ”ãƒ¼ */
 	copylayer(win,1,0) ;
 	msleep(220) ;
     }
@@ -44,7 +44,7 @@ int main()
 	msleep(20) ;
     }
     sleep(2) ;
-    /* Áë¤òÊÄ¤¸¤ë */
+    /* çª“ã‚’é–‰ã˜ã‚‹ */
     gclose(win) ;
     return(0) ;
 }

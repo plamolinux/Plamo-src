@@ -5,11 +5,12 @@ case "$1" in
   LANG=ja_JP.eucJP ;;
 esac
 
-if [ $LANG = ja_JP.UTF-8 ] ; then
-  JLESSCHARSET=japanese-utf8
-  OUTPUT_CHARSET=UTF-8
-else
-  JLESSCHARSET=japanese-euc
-  OUTPUT_CHARSET=EUC-JP
-fi
-export LANG JLESSCHARSET OUTPUT_CHARSET
+#if [ $LANG = ja_JP.UTF-8 ] ; then
+#  JLESSCHARSET=japanese-utf8
+#  OUTPUT_CHARSET=UTF-8
+#else
+#  JLESSCHARSET=japanese-euc
+#  OUTPUT_CHARSET=EUC-JP
+#fi
+#export LANG JLESSCHARSET OUTPUT_CHARSET
+export LANG

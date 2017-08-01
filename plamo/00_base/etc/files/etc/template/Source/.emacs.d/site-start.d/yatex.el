@@ -1,7 +1,7 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ï»¿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; YaTeX
-;;   [La]TeX ÆşÎÏ¥â¡¼¥É
-;;   M-x yatex ¤È¤¹¤ë¤«¡¢.tex ¤Ç½ª¤ï¤ë¥Õ¥¡¥¤¥ë¤òÆÉ¤ß¹ş¤à¤Èµ¯Æ°¤·¤Ş¤¹
+;;   [La]TeX å…¥åŠ›ãƒ¢ãƒ¼ãƒ‰
+;;   M-x yatex ã¨ã™ã‚‹ã‹ã€.tex ã§çµ‚ã‚ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€ã¨èµ·å‹•ã—ã¾ã™
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq load-path
@@ -9,8 +9,8 @@
 (autoload 'yatex-mode "yatex" "Yet Another LaTeX mode" t)
 (autoload 'yahtml-mode "yahtml" "Yet Another HTML mode" t)
 
-;; *.tex *.html ¤Î³ÈÄ¥»Ò¤ò»ı¤Ä¥Õ¥¡¥¤¥ë¤ò³«¤¤¤¿¾ì¹ç¡¤
-;; ¤½¤ì¤¾¤ì yatex-mode, yahtml-mode ¤Ë¤¹¤ë¡¥
+;; *.tex *.html ã®æ‹¡å¼µå­ã‚’æŒã¤ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã„ãŸå ´åˆï¼Œ
+;; ãã‚Œãã‚Œ yatex-mode, yahtml-mode ã«ã™ã‚‹ï¼
 (setq auto-mode-alist
       (cons (cons "\\.tex$" 'yatex-mode)
 	    auto-mode-alist))
@@ -18,8 +18,8 @@
       (cons (cons "\\.html$" 'yahtml-mode)
 	    auto-mode-alist))
 
-(setq YaTeX-kanji-code 3)	; EUC¤Ë¤¹¤ë
-(setq yahtml-kanji-code 3)	; EUC¤Ë¤¹¤ë
+(setq YaTeX-kanji-code 3)	; EUCã«ã™ã‚‹
+(setq yahtml-kanji-code 3)	; EUCã«ã™ã‚‹
 (setq yahtml-www-browser "firefox")
 (setq tex-command "platex")
 (setq dviprint-from-format "-p %b")

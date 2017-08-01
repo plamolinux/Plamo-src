@@ -1,38 +1,38 @@
-Plamo-5.0�Ǥϡ������ ~/.emacs �ι�¤��ʬ�䤷�ơ�
-���줾��ε�ǽ�� site-start.d/ �ʲ��Υե������ʬ�䤷���󶡤��Ƥ��ޤ���
-�����Υե�����Τ������ʲ��Υե�����ϥǥե���ȤǤϥ��󥹥ȡ���
-����ʤ��ѥå�������ɬ�פȤ��뤿�ᡢ���󥹥ȡ���ľ��ξ��֤Ǥϡ�
-�ե�����̾�������� .el ���� _el ���Ѥ��ơ�init.el �����ɤ߹��ޤ�ʤ��褦��
-���Ƥ��ޤ��������Υե������ͭ���ˤ��뤿��ˤϰʲ��Υѥå�������
-���󥹥ȡ��뤷�Ƥ��顢_el �� .el ��ľ���Ƥ���������
-(�ʤ���������XXXX����ʬ�����դ�С�����󡢥ӥ���ֹ椬���뤿�ᡢ
- contrib/emacs/ �ʲ��Ǻǿ��ѥå�����������Ǥ�������)
+Plamo-5.0では、従来の ~/.emacs の構造を分割して、
+それぞれの機能を site-start.d/ 以下のファイルに分割して提供しています。
+これらのファイルのうち、以下のファイルはデフォルトではインストール
+されないパッケージを必要とするため、インストール直後の状態では、
+ファイル名の末尾を .el から _el に変えて、init.el から読み込まれないように
+しています。これらのファイルを有効にするためには以下のパッケージを
+インストールしてから、_el を .el に直してください。
+(なお、下記のXXXXの部分は日付やバージョン、ビルド番号が入るため、
+ contrib/emacs/ 以下で最新パッケージを選んでください)
 
-wl_el : Emacs�ѤΥ᡼��Ǥ���Wanderlust�Ѥ�����ե�����Ǥ���
-        Wanderlust�����Ѥ���ݤϡ�contrib/emacs/waderust-XXXX-x86_64-PXX.txz ��
-        ���󥹥ȡ��뤷�ơ����Υե������ wl.el �� rename ���Ƥ���������
+wl_el : Emacs用のメーラであるWanderlust用の設定ファイルです。
+        Wanderlustを利用する際は、contrib/emacs/waderust-XXXX-x86_64-PXX.txz を
+        インストールして、このファイルを wl.el に rename してください。
 
-mu-cite_el : �᡼��ΰ�����ʬ�Υإå��򥫥����ޥ������뤿�������ե�����Ǥ���
-             ���Υե���������Ѥ���ˤϡ�contrib/emacs/mu_cite-XXXX-x86_64-PX.txz��
-             ���󥹥ȡ��뤷�ơ����Υե������ mu-cite.el �� rename ���Ƥ���������
+mu-cite_el : メールの引用部分のヘッダをカスタマイズするための設定ファイルです。
+             このファイルを利用するには、contrib/emacs/mu_cite-XXXX-x86_64-PX.txzを
+             インストールして、このファイルを mu-cite.el に rename してください。
 
-ibus-el_el : Emacs ����iBus��ͳ�����ܸ����Ϥ��뤿�������ե�����Ǥ���
-	     ���Υե���������Ѥ���ˤϡ�contrib/emacs/ibus_el-XXXX-x86_64-PX.txz��
- 	     ���󥹥ȡ��뤷�ơ����Υե������ibus-el.el�� rename ���Ƥ���������
-	     �ʤ����ǥե���ȤǤ� site-start.d/uim.el ���ɤ߹��ޤ�Ƥ��ꡢ
-	     IM��ON/OFF�������C-\ ���Хåƥ��󥰤���Τǡ�ibus-el.el ��Ȥ��ݤˤ�
-	     uim.el ���ɤ߹��ߤ�ߤ��(uim_el��rename���롢���ˤ���IM��ON/OFF�������
-	     �ѹ�����ɬ�פ�����ޤ���
+ibus-el_el : Emacs からiBus経由で日本語入力するための設定ファイルです。
+	     このファイルを利用するには、contrib/emacs/ibus_el-XXXX-x86_64-PX.txzを
+ 	     インストールして、このファイルをibus-el.elに rename してください。
+	     なお、デフォルトでは site-start.d/uim.el が読み込まれており、
+	     IMのON/OFFの定義がC-\ がバッティングするので、ibus-el.el を使う際には
+	     uim.el の読み込みを止める(uim_elにrenameする、等）か、IMのON/OFFの定義を
+	     変更する必要があります。
 
 
-�ʲ��Υե�����ϡ��Ƕ��Emacs�Ѥ˥��Ƥ���Ƥ��ʤ����ᡢ�ɤ߹��ޤʤ��褦�ˤ��Ƥ��ޤ���
-�����ε�ǽ�򤪻Ȥ������ϡ����ҷи��Υե����ɥХå��򤪴ꤤ���ޤ���
+以下のファイルは、最近のEmacs用にメンテされていないため、読み込まないようにしています。
+これらの機能をお使いの方は、ぜひ経験のフィードバックをお願いします。
 
-key_el : Emacs�˥����Х���ǥ��󥰤�Ĵ������ե�����Ǥ���
+key_el : Emacsにキーバインディングを調整するファイルです。
 
-print_el : �Хåե��Υƥ����Ȥ�PS�ץ�󥿤˽��Ϥ��뤿��ε�ǽ����������ե�����Ǥ���
+print_el : バッファのテキストをPSプリンタに出力するための機能を定義したファイルです。
 
 
 -------
-������
+こじま
 

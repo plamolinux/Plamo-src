@@ -1,24 +1,24 @@
-  �� ��ѥ����λȤ��� ��
+  ■ ルパン三世の使い方 ■
 
-  rupin.c �� X11 ��ǥ�ѥ�����ɽ������ץ������Ǥ���
-���Υץ������� EGGX �Ȥ���Ķ����ڤʥ���ե��å����饤�֥��
-��ȤäƤ��ޤ���
+  rupin.c は X11 上でルパン三世を表示するプログラムです。
+このプログラムは EGGX という超お手軽なグラフィックスライブラリ
+を使っています。
 
-  ����ѥ�����ˡ�ϡ�
+  コンパイル方法は、
 
     % egg rupin.c -o rupin
 
-�Ǵ�λ�Ǥ���
+で完了です。
 
     % ./rupin
 
-�Ȥ���ȼ¹Ԥ��ޤ���
-  �¹Ԥ����顢rupin.c ��į��ƤߤƤ���������¾�ˤ⥵��ץ�ץ�
-����ब /usr/doc/EGGX079/sample/ �ʲ��ˤ���ޤ���
+とすると実行します。
+  実行したら、rupin.c を眺めてみてください。他にもサンプルプロ
+グラムが /usr/doc/EGGX079/sample/ 以下にあります。
 
-  EGGX �ˤĤ��Ƥϡ�
+  EGGX については、
 
     http://phe.phyas.aichi-edu.ac.jp/~cyamauch/eggx_procall/
 
-�����������������ե���󥹥ޥ˥奢����Ѱդ��Ƥ��ޤ���
+を御覧ください。リファレンスマニュアルを用意しています。
 

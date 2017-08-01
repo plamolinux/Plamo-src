@@ -1,4 +1,4 @@
-;; ~/.emacs.d/init.d ░╩▓╝д╦двды *.el е╒ебедеыдЄ╞╔д▀╣■др
+;; ~/.emacs.d/init.d ф╗еф╕ЛуБлуБВуВЛ *.el уГХуВбуВдуГлуВТшкнуБ┐ш╛╝уВА
 (let* ((dir "~/.emacs.d/site-start.d")
        (el-suffix "\\.el\\'")
        (files (mapcar

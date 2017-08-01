@@ -1,32 +1,32 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Tamago-4 ¤ÎÀßÄê (PlamoÉ¸½à)
+ï»¿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tamago-4 ã®è¨­å®š (Plamoæ¨™æº–)
 ;;   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; wnn ¤È¤« canna ¤È¤«¤Î»ÈÍÑ¤ÈÆ±»ş¤Ë tamago µ¯Æ°¤¹¤ë¤è¤¦¤Ë¤Ê¤Ã¤Æ¤¤¤ë¤Î¤Ç
-;; ¤³¤Î¤Ş¤Ş¤Ç¤Ï¿§¡¹¤ÊÀßÄê (customize-tamago Æâ¤Ê¤É) ¤¬¸ú¤«¤Ê¤¤¤È»×¤¦¡£
+;; wnn ã¨ã‹ canna ã¨ã‹ã®ä½¿ç”¨ã¨åŒæ™‚ã« tamago èµ·å‹•ã™ã‚‹ã‚ˆã†ã«ãªã£ã¦ã„ã‚‹ã®ã§
+;; ã“ã®ã¾ã¾ã§ã¯è‰²ã€…ãªè¨­å®š (customize-tamago å†…ãªã©) ãŒåŠ¹ã‹ãªã„ã¨æ€ã†ã€‚
 
-;;; ½é´ü²½
+;;; åˆæœŸåŒ–
 (setq emacs-ime "default")
 
-;; ½¾Íè¤Î´Ä¶­¤«¤é Tamago-4 ¤Ë°Ü¹Ô¤¹¤ë¾ì¹ç¤Ï¡¢
-;; ~/.eggrc ¤òºï½ü¤·¤Æ¤¯¤À¤µ¤¤¡¥
+;; å¾“æ¥ã®ç’°å¢ƒã‹ã‚‰ Tamago-4 ã«ç§»è¡Œã™ã‚‹å ´åˆã¯ã€
+;; ~/.eggrc ã‚’å‰Šé™¤ã—ã¦ãã ã•ã„ï¼
 
-;;; Anthy ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é¤òÍ­¸ú¤Ë¤¹¤ë
+;;; Anthy ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰ã‚’æœ‰åŠ¹ã«ã™ã‚‹
 (setq default-input-method "japanese-egg-anthy")
 
-;;; Canna ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é¤òÍ­¸ú¤Ë¤¹¤ë
+;;; Canna ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰ã‚’æœ‰åŠ¹ã«ã™ã‚‹
 ;(setq emacs-ime "canna")
 
-;;; Wnn ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é¤òÍ­¸ú¤Ë¤¹¤ë
+;;; Wnn ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰ã‚’æœ‰åŠ¹ã«ã™ã‚‹
 ;(setq emacs-ime "wnn")
 
-;;  Wnn ¤Î¾ì¹ç¤Ï 2 ¤Ä¤ÎÆşÎÏ¥â¡¼¥É(EggRemix or Egg)¤òÁª¤Ù¤Ş¤¹
-;;; Tamago ¤ÎÆşÎÏ¥â¡¼¥É¤ò Egg ReMix ¤Ë¤¹¤ë
+;;  Wnn ã®å ´åˆã¯ 2 ã¤ã®å…¥åŠ›ãƒ¢ãƒ¼ãƒ‰(EggRemix or Egg)ã‚’é¸ã¹ã¾ã™
+;;; Tamago ã®å…¥åŠ›ãƒ¢ãƒ¼ãƒ‰ã‚’ Egg ReMix ã«ã™ã‚‹
 ;(setq egg-mode-preference "remix")
-;;; Tamago ¤ÎÆşÎÏ¥â¡¼¥É¤ò ÄÌ¾ï¤Î Egg ¤Ë¤¹¤ë
+;;; Tamago ã®å…¥åŠ›ãƒ¢ãƒ¼ãƒ‰ã‚’ é€šå¸¸ã® Egg ã«ã™ã‚‹
 (setq egg-mode-preference "egg")
 
-;; ¤³¤Î¤¢¤¿¤ê¤Ï 21.3/lisp/language/japan-util.el ¤ò»²¾È
+;; ã“ã®ã‚ãŸã‚Šã¯ 21.3/lisp/language/japan-util.el ã‚’å‚ç…§
 (defun its-han-katakana ()
   (interactive)
   (its-convert (lambda (str lang) (japanese-hankaku str))))
@@ -36,24 +36,24 @@
   (its-convert (lambda (str lang) (japanese-hiragana str)))
   (its-convert (lambda (str lang) (japanese-katakana str))))
 
-;;; Tamago-4 ¤Î¶¦ÄÌ¤Î¥«¥¹¥¿¥Ş¥¤¥º(egg-cnv.el¤ò»²¾È)
+;;; Tamago-4 ã®å…±é€šã®ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚º(egg-cnv.elã‚’å‚ç…§)
 (defun customize-tamago ()
-  ;; ÊÑ´¹»ş¤Ë²¼Éô¤Ë¸õÊä¤òÉ½¼¨(¿ô»ú¤Ç²¿²ó¸å¤Ë¸õÊäÉ½¼¨¤¹¤ë¤«¤¬·è¤Ş¤ë)¡¥
+  ;; å¤‰æ›æ™‚ã«ä¸‹éƒ¨ã«å€™è£œã‚’è¡¨ç¤º(æ•°å­—ã§ä½•å›å¾Œã«å€™è£œè¡¨ç¤ºã™ã‚‹ã‹ãŒæ±ºã¾ã‚‹)ï¼
   (setq egg-conversion-auto-candidate-menu 1)
-  ;; ÊÑ´¹»ş¤Ë¸ôÊä¤òÊÌ¤ÎÁë¤ËÁ´¤ÆÉ½¼¨¤¹¤ë¡¥
+  ;; å¤‰æ›æ™‚ã«ä¾¯è£œã‚’åˆ¥ã®çª“ã«å…¨ã¦è¡¨ç¤ºã™ã‚‹ï¼
 ;  (setq egg-conversion-auto-candidate-menu-show-all t)
-  ;; ¸õÊäÉ½¼¨»ş¡¤¿ô»ú¤¢¤ë¤¤¤Ï¥¢¥ë¥Õ¥¡¥Ù¥Ã¥È¤òÆşÎÏ¤·¤¿»şÅÀ¤Ç³ÎÄê¤Ë¤¹¤ë¡¥
+  ;; å€™è£œè¡¨ç¤ºæ™‚ï¼Œæ•°å­—ã‚ã‚‹ã„ã¯ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã‚’å…¥åŠ›ã—ãŸæ™‚ç‚¹ã§ç¢ºå®šã«ã™ã‚‹ï¼
   (setq menudiag-select-without-return t)
-  ;; °ìÍ÷¤«¤éÁªÂò¸å¤Ï¼¡¤ÎÊ¸Àá¤Ë°ÜÆ°
+  ;; ä¸€è¦§ã‹ã‚‰é¸æŠå¾Œã¯æ¬¡ã®æ–‡ç¯€ã«ç§»å‹•
   (setq egg-conversion-stay-after-validate nil)
-  ;; "." ¤Ç¡Ö¡¥¡×¡¢"," ¤Ç¡Ö¡¤¡×¤òÆşÎÏ¡¥
-  (setq its-hira-period "¡¥")
-  (setq its-hira-comma  "¡¤")
+  ;; "." ã§ã€Œï¼ã€ã€"," ã§ã€Œï¼Œã€ã‚’å…¥åŠ›ï¼
+  (setq its-hira-period "ï¼")
+  (setq its-hira-comma  "ï¼Œ")
   (setq its-hira-enable-double-n t)
-  (setq its-hira-open-bracket "¡Ö")
-  (setq its-hira-close-bracket "¡×")
-  (setq its-hira-horizontal  "¡¼")
-  ;; ¥­¡¼¥Ğ¥¤¥ó¥É
+  (setq its-hira-open-bracket "ã€Œ")
+  (setq its-hira-close-bracket "ã€")
+  (setq its-hira-horizontal  "ãƒ¼")
+  ;; ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰
   (define-key egg-conversion-map "\C-g" 'egg-abort-conversion)
   (define-key egg-conversion-map "\C-s" 'ignore)
   (define-key egg-conversion-map "\C-r" 'ignore)
@@ -126,7 +126,7 @@
       (define-key menudiag-mode-map "\e[18~" 'menudiag-exit)
       (define-key menudiag-mode-map "\e[19~" 'menudiag-exit)
       ))
-  ;; ÊÑ´¹Ãæ¤Î¥Ş¥¦¥¹Áàºî¤ò¶Ø»ß
+  ;; å¤‰æ›ä¸­ã®ãƒã‚¦ã‚¹æ“ä½œã‚’ç¦æ­¢
   (if (eq window-system 'x)
       (progn
 	(add-hook 'mouse-leave-buffer-hook
@@ -176,10 +176,10 @@
 	(define-key egg-conversion-map [C-mouse-4] 'ignore)
 	(define-key egg-conversion-map [C-mouse-5] 'ignore)
 	))
-  ;;; remix °Ê³°(egg-canna,egg-wnn)¤Î¾ì¹ç¤ÎÀßÄê
+  ;;; remix ä»¥å¤–(egg-canna,egg-wnn)ã®å ´åˆã®è¨­å®š
   (if (not (and (equal egg-mode-preference "remix") (equal emacs-ime "wnn")))
       (progn
-	;; ¥­¡¼¥Ğ¥¤¥ó¥É
+	;; ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰
 	(defun egg-f6-mode ()
 	  (interactive)
 	  (if (eq inactivate-current-input-method-function 'egg-mode)
@@ -268,7 +268,7 @@
 	    (define-key its-mode-map "\e[18~" 'its-zen-katakana)
 	    (define-key its-mode-map "\e[19~" 'its-han-katakana)
 	    ))
-	;; ÊÑ´¹Ãæ¤Î¥Ş¥¦¥¹Áàºî¤ò¶Ø»ß
+	;; å¤‰æ›ä¸­ã®ãƒã‚¦ã‚¹æ“ä½œã‚’ç¦æ­¢
 	(if (eq window-system 'x)
 	    (progn
 	      (define-key its-mode-map [mouse-1] 'ignore)
@@ -317,42 +317,42 @@
 	))
   )
 
-;;; ¤«¤ó¤Ê¤Î¥«¥¹¥¿¥Ş¥¤¥º
+;;; ã‹ã‚“ãªã®ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚º
 (defun customize-egg-canna ()
   (add-hook 'egg-mode-hook 
 	    '(lambda ()
-	       ;; default.kpdef ¤Ë¤Ç¤­¤ë¤À¤±Ãé¼Â¤Ë
-	       (its-defrule "{"  "¡Ø" nil t)
-	       (its-defrule "}"  "¡Ù" nil t)
-	       (its-defrule "~"  "¡±" nil t)
-	       (its-defrule "@-"  "¡İ" nil t)
-	       (its-defrule "@@"  "¡¡" nil t)
-	       (its-defrule "@/"  "¡¦" nil t)
-	       (its-defrule "@\\" "¡À" nil t)
-	       (its-defrule "@,"  "¡¤" nil t)
-	       (its-defrule "@."  "¡¥" nil t)
-	       (its-defrule "@~"  "¡Á" nil t)
-	       (its-defrule "@|"  "¡Ã" nil t)
-	       (its-defrule "@||" "¡Â" nil t)
-	       (its-defrule "@3"  "¡Ä" nil t)
-	       (its-defrule "@2"  "¡Å" nil t)
-	       (its-defrule "@("  "¡Ê" nil t)
-	       (its-defrule "@)"  "¡Ë" nil t)
-	       (its-defrule "@["  "¡Î" nil t)
-	       (its-defrule "@]"  "¡Ï" nil t)
-	       (its-defrule "@{"  "¡Ğ" nil t)
-	       (its-defrule "@}"  "¡Ñ" nil t)
-	       ;; °Ê²¼¤Ï¾¡¼ê¤Ê³ÈÄ¥
-	       (its-defrule "@?"  "¡¦" nil t)
-	       (its-defrule "@|||" "¢Ì" nil t)
-	       (its-defrule "@`"  "¡ñ" nil t)
-	       (its-defrule "@="  "¡ò" nil t)
-	       (its-defrule "@:"  "¥ö" nil t)
-	       (its-defrule "@*"  "¥ö" nil t)
-	       (its-defrule "@^"  "¡¹" nil t)
-	       (its-defrule "@~~" "¡¹" nil t)
+	       ;; default.kpdef ã«ã§ãã‚‹ã ã‘å¿ å®Ÿã«
+	       (its-defrule "{"  "ã€" nil t)
+	       (its-defrule "}"  "ã€" nil t)
+	       (its-defrule "~"  "â€¾" nil t)
+	       (its-defrule "@-"  "âˆ’" nil t)
+	       (its-defrule "@@"  "ã€€" nil t)
+	       (its-defrule "@/"  "ãƒ»" nil t)
+	       (its-defrule "@\\" "ï¼¼" nil t)
+	       (its-defrule "@,"  "ï¼Œ" nil t)
+	       (its-defrule "@."  "ï¼" nil t)
+	       (its-defrule "@~"  "ã€œ" nil t)
+	       (its-defrule "@|"  "ï½œ" nil t)
+	       (its-defrule "@||" "â€–" nil t)
+	       (its-defrule "@3"  "â€¦" nil t)
+	       (its-defrule "@2"  "â€¥" nil t)
+	       (its-defrule "@("  "ï¼ˆ" nil t)
+	       (its-defrule "@)"  "ï¼‰" nil t)
+	       (its-defrule "@["  "ï¼»" nil t)
+	       (its-defrule "@]"  "ï¼½" nil t)
+	       (its-defrule "@{"  "ï½›" nil t)
+	       (its-defrule "@}"  "ï½" nil t)
+	       ;; ä»¥ä¸‹ã¯å‹æ‰‹ãªæ‹¡å¼µ
+	       (its-defrule "@?"  "ãƒ»" nil t)
+	       (its-defrule "@|||" "Â¬" nil t)
+	       (its-defrule "@`"  "Â¢" nil t)
+	       (its-defrule "@="  "Â£" nil t)
+	       (its-defrule "@:"  "ãƒ¶" nil t)
+	       (its-defrule "@*"  "ãƒ¶" nil t)
+	       (its-defrule "@^"  "ã€…" nil t)
+	       (its-defrule "@~~" "ã€…" nil t)
 	       ))
-  ;; ¥­¡¼ÀßÄê
+  ;; ã‚­ãƒ¼è¨­å®š
   (define-key its-mode-map "\C-h" 'its-delete-backward-SYL)
   (define-key egg-conversion-map "\C-h" 'egg-abort-conversion)
   (define-key menudiag-mode-map "\C-h" 'menudiag-exit-one-level)
@@ -367,24 +367,24 @@
 	 (if (or (equal (getenv "TERM" ) "kterm")
 ;		 (equal (getenv "TERM" ) "xterm")
 		 (equal (getenv "TERM" ) "sun")
-		 ;; TeraTerm¤Ç DEL by Delete key ¤Î¾ì¹ç¤ÏÍ­¸ú¤Ë¤¹¤ë
+		 ;; TeraTermã§ DEL by Delete key ã®å ´åˆã¯æœ‰åŠ¹ã«ã™ã‚‹
 ;		 (equal (substring (concat (getenv "TERM") "__") 0 2) "vt")
 		 )
 	     (define-key its-mode-map [8] 'its-delete-SYL)
 	   ))))
 
-;;; Wnn¤Î¥«¥¹¥¿¥Ş¥¤¥º
+;;; Wnnã®ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚º
 (defun customize-egg-wnn ()
-  ;; ¥­¡¼ÀßÄê
+  ;; ã‚­ãƒ¼è¨­å®š
   (cond ((eq window-system 'x)
 	 )
 	((null window-system)
 	 (define-key its-mode-map "\e[3~" 'its-delete-backward-SYL)
 	 )))
 
-;;; Egg ReMix ¤Î¥«¥¹¥¿¥Ş¥¤¥º
+;;; Egg ReMix ã®ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚º
 (defun customize-egg-remix ()
-  ;; ¥­¡¼ÀßÄê
+  ;; ã‚­ãƒ¼è¨­å®š
   (if (equal egg-mode-preference "remix")
       (progn
 	(define-key remix-its-mode-map "\C-p" 'remix-hiragana)
@@ -414,7 +414,7 @@
 	(define-key remix-its-mode-map [home] 'remix-beginning-of-input-buffer)
 	(define-key remix-its-mode-map [end]  'remix-end-of-input-buffer)
 	(cond ((eq window-system 'x)
-	       ;; ÊÑ´¹Ãæ¤Î¥Ş¥¦¥¹Áàºî¤ò¶Ø»ß
+	       ;; å¤‰æ›ä¸­ã®ãƒã‚¦ã‚¹æ“ä½œã‚’ç¦æ­¢
 	       (add-hook 'mouse-leave-buffer-hook
 			 '(lambda ()
 			    (if (remix-in-fence-p)
@@ -461,7 +461,7 @@
 	       (define-key remix-its-mode-map [S-mouse-5] 'ignore)
 	       (define-key remix-its-mode-map [C-mouse-4] 'ignore)
 	       (define-key remix-its-mode-map [C-mouse-5] 'ignore)
-	       ;; ¥­¡¼ÀßÄê
+	       ;; ã‚­ãƒ¼è¨­å®š
 	       (define-key remix-its-mode-map [M-up] 'remix-hiragana)
 	       (define-key remix-its-mode-map [M-down] 'remix-katakana)
 	       (define-key remix-its-mode-map [M-right] 'ignore)
@@ -488,9 +488,9 @@
 	       (define-key remix-its-mode-map "\e[3~" 'remix-delete-backward)
 	       )))))
 
-;;; Tamago-4 ´ğËÜÀßÄê
+;;; Tamago-4 åŸºæœ¬è¨­å®š
 
-;;; È¾³Ñ/Á´³Ñ¥­¡¼¤Ç¤âÊÑ´¹¤ò³«»Ï¤Ç¤­¤ë¤è¤¦¤Ë¤¹¤ë
+;;; åŠè§’/å…¨è§’ã‚­ãƒ¼ã§ã‚‚å¤‰æ›ã‚’é–‹å§‹ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
 (define-key global-map [zenkaku-hankaku] 'toggle-input-method)
 (define-key isearch-mode-map [zenkaku-hankaku] 'isearch-toggle-input-method)
 (define-key global-map [M-zenkaku-hankaku] 'toggle-input-method)
@@ -500,7 +500,7 @@
 (define-key global-map [M-kanji] 'toggle-input-method)
 (define-key isearch-mode-map [M-kanji] 'isearch-toggle-input-method)
 ;;; 
-;;; ²şÎÉÈÇ egg-toroku-region
+;;; æ”¹è‰¯ç‰ˆ egg-toroku-region
 (defun egg-f4-mode (start end &optional nth-backend)
   (interactive "r\nP")
   (if (not (eq inactivate-current-input-method-function 'egg-mode))
@@ -508,7 +508,7 @@
 	(activate-input-method default-input-method)
 	(inactivate-input-method)))
   (egg-toroku-string (buffer-substring start end) nil nil nil nil nth-backend))
-;;; F4 ¥­¡¼¤ÇÁªÂòÎÎ°è¤òÃ±¸ìÅĞÏ¿
+;;; F4 ã‚­ãƒ¼ã§é¸æŠé ˜åŸŸã‚’å˜èªç™»éŒ²
 (if (eq window-system 'x)
     (progn
       (global-set-key [f4] 'egg-f4-mode)
@@ -518,21 +518,21 @@
     ))
 ;;;
 (if (equal emacs-ime "canna")
-    ;;;;;; ¤«¤ó¤Ê¤ÎÀßÄê
+    ;;;;;; ã‹ã‚“ãªã®è¨­å®š
     (progn
-      ;;; ¥µ¡¼¥Ğ¤Î»ØÄê¡£
+      ;;; ã‚µãƒ¼ãƒã®æŒ‡å®šã€‚
       (setq canna-hostname "localhost")
-      ;;; InputMethod ¤ÎÀßÄê
+      ;;; InputMethod ã®è¨­å®š
       (setq default-input-method "japanese-egg-canna") 
-      ;;; emcws ¤ÎCANNA¤Î¥³¥Ş¥ó¥É¤ò»È¤¦
+      ;;; emcws ã®CANNAã®ã‚³ãƒãƒ³ãƒ‰ã‚’ä½¿ã†
       (add-hook 'canna-load-hook '(lambda () 
 				    (load "egg-canna")
 				    (customize-tamago)
 				    (customize-egg-canna)))
-      ;;; Ctrl + o ¤Ç¤â»È¤¨¤ë¤è¤¦¤Ë¤¹¤ë
+      ;;; Ctrl + o ã§ã‚‚ä½¿ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹
       (define-key global-map "\C-o" 'toggle-input-method)
       (define-key isearch-mode-map "\C-o" 'isearch-toggle-input-method)
-      ;;; ¥Õ¥¡¥ó¥¯¥·¥ç¥ó¥­¡¼¤Ş¤ï¤ê¤ò emcws ¤ÈÆ±Åù¤Ë¤¹¤ë
+      ;;; ãƒ•ã‚¡ãƒ³ã‚¯ã‚·ãƒ§ãƒ³ã‚­ãƒ¼ã¾ã‚ã‚Šã‚’ emcws ã¨åŒç­‰ã«ã™ã‚‹
       (defun canna-f1-mode ()
 	(interactive)
 	(if (not (eq inactivate-current-input-method-function 'egg-mode))
@@ -559,26 +559,26 @@
 	    (global-set-key [f1] 'canna-f1-mode)
 	    (global-set-key [f3] 'canna-f3-mode)
 	    (global-set-key [f12] 'canna-f12-mode)
-	    ;;; ¿·¤·¤¤face¤ò¤Ä¤¯¤ë
+	    ;;; æ–°ã—ã„faceã‚’ã¤ãã‚‹
 	    (make-face 'canna-face)
 	    (make-face 'canna-conversion-face)
-	    ;;; face¤ÎÁ°·Ê¿§
+	    ;;; faceã®å‰æ™¯è‰²
 	    (set-face-foreground 'canna-face "darkblue")
 	    (set-face-foreground 'canna-conversion-face "white")
-	    ;;; face¤ÎÇØ·Ê¿§
+	    ;;; faceã®èƒŒæ™¯è‰²
 	    (set-face-background 'canna-face "lightcyan1")
 ;	    (set-face-bold-p 'canna-conversion-face t)
 ;	    (set-face-inverse-video-p 'canna-conversion-face t)
 	    (set-face-background 'canna-conversion-face "royalblue")
-	    ;;; ²¼Àş¤ò¤Ä¤±¤ë
+	    ;;; ä¸‹ç·šã‚’ã¤ã‘ã‚‹
 	    (set-face-underline 'canna-face t)
 ;	    (set-face-underline 'canna-conversion-face t)
-	    ;;; egg-canna¤Ç¤Ä¤«¤¦face¤ËÀßÄê
+	    ;;; egg-cannaã§ã¤ã‹ã†faceã«è¨­å®š
 	    (setq its-fence-face 'canna-face)
 	    (setq egg-conversion-face 'canna-conversion-face)
 ;	    (setq its-fence-invisible t)
 ;	    (setq egg-conversion-fence-invisible t)
-	    ;; ÊÑ´¹»ş¤Î¥«¡¼¥½¥ë¤ÎÀßÄê
+	    ;; å¤‰æ›æ™‚ã®ã‚«ãƒ¼ã‚½ãƒ«ã®è¨­å®š
 	    (add-hook 'egg-enter/leave-fence-hook
 		      '(lambda () 
 			 (if (its-in-fence-p)
@@ -599,28 +599,28 @@
 	  (global-set-key "\e[24~" 'canna-f12-mode)))
       )
   (if (equal emacs-ime "wnn")
-      ;;;;;; Wnn ¤ÎÀßÄê
+      ;;;;;; Wnn ã®è¨­å®š
       (progn
-	;;; ¥í¡¼¥É¥Ñ¥¹¤ÎÀßÄê
+	;;; ãƒ­ãƒ¼ãƒ‰ãƒ‘ã‚¹ã®è¨­å®š
 	(setq load-path (cons (expand-file-name "/usr/share/emacs/site-lisp/egg-remix") load-path))
-	;;; ¥µ¡¼¥Ğ¤Î»ØÄê¡£
+	;;; ã‚µãƒ¼ãƒã®æŒ‡å®šã€‚
 	(setq wnn-jserver "localhost")
 	(add-hook 'wnn-load-hook '(lambda () 
 				    (customize-tamago)
 				    (customize-egg-wnn)))
-	;;; ¿·¤·¤¤face¤ò¤Ä¤¯¤ë
+	;;; æ–°ã—ã„faceã‚’ã¤ãã‚‹
 	(make-face 'remix-face)
-	;;; face¤ÎÁ°·Ê¿§
+	;;; faceã®å‰æ™¯è‰²
 	(set-face-foreground 'remix-face "blue") 
-	;;; face¤ÎÇØ·Ê¿§
+	;;; faceã®èƒŒæ™¯è‰²
 	(set-face-background 'remix-face "lightskyblue") 
-	;;; ²¼Àş¤ò¤Ä¤±¤ë
+	;;; ä¸‹ç·šã‚’ã¤ã‘ã‚‹
 	(set-face-underline 'remix-face t) 
-	;;; remix¤Ç¤Ä¤«¤¦face¤ËÀßÄê
+	;;; remixã§ã¤ã‹ã†faceã«è¨­å®š
 	(setq remix-fence-face 'remix-face) 
-	;;; Á´³Ñ¥¢¥ë¥Õ¥¡¥Ù¥Ã¥È¤ò¥Õ¥§¥ó¥¹¤ÇÆşÎÏ¤·¤Ê¤¤
+	;;; å…¨è§’ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã‚’ãƒ•ã‚§ãƒ³ã‚¹ã§å…¥åŠ›ã—ãªã„
 	(setq its-enable-fullwidth-alphabet nil) 
-	;;; ÊÑ´¹¥â¡¼¥É¤Ç¸õÊä¤ò¥µ¥¤¥¯¥ê¥Ã¥¯¤ËÁªÂò
+	;;; å¤‰æ›ãƒ¢ãƒ¼ãƒ‰ã§å€™è£œã‚’ã‚µã‚¤ã‚¯ãƒªãƒƒã‚¯ã«é¸æŠ
 	(setq egg-conversion-wrap-select t) 
 	(load "egg-remix") 
 	(customize-egg-remix)

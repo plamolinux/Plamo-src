@@ -1,5 +1,5 @@
 ###################################################################
-#  Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë .zshrc
+#  Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« .zshrc
 #                       Chisato Yamauchi (cyamauch@phyas.aichi-edu.ac.jp)
 #                            Time-stamp: <2005-02-02 20:10:01 cyamauch>
 #                            Time-stamp: <2016-01-22 19:52:16 kojima>
@@ -8,7 +8,7 @@
 #  PATH="$PATH:." ;
 #fi
 
-# Ã¼Ëö¤Ë¤è¤Ã¤ÆÆüËÜ¸ìÉ½¼¨¤¹¤ë/¤·¤Ê¤¤¤ÎÀÚ¤êÂØ¤¨
+# ç«¯æœ«ã«ã‚ˆã£ã¦æ—¥æœ¬èªè¡¨ç¤ºã™ã‚‹/ã—ãªã„ã®åˆ‡ã‚Šæ›¿ãˆ
 #if [ "$TERM" = "linux" ] ; then
 #  LANG=C
 #else
@@ -17,21 +17,21 @@
 #LANG=ja_JP.eucJP
 #export LANG
 
-# JIS¤ÇÉ½¼¨¤Ç¤­¤Ê¤¤Ã¼Ëö¤ÏEUC¤Ë¤¹¤ë
+# JISã§è¡¨ç¤ºã§ããªã„ç«¯æœ«ã¯EUCã«ã™ã‚‹
 #if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
 #  JLESSCHARSET=japanese-euc
 #fi
 
-if [ "$TERM" = "linux" ] ; then
-  LANG=ja_JP.eucJP
-  JLESSCHARSET=japanese-euc
-  OUTPUT_CHARSET=EUC-JP
-  export LANG JLESSCHARSET OUTPUT_CHARSET
-else
-  source $HOME/.set_lang_bsh @LOCALE@
-fi
+#if [ "$TERM" = "linux" ] ; then
+#  LANG=ja_JP.eucJP
+#  JLESSCHARSET=japanese-euc
+#  OUTPUT_CHARSET=EUC-JP
+#  export LANG JLESSCHARSET OUTPUT_CHARSET
+#else
+source $HOME/.set_lang_bsh @LOCALE@
+#fi
 
-# less ¤Ç¹ÔÈÖ¹æ¤ò¤Ä¤±¡¤½ªÎ»¸å¤Ë²èÌÌ¤ò»Ä¤¹
+# less ã§è¡Œç•ªå·ã‚’ã¤ã‘ï¼Œçµ‚äº†å¾Œã«ç”»é¢ã‚’æ®‹ã™
 LESS='-R -M -X'
 
 EDITOR='vi'
@@ -45,7 +45,7 @@ export LESS EDITOR PAGER
 HISTFILE=$HOME/.zhistory
 
 # color-ls
-# ¿§ÀßÄêÅù¤Ï ~/.dir_colors
+# è‰²è¨­å®šç­‰ã¯ ~/.dir_colors
 if [ -x /usr/bin/dircolors ]; then
   eval `dircolors -b ~/.dir_colors`
   LS_OPTIONS=(--color=auto -F -T 0 -N) ;
@@ -53,12 +53,9 @@ else
   LS_OPTIONS=(-F -T 0 -N) ;
 fi
 
-# Emacs ¤Ê¤É¤Î dumb Ã¼Ëö¤Ç¤Ï¿§¤ò¤Ä¤±¤Ê¤¤
+# Emacs ãªã©ã® dumb ç«¯æœ«ã§ã¯è‰²ã‚’ã¤ã‘ãªã„
 if [ "$TERM" = "dumb" ] ; then
     LS_OPTIONS=(-F -T 0 -N --color=none) ;
-else
-  GREP_OPTIONS="--color=auto"
-  export GREP_OPTIONS
 fi
 
 export LS_OPTIONS
@@ -66,17 +63,17 @@ alias ls='/bin/ls $LS_OPTIONS';
 alias dir='/bin/dir $LS_OPTIONS';
 alias vdir='/bin/vdir $LS_OPTIONS';
 
-# Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê¤¬
-# É½¼¨ÉÔ²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
+# Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªãŒ
+# è¡¨ç¤ºä¸å¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
 PS1='%n@%m[%~]%# '
-# kterm,xterm,rxvt ¤Î¥¿¥¤¥È¥ë¤Ë prompt ¤òÉ½¼¨¤¹¤ë
+# kterm,xterm,rxvt ã®ã‚¿ã‚¤ãƒˆãƒ«ã« prompt ã‚’è¡¨ç¤ºã™ã‚‹
 case $TERM in
 kterm|xterm|rxvt|dtterm|vt100)
-    # Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-    # ¤¬É½¼¨²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
-    #   É½¼¨Îã¢ª hoge@host[/usr/lib64/X11/app-defaults]% _
+    # Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+    # ãŒè¡¨ç¤ºå¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
+    #   è¡¨ç¤ºä¾‹â†’ hoge@host[/usr/lib64/X11/app-defaults]% _
     PS1='%n@%m[%~]%# '
-    #   É½¼¨Îã¢ª hoge@host[app-defaults]% _
+    #   è¡¨ç¤ºä¾‹â†’ hoge@host[app-defaults]% _
     #PS1='%n@%m[%c]%# '
     HN="`hostname`:"
 #    HN="`hostname -s`:"
@@ -95,7 +92,7 @@ kterm|xterm|rxvt|dtterm|vt100)
 	  fi
 	fi
     }
-    # ÃÙ¤¤¥Ş¥·¥ó¤Ç¤Ï¤³¤ÎÀßÄê¤ÎÊı¤¬¤¤¤¤¤«¤â¡Ä
+    # é…ã„ãƒã‚·ãƒ³ã§ã¯ã“ã®è¨­å®šã®æ–¹ãŒã„ã„ã‹ã‚‚â€¦
     # function mkrmhmpwd () { RMHMPWD="$PWD" ; }
     function termtitle () {
 	tty > /dev/null
@@ -141,41 +138,41 @@ kterm|xterm|rxvt|dtterm|vt100)
 ;;
 esac
 
-# ¥×¥í¥ó¥×¥È PS1 ¤Ï export ¤·¤Ê¤¤(¸å¤Çbash¤ò¼Â¹Ô¤¹¤ë¤ÈÊÑ¤Ë¤Ê¤ë¤Î¤Ç)
+# ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆ PS1 ã¯ export ã—ãªã„(å¾Œã§bashã‚’å®Ÿè¡Œã™ã‚‹ã¨å¤‰ã«ãªã‚‹ã®ã§)
 typeset +x PS1
-# ÊİÂ¸¤¹¤ëÍúÎò¤Î¹Ô¿ô
+# ä¿å­˜ã™ã‚‹å±¥æ­´ã®è¡Œæ•°
 HISTSIZE=512
 SAVEHIST=512
-# Êä´°¸õÊä¤òÉ½¼¨
+# è£œå®Œå€™è£œã‚’è¡¨ç¤º
 setopt auto_list
-# ½ÅÊ£¤¹¤ë¥¤¥Ù¥ó¥È¤òÊİÂ¸¤·¤Ê¤¤
+# é‡è¤‡ã™ã‚‹ã‚¤ãƒ™ãƒ³ãƒˆã‚’ä¿å­˜ã—ãªã„
 setopt hist_ignore_all_dups
-# ¥é¥¤¥ó¥¨¥Ç¥£¥¿Ãæ¤Ç¥×¥í¥ó¥×¥È¤òÉ½¼¨¤¹¤ë¤Ş¤¨¤Ë¥­¥ã¥ê¥Ã¥¸¥ê¥¿¡¼¥ó¤òÉ½¼¨¤·¤Ê¤¤
+# ãƒ©ã‚¤ãƒ³ã‚¨ãƒ‡ã‚£ã‚¿ä¸­ã§ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã‚’è¡¨ç¤ºã™ã‚‹ã¾ãˆã«ã‚­ãƒ£ãƒªãƒƒã‚¸ãƒªã‚¿ãƒ¼ãƒ³ã‚’è¡¨ç¤ºã—ãªã„
 #unsetopt prompt_cr
-# ¥·¥§¥ë¤¬½ªÎ»¤¹¤ëÁ°¤Ë¥¸¥ç¥Ö¤Î¾õÂÖ¤òÊó¹ğ¤·¤Ê¤¤
+# ã‚·ã‚§ãƒ«ãŒçµ‚äº†ã™ã‚‹å‰ã«ã‚¸ãƒ§ãƒ–ã®çŠ¶æ…‹ã‚’å ±å‘Šã—ãªã„
 #unsetopt check_jobs
-# ¥·¥§¥ë¤¬½ªÎ»¤·¤Æ¤â¡¢¼Â¹ÔÃæ¤Î¥¸¥ç¥Ö¤ËHUP¥·¥°¥Ê¥ë¤òÁ÷¤é¤Ê¤¤
+# ã‚·ã‚§ãƒ«ãŒçµ‚äº†ã—ã¦ã‚‚ã€å®Ÿè¡Œä¸­ã®ã‚¸ãƒ§ãƒ–ã«HUPã‚·ã‚°ãƒŠãƒ«ã‚’é€ã‚‰ãªã„
 unsetopt hup
-# beep²»¤òÌÄ¤é¤µ¤Ê¤¤
+# beepéŸ³ã‚’é³´ã‚‰ã•ãªã„
 #unsetopt beep
-# Ctrl+D ¤Ç exit ¤·¤Ê¤¤
+# Ctrl+D ã§ exit ã—ãªã„
 #setopt ignoreeof
-# Êä´°¤ÇÌµ»ë¤¹¤ë¥µ¥Õ¥£¥Ã¥¯¥¹
+# è£œå®Œã§ç„¡è¦–ã™ã‚‹ã‚µãƒ•ã‚£ãƒƒã‚¯ã‚¹
 #fignore=('.o' '~')
-# ¥á¡¼¥ë¤òÃÎ¤é¤»¤ë
+# ãƒ¡ãƒ¼ãƒ«ã‚’çŸ¥ã‚‰ã›ã‚‹
 #setopt mail_warning
 
-#emacs ¥é¥¤¥¯¤Ê¥­¡¼¥Ğ¥¤¥ó¥É¤Ë¤¹¤ë
+#emacs ãƒ©ã‚¤ã‚¯ãªã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰ã«ã™ã‚‹
 bindkey -e
-#vi ¥é¥¤¥¯¤Ê¥­¡¼¥Ğ¥¤¥ó¥É¤Ë¤¹¤ë
+#vi ãƒ©ã‚¤ã‚¯ãªã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰ã«ã™ã‚‹
 #bindkey -v
 
-# ¸¡º÷ÉÕ¤­ÍúÎòµ¡Ç½¤Ë¤¹¤ë
-# PageUp,PageDown ¥­¡¼
+# æ¤œç´¢ä»˜ãå±¥æ­´æ©Ÿèƒ½ã«ã™ã‚‹
+# PageUp,PageDown ã‚­ãƒ¼
 bindkey "^[[5~" history-beginning-search-backward
 bindkey "^[[6~" history-beginning-search-forward
-# ¢¬¢­¥­¡¼
-# ¸Å¤¤ zsh ¤Î history-search-xxxx ¤Ë¤¹¤ë
+# â†‘â†“ã‚­ãƒ¼
+# å¤ã„ zsh ã® history-search-xxxx ã«ã™ã‚‹
 autoload -U history-search-end
 zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
@@ -186,13 +183,13 @@ bindkey "^[[B" history-beginning-search-forward-end
 #bindkey "^[[A" backward-word
 #bindkey "^[[B" forward-word
 bindkey "^[[3~" delete-char
-# Home,End ¥­¡¼
+# Home,End ã‚­ãƒ¼
 bindkey "^[[1~" beginning-of-history
 bindkey "^[[4~" end-of-history
 bindkey "^[[7~" beginning-of-history
 bindkey "^[[8~" end-of-history
 
-# Ã¼Ëö¤Ë¤è¤ë BackSpace ¥­¡¼¤ÎÄ´À°
+# ç«¯æœ«ã«ã‚ˆã‚‹ BackSpace ã‚­ãƒ¼ã®èª¿æ•´
 stty erase '^?'
 case "$TERM" in
 kterm|sun)
@@ -205,7 +202,7 @@ kterm|sun)
 #    ;;
 esac
 stty werase '^W'
-# Ctrl+S ¤Ç¤Î stop ¤ò¤ä¤á¤ë
+# Ctrl+S ã§ã® stop ã‚’ã‚„ã‚ã‚‹
 stty stop undef
 
 # aliases

@@ -47,5 +47,7 @@ kdm::45:
 scanner::46:
 libvirt::47:
 cgred::48:
+ntp::49:
+input::50:
 users::100:
 nogroup::65534:

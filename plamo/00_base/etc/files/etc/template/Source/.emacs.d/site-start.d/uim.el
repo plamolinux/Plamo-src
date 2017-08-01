@@ -1,4 +1,4 @@
-;; uim.el
+﻿;; uim.el
 ;; read uim.el
 (require 'uim)
 ;; uncomment next and comment out previous to load uim.el on-demand

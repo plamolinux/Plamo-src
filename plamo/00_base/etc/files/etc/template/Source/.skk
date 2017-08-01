@@ -1,14 +1,14 @@
-(setq skk-server-host "localhost") ;; ... ¤Ï¼­½ñ¥µ¡¼¥Ğ¤Î¥Û¥¹¥ÈÌ¾
+(setq skk-server-host "localhost") ;; ... ã¯è¾æ›¸ã‚µãƒ¼ãƒã®ãƒ›ã‚¹ãƒˆå
 ; (setq skk-serv "/usr/libexec/skkserv")
-;; ¶¦ÍÑ¼­½ñ¥Õ¥¡¥¤¥ë¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê
+;; å…±ç”¨è¾æ›¸ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
 ; (setq skk-aux-large-jisyo "/usr/share/skk/SKK-JISYO.L") 
 
-;; ¤«¤ÊÆşÎÏ¤ò»È¤¦¾ì¹ç¤ÏÍ­¸ú¤Ë¤¹¤ë
+;; ã‹ãªå…¥åŠ›ã‚’ä½¿ã†å ´åˆã¯æœ‰åŠ¹ã«ã™ã‚‹
 ;(setq skk-use-kana-keyboard t)
-;; NICOLA ÇÛÎó
+;; NICOLA é…åˆ—
 ;(setq skk-kanagaki-keyboard-type 'nicola-jis)
-;; µì JIS ÇÛÎó
+;; æ—§ JIS é…åˆ—
 ;(setq skk-kanagaki-keyboard-type '106-jis)
 
-(defalias-maybe 'characterp 'char-valid-p)
+;(defalias-maybe 'characterp 'char-valid-p)
 

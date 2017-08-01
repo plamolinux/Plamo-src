@@ -8,31 +8,21 @@ if ($?prompt) then
 	set history = 100
 #	set complete = igncase
 #        setenv MANPATH /usr/share/man:/usr/local/man:/usr/man
-	setenv MINICOM "-c on"
 	setenv HOSTNAME "`cat /etc/HOSTNAME`"
 	setenv LESS "-M"
 	setenv LESSOPEN "|lesspipe.sh %s"
-	setenv JLESSCHARSET japanese-euc
-	setenv OUTPUT_CHARSET EUC-JP 
-	setenv LANG ja_JP.eucJP
+	setenv LANG ja_JP.UTF-8
         setenv JSERVER localhost
         setenv TZ /etc/localtime
-        setenv PKG_CONFIG_PATH /usr/lib64/pkgconfig
+        setenv PKG_CONFIG_PATH "/usr/lib/pkgconfig:/usr/share/pkgconfig"
 	if( $SHLVL == 1 ) then
 	  set path = ( /usr/local/bin /bin /usr/bin )
-	  set path = ( $path /usr/games/bin /usr/games )
           if ( -d /etc/profile.d ) then
                foreach i ( /etc/profile.d/*.csh )
                    source $i
                end
           endif
 	endif
-	## for JAVA
-	#setenv JAVA_HOME /usr/local/j2sdk1.4.0
-	#setenv CLASSPATH ".:$JAVA_HOME/lib64/tools.jar"
-	#if( $SHLVL == 1 ) then
-	#  set path = ( $path $JAVA_HOME/jre/bin $JAVA_HOME/bin )
-	#endif
 endif
 
 if ($?SSH_CLIENT && ! $?SSH_TTY) setenv LANG C

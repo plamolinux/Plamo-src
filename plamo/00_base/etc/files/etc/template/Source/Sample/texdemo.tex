@@ -4,47 +4,47 @@
 \begin{document}
 
 \begin{center}
-{\LARGE \bf Plamo Linux �ؤ褦����!!}
+{\LARGE \bf Plamo Linux へようこそ!!}
 \end{center}
 
 \vspace{1cm}
 
-\section{Mule + YaTeX + xdvi �Υƥ���}
+\section{Mule + YaTeX + xdvi のテスト}
 
-����ʸ��� mule �ǳ����Ƥ�����������ưŪ�� YaTeX ����ư���ơ�
-\verb+\section+ �� \verb+\begin .. \end+ �ʤɡ�LaTeX �Υ��ޥ�����ο���
-�Ѥä�ɽ������Ƥ���Ǥ��礦��
+この文書を mule で開いてください。自動的に YaTeX が起動して、
+\verb+\section+ や \verb+\begin .. \end+ など、LaTeX のコマンド部の色が
+変って表示されているでしょう。
 
-���ˡ�C-c, t, j �򲡤��ơ�TeX �ǥ���ѥ��뤷�Ƥ���������YaTeX ����ưŪ
-���̤���򳫤��ơ�����ʸ��� pTeX �ǥ���ѥ��뤷�Ƥ���ޤ���
+次に、C-c, t, j を押して、TeX でコンパイルしてください。YaTeX が自動的
+に別の窓を開いて、この文書を pTeX でコンパイルしてくれます。
 
-���� C-c, t, p �򲡤��ơ�xdvi ��Ȥäơ�DVI �ե������ץ�ӥ塼���ޤ���
-���Υե�����ˤϡ�EPSF �ե����뤬�ޤޤ�Ƥ���Τǡ����������󥹥ȡ����
-���Ƥ���С�xdvi �� ghostcript ��ư���ơ��������ʬ��ɽ�������Ϥ���
-����
+次に C-c, t, p を押して、xdvi を使って、DVI ファイルをプレビューします。
+このファイルには、EPSF ファイルが含まれているので、正しくインストールで
+きていれば、xdvi が ghostcript を起動して、グラフ部分も表示されるはずで
+す。
 
 \begin{figure}[hb]
 \begin{center}
 
 \includegraphics{gnuplot-demo.eps}
-\caption{GNUPLOT �ǽ񤤤� 3 ���������}
+\caption{GNUPLOT で書いた 3 次元グラフ}
 \label{figdemo}
 
 \end{center}
 \end{figure}
 
 
-�� \ref{figdemo} �� GNUPLOT ��Ȥäơ�
+図 \ref{figdemo} は GNUPLOT を使って、
 \[
 f(x) = \frac{\sin (x)}{x}
 \]
-�������Ƥߤޤ�����
+を描いてみました。
 
-���� C-c, t, l �򲡤��ơ�dvips ��ư���� DVI �ե������ PS �ե������
-�Ѵ����Ƥߤޤ����ץ�󥿤����꤬�Ѥ�Ǥ���С�PostScript �ץ�󥿤�̾��
-�� lpr -Pps �Τ褦�˻��ꤷ�ơ��ץ�󥿤����äƤߤޤ����ץ�󥿤������
-�Ƥ��ʤ���硢``$|$ lpr'' ����ʬ�� ``$>$ texdemo.ps'' �Ƚ������ơ��ե�����
-�˽񤭤�����gv ��ư���ơ�texdemo.ps �Ȥ��� PostScript �ե����뤬������
-�Ǥ��Ƥ��뤫���ǧ���Ƥ���������
+次に C-c, t, l を押して、dvips を起動して DVI ファイルを PS ファイルに
+変換してみます。プリンタの設定が済んでいれば、PostScript プリンタの名前
+を lpr -Pps のように指定して、プリンタに送ってみます。プリンタの設定をし
+ていない場合、``$|$ lpr'' の部分は ``$>$ texdemo.ps'' と修正して、ファイル
+に書きだし、gv を起動して、texdemo.ps という PostScript ファイルが正しく
+できているかを確認してください。
 
 \end{document}

@@ -1,8 +1,8 @@
 ######################################################################
-# Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë .bash_logout
+# Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« .bash_logout
 #                             Time-stamp: <2009-07-09 12:29:45 tamuki>
 
-# pulseaudio: ¥µ¥¦¥ó¥É¥µ¡¼¥Ğ¤ò½ªÎ»¤·¤Ş¤¹¡£
+# pulseaudio: ã‚µã‚¦ãƒ³ãƒ‰ã‚µãƒ¼ãƒã‚’çµ‚äº†ã—ã¾ã™ã€‚
 if [ $SHLVL -eq 1 ] ; then
   if [ `w -h $USER | wc -l` -eq 1 ] ; then
     if [ -x /usr/bin/pulseaudio -a -x /usr/bin/dbus-daemon ] ; then

@@ -1,9 +1,9 @@
 # jmode's configuration file 
 #
-# jmode$B$N@_Dj%U%!%$%k(B
+# jmodeの設定ファイル
 # key bind
 #
-# $B$3$N%U%!%$%k$r=q$-49$($k;~$O(B ~/.jmode$B$K%3%T!<$7$F$/$@$5$$!%(B
+# このファイルを書き換える時は ~/.jmodeにコピーしてください．
 #
 #include jmode-kana.conf
 #
@@ -42,24 +42,24 @@ bind	go_right	Right
 bind	go_up		Up
 bind	go_down		Down
 #
-#$B;HMQ$9$k4D6-JQ?t(B
+#使用する環境変数
 #
-#LANG$B$d(BHOME$B$J$I$N;HMQ$9$k$3$H$,EvA3$H(B
-#$B$_$J$7$FNI$$$H;W$o$l$k4D6-JQ?t$O$3$3$N;XDj$H$O4X78L5$/(B
-#$B;HMQ$9$k(B(libc$B$J$I$,FbIt$G;HMQ$9$k$b$N$OITL@(B)
+#LANGやHOMEなどの使用することが当然と
+#みなして良いと思われる環境変数はここの指定とは関係無く
+#使用する(libcなどが内部で使用するものは不明)
 #
 #bind	env		SKKSERVER
 #
-#$B4D6-JQ?t$r;HMQ$7$J$$>l9g$K$O(B
-#$B$3$3$GCM$r=q$/$3$H$,$G$-$k(B
+#環境変数を使用しない場合には
+#ここで値を書くことができる
 #
 #bind	SKKSERVER	skkserver
-#SKK$B$N@_Dj(B
-# $B%[!<%`%G%#%l%/%H%j$K$"$k<-=q%U%!%$%k$NL>A0(B
+#SKKの設定
+# ホームディレクトリにある辞書ファイルの名前
 bind	SkkPersonalDic	.skk-jisyo
 bind	SkkPersonalDic	.skkinput-jisyo
 bind	SkkLearnDic	.skk-jmode-jisyo
-# $B%[!<%`%G%#%l%/%H%j$KL5$$<-=q%U%!%$%k$NL>A0(B
+# ホームディレクトリに無い辞書ファイルの名前
 bind	SkkShareDic	/usr/share/skk/SKK-JISYO.L
 #
 #bind	AnthyPersonality

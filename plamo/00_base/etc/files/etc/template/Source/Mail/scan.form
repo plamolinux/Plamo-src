@@ -1,4 +1,4 @@
-%4(msg)%<(cur)+%| %>\
+﻿%4(msg)%<(cur)+%| %>\
 %(void(trim{content-type}))\
 %<(amatch multipart/signed)S\
 %?(amatch multipart/encrypted)E\

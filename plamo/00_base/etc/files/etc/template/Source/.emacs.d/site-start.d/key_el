@@ -1,15 +1,15 @@
+ï»¿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ãã®ä»–ã®è¨­å®š
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ¤½¤ÎÂ¾¤ÎÀßÄê
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ¤³¤³¤Ï¤è¤¯¤ï¤«¤ê¤Ş¤»¤Ì ^^;
+;; ã“ã“ã¯ã‚ˆãã‚ã‹ã‚Šã¾ã›ã¬ ^^;
 
-;;; ¥Ş¥¯¥í¥µ¡¼¥Á¥Ñ¥¹¤ÎÄÉ²Ã
-;;; ~/lib64/emacs °Ê²¼¤Ë¥æ¡¼¥¶ÍÑ¤Î *.el, *.elc ¤òÃÖ¤¯¤³¤È¤¬¤Ç¤­¤Ş¤¹
+;;; ãƒã‚¯ãƒ­ã‚µãƒ¼ãƒãƒ‘ã‚¹ã®è¿½åŠ 
+;;; ~/lib64/emacs ä»¥ä¸‹ã«ãƒ¦ãƒ¼ã‚¶ç”¨ã® *.el, *.elc ã‚’ç½®ãã“ã¨ãŒã§ãã¾ã™
 ;;(setq load-path (append '("~/lib64/emacs") load-path))
 
-;;; C-h ¤È Del ¤ÎÆş¤ìÂØ¤¨
-;;; Help ¤¬ Shift + Ctrl + h ¤ª¤è¤Ó Del ¤Ë³äÅö¤Æ¤é¤ì¡¢
-;;; Á°°ìÊ¸»úºï½ü¤¬ Ctrl + h ¤Ë³äÅö¤Æ¤é¤ì¤Ş¤¹
+;;; C-h ã¨ Del ã®å…¥ã‚Œæ›¿ãˆ
+;;; Help ãŒ Shift + Ctrl + h ãŠã‚ˆã³ Del ã«å‰²å½“ã¦ã‚‰ã‚Œã€
+;;; å‰ä¸€æ–‡å­—å‰Šé™¤ãŒ Ctrl + h ã«å‰²å½“ã¦ã‚‰ã‚Œã¾ã™
 ;;(load-library "term/keyswap")
 ;;(if (eq window-system 'x)
 ;;    (progn
@@ -17,15 +17,15 @@
 ;;      (put 'delete 'ascii-character 8)))
 
 
-;;; BS,Delete ¤Ê¤É¤ÎÆÃ¼ì¥­¡¼¤ÎÀßÄê
-;;  ¤È¤Ë¤«¤¯¡¤
-;;   ¡¦Delete¤Ï¡Ö¸½ºß¤Î°ìÊ¸»ú¾Ãµî¡×
-;;   ¡¦BackSpace¤Ï¡Ö¸åÂà¡×
-;;  ¤Ë¤³¤À¤ï¤Ã¤Æ¤ß¤Ş¤·¤¿¡¥
-;;  Windows ¾å¤ÎÃ¼Ëö¥¨¥ß¥å¥ì¡¼¥¿ TeraTerm ¤ÎÀßÄêÎã¤¬
-;;  ¤³¤Î¸å¤Ë¤¢¤ê¤Ş¤¹¡¥
-;;  TeraTerm ¤Î ¥­¡¼¥Ü¡¼¥É¤ÎÀßÄê¤Î DEL by ¤Ï Backspace key
-;;  ¤Ë³äÅö¤Æ¤ë¤³¤È¤ò¤ª´«¤á¤·¤Ş¤¹¡¥
+;;; BS,Delete ãªã©ã®ç‰¹æ®Šã‚­ãƒ¼ã®è¨­å®š
+;;  ã¨ã«ã‹ãï¼Œ
+;;   ãƒ»Deleteã¯ã€Œç¾åœ¨ã®ä¸€æ–‡å­—æ¶ˆå»ã€
+;;   ãƒ»BackSpaceã¯ã€Œå¾Œé€€ã€
+;;  ã«ã“ã ã‚ã£ã¦ã¿ã¾ã—ãŸï¼
+;;  Windows ä¸Šã®ç«¯æœ«ã‚¨ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚¿ TeraTerm ã®è¨­å®šä¾‹ãŒ
+;;  ã“ã®å¾Œã«ã‚ã‚Šã¾ã™ï¼
+;;  TeraTerm ã® ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã®è¨­å®šã® DEL by ã¯ Backspace key
+;;  ã«å‰²å½“ã¦ã‚‹ã“ã¨ã‚’ãŠå‹§ã‚ã—ã¾ã™ï¼
 ;;
 
 (global-set-key [end]  'end-of-buffer)
@@ -67,50 +67,50 @@
        (global-set-key "\e[F" 'end-of-buffer )		; xterm
 ;       (global-set-key "\e[2~" 'set-mark-command )	; Insert Key
        (global-set-key "\C-_" 'undo )
-       ;; kon¤ÈlinuxÃ¼Ëö¤Îdelete¥­¡¼
+       ;; konã¨linuxç«¯æœ«ã®deleteã‚­ãƒ¼
        (global-set-key "\e[3~" 'delete-char)
        (global-set-key [8] 'delete-backward-char)
        (if (or (equal (getenv "TERM" ) "kterm")
 ;	       (equal (getenv "TERM" ) "xterm")
 	       (equal (getenv "TERM" ) "sun")
-	       ;; TeraTerm¤Ç DEL by Delete key ¤Î¾ì¹ç¤ÏÍ­¸ú¤Ë¤¹¤ë
+	       ;; TeraTermã§ DEL by Delete key ã®å ´åˆã¯æœ‰åŠ¹ã«ã™ã‚‹
 ;	       (equal (substring (concat (getenv "TERM") "__") 0 2) "vt")
 	       )
 	   (progn
-             ;; keyswap ¤Ï obsolete ¤Ë¤Ê¤Ã¤¿¤½¤¦¤Ê¤Î¤Ç¡¥
+             ;; keyswap ã¯ obsolete ã«ãªã£ãŸãã†ãªã®ã§ï¼
 	     ;; (load "term/keyswap")
 	     (keyboard-translate ?\C-h ?\C-?)
 	     ;; (keyboard-translate ?\C-? ?\C-h)
              (define-key function-key-map [delete] [8])
              (put 'delete 'ascii-character 8)
-             ;; ¤³¤ì¤ÏÉ¬Í×¤«¤É¤¦¤«Ê¬¤«¤é¤Ê¤¤
+             ;; ã“ã‚Œã¯å¿…è¦ã‹ã©ã†ã‹åˆ†ã‹ã‚‰ãªã„
 	     (if (not (equal (getenv "TERM" ) "xterm"))
 		 (global-set-key [8] 'delete-char))
 	     )
 	 )
        ))
 
-;;  ¡ÚTeraTermPro ¤Î KEYBOARD.CNF ¤ÎÀßÄê¤Ë¤Ä¤¤¤Æ¡Û
-;; /usr/doc/emacs-21.3/TeraTerm/ ¤Ë KEYBOARD.CNF ¤¬Æş¤Ã¤Æ¤¤¤Ş¤¹¡¥
-;; ¤³¤ÎKEYBOARD.CNF ¤ò»È¤¦¤È¡¤[Home][End][Delete][PageUp]¡¤
-;; ¤Ê¤É¤¬ÍøÍÑ¤Ç¤­¡¤¥Æ¥ó¥­¡¼¤âÉÔ¼«Í³¤Ê¤¯»È¤¨¤ÆÊØÍø¤Ë¤Ê¤ê¤Ş¤¹¡¥
+;;  ã€TeraTermPro ã® KEYBOARD.CNF ã®è¨­å®šã«ã¤ã„ã¦ã€‘
+;; /usr/doc/emacs-21.3/TeraTerm/ ã« KEYBOARD.CNF ãŒå…¥ã£ã¦ã„ã¾ã™ï¼
+;; ã“ã®KEYBOARD.CNF ã‚’ä½¿ã†ã¨ï¼Œ[Home][End][Delete][PageUp]ï¼Œ
+;; ãªã©ãŒåˆ©ç”¨ã§ãï¼Œãƒ†ãƒ³ã‚­ãƒ¼ã‚‚ä¸è‡ªç”±ãªãä½¿ãˆã¦ä¾¿åˆ©ã«ãªã‚Šã¾ã™ï¼
 
-;;; °ìÈÌÅª¤ÊÀßÄê
-;;  Esc¢ª¥¹¥Ú¡¼¥¹ ¤Ç¥Ş¡¼¥¯¥»¥Ã¥È
+;;; ä¸€èˆ¬çš„ãªè¨­å®š
+;;  Escâ†’ã‚¹ãƒšãƒ¼ã‚¹ ã§ãƒãƒ¼ã‚¯ã‚»ãƒƒãƒˆ
 (global-set-key "\e " 'set-mark-command)
 (global-set-key "\M-/" 'help-for-help)
 (global-set-key "\M-?" 'help-for-help)
 (global-set-key "\M-g" 'goto-line)
 
-;;; for glibc2.1 ÆüËÜ¸ì locale
-;;; thanks to ²Ö¹â¤µ¤ó
-;;; Emacs20.5 ¤Ç¤ÏÉÔÍ×
+;;; for glibc2.1 æ—¥æœ¬èª locale
+;;; thanks to èŠ±é«˜ã•ã‚“
+;;; Emacs20.5 ã§ã¯ä¸è¦
 ;
 ; (let ((lang (or (getenv "LC_ALL")(getenv "LC_TIME")(getenv "LANG"))))
 ;   (cond
 ;    ((and lang (string-match "^ja" lang))
 ;     (setq dired-move-to-filename-regexp
-;           " [1 ][0-9]·î [0-3 ][0-9]Æü +[0-9][0-9][:0-9][0-9][0-9Ç¯] "))))
+;           " [1 ][0-9]æœˆ [0-3 ][0-9]æ—¥ +[0-9][0-9][:0-9][0-9][0-9å¹´] "))))
 
 ;;
 ;; fix to use with sdic
@@ -123,7 +123,7 @@
     win))
 (eval-after-load "sdic"
   '(defun sdic-display-buffer (&optional start-point)
-     "¸¡º÷·ë²ÌÉ½¼¨¥Ğ¥Ã¥Õ¥¡¤òÉ½¼¨¤¹¤ë´Ø¿ô"
+     "æ¤œç´¢çµæœè¡¨ç¤ºãƒãƒƒãƒ•ã‚¡ã‚’è¡¨ç¤ºã™ã‚‹é–¢æ•°"
      (let ((old-buffer (current-buffer)))
        (unwind-protect
            (let* ((buf (set-buffer sdic-buffer-name))
@@ -139,7 +139,7 @@
              (set-window-start w2 p)
              (and sdic-warning-hidden-entry
                   (> p (point-min))
-                  (message "¤³¤ÎÁ°¤Ë¤â¥¨¥ó¥È¥ê¤¬¤¢¤ê¤Ş¤¹¡£"))
+                  (message "ã“ã®å‰ã«ã‚‚ã‚¨ãƒ³ãƒˆãƒªãŒã‚ã‚Šã¾ã™ã€‚"))
              (goto-char p)
              (if sdic-disable-select-window (select-window w1))
              (buffer-size))
@@ -186,7 +186,7 @@
 	       ))
 	     ))
 
-;; ¥¢¥¹¥­¡¼¥Æ¡¼¥Ö¥ë¤ÎÉ½¼¨
+;; ã‚¢ã‚¹ã‚­ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã®è¡¨ç¤º
 (defun ascii-table ()
   "Print the ascii table. Based on a defun by Alex Schroeder <asc@bsiag.com>"
   (interactive)
@@ -199,13 +199,13 @@
       (insert (format "%4d  0x%02x  %c\n" i i i))))
   (beginning-of-buffer))
 
-;; ¥Ğ¥Ã¥Õ¥¡¤Î DOS ¤Î²ş¹ÔÊ¸»ú¤ò UNIX ¤ËÊÑ¹¹
+;; ãƒãƒƒãƒ•ã‚¡ã® DOS ã®æ”¹è¡Œæ–‡å­—ã‚’ UNIX ã«å¤‰æ›´
 (defun dos2unix ()
   (interactive)
   (goto-char (point-min))
   (while (search-forward "\r" nil t) (replace-match "")))
 
-;; ¥Ğ¥Ã¥Õ¥¡¤Î UNIX ¤Î²ş¹ÔÊ¸»ú¤ò DOS ¤ËÊÑ¹¹
+;; ãƒãƒƒãƒ•ã‚¡ã® UNIX ã®æ”¹è¡Œæ–‡å­—ã‚’ DOS ã«å¤‰æ›´
 (defun unix2dos ()
   (interactive)
   (goto-char (point-min))
@@ -213,7 +213,7 @@
 
 
 ;;
-;;  ¥Ğ¥Ã¥Õ¥¡¤Ë´Á»ú¤ò¿·¤¿¤Ë½ñ¤­²Ã¤¨¤¿»ş¤ÎÂĞºö  thanks to ÎëÌÚ·½°ìÍÍ
+;;  ãƒãƒƒãƒ•ã‚¡ã«æ¼¢å­—ã‚’æ–°ãŸã«æ›¸ãåŠ ãˆãŸæ™‚ã®å¯¾ç­–  thanks to éˆ´æœ¨åœ­ä¸€æ§˜
 ;;
 (defun my-buffer-file-coding-system-fixed-p ()
   (let ((buf-base (coding-system-base buffer-file-coding-system)))
@@ -248,16 +248,16 @@
       (set-buffer-file-coding-system cs)))
   nil)
 
-;; ¤³¤Á¤é¤òadd-hook¤·¤Æ¤ª¤¯¤È¡¤¥Ğ¥Ã¥Õ¥¡¤Ë´Á»ú¤ò¿·¤¿¤Ë½ñ¤­²Ã¤¨¤¿»ş¡¤
-;; ¤É¤Î´Á»ú¥³¡¼¥É¤Çsave¤¹¤ë¤«¡¤default¤òcs¤È¤·¤Æ¡¤¼ÁÌä¤·¤Æ¤¯¤ì¤ë¡¥
+;; ã“ã¡ã‚‰ã‚’add-hookã—ã¦ãŠãã¨ï¼Œãƒãƒƒãƒ•ã‚¡ã«æ¼¢å­—ã‚’æ–°ãŸã«æ›¸ãåŠ ãˆãŸæ™‚ï¼Œ
+;; ã©ã®æ¼¢å­—ã‚³ãƒ¼ãƒ‰ã§saveã™ã‚‹ã‹ï¼Œdefaultã‚’csã¨ã—ã¦ï¼Œè³ªå•ã—ã¦ãã‚Œã‚‹ï¼
 (defun my-set-file-encoding (cs)
   (add-hook 'local-write-file-hooks
             `(lambda ()
                (my-set-file-coding-system-for-write
                 (quote ,cs)))))
 
-;; ¤³¤Á¤é¤òadd-hook¤·¤Æ¤ª¤¯¤È¡¤¥Ğ¥Ã¥Õ¥¡¤Ë´Á»ú¤ò¿·¤¿¤Ë½ñ¤­²Ã¤¨¤¿»ş¡¤
-;; Â®¹¶¤Çcs¤Ê´Á»ú¥³¡¼¥É¤Çsave¤·¤Æ¤¯¤ì¤ë¡¥
+;; ã“ã¡ã‚‰ã‚’add-hookã—ã¦ãŠãã¨ï¼Œãƒãƒƒãƒ•ã‚¡ã«æ¼¢å­—ã‚’æ–°ãŸã«æ›¸ãåŠ ãˆãŸæ™‚ï¼Œ
+;; é€Ÿæ”»ã§csãªæ¼¢å­—ã‚³ãƒ¼ãƒ‰ã§saveã—ã¦ãã‚Œã‚‹ï¼
 (defun my-set-file-encoding-quick (cs)
   (add-hook 'local-write-file-hooks
             `(lambda ()

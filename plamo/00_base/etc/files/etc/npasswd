@@ -30,6 +30,7 @@ www:x:31:31:Apache httpd:/dev/null:/bin/bash
 wadm:x:32:31:Apache httpd admin:/dev/null:/bin/bash
 mysql:x:33:40::/home/mysql:/bin/bash
 usbmux:x:40:6::/dev/null:/bin/true
+ntp:x:49:49::/dev/null:/bin/false
 libvirt-qemu:x:50:36::/var/lib/libvirt:/bin/false
 guest:x:999:100:guest:/dev/null:/bin/true
 pcguest:x:999:100:guest:/dev/null:/bin/true

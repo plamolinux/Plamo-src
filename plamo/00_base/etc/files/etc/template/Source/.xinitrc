@@ -1,6 +1,6 @@
 #!/bin/sh
 ######################################################################
-# Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for xinitrc, xsession
+# Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for xinitrc, xsession
 #                           Time-stamp: <2005-10-28 14:45:12 cyamauch>
 #                           Time-stamp: <2006-01-18 16:56:27 jado>
 #                           Time-stamp: <2009-06-18 15:07:14 kojima>
@@ -8,7 +8,7 @@
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 
-# startx¡¤xdm ¤«¤é¼Â¹Ô¤µ¤ì¤ë¥Õ¥¡¥¤¥ë¤Ç¤¹¡£
+# startxï¼Œxdm ã‹ã‚‰å®Ÿè¡Œã•ã‚Œã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã§ã™ã€‚
 
 #WM="step"
 #WM="qvwm"
@@ -56,77 +56,77 @@ export KDEDIR PATH
 userresources=$HOME/.Xdefaults
 [ -f $userresources ] && xrdb -merge $userresources
 
-# .Xmodmap(±Ñ¸ì¥­¡¼¥Ü¡¼¥ÉÍÑ)¤Ë CapsLock(±Ñ¿ô)¤È Ctrl ¤òÆþ¤ìÊÑ¤¨¤ëÀßÄê¤ò
-# Æþ¤ì¤Æ¤¢¤ê¤Þ¤¹¡£
+# .Xmodmap(è‹±èªžã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ç”¨)ã« CapsLock(è‹±æ•°)ã¨ Ctrl ã‚’å…¥ã‚Œå¤‰ãˆã‚‹è¨­å®šã‚’
+# å…¥ã‚Œã¦ã‚ã‚Šã¾ã™ã€‚
 if [ "x`xmodmap -pk | grep Eisu_toggle`" == "x" ] ; then
   usermodmap=$HOME/.Xmodmap
 else
   usermodmap=$HOME/.Xmodmap.jp
 fi
 
-# X¤ÎÍøÍÑ»þ¤Ë¡¤Caps_Lock(±Ñ¿ô) ¤È Control_L ¤È¤òÆþ¤ìÂØ¤¨¤ë»þ¤ÏÍ­¸ú¤Ë¤·¤Þ¤¹¡£
+# Xã®åˆ©ç”¨æ™‚ã«ï¼ŒCaps_Lock(è‹±æ•°) ã¨ Control_L ã¨ã‚’å…¥ã‚Œæ›¿ãˆã‚‹æ™‚ã¯æœ‰åŠ¹ã«ã—ã¾ã™ã€‚
 #[ -f $usermodmap ] && xmodmap $usermodmap
 
-# ÉÙ»ÎÄÌ¤Î°ìÉô¤ÎÊÑÂÖ¥­¡¼¥Ü¡¼¥ÉÍÑ
+# å¯Œå£«é€šã®ä¸€éƒ¨ã®å¤‰æ…‹ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ç”¨
 #xmodmap -e 'keycode 131 = backslash underscore'
 
-# ¥æ¡¼¥¶¤Î¥Û¡¼¥à¥Ç¥£¥ì¥¯¥È¥ê¤Ë font ¤òÃÖ¤¯¾ì¹ç¤Ë¤Ï¤³¤Î¤è¤¦¤Ë¤·¤Þ¤¹¡£
+# ãƒ¦ãƒ¼ã‚¶ã®ãƒ›ãƒ¼ãƒ ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã« font ã‚’ç½®ãå ´åˆã«ã¯ã“ã®ã‚ˆã†ã«ã—ã¾ã™ã€‚
 #xset +fp $HOME/lib64/fonts
 
-# ´Á»úÆþÎÏ¥·¥¹¥Æ¥à kinput2 ¤Îµ¯Æ°
+# æ¼¢å­—å…¥åŠ›ã‚·ã‚¹ãƒ†ãƒ  kinput2 ã®èµ·å‹•
 #CC_DEF_PATH=$HOME/.kinput2/ccdef
 #export CC_DEF_PATH
 #[ -f $HOME/.kinput2.PID ] && rm $HOME/.kinput2.PID
 #[ -x /usr/bin/kinput2 ] && exec /usr/bin/kinput2 &
 
-# ´Á»úÆþÎÏ¥·¥¹¥Æ¥à skkinput ¤Îµ¯Æ°
+# æ¼¢å­—å…¥åŠ›ã‚·ã‚¹ãƒ†ãƒ  skkinput ã®èµ·å‹•
 #[ -x /usr/bin/skkinput ] && exec /usr/bin/skkinput &
 
-# ÆüËÜ¸ìÆþÎÏ¥µ¡¼¥Ð nicolatter ¤Îµ¯Æ°
+# æ—¥æœ¬èªžå…¥åŠ›ã‚µãƒ¼ãƒ nicolatter ã®èµ·å‹•
 #[ -x /usr/bin/nicolatter ] && ( sleep 15 ; /usr/bin/nicolatter ) &
 
-# ÆüËÜ¸ìÆþÎÏ IME jmode ¤Îµ¯Æ°
+# æ—¥æœ¬èªžå…¥åŠ› IME jmode ã®èµ·å‹•
 #[ -x /usr/bin/jmode ] && /usr/bin/jmode &
 
-# Â¿¸À¸ìÆþÎÏ¥á¥½¥Ã¥É¥Õ¥ì¡¼¥à¥ï¡¼¥¯ uim ¤Îµ¯Æ°
+# å¤šè¨€èªžå…¥åŠ›ãƒ¡ã‚½ãƒƒãƒ‰ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¯ãƒ¼ã‚¯ uim ã®èµ·å‹•
 [ -x /usr/bin/uim-xim ] && uim-xim &
 [ -x /usr/bin/uim-toolbar-gtk -a $WM != "kde" -a $WM != "mate" ] && uim-toolbar-gtk &
 [ -x /usr/bin/uim-toolbar-qt4 -a $WM == "kde" ] && uim-toolbar-qt4 &
 [ -x /usr/bin/uim-toolbar-gtk-systray -a $WM == "mate" ] && uim-toolbar-gtk-systray &
 
-# Â¿¸À¸ìÆþÎÏ´Ä¶­ SCIM ¤Îµ¯Æ°
+# å¤šè¨€èªžå…¥åŠ›ç’°å¢ƒ SCIM ã®èµ·å‹•
 #[ -x /usr/bin/scim ] && /usr/bin/scim -d
 
-# ¥¤¥ó¥×¥Ã¥È¥á¥½¥Ã¥É¥Õ¥ì¡¼¥à¥ï¡¼¥¯ ibus ¤Îµ¯Æ°
+# ã‚¤ãƒ³ãƒ—ãƒƒãƒˆãƒ¡ã‚½ãƒƒãƒ‰ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¯ãƒ¼ã‚¯ ibus ã®èµ·å‹•
 #[ -x /usr/bin/ibus-daemon ] && /usr/bin/ibus-daemon -d -x
 
-# kinput2 ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# kinput2 ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=kinput2"
-# skkinput ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# skkinput ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=skkinput"
-# nicolatter ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# nicolatter ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=nicolatter"
-# jmode ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# jmode ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=jmode"
-# ¾åµ­¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é¤â
+# ä¸Šè¨˜ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰ã‚‚
 #QT_IM_MODULE=xim
 #GTK_IM_MODULE=xim
-# uim ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# uim ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 XMODIFIERS="@im=uim"
 QT_IM_MODULE=uim
 GTK_IM_MODULE=uim
-# SCIM ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# SCIM ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=SCIM"
 #QT_IM_MODULE=scim-bridge
 #GTK_IM_MODULE=scim-bridge
-# ibus ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+# ibus ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 #XMODIFIERS="@im=ibus"
 #QT_IM_MODULE=ibus
 #GTK_IM_MODULE=ibus
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 
-# ATOKX ¥¯¥é¥¤¥¢¥ó¥È¤Îµ¯Æ°
+# ATOKX ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã®èµ·å‹•
 if [ -x /opt/atokx2/bin/atokx2_client.sh ] ; then
   /opt/atokx2/bin/atokx2_client.sh
 elif [ -x /usr/lib64/im/locale/ja/atokserver/atokx_client ] ; then
@@ -150,15 +150,15 @@ export USE_XOPENIM
 #QT_GRAPHICSSYSTEM=opengl
 #export QT_GRAPHICSSYSTEM
 
-# GNOME(glib2) ¤¬ºî¤ë¥Õ¥¡¥¤¥ëÌ¾¤Î¥¨¥ó¥³¡¼¥Ç¥£¥ó¥°¤ò LANG ¤Ë¹ç¤ï¤»¤ë¡£
+# GNOME(glib2) ãŒä½œã‚‹ãƒ•ã‚¡ã‚¤ãƒ«åã®ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚’ LANG ã«åˆã‚ã›ã‚‹ã€‚
 G_FILENAME_ENCODING=@locale
 export G_FILENAME_ENCODING
 
-# MP3 ¤Î¥¿¥°¤ÎÊ¸»ú¥³¡¼¥É(ÆÉ¤ß¹þ¤ß: CP932 or UTF-8 / ½ñ¤­¹þ¤ß: CP932)
+# MP3 ã®ã‚¿ã‚°ã®æ–‡å­—ã‚³ãƒ¼ãƒ‰(èª­ã¿è¾¼ã¿: CP932 or UTF-8 / æ›¸ãè¾¼ã¿: CP932)
 #GST_ID3_TAG_ENCODING=CP932:UTF-8
 #export GST_ID3_TAG_ENCODING
 
-# ÀßÄê¤¹¤ë¤È¥¦¥¤¥ó¥É¥¦¥Þ¥Í¡¼¥¸¥ã¤òÊÑ¹¹²ÄÇ½
+# è¨­å®šã™ã‚‹ã¨ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ãƒžãƒãƒ¼ã‚¸ãƒ£ã‚’å¤‰æ›´å¯èƒ½
 #WINDOW_MANAGER="metacity"
 #export WINDOW_MANAGER
 
@@ -167,9 +167,9 @@ XDG_CONFIG_DIRS=/etc/xdg
 export XDG_DATA_DIRS XDG_CONFIG_DIRS
 
 #
-# ÊÉ»æ¤ÎÀßÄê
+# å£ç´™ã®è¨­å®š
 #
-# ¥¤¥á¡¼¥¸¤òÅ½¤êÉÕ¤±¤ë¾ì¹ç
+# ã‚¤ãƒ¡ãƒ¼ã‚¸ã‚’è²¼ã‚Šä»˜ã‘ã‚‹å ´åˆ
 #xv +noresetroot -root -max -quit /usr/share/pixmaps/backgrounds/Plamo/plamoback.jpg
 #xv +noresetroot -root -max -quit /usr/share/pixmaps/backgrounds/Plamo/plamoback_c1.png
 #xv +noresetroot -root -max -quit /usr/share/pixmaps/backgrounds/Plamo/plamoback_c2.png
@@ -178,7 +178,7 @@ export XDG_DATA_DIRS XDG_CONFIG_DIRS
 #xv +noresetroot -root -quit /usr/include/X11/pixmaps/world.xpm
 #xv +noresetroot -root -quit /usr/share/pixmaps/backgrounds/Plamo/sx68k_root1.xpm
 #xv +noresetroot -root -quit /usr/share/pixmaps/backgrounds/Plamo/sx68k_root2.xpm
-# Ã±°ì¿§¤Î¾ì¹ç
+# å˜ä¸€è‰²ã®å ´åˆ
 #xsetroot -solid '#404060'
 if [ $WM == "step" ] ; then
   xv +noresetroot -root -max -quit /usr/share/pixmaps/backgrounds/Plamo/plamoback_c3.png
@@ -196,46 +196,46 @@ if [ `date +%m%d` \> "1222" -a `date +%m%d` \< "1227" ] ; then
   [ -x /usr/bin/xsnow ] && /usr/bin/xsnow &
 fi
 
-# unclutter ¤Ï°ìÄê»þ´ÖÆ°¤«¤Ê¤¤¥«¡¼¥½¥ë¤ò±£¤¹¥×¥í¥°¥é¥à¤Ç¤¹¡£
+# unclutter ã¯ä¸€å®šæ™‚é–“å‹•ã‹ãªã„ã‚«ãƒ¼ã‚½ãƒ«ã‚’éš ã™ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã§ã™ã€‚
 #unclutter &
 if [ $WM != "xfce" -a $WM != "kde" -a $WM != "mate" ] ; then
   unclutter &
 fi
 
-# ¥á¡¼¥ë¤ò¤ªÃÎ¤é¤» :-9
-# ¥í¡¼¥«¥ë¥Þ¥·¥ó¤Î¥¹¥×¡¼¥ë¤Ë¥á¡¼¥ë¤¬ÇÛÁ÷¤µ¤ì¤¿¤éÃÎ¤é¤»¤ë¡£
-# POP/IMAP ¥×¥í¥È¥³¥ë¤Ç¼è¤ê¹þ¤à¾ì¹ç¤Ï»È¤¨¤Ê¤¤¡£
+# ãƒ¡ãƒ¼ãƒ«ã‚’ãŠçŸ¥ã‚‰ã› :-9
+# ãƒ­ãƒ¼ã‚«ãƒ«ãƒžã‚·ãƒ³ã®ã‚¹ãƒ—ãƒ¼ãƒ«ã«ãƒ¡ãƒ¼ãƒ«ãŒé…é€ã•ã‚ŒãŸã‚‰çŸ¥ã‚‰ã›ã‚‹ã€‚
+# POP/IMAP ãƒ—ãƒ­ãƒˆã‚³ãƒ«ã§å–ã‚Šè¾¼ã‚€å ´åˆã¯ä½¿ãˆãªã„ã€‚
 #xmascot -degree 15 -geometry +10+4 &
 if [ $WM == "step" ] ; then
   xmascot -degree 15 -geometry +10+4 &
 fi
 
-# ÆüËÜ¸ì¤Î¥«¥ì¥ó¥À¡¼
+# æ—¥æœ¬èªžã®ã‚«ãƒ¬ãƒ³ãƒ€ãƒ¼
 #xcalendar -geometry 235x215+0+600 &
 
-# ¥µ¥¦¥ó¥É¥ß¥­¥µ¡¼
+# ã‚µã‚¦ãƒ³ãƒ‰ãƒŸã‚­ã‚µãƒ¼
 #xamixer &
 
-# Í­Ì¾¤Ê EmiClock ¤Ç¤¹¡£
+# æœ‰åãª EmiClock ã§ã™ã€‚
 #emiclock -geometry 140x140+662+0 &
 
-# xipmsg ¤Ï¡¤Windows 95 & NT ¤ä Machintosh ¤Î IP-Messenger ¤ò
-# X window ¤Ë°Ü¿¢¤·¤¿¤â¤Î¤Ç¤¹¡£
-# ¤³¤ì¤òµ¯Æ°¤·¤Æ¤ª¤¯¤³¤È¤Ç Windows ¤ä Mac ¥æ¡¼¥¶¤È
-# ¥ê¥¢¥ë¥¿¥¤¥à¤ËÆüËÜ¸ì¤Ç¥Á¥ã¥Ã¥È¤¹¤ë»ö¤¬²ÄÇ½¤Ç¤¹¡£
-#xipmsg -name "¥Ï¥ó¥É¥ëÌ¾" &
+# xipmsg ã¯ï¼ŒWindows 95 & NT ã‚„ Machintosh ã® IP-Messenger ã‚’
+# X window ã«ç§»æ¤ã—ãŸã‚‚ã®ã§ã™ã€‚
+# ã“ã‚Œã‚’èµ·å‹•ã—ã¦ãŠãã“ã¨ã§ Windows ã‚„ Mac ãƒ¦ãƒ¼ã‚¶ã¨
+# ãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ã«æ—¥æœ¬èªžã§ãƒãƒ£ãƒƒãƒˆã™ã‚‹äº‹ãŒå¯èƒ½ã§ã™ã€‚
+#xipmsg -name "ãƒãƒ³ãƒ‰ãƒ«å" &
 
-# X Window ¤¬°ìÄê»þ´ÖÍøÍÑ¤µ¤ì¤Ê¤¤»þ¤Ë¡¤
-# ¥¦¥£¥ó¥É¥¦¥Þ¥Í¡¼¥¸¥ã¤ÇÀßÄê¤·¤¿¥¹¥¯¥ê¡¼¥ó¥»¡¼¥Ð¡¼¤¬É½¼¨¤µ¤ì¤Þ¤¹¡£
+# X Window ãŒä¸€å®šæ™‚é–“åˆ©ç”¨ã•ã‚Œãªã„æ™‚ã«ï¼Œ
+# ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒžãƒãƒ¼ã‚¸ãƒ£ã§è¨­å®šã—ãŸã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã‚»ãƒ¼ãƒãƒ¼ãŒè¡¨ç¤ºã•ã‚Œã¾ã™ã€‚
 xset s off
 
-# X Window ¤¬°ìÄê»þ´ÖÍøÍÑ¤µ¤ì¤Ê¤¤»þ¤Ë²èÌÌ¤ò¥í¥Ã¥¯¤·¤Þ¤¹¡£
+# X Window ãŒä¸€å®šæ™‚é–“åˆ©ç”¨ã•ã‚Œãªã„æ™‚ã«ç”»é¢ã‚’ãƒ­ãƒƒã‚¯ã—ã¾ã™ã€‚
 #xset s noblank
 
-# mnews ¤Îµ¯Æ°
+# mnews ã®èµ·å‹•
 #kterm -km euc -sb -sl 500 -geometry 80x24+0+0 -e mnews -bg cornsilk &
 
-# Å¬Åö¤Ê¾ì½ê¤Ë kterm ¤ò³«¤­¤Þ¤¹¡£
+# é©å½“ãªå ´æ‰€ã« kterm ã‚’é–‹ãã¾ã™ã€‚
 #kterm -vb -km euc -geometry 80x30+10+10 -bg cornsilk &
 if [ $WM == "qvwm" ] ; then
   kterm -vb -km euc -geometry 80x30+10+10 -bg cornsilk &
@@ -255,7 +255,7 @@ fi
 
 mesg n
 
-# ¥¦¥£¥ó¥É¥¦¥Þ¥Í¡¼¥¸¥ã¤ò½ªÎ»¤¹¤ë¤È X ¤¬½ªÎ»¤·¤Þ¤¹¡£
+# ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒžãƒãƒ¼ã‚¸ãƒ£ã‚’çµ‚äº†ã™ã‚‹ã¨ X ãŒçµ‚äº†ã—ã¾ã™ã€‚
 case $WM in
 "step")
   exec $LAUNCH afterstep

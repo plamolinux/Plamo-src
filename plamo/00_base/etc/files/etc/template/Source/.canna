@@ -1,17 +1,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for canna
+;;  Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for canna
 ;;                           Time-stamp: <2003-07-26 20:28:06 cyamauch>
 
 ;;
-;; ¥í¡¼¥Ş»şÆşÎÏ/¤«¤ÊÆşÎÏ¤ÎÀßÄê
+;; ãƒ­ãƒ¼ãƒæ™‚å…¥åŠ›/ã‹ãªå…¥åŠ›ã®è¨­å®š
 ;;
-;; ¥í¡¼¥Ş»şÆşÎÏ¤Î¾ì¹ç
+;; ãƒ­ãƒ¼ãƒæ™‚å…¥åŠ›ã®å ´åˆ
 (setq canna-input-method "roma")
-;; ¤«¤ÊÆşÎÏ¤Î¾ì¹ç
+;; ã‹ãªå…¥åŠ›ã®å ´åˆ
 ;(setq canna-input-method "kana")
 
 ;;
-;; ¼­½ñ¤ÎÀßÄê
+;; è¾æ›¸ã®è¨­å®š
 ;;
 (use-dictionary
  "gcanna"
@@ -27,77 +27,77 @@
 )
 
 ;;
-;; ¥­¡¼¥Ğ¥¤¥ó¥É¡¤¥·¥ó¥Ü¥ë¤ÎÀßÄê
+;; ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰ï¼Œã‚·ãƒ³ãƒœãƒ«ã®è¨­å®š
 ;;
-;; ¥·¥ó¥Ü¥ë¤ÎÄêµÁ
+;; ã‚·ãƒ³ãƒœãƒ«ã®å®šç¾©
 (if (equal canna-input-method "kana")
   (progn
-    ;; ¤«¤ÊÆşÎÏ¤Î¾ì¹ç
+    ;; ã‹ãªå…¥åŠ›ã®å ´åˆ
     (setq romkana-table "kana.cbp")
-    (defsymbol ?~ "¤ò")
-    (defsymbol ?[ "¡¬" "¡Î")
-    (defsymbol ?@ "¡«" "¡÷")
-    (defsymbol ?* "¥ö" "¡ö")
-    (defsymbol ?` "¡ñ" "¡Æ" "¡ğ")
-    (defsymbol ?P "¡Ø" "P")
-    (defsymbol ?+ "¡Ù" "¡Ü")
-    (defsymbol ?= "¡ò" "¡á")
-    (defsymbol ?? "¡¦" "¡©" "¡¿" "¡à")
-    (defsymbol ?< "¡¢" "¡¤")
-    (defsymbol ?> "¡£" "¡¥")
-    (defsymbol ?| "¢Ì" "¡Ã")
-    (defsymbol ?! "¡ª" "!")
-    (defsymbol ?\" "¡É" "\"")
+    (defsymbol ?~ "ã‚’")
+    (defsymbol ?[ "ã‚œ" "ï¼»")
+    (defsymbol ?@ "ã‚›" "ï¼ ")
+    (defsymbol ?* "ãƒ¶" "ï¼Š")
+    (defsymbol ?` "Â¢" "â€˜" "ï¼„")
+    (defsymbol ?P "ã€" "P")
+    (defsymbol ?+ "ã€" "ï¼‹")
+    (defsymbol ?= "Â£" "ï¼")
+    (defsymbol ?? "ãƒ»" "ï¼Ÿ" "ï¼" "Ã·")
+    (defsymbol ?< "ã€" "ï¼Œ")
+    (defsymbol ?> "ã€‚" "ï¼")
+    (defsymbol ?| "Â¬" "ï½œ")
+    (defsymbol ?! "ï¼" "!")
+    (defsymbol ?\" "â€" "\"")
   ) (progn
-    ;; ¥í¡¼¥Ş»şÆşÎÏ¤Î¾ì¹ç
+    ;; ãƒ­ãƒ¼ãƒæ™‚å…¥åŠ›ã®å ´åˆ
     (setq romkana-table "default.cbp")
     (defsymbol
-      ?[ "¡Ö" "¡Ø" "[" "¡Î" "¡Ì" "¡Ğ"
-      ?] "¡×" "¡Ù" "]" "¡Ï" "¡Í" "¡Ñ" )
+      ?[ "ã€Œ" "ã€" "[" "ï¼»" "ã€”" "ï½›"
+      ?] "ã€" "ã€" "]" "ï¼½" "ã€•" "ï½" )
     (defsymbol
-      ?( "(" "¡Ê" "¡Ú"
-      ?) ")" "¡Ë" "¡Û" )
+      ?( "(" "ï¼ˆ" "ã€"
+      ?) ")" "ï¼‰" "ã€‘" )
     (defsymbol
-      ?{ "¡Ø" "¡Ğ" "{"
-      ?} "¡Ù" "¡Ñ" "}" )
+      ?{ "ã€" "ï½›" "{"
+      ?} "ã€" "ï½" "}" )
     (defsymbol
-      ?< "¡ã" "<" "¡Ò" "¡Ô"
-      ?> "¡ä" ">" "¡Ó" "¡Õ" )
-    (defsymbol ?- "¡¼" "¡İ" "-")
-    (defsymbol ?/ "¡¿" "/" "¡à" "¡¦")
-    (defsymbol ?+ "¡Ü" "+")
-    (defsymbol ?* "¡ö" "*" "¡ß")
-    (defsymbol ?= "¡á" "=")
-    (defsymbol ?? "¡©" "?")
-    (defsymbol ?! "¡ª" "!")
-    (defsymbol ?\" "¡É" "\"")
-    (defsymbol ?# "¡ô" "#")
-    (defsymbol ?$ "¡ğ" "$")
-    (defsymbol ?% "¡ó" "%")
-    (defsymbol ?& "¡õ" "&")
-    (defsymbol ?' "¡Ç" "'")
-    (defsymbol ?` "¡Æ" "`")
-    (defsymbol ?~ "¡±" "~")
-    (defsymbol ?^ "¡°" "^")
-    (defsymbol ?: "¡§" ":")
-    (defsymbol ?; "¡¨" ";")
-    (defsymbol ?| "¡Ã" "|")
-    ;; °ìÈÌ¸ş¤­(½Ä½ñ¤­ÍÑ)
+      ?< "ï¼œ" "<" "ã€ˆ" "ã€Š"
+      ?> "ï¼" ">" "ã€‰" "ã€‹" )
+    (defsymbol ?- "ãƒ¼" "âˆ’" "-")
+    (defsymbol ?/ "ï¼" "/" "Ã·" "ãƒ»")
+    (defsymbol ?+ "ï¼‹" "+")
+    (defsymbol ?* "ï¼Š" "*" "Ã—")
+    (defsymbol ?= "ï¼" "=")
+    (defsymbol ?? "ï¼Ÿ" "?")
+    (defsymbol ?! "ï¼" "!")
+    (defsymbol ?\" "â€" "\"")
+    (defsymbol ?# "ï¼ƒ" "#")
+    (defsymbol ?$ "ï¼„" "$")
+    (defsymbol ?% "ï¼…" "%")
+    (defsymbol ?& "ï¼†" "&")
+    (defsymbol ?' "â€™" "'")
+    (defsymbol ?` "â€˜" "`")
+    (defsymbol ?~ "â€¾" "~")
+    (defsymbol ?^ "ï¼¾" "^")
+    (defsymbol ?: "ï¼š" ":")
+    (defsymbol ?; "ï¼›" ";")
+    (defsymbol ?| "ï½œ" "|")
+    ;; ä¸€èˆ¬å‘ã(ç¸¦æ›¸ãç”¨)
     (defsymbol
-      ?. "¡£" "." "¡¥"
-      ?, "¡¢" "," "¡¤")
-    ;; °ìÈÌ¸ş¤­(²£½ñ¤­ÍÑ)
+      ?. "ã€‚" "." "ï¼"
+      ?, "ã€" "," "ï¼Œ")
+    ;; ä¸€èˆ¬å‘ã(æ¨ªæ›¸ãç”¨)
     ;(defsymbol
-    ;  ?. "¡£" "." "¡¥"
-    ;  ?, "¡¤" "," "¡¢")
-    ;; Íı·ÏÏÀÊ¸¸ş¤­
+    ;  ?. "ã€‚" "." "ï¼"
+    ;  ?, "ï¼Œ" "," "ã€")
+    ;; ç†ç³»è«–æ–‡å‘ã
     ;(defsymbol
-    ;  ?. "¡¥" "." "¡£"
-    ;  ?, "¡¤" "," "¡¢")
+    ;  ?. "ï¼" "." "ã€‚"
+    ;  ?, "ï¼Œ" "," "ã€")
   )
 )
 
-;; ¥­¡¼¥Ğ¥¤¥ó¥É
+;; ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰
 (set-key 'empty-mode "\F10"	'kigou-mode)
 (set-key 'kigou-mode "\F10"	'quit)
 ;(set-key 'kigou-mode "\Escape"	'quit)
@@ -143,17 +143,17 @@
 (set-key 'ichiran-mode "\Rollup" 'previous)
 (set-key 'ichiran-mode "\Rolldown" 'next)
 
-;; ¥¯¥é¥¤¥¢¥ó¥È¤´¤È¤ÎÀßÄê
-;; (¤³¤³¤Ï Plamo ÆÈ¼«¤Ê¤Î¤ÇÃí°Õ)
+;; ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã”ã¨ã®è¨­å®š
+;; (ã“ã“ã¯ Plamo ç‹¬è‡ªãªã®ã§æ³¨æ„)
 (cond ((equal (getenv "CONVERSIONCLIENT") "kinput2")
   ;; Key bind for kinput2
   (if (equal canna-input-method "kana")
     (progn
-      (defsymbol ?_ "¤í")
-      (defsymbol ?\\ "¡¼")
+      (defsymbol ?_ "ã‚")
+      (defsymbol ?\\ "ãƒ¼")
     ) (progn
-      (defsymbol ?_ "¡²" "_" "¡À" "\\")
-      (defsymbol ?\\ "¡ï" "¡À" "\\")
+      (defsymbol ?_ "ï¼¿" "_" "ï¼¼" "\\")
+      (defsymbol ?\\ "Â¥" "ï¼¼" "\\")
     )
   )
   (global-set-key "\Escape" 'quit)
@@ -175,7 +175,7 @@
   (set-key 'mojishu-mode "\Katakana" 'katakana)
   (set-key 'ichiran-mode "\Hiragana" 'hiragana)
   (set-key 'ichiran-mode "\Katakana" 'katakana)
-  ;; kinput2 ¤Î Ctrl + o ¤òÌµ¸ú¤Ë¤¹¤ë
+  ;; kinput2 ã® Ctrl + o ã‚’ç„¡åŠ¹ã«ã™ã‚‹
   ;(global-unbind-key-function 'japanese-mode)
   ;(global-unbind-key-function 'alpha-mode)
   ; for Exceed
@@ -184,10 +184,10 @@
   ;; Key bind for nicolatter
   (global-set-key ":" 'delete-previous)
   (global-set-key "]" 'quit)
-  (set-mode-display 'alpha-mode "[±Ñ¿ô]")
+  (set-mode-display 'alpha-mode "[è‹±æ•°]")
   (set-key 'henkan-nyuuryoku-mode "\C-n" 'zen-alpha-kakutei-mode)
   (set-key 'zen-alpha-kakutei-mode "\C-n" 'henkan-nyuuryoku-mode)
-;; °Ê²¼¤ÎÀßÄê¤Ï .emacs ¤Ç²ÄÇ½¡£
+;; ä»¥ä¸‹ã®è¨­å®šã¯ .emacs ã§å¯èƒ½ã€‚
 ;) ((equal (getenv "CONVERSIONCLIENT") "mule_on_x")
 ;  ;; Key bind for emacs on X
 ;  (global-set-key "\Delete" 'delete-previous)
@@ -217,42 +217,42 @@
 ))
 
 ;;
-;; Æ°ºî¤ÎÀßÄê
+;; å‹•ä½œã®è¨­å®š
 ;;
-;; ¼¡¤ÎÊ¸»ú¤òÆşÎÏ¤·»Ï¤á¤¿¤é¼«Æ°Åª¤Ë³ÎÄê
+;; æ¬¡ã®æ–‡å­—ã‚’å…¥åŠ›ã—å§‹ã‚ãŸã‚‰è‡ªå‹•çš„ã«ç¢ºå®š
 (setq chikuji-continue nil)
 (setq renbun-continue nil)
 (setq mojishu-continue nil)
 
-; ¸õÊäÉ½¼¨»ş¤ËÊ¸Àá¤Î¶èÀÚ¤ê¤Ë¶õÇò¤ò¤¤¤ì¤ë
+; å€™è£œè¡¨ç¤ºæ™‚ã«æ–‡ç¯€ã®åŒºåˆ‡ã‚Šã«ç©ºç™½ã‚’ã„ã‚Œã‚‹
 ;(setq bunsetsu-kugiri t)
 
-; ÆşÎÏÃæ¤ÎÆÉ¤ßÁ´ÂÎ¤ò¥ê¥Ğ¡¼¥¹É½¼¨¤¹¤ë
+; å…¥åŠ›ä¸­ã®èª­ã¿å…¨ä½“ã‚’ãƒªãƒãƒ¼ã‚¹è¡¨ç¤ºã™ã‚‹
 ;(setq reverse-widely t)
 
-; ÉÑÅÙ³Ø½¬¤ò¤·¤Ê¤¤
+; é »åº¦å­¦ç¿’ã‚’ã—ãªã„
 ;(setq gakushu nil)
 
-; Ê¸Àá¤Î±¦Ã¼¤Ç¢ª¥­¡¼¤ÇÁ´ÂÎ¤¬³ÎÄê
+; æ–‡ç¯€ã®å³ç«¯ã§â†’ã‚­ãƒ¼ã§å…¨ä½“ãŒç¢ºå®š
 ;(setq kakutei-if-end-of-bunsetsu t)
 
-; °ìÍ÷¤«¤éÁªÂò¸å¤Ï¼¡¤ÎÊ¸Àá¤Ë°ÜÆ°
+; ä¸€è¦§ã‹ã‚‰é¸æŠå¾Œã¯æ¬¡ã®æ–‡ç¯€ã«ç§»å‹•
 (setq stay-after-validate nil)
 
-; ÆÉ¤ßÆşÎÏÃæ¤ÎBackSpace¤Ç¥í¡¼¥Ş»ú¤Ë¥Ğ¥é¤¹
+; èª­ã¿å…¥åŠ›ä¸­ã®BackSpaceã§ãƒ­ãƒ¼ãƒå­—ã«ãƒãƒ©ã™
 (setq break-into-roman t)
 
-; ²¿²ó¤ÎÊÑ´¹¥­¡¼¤Ç¸õÊä°ìÍ÷É½¼¨¤ò¹Ô¤¦¤«¡£
+; ä½•å›ã®å¤‰æ›ã‚­ãƒ¼ã§å€™è£œä¸€è¦§è¡¨ç¤ºã‚’è¡Œã†ã‹ã€‚
 (setq n-henkan-for-ichiran 2)
 
-; Ãà¼¡ÊÑ´¹¤ò¤¹¤ë
+; é€æ¬¡å¤‰æ›ã‚’ã™ã‚‹
 ;(setq auto t)
 
-; Ãà¼¡ÊÑ´¹¤ò¤¹¤ë»ş¤ÎÌ¤³ÎÄêÊ¸Àá¤Î¸Ä¿ô
+; é€æ¬¡å¤‰æ›ã‚’ã™ã‚‹æ™‚ã®æœªç¢ºå®šæ–‡ç¯€ã®å€‹æ•°
 (setq n-kouho-bunsetsu 16)
 
-; ¥í¡¼¥Ş»ú¤«¤ÊÊÑ´¹¤Ç¥¤¥ê¡¼¥¬¥ë¤Ê¥í¡¼¥Ş»ú¤ò¼Î¤Æ¤ë
+; ãƒ­ãƒ¼ãƒå­—ã‹ãªå¤‰æ›ã§ã‚¤ãƒªãƒ¼ã‚¬ãƒ«ãªãƒ­ãƒ¼ãƒå­—ã‚’æ¨ã¦ã‚‹
 ;(setq abandon-illegal-phonogram t)
 
-; °ìÍ÷¤Î»ş¤â¼¡¤ÎÆşÎÏ¤òÇ§¤á¤Ê¤¤
+; ä¸€è¦§ã®æ™‚ã‚‚æ¬¡ã®å…¥åŠ›ã‚’èªã‚ãªã„
 ;(setq allow-next-input nil)

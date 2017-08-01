@@ -1,5 +1,5 @@
 ###################################################################
-#  Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for tcsh
+#  Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for tcsh
 #                       Chisato Yamauchi (cyamauch@phyas.aichi-edu.ac.jp)
 #                            Time-stamp: <2005-02-02 20:07:05 cyamauch>
 #                            Time-stamp: <2016-01-22 17:21:41 kojima>
@@ -7,7 +7,7 @@
 umask 022
 limit coredumpsize 0
 
-# Ã¼Ëö¤Ë¤è¤Ã¤ÆÆüËÜ¸ìÉ½¼¨¤¹¤ë/¤·¤Ê¤¤¤ÎÀÚ¤êÂØ¤¨
+# ç«¯æœ«ã«ã‚ˆã£ã¦æ—¥æœ¬èªè¡¨ç¤ºã™ã‚‹/ã—ãªã„ã®åˆ‡ã‚Šæ›¿ãˆ
 #setenv LANG ja_JP.eucJP
 #if ! ${?TERM} setenv TERM dumb
 #if ( "x.${TERM}" == "x.linux" ) then
@@ -21,21 +21,21 @@ limit coredumpsize 0
 #set dspmbyte = euc
 set echo_style = both
 
-# JIS¤ÇÉ½¼¨¤Ç¤­¤Ê¤¤Ã¼Ëö¤ÏEUC¤Ë¤¹¤ë
+# JISã§è¡¨ç¤ºã§ããªã„ç«¯æœ«ã¯EUCã«ã™ã‚‹
 #if ( "x.${TERM}" == "x.xterm" || "x.${TERM}" == "x.dtterm" ) then
 #  setenv JLESSCHARSET japanese-euc
 #endif
 
-if ("$TERM" == "linux") then
-  setenv LANG ja_JP.eucJP
-  setenv JLESSCHARSET japanese-euc
-  setenv OUTPUT_CHARSET EUC-JP
-  set dspmbyte=euc
-else
-  source $HOME/.set_lang_csh @LOCALE@
-endif
+#if ("$TERM" == "linux") then
+#  setenv LANG ja_JP.eucJP
+#  setenv JLESSCHARSET japanese-euc
+#  setenv OUTPUT_CHARSET EUC-JP
+#  set dspmbyte=euc
+#else
+source $HOME/.set_lang_csh @LOCALE@
+#endif
 
-# less ¤Ç¹ÔÈÖ¹æ¤ò¤Ä¤±¡¤½ªÎ»¸å¤Ë²èÌÌ¤ò»Ä¤¹
+# less ã§è¡Œç•ªå·ã‚’ã¤ã‘ï¼Œçµ‚äº†å¾Œã«ç”»é¢ã‚’æ®‹ã™
 setenv LESS '-R -M -X'
 
 setenv EDITOR 'vi'
@@ -45,14 +45,14 @@ setenv PAGER 'less'
 # for Python 2.7
 #setenv PYTHONPATH /usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
 
-# NetNews ¤Î¥µ¡¼¥Ğ¤ò»ØÄê¤·¤Æ¤¯¤À¤µ¤¤
+# NetNews ã®ã‚µãƒ¼ãƒã‚’æŒ‡å®šã—ã¦ãã ã•ã„
 # setenv NNTPSERVER news.hoge.hoge.ac.jp
 
-# ÄÌ¾ï¤ÏÉÔÍ×¤Ç¤¹¤¬¡¢Firewall ¤ò±Û¤¨¤ë¤Ë¤Ï SOCKS ¤¬É¬Í×¤Ê¾ì¹ç¤ÎÀßÄê
+# é€šå¸¸ã¯ä¸è¦ã§ã™ãŒã€Firewall ã‚’è¶Šãˆã‚‹ã«ã¯ SOCKS ãŒå¿…è¦ãªå ´åˆã®è¨­å®š
 # setenv SOCKS_SERVER 100.100.100.1
 # setenv SOCKS_NS 100.100.100.2
 
-# proxy ¥µ¡¼¥Ğ¤´¤·¤Ë WWW ¤ò¸«¤ë¾ì¹ç¤Ë lynx ¤ä www.el ¤ËÉ¬Í×¤ÊÀßÄê
+# proxy ã‚µãƒ¼ãƒã”ã—ã« WWW ã‚’è¦‹ã‚‹å ´åˆã« lynx ã‚„ www.el ã«å¿…è¦ãªè¨­å®š
 
 # setenv http_proxy http://proxy.hoge.hoge.ac.jp:999/
 # setenv ftp_proxy http://proxy.hoge.hoge.ac.jp:999/
@@ -61,13 +61,12 @@ setenv PAGER 'less'
 
 if ($?prompt) then
     setenv LS_OPTIONS "-F -T 0 -N"
-    # TERM¤¬dumb¤Î¤È¤­(mule,emacs)°Ê³°¤Ë¤Ï¿§¤ò¤Ä¤±¤ë
+    # TERMãŒdumbã®ã¨ã(mule,emacs)ä»¥å¤–ã«ã¯è‰²ã‚’ã¤ã‘ã‚‹
     if ( "x.${TERM}" != "x.dumb" ) then
 	eval `dircolors -c ~/.dir_colors`
         setenv LS_OPTIONS "--color=auto -F -T 0 -N"
-        setenv GREP_OPTIONS "--color=auto"
     endif
-    # ¤³¤³¤«¤é¥¦¥£¥ó¥É¥¥¥¿¥¤¥È¥ëÉ½¼¨¤ÎÀßÄê
+    # ã“ã“ã‹ã‚‰ã‚¦ã‚£ãƒ³ãƒ‰ã‚¥ã‚¿ã‚¤ãƒˆãƒ«è¡¨ç¤ºã®è¨­å®š
     if ( "x.${TERM}" == "x.xterm" || \
 	 "x.${TERM}" == "x.kterm" || \
          "x.${TERM}" == "x.rxvt" || \
@@ -83,7 +82,7 @@ if ($?prompt) then
 	endsw
 	alias getrmhmpwd 'setenv TTL_TMP_VAL `echo "/$HOME"|/usr/bin/sed -e "s/\//\\\//g"` ; setenv RMHMPWD `echo "/$PWD"|/usr/bin/sed -e "s/$TTL_TMP_VAL/\\\~/g"` ; if ( "/$RMHMPWD" == "//$PWD" ) setenv RMHMPWD "$PWD"'
 	alias termtitle 'setenv TTL_TMP_VAL /dev/null ; tty > /dev/null ; if ( "$?" == "0" ) if ( -w `tty` ) setenv TTL_TMP_VAL `tty` ; echo -n "\033]0;$TERM - "`echo "$TERMTITLE"|/usr/bin/sed -e "s/\\\~/\~/g"`"\007" > $TTL_TMP_VAL'
-	# ÃÙ¤¤¥Ş¥·¥ó¤Ç¤Ï¤³¤ÎÀßÄê¤ÎÊı¤¬¤¤¤¤¤«¤â¡Ä
+	# é…ã„ãƒã‚·ãƒ³ã§ã¯ã“ã®è¨­å®šã®æ–¹ãŒã„ã„ã‹ã‚‚â€¦
 	# alias termtitle 'echo -n "\033]0;$TERM - ${HOST}:$PWD\007"'
 	alias cd 'cd \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	alias pushd 'pushd \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
@@ -98,17 +97,17 @@ if ($?prompt) then
 	    setenv SSH_BIN `which ssh`
 	    alias ssh 'setenv TERMTITLE "'$HN'ssh \!*" ; termtitle ; '$SSH_BIN' \!* ; getrmhmpwd ; setenv TERMTITLE "'$HN'[$RMHMPWD]" ; termtitle'
 	endif
-	# Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-	# ¤¬É½¼¨²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
-	#   É½¼¨Îã¢ª hoge@host[/usr/lib64/X11/app-defaults]% _
+	# Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+	# ãŒè¡¨ç¤ºå¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
+	#   è¡¨ç¤ºä¾‹â†’ hoge@host[/usr/lib64/X11/app-defaults]% _
 	set prompt   = `whoami`@`hostname`"[%~]% "
-	#   É½¼¨Îã¢ª hoge@host[/<4>app-defaults]% _
+	#   è¡¨ç¤ºä¾‹â†’ hoge@host[/<4>app-defaults]% _
 	#set prompt   = `whoami`@`hostname`"[%c01]% "
-	#   É½¼¨Îã¢ª hoge@host[app-defaults]% _
+	#   è¡¨ç¤ºä¾‹â†’ hoge@host[app-defaults]% _
 	#set prompt   = `whoami`@`hostname`"[%c1]% "
     else
-	# Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-	# ¤¬É½¼¨ÉÔ²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
+	# Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+	# ãŒè¡¨ç¤ºä¸å¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
 	set prompt   = `whoami`@`hostname`"[%~]% "
 	#set prompt   = `whoami`@`hostname`"[%c01]% "
 	#set prompt   = `whoami`@`hostname`"[%c1]% "
@@ -116,36 +115,36 @@ if ($?prompt) then
     # alias ls `alias ls | sed 's/\!\*/$LS_OPTIONS \!\*/'`
     alias dir 'dir $LS_OPTIONS'
     alias vdir 'vdir $LS_OPTIONS'
-    # ÊİÂ¸¤¹¤ëÍúÎò¤Î¹Ô¿ô
+    # ä¿å­˜ã™ã‚‹å±¥æ­´ã®è¡Œæ•°
     set savehist = 512
     set history  = 512
-    # ½ÅÊ£¤¹¤ë¥¤¥Ù¥ó¥È¤òÊİÂ¸¤·¤Ê¤¤
+    # é‡è¤‡ã™ã‚‹ã‚¤ãƒ™ãƒ³ãƒˆã‚’ä¿å­˜ã—ãªã„
     set histdup = erase
-    # Êä´°¤òÍ­¸ú¤Ë¤¹¤ë(tcsh¤Ç¤Ï¾ï¤ËÍ­¸ú)
+    # è£œå®Œã‚’æœ‰åŠ¹ã«ã™ã‚‹(tcshã§ã¯å¸¸ã«æœ‰åŠ¹)
     set filec
-    # Êä´°¤ÇÌµ»ë¤¹¤ë¥µ¥Õ¥£¥Ã¥¯¥¹
+    # è£œå®Œã§ç„¡è¦–ã™ã‚‹ã‚µãƒ•ã‚£ãƒƒã‚¯ã‚¹
 #    set fignore = (.o \~)
-    # traditional csh Êä´°¤Ë¤¹¤ë
+    # traditional csh è£œå®Œã«ã™ã‚‹
 #    unset edit
-    # beep²»¤òÌÄ¤é¤µ¤Ê¤¤
+    # beepéŸ³ã‚’é³´ã‚‰ã•ãªã„
 #    set nobeep
-    # Ctrl+D ¤Ç exit ¤·¤Ê¤¤
+    # Ctrl+D ã§ exit ã—ãªã„
 #    set ignoreeof
-    # ¥Ç¥£¥ì¥¯¥È¥ê¤Ë / ¤òÉÕ²Ã¤·¤Ê¤¤
+    # ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã« / ã‚’ä»˜åŠ ã—ãªã„
 #    unset addsuffix
-    # Êä´°¸õÊä¤òÉ½¼¨
+    # è£œå®Œå€™è£œã‚’è¡¨ç¤º
     set autolist
-    # ¸¡º÷ÉÕ¤­ÍúÎòµ¡Ç½¤Ë¤¹¤ë
-    # PageUp,PageDown¥­¡¼
+    # æ¤œç´¢ä»˜ãå±¥æ­´æ©Ÿèƒ½ã«ã™ã‚‹
+    # PageUp,PageDownã‚­ãƒ¼
     bindkey "^[[5~" history-search-backward
     bindkey "^[[6~" history-search-forward
-    # ¢¬¢­¥­¡¼
+    # â†‘â†“ã‚­ãƒ¼
     bindkey -k up history-search-backward
     bindkey -k down history-search-forward
 #    bindkey -k up backward-word
 #    bindkey -k down forward-word
     bindkey "^[[3~" delete-char
-    # Ã¼Ëö¤Ë¤è¤ëBackSpace¥­¡¼¤ÎÄ´À°
+    # ç«¯æœ«ã«ã‚ˆã‚‹BackSpaceã‚­ãƒ¼ã®èª¿æ•´
     switch( "${TERM}" )
     case "kterm":
 	stty erase '^H'
@@ -164,8 +163,8 @@ if ($?prompt) then
 	breaksw
     endsw
     stty werase '^W'
-    # Ctrl+S ¤Ç¤Î stop ¤ò¤ä¤á¤ë
+    # Ctrl+S ã§ã® stop ã‚’ã‚„ã‚ã‚‹
     stty stop undef
-# alias ¤Ï .alias ¤Ë½ñ¤¤¤Æ¤¯¤À¤µ¤¤¡¥
+# alias ã¯ .alias ã«æ›¸ã„ã¦ãã ã•ã„ï¼
     if -f ~/.alias source ~/.alias
 endif

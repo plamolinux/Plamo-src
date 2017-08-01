@@ -1,50 +1,50 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë .Xdefaults
+!! Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« .Xdefaults
 !!                          Time-stamp: <2005-10-28 14:47:00 cyamauch>
 !!                          Time-stamp: <2011-08-31 15:08:04 karma>
 !!                          Time-stamp: <2011-10-06 07:34:24 tamuki>
 !!
-!! X ¾å¤Ç»È¤¦³Æ¥¢¥×¥ê¥±¡¼¥·¥ç¥óÍÑ¤Î¥Ç¥Õ¥©¥ë¥È¤ÎÀßÄêÃÍ¤Ç¤¹¡£
-!! ¤³¤Î¥Û¥¹¥È¤Î¥¯¥é¥¤¥¢¥ó¥È¤Î¤ß¤ËÅ¬ÍÑ¤µ¤ì¤Ş¤¹¡£
+!! X ä¸Šã§ä½¿ã†å„ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ç”¨ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®è¨­å®šå€¤ã§ã™ã€‚
+!! ã“ã®ãƒ›ã‚¹ãƒˆã®ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã®ã¿ã«é©ç”¨ã•ã‚Œã¾ã™ã€‚
 
-! Xaw3d ¤Î±Æ¤ÎÉı¤òÀßÄê¤¹¤ë¡£
+! Xaw3d ã®å½±ã®å¹…ã‚’è¨­å®šã™ã‚‹ã€‚
 !*shadowWidth:		2
 
-! Xaw3d ¤ÎÉ½¼¨¤òåºÎï¤Ë¤¹¤ë¡£
+! Xaw3d ã®è¡¨ç¤ºã‚’ç¶ºéº—ã«ã™ã‚‹ã€‚
 *beNiceToColormap:	False
 
-! kterm¡¤xterm ¤Ê¤É¤Ç¥Ó¡¼¥×²»¤òÌÄ¤é¤µ¤Ê¤¤¡£
+! ktermï¼Œxterm ãªã©ã§ãƒ“ãƒ¼ãƒ—éŸ³ã‚’é³´ã‚‰ã•ãªã„ã€‚
 !*visualBell:		True
 
-! kinput2 ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! kinput2 ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		kinput2
-! skkinput ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! skkinput ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		skkinput
-! nicolatter ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! nicolatter ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		nicolatter
-! jmode ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! jmode ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		jmode
-! uim ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! uim ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 *inputMethod:		uim
-! SCIM ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! SCIM ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		SCIM
-! ibus ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! ibus ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		ibus
-! ATOKX ¤ò»È¤¦¾ì¹ç¤Ï¤³¤Á¤é
+! ATOKX ã‚’ä½¿ã†å ´åˆã¯ã“ã¡ã‚‰
 !*inputMethod:		htt
 
 !!
 !! Htt (atokx2)
 !!
-! ¤³¤ì¤ÏÀßÄê¤·¤Ê¤¤Êı¤¬¤¤¤¤¤é¤·¤¤¡Ä
+! ã“ã‚Œã¯è¨­å®šã—ãªã„æ–¹ãŒã„ã„ã‚‰ã—ã„â€¦
 !Htt*conversionOnKeys:	Kanji Zenkaku_Hankaku <Shift>space
 
 !!
 !! Kinput2
 !!
 Kinput2*CcWnn.ccdef:			ccdef.kinput2
-! ÆüËÜ¸ìÆşÎÏ¥â¡¼¥ÉÀÚ¤êÂØ¤¨¥­¡¼¤ÎÀßÄê
-! Ctrl + o ¤òÌµ¸ú¤Ë¤·¤¿¤¤¾ì¹ç¤Ï .canna ¤ÇÀßÄê¤·¤Æ¤¯¤À¤µ¤¤¡£
+! æ—¥æœ¬èªå…¥åŠ›ãƒ¢ãƒ¼ãƒ‰åˆ‡ã‚Šæ›¿ãˆã‚­ãƒ¼ã®è¨­å®š
+! Ctrl + o ã‚’ç„¡åŠ¹ã«ã—ãŸã„å ´åˆã¯ .canna ã§è¨­å®šã—ã¦ãã ã•ã„ã€‚
 Kinput2*ConversionStartKeys: \
 	Shift<Key>space\n\
 	<Key>Zenkaku_Hankaku\n\
@@ -57,13 +57,13 @@ Kinput2*sendbackKeyPress:		True
 Kinput2*background:			#c0c0c0
 Kinput2*foreground:			black
 Kinput2*OverTheSpotConversion*modeShell.borderWidth:	1
-! KDE ¤Ç¤ÏÉ¬¿Ü(WindowMaker ¤Ç¤Ï¥³¥á¥ó¥È¤Ë¤¹¤ë)
+! KDE ã§ã¯å¿…é ˆ(WindowMaker ã§ã¯ã‚³ãƒ¡ãƒ³ãƒˆã«ã™ã‚‹)
 Kinput2*OverTheSpotConversion.useOverrideShellForMode:	True
-! OpenOffice ¤ÇÉ¬Í×¤é¤·¤¤
+! OpenOffice ã§å¿…è¦ã‚‰ã—ã„
 Kinput2*SeparateConversion.input:	false
 Kinput2*selectionShell.input:		false
 Kinput2*auxShell.input:			false
-! °Ê²¼ 2 ¤Ä¤Î¥ê¥½¡¼¥¹¤Ï kinput2-canna ¤Î¾ì¹ç¤Î¤ßÍ­¸ú
+! ä»¥ä¸‹ 2 ã¤ã®ãƒªã‚½ãƒ¼ã‚¹ã¯ kinput2-canna ã®å ´åˆã®ã¿æœ‰åŠ¹
 Kinput2*ConversionEndKeys: \
 	Shift<Key>space\n\
 	<Key>Zenkaku_Hankaku\n\
@@ -72,7 +72,7 @@ Kinput2*ConversionEndKeys: \
 	<Key>Kanji\n\
 	Alt<Key>Kanji\n\
 	Shift<Key>Kanji
-! ¥­¡¼¥Ü¡¼¥É±¦²¼¤Î backslash ¤Ï¾ï¤Ë¡È_¡É¤Ë¤¹¤ë(¤«¤ÊÆşÎÏ¤ÇÉ¬¿Ü)
+! ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰å³ä¸‹ã® backslash ã¯å¸¸ã«â€œ_â€ã«ã™ã‚‹(ã‹ãªå…¥åŠ›ã§å¿…é ˆ)
 Kinput2*keyBackslashAlwaysShifted:	True
 Kinput2*Font: \
 	-*-fixed-medium-r-normal--@FSIZE_TERM@-*-*-*-c-*-iso8859-1
@@ -104,7 +104,7 @@ Skkinput*offthespot.input:		False
 !!
 !! KTerm
 !!
-! kterm ¤Î³Æ¹Ô¤Î²¼¤Ë 2 ²èÁÇ¤Î´Ö³Ö¤ò¶õ¤±¤ë¡£
+! kterm ã®å„è¡Œã®ä¸‹ã« 2 ç”»ç´ ã®é–“éš”ã‚’ç©ºã‘ã‚‹ã€‚
 !KTerm*lineSpace:		2
 !KTerm*VT100.background:	#e0e0e8
 KTerm*VT100.background:		#f8f4f0
@@ -120,7 +120,7 @@ KTerm*SimpleMenu*fontSet: \
 KTerm*SimpleMenu*menuLabel.fontSet: \
 	-adobe-helvetica-bold-r-*-*-@FSIZE_UI@-*-*-*-*-*-iso8859-*,\
 	-*-fixed-bold-r-normal--@FSIZE_UI@-*-*-*-c-*-*-*
-! ¥Õ¥©¥ó¥È(Ctrl + ±¦¥É¥é¥Ã¥°¤ÇÁªÂò)
+! ãƒ•ã‚©ãƒ³ãƒˆ(Ctrl + å³ãƒ‰ãƒ©ãƒƒã‚°ã§é¸æŠ)
 KTerm*VT100*fontList:		-*-fixed-medium-r-normal--@FSIZE_TERM@-*-*-*-c-*-*-*
 KTerm*VT100*boldFontList:	-*-fixed-bold-r-normal--@FSIZE_TERM@-*-*-*-c-*-*-*
 KTerm*VT100*fontList2:		-*-fixed-medium-r-normal--8-*-*-*-c-*-*-*
@@ -133,8 +133,8 @@ KTerm*VT100*fontList5:		-*-fixed-medium-r-normal--20-*-*-*-c-*-*-*
 KTerm*VT100*boldFontList5:	-*-fixed-bold-r-normal--20-*-*-*-c-*-*-*
 KTerm*VT100*fontList6:		-*-fixed-medium-r-normal--24-*-*-*-c-*-*-*
 KTerm*VT100*boldFontList6:	-*-fixed-bold-r-normal--24-*-*-*-c-*-*-*
-! kinput2 ¤ò Shift + [¥¹¥Ú¡¼¥¹]¤â¤·¤¯¤Ï[ÊÑ´¹]¤Ç³«¤¯¡£
-! [Delete][Home][End]¥­¡¼¤ÎÀßÄê
+! kinput2 ã‚’ Shift + [ã‚¹ãƒšãƒ¼ã‚¹]ã‚‚ã—ãã¯[å¤‰æ›]ã§é–‹ãã€‚
+! [Delete][Home][End]ã‚­ãƒ¼ã®è¨­å®š
 KTerm*VT100*translations: #override \
 	Shift<Key>space: begin-conversion(_JAPANESE_CONVERSION)\n\
 	<Key>Henkan: begin-conversion(_JAPANESE_CONVERSION)\n\
@@ -200,32 +200,32 @@ Rxvt*preeditType:	OverTheSpot
 !! Emacs
 !!
 !Emacs*xnlLanguage: C
-! ATOKX ¤Ê¤É¤Ç XIM ¤òÍøÍÑ¤¹¤ë¤Ë¤Ï¡¤¤³¤Î¹Ô¤òÍ­¸ú¤Ë¤·¤Ş¤¹¡£
+! ATOKX ãªã©ã§ XIM ã‚’åˆ©ç”¨ã™ã‚‹ã«ã¯ï¼Œã“ã®è¡Œã‚’æœ‰åŠ¹ã«ã—ã¾ã™ã€‚
 !Emacs*useXim:	true
-! XIM »ÈÍÑ»ş¤Ë±¦²¼¤Î Status ¤òÉ½¼¨¤·¤Ê¤¤¡£
+! XIM ä½¿ç”¨æ™‚ã«å³ä¸‹ã® Status ã‚’è¡¨ç¤ºã—ãªã„ã€‚
 !Emacs*ximStatusArea: false
-! ¥á¥Ë¥å¡¼¥Ğ¡¼ÉÔÍ×
+! ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãƒãƒ¼ä¸è¦
 !Emacs*menuBar: false
-! ¥Ä¡¼¥ë¥Ğ¡¼ÉÔÍ×
+! ãƒ„ãƒ¼ãƒ«ãƒãƒ¼ä¸è¦
 !Emacs*toolBar: false
-! ³«¤¯°ÌÃÖ¤ÈÂç¤­¤µ¤Î»ØÄê
+! é–‹ãä½ç½®ã¨å¤§ãã•ã®æŒ‡å®š
 !Emacs*geometry: 80x25+10
-! xemacs ¤À¤ÈÀßÄê¤òÊÑ¤¨¤ëÉ¬Í×¤¬¤¢¤ë¤é¤·¤¤
+! xemacs ã ã¨è¨­å®šã‚’å¤‰ãˆã‚‹å¿…è¦ãŒã‚ã‚‹ã‚‰ã—ã„
 !Emacs*geometry: 80x36
-! xemacs xemacs.geometry ¤Î¤è¤¦¤Ë¤Ê¤ë¤é¤·¤¤¤Î¤À¤±¤ÉÌ¤³ÎÇ§
+! xemacs xemacs.geometry ã®ã‚ˆã†ã«ãªã‚‹ã‚‰ã—ã„ã®ã ã‘ã©æœªç¢ºèª
 Emacs*lineSpacing: 2
 !Emacs*cursorType: bar
 !Emacs*menubar.shadowThickness: 1
-! ¿§ÀßÄê
+! è‰²è¨­å®š
 Emacs*TransientShell*background:	grey75
 Emacs*XlwMenu*background:		grey75
 !Emacs*Background:			#e4e0d0
 !Emacs*Background:			#fff8f0
 !Emacs*Background:			cornsilk
 !Emacs*Foreground:			navyblue
-! ¥Õ¥©¥ó¥ÈÌ¾¤Î»ØÄê
-! Emacs(Mule) ¤Î Window ¾å¤Ç Shift + º¸¥É¥é¥Ã¥°¤·¤Æ FontSet ¤«¤éÁªÂò
-! xfntali ¥Ñ¥Ã¥±¡¼¥¸¤¬¤¹¤Ù¤ÆÆş¤Ã¤Æ¤¤¤ë¤³¤È¤ò²¾Äê¤·¤Æ¤¤¤Ş¤¹¡£
+! ãƒ•ã‚©ãƒ³ãƒˆåã®æŒ‡å®š
+! Emacs(Mule) ã® Window ä¸Šã§ Shift + å·¦ãƒ‰ãƒ©ãƒƒã‚°ã—ã¦ FontSet ã‹ã‚‰é¸æŠ
+! xfntali ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ãŒã™ã¹ã¦å…¥ã£ã¦ã„ã‚‹ã“ã¨ã‚’ä»®å®šã—ã¦ã„ã¾ã™ã€‚
 Emacs*TransientShell*font: \
 	-adobe-helvetica-medium-r-*-*-@FSIZE_UI@-*-*-*-*-*-iso8859-*
 Emacs*XlwMenu*font: \
@@ -305,11 +305,11 @@ Emacs.Fontset-11: \
 	japanese-jisx0201.1976:-*-fixed-bold-r-normal--24-*-*-*-c-*-jisx0201.1976-0,\
 	japanese-jisx0208.1983:-*-fixed-bold-r-normal--24-*-*-*-c-*-jisx0208.1983-0
 
-! Motif ¤Î¥¹¥¯¥í¡¼¥ë¥Ğ¡¼¤ÎÉı
+! Motif ã®ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ãƒãƒ¼ã®å¹…
 *XmScrollBar*width:	19
 *XmScrollBar*height:	19
 
-! Xaw,Xaw3d ¤Î¥¹¥¯¥í¡¼¥ë¥Ğ¡¼¤ÎÉı
+! Xaw,Xaw3d ã®ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ãƒãƒ¼ã®å¹…
 !*Scrollbar*width:	19
 !*Scrollbar*height:	19
 
@@ -338,7 +338,7 @@ Sketch*font:			-adobe-helvetica-medium-r-*-*-@FSIZE_UI@-*-*-*-*-*-iso8859-1
 !Tgif.DefaultColorIndex:	0
 !Tgif.FontSizes:		8 10 12 14 16 18 20 24 34
 Tgif.InitialFont:		Ryumin
-! °ìÈÌ¤Î fixed ¥Õ¥©¥ó¥È¤ò»È¤¦ÀßÄê¡£
+! ä¸€èˆ¬ã® fixed ãƒ•ã‚©ãƒ³ãƒˆã‚’ä½¿ã†è¨­å®šã€‚
 !Tgif.SquareDoubleByteFonts: \n\
 -*-fixed-medium-r-*--%d-*-*-*-*-*-jisx0208.1983-*,H,Ryumin-Light-EUC-H\n\
 -*-fixed-medium-r-*--%d-*-*-*-*-*-jisx0208.1983-*,H,Ryumin-Light-EUC-H\n\
@@ -393,7 +393,7 @@ Tgif.BoldMsgFontSet: \
 !!
 !! Xfig
 !!
-! ATOKX ¤ò»È¤¦¾ì¹ç¤Ï¤³¤ÎÀßÄê¤Ë¤·¤Æ¤ª¤¯¡£
+! ATOKX ã‚’ä½¿ã†å ´åˆã¯ã“ã®è¨­å®šã«ã—ã¦ãŠãã€‚
 Fig*inputStyle:		OverTheSpot
 
 !!
@@ -528,7 +528,7 @@ Xmessage*message*fontSet: \
 Xmessage*message*TransientShell*fontSet: \
 	-adobe-helvetica-medium-r-normal--@FSIZE_UI@-*-*-*-*-*-iso8859-1,\
 	-*-fixed-medium-r-normal--@FSIZE_UI@-*-*-*-c-*-*-*
-Xmessage*okay.Label:			Î»²ò
+Xmessage*okay.Label:			äº†è§£
 !Xmh.Geometry:				480x450
 Xmh.notice.Dialog.Text.TextSink.Font: \
 	-*-courier-bold-r-*--@FSIZE_UI@-*-*-*-*-*-iso8859-1

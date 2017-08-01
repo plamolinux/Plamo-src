@@ -1,16 +1,16 @@
 ######################################################################
-# Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë .login
+# Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« .login
 #                           Time-stamp: <2004-01-11 23:31:23 cyamauch>
 #                           Time-stamp: <2009-07-09 12:21:25 tamuki>
 
-# biff: ¥á¡¼¥ë¤¬ÆÏ¤¯¤ÈÃ¼Ëö¤Ë¥á¥Ã¥»¡¼¥¸¤òÉ½¼¨¤·¤Þ¤¹¡£
+# biff: ãƒ¡ãƒ¼ãƒ«ãŒå±Šãã¨ç«¯æœ«ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
 if ( -x /usr/bin/biff ) then
   if ( -w `tty` ) then
     biff y
   endif
 endif
 
-# fortune: ¥í¥°¥¤¥ó»þ¤ËËè²ó°ã¤Ã¤¿¥á¥Ã¥»¡¼¥¸¤òÉ½¼¨¤·¤Þ¤¹¡£
+# fortune: ãƒ­ã‚°ã‚¤ãƒ³æ™‚ã«æ¯Žå›žé•ã£ãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
 if ( $SHLVL == 1 ) then
   if ( { tty --silent } ) then >& /dev/null
     if ( -x /usr/games/fortune ) then
@@ -19,7 +19,7 @@ if ( $SHLVL == 1 ) then
   endif
 endif
 
-# esd: ¥µ¥¦¥ó¥É¥µ¡¼¥Ð¤òµ¯Æ°¤·¤Þ¤¹¡£
+# esd: ã‚µã‚¦ãƒ³ãƒ‰ã‚µãƒ¼ãƒã‚’èµ·å‹•ã—ã¾ã™ã€‚
 if ( $SHLVL == 1 ) then
   if ( -x /usr/bin/esdctl && ! { esdctl serverinfo } ) then >& /dev/null
     if ( -x /usr/bin/esd ) then

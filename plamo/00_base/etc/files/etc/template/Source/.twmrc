@@ -70,10 +70,9 @@ Button2 = : iconmgr : f.iconify
 menu "defops"
 {
 "Twm"	f.title
-"KTerm"		f.exec "exec kterm &"
-"Rxvt"		f.exec "exec rxvt &"
+"XTerm"		f.exec "exec xterm &"
 "Calculator"	f.exec "exec xcalc &"
-"Netscape"	f.exec "exec netscape &"
+"Firefox"	f.exec "exec firefox &"
 ""		f.nop
 "Iconify"	f.iconify
 "Resize"	f.resize

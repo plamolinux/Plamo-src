@@ -1,27 +1,27 @@
 ###################################################################
-#  Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for bash
+#  Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for bash
 #                            Time-stamp: <2005-02-02 20:09:17 cyamauch>
 #                            Time-stamp: <2016-01-22 17:19:56 kojima>
 
 # prevent illegal line wrapping
 shopt -s checkwinsize
 
-## ¥í¥°¥¤¥ó»ş°Ê³° (¥í¥°¥¤¥ó¥·¥§¥ë¤Ç¤Ê¤¤¾ì¹ç) ¤Ç¡¢
-## ÂĞÏÃ¥·¥§¥ë¤Î¾ì¹ç¤Ë¼Â¹Ô¤µ¤ì¤Ş¤¹¡£
+## ãƒ­ã‚°ã‚¤ãƒ³æ™‚ä»¥å¤– (ãƒ­ã‚°ã‚¤ãƒ³ã‚·ã‚§ãƒ«ã§ãªã„å ´åˆ) ã§ã€
+## å¯¾è©±ã‚·ã‚§ãƒ«ã®å ´åˆã«å®Ÿè¡Œã•ã‚Œã¾ã™ã€‚
 
 if [ ! -n "$SSH_CLIENT" -o -n "$SSH_TTY" ] ; then
 
-# ¥·¥§¥ëÊÑ¿ô¤ÎÀßÄê (¾ÜºÙ¤Ï man bash)
-# ÊİÂ¸¤¹¤ëÍúÎò¤Î¹Ô¿ô
+# ã‚·ã‚§ãƒ«å¤‰æ•°ã®è¨­å®š (è©³ç´°ã¯ man bash)
+# ä¿å­˜ã™ã‚‹å±¥æ­´ã®è¡Œæ•°
 HISTSIZE=512
 HISTFILESIZE=512
-# ¶õÇòÊ¸»ú¤Ç»Ï¤Ş¤ë¹Ô¡¤ÍúÎò¤ÎºÇ¸å¤Î¹Ô¤Ë¥Ş¥Ã¥Á¤¹¤ë¹Ô¤Ï
-# ÍúÎò¤ËÆş¤ì¤Ê¤¤
+# ç©ºç™½æ–‡å­—ã§å§‹ã¾ã‚‹è¡Œï¼Œå±¥æ­´ã®æœ€å¾Œã®è¡Œã«ãƒãƒƒãƒã™ã‚‹è¡Œã¯
+# å±¥æ­´ã«å…¥ã‚Œãªã„
 HISTCONTROL=ignoreboth
-# Ctrl+D ¤Ï 3 ²óÌµ»ë¤¹¤ë
+# Ctrl+D ã¯ 3 å›ç„¡è¦–ã™ã‚‹
 IGNOREEOF=3
 
-# Ã¼Ëö¤Ë¤è¤Ã¤ÆÆüËÜ¸ìÉ½¼¨¤¹¤ë/¤·¤Ê¤¤¤ÎÀÚ¤êÂØ¤¨
+# ç«¯æœ«ã«ã‚ˆã£ã¦æ—¥æœ¬èªè¡¨ç¤ºã™ã‚‹/ã—ãªã„ã®åˆ‡ã‚Šæ›¿ãˆ
 #if [ "$TERM" = "linux" ] ; then
 #  LANG=C
 #else
@@ -30,21 +30,21 @@ IGNOREEOF=3
 #LANG=ja_JP.eucJP
 #export LANG
 
-# JIS¤ÇÉ½¼¨¤Ç¤­¤Ê¤¤Ã¼Ëö¤ÏEUC¤Ë¤¹¤ë
+# JISã§è¡¨ç¤ºã§ããªã„ç«¯æœ«ã¯EUCã«ã™ã‚‹
 #if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
 #  JLESSCHARSET=japanese-euc
 #fi
 
-if [ "$TERM" == "linux" ] ; then
-  LANG=ja_JP.eucJP
-  JLESSCHARSET=japanese-euc
-  OUTPUT_CHARSET=EUC-JP
-  export LANG JLESSCHARSET OUTPUT_CHARSET
-else
+#if [ "$TERM" == "linux" ] ; then
+#  LANG=ja_JP.eucJP
+#  JLESSCHARSET=japanese-euc
+#  OUTPUT_CHARSET=EUC-JP
+#  export LANG JLESSCHARSET OUTPUT_CHARSET
+#else
   source $HOME/.set_lang_bsh @LOCALE@
-fi
+#fi
 
-# less ¤Ç¹ÔÈÖ¹æ¤ò¤Ä¤±¡¤½ªÎ»¸å¤Ë²èÌÌ¤ò»Ä¤¹
+# less ã§è¡Œç•ªå·ã‚’ã¤ã‘ï¼Œçµ‚äº†å¾Œã«ç”»é¢ã‚’æ®‹ã™
 LESS='-R -M -X'
 
 EDITOR='vi'
@@ -60,43 +60,40 @@ export LESS EDITOR PAGER
 #   PATH="$PATH:." ;
 # fi
 
-# ls ¤Ç¿§¤ò¤Ä¤±¤ë
-# ¿§ÀßÄêÅù¤Ï ~/.dir_colors
+# ls ã§è‰²ã‚’ã¤ã‘ã‚‹
+# è‰²è¨­å®šç­‰ã¯ ~/.dir_colors
 if [ -x /usr/bin/dircolors ]; then
   eval `dircolors -b $HOME/.dir_colors`
   LS_OPTIONS='--color=auto -F -T 0 -N'
 else
   LS_OPTIONS='-F -T 0 -N';
 fi
-# Emacs ¤Ê¤É¤Î dumb Ã¼Ëö¤Ç¤Ï¿§¤ò¤Ä¤±¤Ê¤¤
+# Emacs ãªã©ã® dumb ç«¯æœ«ã§ã¯è‰²ã‚’ã¤ã‘ãªã„
 if [ "$TERM" = "dumb" ] ; then
   LS_OPTIONS="-F -T 0 -N --color=none"
-else
-  GREP_OPTIONS="--color=auto"
-  export GREP_OPTIONS
 fi
-export LS_OPTIONS
 
+export LS_OPTIONS
 alias ls='ls $LS_OPTIONS'
 alias dir='dir $LS_OPTIONS';
 alias vdir='vdir $LS_OPTIONS';
 
-# Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# ¤¬É½¼¨ÉÔ²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
+# Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# ãŒè¡¨ç¤ºä¸å¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
 PS1='\u@\h:\w\$ '
 #PS1='\h:\w\$ '
 
-# Ã¼Ëö¤Î¥¿¥¤¥È¥ë¤Ë prompt ¤òÉ½¼¨¤¹¤ë
+# ç«¯æœ«ã®ã‚¿ã‚¤ãƒˆãƒ«ã« prompt ã‚’è¡¨ç¤ºã™ã‚‹
 if [ "$TERM" = "screen" ] ; then
   SCREEN=screen@
 fi
 case $TERM in
 kterm|xterm|rxvt|dtterm|vt100|screen)
-    # Window¤Î¥¿¥¤¥È¥ë¥Ğ¡¼¤Ë¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-    # ¤¬É½¼¨²ÄÇ½¤Ê¾ì¹ç¤Î¥×¥í¥ó¥×¥ÈÀßÄê
-    #   É½¼¨Îã¢ª hoge@host:/usr/lib64/X11/app-defaults$ _
+    # Windowã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã«ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+    # ãŒè¡¨ç¤ºå¯èƒ½ãªå ´åˆã®ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆè¨­å®š
+    #   è¡¨ç¤ºä¾‹â†’ hoge@host:/usr/lib64/X11/app-defaults$ _
     PS1='\u@\h:\w\$ '
-    #   É½¼¨Îã¢ª hoge@host:app-defaults$ _
+    #   è¡¨ç¤ºä¾‹â†’ hoge@host:app-defaults$ _
     #PS1='\u@\h:\W\$ '
     HN="$SCREEN`hostname`:"
     #HN="$SCREEN`hostname -s`:"
@@ -115,7 +112,7 @@ kterm|xterm|rxvt|dtterm|vt100|screen)
 	  fi
 	fi
     }
-    # ÃÙ¤¤¥Ş¥·¥ó¤Ç¤Ï¤³¤ÎÀßÄê¤ÎÊı¤¬¤¤¤¤¤«¤â¡Ä
+    # é…ã„ãƒã‚·ãƒ³ã§ã¯ã“ã®è¨­å®šã®æ–¹ãŒã„ã„ã‹ã‚‚â€¦
     # function mkrmhmpwd () { RMHMPWD="$PWD" ; }
     function termtitle () {
 	tty > /dev/null
@@ -184,12 +181,12 @@ kterm|xterm|rxvt|dtterm|vt100|screen)
 ;;
 esac
 
-# Ã¼Ëö¤Ë¤è¤ëBackSpace¥­¡¼¤ÎÄ´À°
+# ç«¯æœ«ã«ã‚ˆã‚‹BackSpaceã‚­ãƒ¼ã®èª¿æ•´
 stty erase '^?'
 case "$TERM" in
 kterm|sun)
     stty erase '^H'
-#   ~/.inputrc ¤ÇÀßÄêºÑ
+#   ~/.inputrc ã§è¨­å®šæ¸ˆ
 #   bind '"\C-?": delete-char'
     ;;
 #vt*)
@@ -198,10 +195,10 @@ kterm|sun)
 #    ;;
 esac
 stty werase '^W'
-# Ctrl+S ¤Ç¤Î stop ¤ò¤ä¤á¤ë
+# Ctrl+S ã§ã® stop ã‚’ã‚„ã‚ã‚‹
 stty stop undef
 
-# ¥­¡¼¥Ğ¥¤¥ó¥ÉÅù¤ÎÀßÄê¤Ï .inputrc ¤â»²¾È¤·¤Æ¤¯¤À¤µ¤¤¡¥
+# ã‚­ãƒ¼ãƒã‚¤ãƒ³ãƒ‰ç­‰ã®è¨­å®šã¯ .inputrc ã‚‚å‚ç…§ã—ã¦ãã ã•ã„ï¼
 
 #Aliases
 alias h='history'

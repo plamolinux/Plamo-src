@@ -1,23 +1,23 @@
 ######################################################################
-# Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë .zlogin
+# Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« .zlogin
 #                           Time-stamp: <2004-01-11 23:24:19 cyamauch>
 #                           Time-stamp: <2009-07-09 12:23:37 tamuki>
 
-# biff: ¥á¡¼¥ë¤¬ÆÏ¤¯¤ÈÃ¼Ëö¤Ë¥á¥Ã¥»¡¼¥¸¤òÉ½¼¨¤·¤Þ¤¹¡£
+# biff: ãƒ¡ãƒ¼ãƒ«ãŒå±Šãã¨ç«¯æœ«ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
 if [ -x /usr/bin/biff ] ; then
   if [ -w `tty` ] ; then
     biff y
   fi
 fi
 
-# fortune: ¥í¥°¥¤¥ó»þ¤ËËè²ó°ã¤Ã¤¿¥á¥Ã¥»¡¼¥¸¤òÉ½¼¨¤·¤Þ¤¹¡£
+# fortune: ãƒ­ã‚°ã‚¤ãƒ³æ™‚ã«æ¯Žå›žé•ã£ãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
 if [ $SHLVL -eq 1 ] ; then
   if [ -x /usr/games/fortune ] ; then
     echo ; /usr/games/fortune ; echo
   fi
 fi
 
-# esd: ¥µ¥¦¥ó¥É¥µ¡¼¥Ð¤òµ¯Æ°¤·¤Þ¤¹¡£
+# esd: ã‚µã‚¦ãƒ³ãƒ‰ã‚µãƒ¼ãƒã‚’èµ·å‹•ã—ã¾ã™ã€‚
 if [ $SHLVL -eq 1 ] ; then
   if [ -x /usr/bin/esdctl ] && ! esdctl serverinfo &> /dev/null ; then
     if [ -x /usr/bin/esd ] ; then

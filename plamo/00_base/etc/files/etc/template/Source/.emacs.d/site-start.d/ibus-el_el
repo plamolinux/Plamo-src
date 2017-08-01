@@ -1,9 +1,9 @@
-;;; ibus.el ÀßÄê (contrib/emacs °Ê²¼¤Ë¤¢¤ê¤Ş¤¹)
+ï»¿;;; ibus.el è¨­å®š (contrib/emacs ä»¥ä¸‹ã«ã‚ã‚Šã¾ã™)
 ;;;   http://www11.atwiki.jp/s-irie/pages/21.html
 (require 'ibus)
 (add-hook 'after-init-hook 'ibus-mode-on)
 
-;; Ctrl-Space ¤Ï Set Mark ¤Ë»ÈÍÑ
+;; Ctrl-Space ã¯ Set Mark ã«ä½¿ç”¨
 (ibus-define-common-key ?\C-\s nil)
 ;; 
 (setq ibus-cursor-color '("red" "blue" "limegreen"))
