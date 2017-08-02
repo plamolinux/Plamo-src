@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: euc-jp -*-
+# -*- coding: utf-8 -*-
 
 import argparse, sys, os
 
@@ -133,12 +133,12 @@ def make_config(prefix, method, source):
     body_01 = '''
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -202,7 +202,7 @@ if [ $opt_config -eq 1 ] ; then
   $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
     '''.format(prefix)
 
-    elif method == 'cmake' :      # cmake ¤Ç¤Ï out of the tree build ¤¬¥Ç¥Õ¥©¥ë¥È
+    elif method == 'cmake' :      # cmake ã§ã¯ out of the tree build ãŒãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ
         body_02 = '''
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
