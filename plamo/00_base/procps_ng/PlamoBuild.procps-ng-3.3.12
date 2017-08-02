@@ -5,7 +5,7 @@ vers='3.3.12'
 url="http://downloads.sourceforge.net/procps-ng/procps-ng-${vers}.tar.xz"
 digest="md5sum:957e42e8b193490b2111252e4a2b443c"
 arch=`uname -m`
-build=B1
+build=B2
 src="procps-ng-${vers}"
 OPT_CONFIG="--exec-prefix=/ --enable-skill --disable-kill --docdir=/usr/share/doc/$src --disable-static"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog NEWS'
@@ -83,6 +83,10 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -v -m 0755 -D $W/sysctl.init $P/etc/rc.d/init.d/sysctl
+  install -v -d $P/etc/rc.d/rcS.d
+  ln -s -v ../init.d/sysctl $P/etc/rc.d/rcS.d/S90sysctl
 
 ################################
 #      install tweaks
