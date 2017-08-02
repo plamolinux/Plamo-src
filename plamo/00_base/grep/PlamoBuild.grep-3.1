@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='grep'
-vers='3.0'
+vers="3.1"
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=''
+OPT_CONFIG='--bindir=/bin'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2009 INSTALL NEWS README README-alpha README-release THANKS TODO thanks-gen'
 patchfiles=''
 compress=txz
@@ -82,7 +82,11 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  rm -f $P/usr/share/info/dir
+
+  install -v -d $P/usr/bin
+  ln -sf ../../bin/grep $P/usr/bin/grep
+  ln -sf ../../bin/egrep $P/usr/bin/egrep
+  ln -sf ../../bin/fgrep $P/usr/bin/fgrep
 
 ################################
 #      install tweaks
