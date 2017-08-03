@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsyslog'
-vers='8.27.0'
+vers='8.28.0'
 url="http://www.rsyslog.com/files/download/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="sha256sum:02aefbba59324a6d8b70036a67686bed5f0c7be4ced62c039af6ee694cb5b1fd"
+digest="sha256sum:4ca5405908d612d45da700e36856430510875518eb8028d296d1ee4d2c44678e"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog"
 DOCS='AUTHORS COPYING COPYING.ASL20 COPYING.LESSER ChangeLog INSTALL NEWS README README.md'
@@ -15,12 +15,12 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 # 
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -84,9 +84,28 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -d $P/etc/rsyslog.d
-  install -m644 $W/rsyslog.conf $P/etc/rsyslog.conf
-  install -D -m644 $W/rsyslog.logrotate $P/etc/logrotate.d/rsyslog
+  install -v -d $P/etc/rsyslog.d
+  install -v -m644 $W/rsyslog.conf $P/etc/rsyslog.conf
+  install -v -D -m644 $W/rsyslog.logrotate $P/etc/logrotate.d/rsyslog
+  install -v -D -m755 $W/rsyslogd.init $P/etc/rc.d/init.d/rsyslogd
+
+  runlevels="0 1 2 3 4 5 6"
+  for r in $runlevels
+  do
+    install -d -v $P/etc/rc.d/rc"$r".d
+  done
+
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc0.d/K90rsyslogd
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc1.d/K90rsyslogd
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc2.d/K90rsyslogd
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc3.d/S10rsyslogd
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc4.d/S10rsyslogd
+  ln -sfv ../init.d/rsyslogd $P/etc/rc.d/rc6.d/K90rsyslogd
+
+  for f in rsyslog.conf rsyslog.logrotate rsyslogd.init
+  do
+    install -v -D -m 644 $W/"$f" $docdir/$src/"$f"
+  done
 
 ################################
 #      install tweaks

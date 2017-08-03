@@ -1,0 +1,61 @@
+#!/bin/sh
+########################################################################
+# Begin rsyslogd
+#
+# Description : rsyslogd loader
+#
+# Authors     : KOJIMA Mitsuhiro - kojima@linet.gr.jp
+#
+# Version     : Plamo-7.x
+#
+# Notes       : derived from LFS 7.0
+#
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            $syslog
+# Required-Start:      localnet 
+# Should-Start:
+# Required-Stop:       $local_fs sendsignals
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:        0 1 2 6
+# Short-Description:   Start rsyslogd daemon
+# Description:         Start rsyslogd daemon  
+# X-LFS-Provided-By:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+pid="/run/rsyslogd.pid"
+parms="-i ${pid}"
+
+case "${1}" in
+   start)
+      log_info_msg "Starting rsyslogd..."
+      parms='-i /run/rsyslogd.pid'
+      start_daemon /sbin/rsyslogd $parms
+      evaluate_retval
+      ;;
+
+   stop)
+      log_info_msg "Stopping..."
+      killproc -p $pid /sbin/rsyslogd
+      evaluate_retval
+      ;;
+
+   restart)
+      ${0} stop
+      sleep 1
+      ${0} start
+      ;;
+
+   *)
+      echo "Usage: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac
+
+exit 0
+
+# End rsyslogd
