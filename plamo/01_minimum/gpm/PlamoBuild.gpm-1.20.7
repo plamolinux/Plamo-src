@@ -2,10 +2,11 @@
 ##############################################################
 pkgbase='gpm'
 vers='1.20.7'
-url="url="http://www.nico.schottelius.org/software/${pkgbase}/archives/${pkgbase}-${vers}.tar.bz2""
+url="http://www.nico.schottelius.org/software/${pkgbase}/archives/${pkgbase}-${vers}.tar.bz2"
 verify=""
+digest="md5sum:bf84143905a6a903dbd4d4b911a2a2b8"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static"
 DOCS='COPYING README README.gpm2 README.versions TODO'
@@ -82,6 +83,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   ( cd $P/usr/$libdir ; ln -s -v libgpm.so.2.* libgpm.so ; chmod -v 755 libgpm.so.* )
+  install -D -v -m644 $S/conf/gpm-root.conf $P/etc
   install -D -v -m644 $W/gpm.init $P/etc/rc.d/init.d/gpm
 
 ################################

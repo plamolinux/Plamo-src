@@ -1,60 +1,83 @@
 #!/bin/sh
-# Time-stamp: <2017-03-29 15:02:10 root>
+#######################################################################
+# Begin /etc/init.d/gpm
+#
+# Description : Start GPM Console Mouse Service
+#
+# Author      : DJ Lucas - dj@linuxfromscratch.org
+#
+# Version     : LFS 7.0
+#
+########################################################################
 
-DESC="gpm (General Purpose Mouse)"
-NAME="gpm"
-DAEMON1="/usr/sbin/gpm -m /dev/input/mice -t imps2"
-DAEMON2="/usr/bin/gpm-root"
+### BEGIN INIT INFO
+# Provides:            gpm
+# Required-Start:      $network $local_fs
+# Should-Start:
+# Required-Stop:       $local_fs $network
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:        0 1 2 6
+# Short-Description:   Starts and stops the GPM console mouse service.
+# Description:         Starts and stops the GPM console mouse service.
+# X-LFS-Provided-By:   BLFS / LFS 7.0
+### END INIT INFO
 
-status() {
-  if [ -n "`ps axww | gawk '{print $5}' | grep $NAME`" ] ; then
-    return 0
-  else
-    return 1
-  fi
-}
+. /lib/lsb/init-functions
 
-start() {
-  echo "Starting $DESC:"
-  $DAEMON1 &
-  $DAEMON2 &
-}
+#$LastChangedBy: bdubbs $
+#$Date: 2012-03-23 21:43:45 -0500 (Fri, 23 Mar 2012) $
 
-stop() {
-  echo "Stopping $DESC:"
-  killall gpm
-  killall gpm-root
-}
+pidfile="/run/gpm.pid"
 
-case "$1" in
-start)
-  if status ; then
-    echo "$DESC is already running (will not start it twice)."
-  else
-    start
-  fi
-  ;;
-stop)
-  if status ; then
-    stop
-  else
-    echo "$DESC seems already stopped."
-  fi
-  ;;
-restart)
-  stop
-  start
-  ;;
-status)
-  if status ; then
-    echo "$DESC is currently running."
-  else
-    echo "$DESC is not running."
-  fi
-  ;;
-*)
-  echo "Usage: $0 {start|stop|status|restart}"
-  exit 1
-  ;;
+[ -f /etc/sysconfig/mouse ] && source /etc/sysconfig/mouse
+
+case "${1}" in
+   start)
+      log_info_msg "Starting GPM console mouse service..."
+      if [ "${MDEVICE}" = "" -o "${PROTOCOL}" = "" ]; then
+         log_info_msg2 "invalid configuration"
+         log_failure_msg
+         exit 2
+      fi
+      start_daemon /usr/sbin/gpm -m "${MDEVICE}" -t "${PROTOCOL}" ${GPMOPTS}
+      evaluate_retval
+      ;;
+
+   stop)
+      log_info_msg "Stopping GPM console mouse service..."
+      killproc /usr/sbin/gpm
+      evaluate_retval
+      ;;
+
+   force-reload)
+      # gpm does not honor SIGHUP, restart if running
+      kill -0 `pidofproc -p "${pidfile}" /usr/sbin/gpm` 2>/dev/null
+      if [ "${?}" = "0" ]; then
+         ${0} restart
+      else
+         log_info_msg "Force reloading GPM console mouse service..."
+         log_info_msg2 "not running"
+         log_failure_msg
+      fi
+      ;;
+
+   restart)
+      ${0} stop
+      sleep 1
+      ${0} start
+      ;;
+
+   status)
+      statusproc /usr/sbin/gpm
+      ;;
+
+   *)
+      echo "Usage: ${0} {start|stop|force-reload|restart|status}"
+      exit 1
+      ;;
 esac
+
 exit 0
+
+# End /etc/init.d/gpm
