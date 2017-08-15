@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libpipeline'
-vers='1.4.1'
-url="http://download.savannah.gnu.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+vers='1.4.2'
+url="http://download-mirror.savannah.gnu.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog ChangeLog-2013 INSTALL NEWS README TODO release.sh'
