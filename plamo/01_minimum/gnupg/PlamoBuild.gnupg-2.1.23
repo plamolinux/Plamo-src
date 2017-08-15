@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gnupg'
-vers='2.1.19'
+vers='2.1.23'
 url="https://${pkgbase}.org/ftp/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
@@ -88,10 +88,8 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  ln -sv gpg2 $P/usr/bin/gpg
-  ln -sv gpgv2 $P/usr/bin/gpgv
-  ln -sv gpg2.1.gz $P/usr/share/man/man1/gpg.1.gz
-  ln -sv gpgv2.1.gz $P/usr/share/man/man1/gpgv.1.gz
+  # for compatible
+  ln -sv gpg $P/usr/bin/gpg2
 
 ################################
 #      install tweaks
