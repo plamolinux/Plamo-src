@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='heimdal'
-vers='7.1.0'
-url="https://www.h5l.org/dist/src/${pkgbase}-${vers}.tar.gz"
+vers='7.4.0'
+url="https://github.com/heimdal/heimdal/releases/download/heimdal-${vers}/heimdal-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 # program-prefix=
 OPT_CONFIG="--disable-static --enable-shared
