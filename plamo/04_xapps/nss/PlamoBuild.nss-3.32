@@ -10,7 +10,7 @@ src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS=''
 # http://www.linuxfromscratch.org/patches/blfs/svn/nss-3.26-standalone-1.patch
-patchfiles='nss-3.30.1-standalone-1.patch'
+patchfiles='nss-3.32-standalone-1.patch'
 compress=txz
 ##############################################################
 
