@@ -5,11 +5,11 @@ vers='2.9.4'
 url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --with-history'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles=''
+patchfiles='to20170727.patch'
 compress=txz
 ##############################################################
 
