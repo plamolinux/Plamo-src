@@ -3,9 +3,10 @@
 pkgbase='traceroute'
 vers='2.1.0'
 url="http://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:84d329d67abc3fb83fc8cb12aeaddaba"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING COPYING.LIB ChangeLog README TODO'
