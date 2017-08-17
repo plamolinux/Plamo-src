@@ -3,8 +3,9 @@
 pkgbase='libnftnl'
 vers='1.0.7'
 url="http://www.netfilter.org/projects/${pkgbase}/files/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING'
