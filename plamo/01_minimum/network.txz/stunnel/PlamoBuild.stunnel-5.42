@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='stunnel'
-vers='5.41'
+vers='5.42'
 url="https://www.stunnel.org/downloads/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
