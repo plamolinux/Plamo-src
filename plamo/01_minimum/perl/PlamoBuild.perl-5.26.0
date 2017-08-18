@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='perl'
-vers='5.24.0'
-url="http://www.cpan.org/src/5.0/${pkgbase}-${vers}.tar.gz"
+vers='5.26.0'
+url="http://www.cpan.org/src/5.0/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:8c6995718e4cb62188f0d5e3488cd91f"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS Copying INSTALL README README.aix README.amiga README.android README.bs2000 README.ce README.cn README.cygwin README.dos README.freebsd README.haiku README.hpux README.hurd README.irix README.jp README.ko README.linux README.macos README.macosx README.micro README.netware README.openbsd README.os2 README.os390 README.os400 README.plan9 README.qnx README.riscos README.solaris README.symbian README.synology README.tru64 README.tw README.vms README.vos README.win32 autodoc.pl install_lib.pl installhtml installman installperl'
