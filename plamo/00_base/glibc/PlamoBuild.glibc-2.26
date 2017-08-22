@@ -1,14 +1,22 @@
 #!/bin/sh
 ##############################################################
 pkgbase='glibc'
-vers='2.25'
+vers='2.26'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="glibc-${vers}"
-OPT_CONFIG="--enable-obsolete-rpc --disable-profile --enable-add-ons
-	--enable-kernel=2.6.32 --localedir=/usr/share/locale --enable-tls
-	--build=${arch}-pc-linux --target=${arch}-pc-linux libc_cv_slibdir=/lib"
+OPT_CONFIG="--enable-add-ons
+	--enable-kernel=3.2
+	--localedir=/usr/share/locale
+	--enable-tls
+	--enable-obsolete-rpc
+	--enable-stack-protector=strong
+	--disable-profile
+	--disable-werror
+	--build=${arch}-pc-linux
+	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
 	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
@@ -160,7 +168,6 @@ if [ $opt_package -eq 1 ] ; then
       cat <<EOF > $P/etc/ld.so.conf.new
 /lib64
 /usr/lib64
-/usr/heimdal/lib64
 EOF
 
   fi
@@ -174,9 +181,10 @@ EOF
       mkdir -p $P/usr/${libdir}
       ( cd $P/usr/${libdir} ; ln -sf ../share/locale )
   fi
+
   ( cd $P/usr/share/locale ; mv ja ja_JP.eucJP )
-  ( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja )
-  ( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja_JP )
+  #( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja )
+  #( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja_JP )
 
   gunzip $P/usr/share/i18n/charmaps/EUC-JP.gz
   $P/usr/bin/localedef --charmap=$P/usr/share/i18n/charmaps/EUC-JP --inputfile=$P/usr/share/i18n/locales/ja_JP $P/usr/share/locale/ja_JP.eucJP
@@ -187,10 +195,13 @@ EOF
   $P/usr/bin/localedef --charmap=$P/usr/share/i18n/charmaps/UTF-8 --inputfile=$P/usr/share/i18n/locales/ja_JP $P/usr/share/locale/ja_JP.UTF-8
   gzip -f $P/usr/share/i18n/charmaps/UTF-8
 
+  ln -sfv ja_JP.UTF-8 $P/usr/share/locale/ja
+  ln -sfv ja_JP.UTF-8 $P/usr/share/locale/ja_JP
+
   for i in $P/usr/share/locale/* ; do
       chk=`echo $i | grep ja`
       if [ "$chk.x" = ".x" ]; then
-	  rm -rf $i
+  	  rm -rf $i
       fi
   done
 

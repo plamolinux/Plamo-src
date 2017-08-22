@@ -1,23 +1,37 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gcc'
-vers='7.1.0'
-url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.bz2"
+vers='7.2.0'
+url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.xz"
 verify=${url}.sig
 islvers="0.18"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--build=${arch}-pc-linux-gnu --host=${arch}-pc-linux-gnu
-	--libexecdir=/usr/lib --enable-languages=c,c++,fortran,go,lto
-	--enable-shared --enable-threads=posix --enable-libmpx
-	--with-system-zlib --with-isl --enable-__cxa_atexit 
-	--disable-libunwind-exceptions  --disable-libstdcxx-pch
-	--enable-clocale=gnu --enable-gnu-unique-object
-	--enable-linker-build-id --enable-lto --enable-plugin
-	--enable-install-libiberty --with-linker-hash-style=gnu
-	--enable-gnu-indirect-function --disable-multilib
-	--disable-werror  --enable-checking=release"
+OPT_CONFIG="--build=${arch}-pc-linux-gnu
+	--host=${arch}-pc-linux-gnu
+	--libexecdir=/usr/lib
+	--enable-languages=c,c++,fortran,go,lto
+	--enable-shared
+	--enable-threads=posix
+	--enable-libmpx
+	--with-system-zlib
+	--with-isl
+	--enable-__cxa_atexit 
+	--disable-libunwind-exceptions
+	--enable-clocale=gnu
+	--disable-libstdcxx-pch
+	--disable-libssp
+	--enable-gnu-unique-object
+	--enable-linker-build-id
+	--enable-lto
+	--enable-plugin
+	--enable-install-libiberty
+	--with-linker-hash-style=gnu
+	--enable-gnu-indirect-function
+	--disable-multilib
+	--disable-werror
+	--enable-checking=release"
 DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.jit ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
 patchfiles='disable-lib64-ld.patch'
 compress=txz
