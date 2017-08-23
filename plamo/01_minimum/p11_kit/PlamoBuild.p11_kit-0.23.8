@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gnutls'
-vers='3.5.14'
-url="https://www.gnupg.org/ftp/gcrypt/${pkgbase}/v3.5/${pkgbase}-${vers}.tar.xz"
-verify="${url}.sig"
+pkgbase='p11_kit'
+vers='0.23.8'
+url="https://github.com/p11-glue/p11-kit/releases/download/${vers}/p11-kit-${vers}.tar.gz"
+digest="md5sum:3caf26d841df1527d52549e7adc62966"
+verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-libgcrypt --without-p11-kit --disable-static
-	--with-default-trust-store-file=/etc/ssl/cert/ca-bundle.crt
-        --with-included-unistring"
-DOCS='.clcopying ABOUT-NLS AUTHORS ChangeLog INSTALL INSTALL.md LICENSE NEWS README.md THANKS'
-patchfiles=""
+src="p11-kit-${vers}"
+OPT_CONFIG='--with-trust-paths=/etc/pki/anchors'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
