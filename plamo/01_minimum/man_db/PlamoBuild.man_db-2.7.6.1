@@ -3,8 +3,9 @@
 pkgbase='man_db'
 vers='2.7.6.1'
 url="http://download.savannah.gnu.org/releases/man-db/man-db-${vers}.tar.xz"
+verify="${url}.sig"
 arch=`uname -m`
-build=P1
+build=B1
 src="man-db-${vers}"
 OPT_CONFIG="--docdir=/usr/share/doc/$src
     --disable-setuid
