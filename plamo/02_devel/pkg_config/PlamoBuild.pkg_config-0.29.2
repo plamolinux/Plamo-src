@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='pkg_config'
-vers='0.29.1'
+vers='0.29.2'
 url="http://pkg-config.freedesktop.org/releases/pkg-config-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
-build=P1
+build=B1
 src="pkg-config-${vers}"
 OPT_CONFIG="--with-internal-glib \
     --disable-compile-warnings \
