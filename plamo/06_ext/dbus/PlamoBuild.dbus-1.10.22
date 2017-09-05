@@ -1,0 +1,189 @@
+#!/bin/sh
+##############################################################
+pkgbase='dbus'
+vers='1.10.22'
+url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:baaa10b7cb49086ad91179a8decfadc5"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-doxygen-docs
+	--disable-xml-docs
+	--disable-static
+	--with-console-auth-dir=/run/console
+	--with-system-pid-file=/run/dbus/pid
+	--with-system-socket=/run/dbus/system_bus_socket"
+DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 HACKING INSTALL NEWS NEWS.pre-1-0 NEWS.pre-1-2 README README.cygwin README.launchd README.valgrind README.win README.wince'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  mkdir -p $P/etc/rc.d/init.d
+  cat <<"EOF" > $P/etc/rc.d/init.d/dbus
+#!/bin/sh
+########################################################################
+# Begin dbus
+#
+# Description : Start dbus daemon
+#
+# Author      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+#
+# Version     : LFS 7.0
+#
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            dbus
+# Required-Start:      cleanfs
+# Should-Start:        $remote_fs
+# Required-Stop:       sendsignals
+# Should-Stop:
+# Default-Start:       2 3 4 5
+# Default-Stop:        0 1 6
+# Short-Description:   Starts message bus.
+# Description:         Starts message bus.
+# X-LFS-Provided-By:   LFS
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+#$LastChangedBy: bdubbs $
+#$Date: 2012-05-02 15:39:55 -0500 (Wed, 02 May 2012) $
+
+pidfile=/run/dbus/pid
+socket=/run/dbus/system_bus_socket
+
+case "$1" in
+   start)
+      log_info_msg "Starting the D-Bus Messagebus Daemon..."
+      mkdir -p /run/dbus
+      /usr/bin/dbus-uuidgen --ensure
+      start_daemon /usr/bin/dbus-daemon --system
+      evaluate_retval
+      ;;
+
+   stop)
+      log_info_msg "Stopping the D-Bus Messagebus Daemon..."
+      killproc /usr/bin/dbus-daemon
+      evaluate_retval
+      rm -f $socket $pidfile
+      ;;
+
+   restart)
+      $0 stop
+      sleep 1
+      $0 start
+      ;;
+
+   status)
+      statusproc /usr/bin/dbus-daemon
+      ;;
+
+   *)
+      echo "Usage: $0 {start|stop|restart|status}"
+      exit 1
+      ;;
+esac
+
+# End /etc/init.d/dbus
+
+EOF
+  chmod +x  $P/etc/rc.d/init.d/dbus
+
+  mkdir -p $P/etc/rc.d/rc{0,1,2,3,4,5,6}.d
+  ( cd $P/etc/rc.d/rc0.d ; ln -sf ../init.d/dbus K30dbus )
+  ( cd $P/etc/rc.d/rc1.d ; ln -sf ../init.d/dbus K30dbus )
+  ( cd $P/etc/rc.d/rc2.d ; ln -sf ../init.d/dbus S29dbus )
+  ( cd $P/etc/rc.d/rc3.d ; ln -sf ../init.d/dbus S29dbus )
+  ( cd $P/etc/rc.d/rc4.d ; ln -sf ../init.d/dbus S29dbus )
+  ( cd $P/etc/rc.d/rc5.d ; ln -sf ../init.d/dbus S29dbus )
+  ( cd $P/etc/rc.d/rc6.d ; ln -sf ../init.d/dbus K30dbus )
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
