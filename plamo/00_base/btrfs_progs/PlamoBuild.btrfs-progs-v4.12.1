@@ -193,7 +193,7 @@ if [ $opt_build -eq 1 ] ; then
     cd ${B[$i]}
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      make -j3
+      make -j1
       if [ $? != 0 ]; then
 	echo "make error. $0 script stop"
 	exit 255
@@ -220,6 +220,9 @@ if [ $opt_package -eq 1 ] ; then
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
+      pushd Documentation
+      make install-man DESTDIR=$P
+      popd
     fi
     if [ $? != 0 ]; then
       echo "make install error. $0 script stop"
