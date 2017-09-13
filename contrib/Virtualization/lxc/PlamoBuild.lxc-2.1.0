@@ -1,7 +1,7 @@
 #!/bin/sh 
 ##############################################################
 pkgbase=lxc
-vers=2.0.8
+vers=2.1.0
 url="https://linuxcontainers.org/downloads/lxc/lxc-${vers}.tar.gz"
 verify=$url.asc
 commitid=
@@ -10,7 +10,7 @@ build=P1
 src=lxc-${vers}
 OPT_CONFIG='--with-runtime-path=/var/run --enable-deprecated'
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-patchfiles="CVE-2017-5985.patch"
+patchfiles="after-2.1.0.patch"
 compress=txz
 ##############################################################
 
