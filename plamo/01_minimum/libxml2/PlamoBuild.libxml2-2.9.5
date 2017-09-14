@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.9.4'
+vers='2.9.5'
 url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --with-history'
+OPT_CONFIG='--disable-static --with-history --with-threads'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles='to20170727.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 

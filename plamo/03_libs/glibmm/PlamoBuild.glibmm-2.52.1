@@ -1,26 +1,27 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libxslt'
-vers='1.1.29'
-url="ftp://xmlsoft.org/XSLT/${pkgbase}-${vers}.tar.gz"
-verify="${url}.asc"
+pkgbase='glibmm'
+vers='2.52.1'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/2.52/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:343d8eb0ab296ff2b91889e1dcdea74e"
+verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+DOCS='AUTHORS COPYING COPYING.tools ChangeLog INSTALL NEWS README README.SUN README.win32'
 patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -41,21 +42,30 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
+  if [ ! -f .doc_patch ]; then
+      sed -e '/^libdocdir =/ s/$(book_name)/glibmm-2.52.1/' \
+	  -i docs/Makefile.in
+      touch .doc_patch
+  fi
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
