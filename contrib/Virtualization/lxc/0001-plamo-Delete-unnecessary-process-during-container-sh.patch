@@ -1,0 +1,58 @@
+From d3953cdca9302afd7f3236c6b138593a10b6ab46 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Tue, 12 Sep 2017 15:29:34 +0900
+Subject: [PATCH] plamo: Delete unnecessary process during container shutdown
+
+Since some remounts/umounts is executed in the plamo shutdown script,
+the filesystem on where a container exists might be mount as
+read-only. This patch delete some mounts and umounts from the shutdown
+script. It also delete hwclock setting process.
+
+And delete an unncecessary output.
+
+Signed-off-by: KATOH Yasufumi <karma@jazz.email.ne.jp>
+---
+ templates/lxc-plamo.in | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/templates/lxc-plamo.in b/templates/lxc-plamo.in
+index d59c49bf..ec442ec3 100644
+--- a/templates/lxc-plamo.in
++++ b/templates/lxc-plamo.in
+@@ -186,7 +186,8 @@ configure_plamo() {
+   # glibc configure
+   mv $rootfs/etc/ld.so.conf{.new,}
+   chroot $rootfs ldconfig
+-  echo "Please change root password!"
++
++  # delete unnecessary process from rc.S
+   ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+ 	/^mount -w -n -t proc/;/^mkdir \/dev\/shm/-1d
+ 	/^mknod \/dev\/null/;/^# Clean \/etc\/mtab/-2d
+@@ -194,13 +195,22 @@ configure_plamo() {
+ 	/^# Check the integrity/;/^# Clean up temporary/-1d
+ 	w
+ 	EOF
+-  # /etc/rc.d/rc.M
++
++  # delete unnecessary process from rc.M
+   ed - $rootfs/etc/rc.d/rc.M <<- "EOF"
+ 	/^# Screen blanks/;/^# Initialize ip6tables/-1d
+ 	/^# Initialize sysctl/;/^echo "Starting services/-1d
+ 	/^sync/;/^# All done/-1d
+ 	w
+ 	EOF
++
++  # delete unnecessary process from rc.6
++  ed - $rootfs/etc/rc.d/rc.6 <<- "EOF"
++	/^# Save system time/;/^# Unmount any remote filesystems/-1d
++	/^# Turn off swap/;/^# See if this is a powerfail situation/-1d
++	w
++	EOF
++
+   # /etc/rc.d/rc.inet1.tradnet
+   head -n-93 $rootfs/sbin/netconfig.tradnet > /tmp/netconfig.rconly
+   cat <<- EOF >> /tmp/netconfig.rconly
+-- 
+2.12.2
+
