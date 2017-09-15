@@ -39,7 +39,8 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${patchurl##/*} ]; then
+  tar xvf sgml-common-${vers}.tgz
+  if [ ! -f ${patchurl##*/} ]; then
     wget $patchurl
   fi
 fi
@@ -60,7 +61,7 @@ if [ $opt_config -eq 1 ] ; then
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -84,6 +85,15 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make docdir=/usr/share/doc install DESTDIR=$P
+
+  install -d -v $P/install
+  cat <<EOF >> $P/install/initpkg
+install-catalog --add /etc/sgml/sgml-ent.cat \
+    /usr/share/sgml/sgml-iso-entities-8879.1986/catalog &&
+
+install-catalog --add /etc/sgml/sgml-docbook.cat \
+    /etc/sgml/sgml-ent.cat
+EOF
 
 ################################
 #      install tweaks
