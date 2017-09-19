@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='docbook31'
-vers='3.1'
-url="http://www.docbook.org/sgml/3.1/docbk31.zip"
-digest="md5sum:432749c0c806dbae81c8bcb70da3b5d3"
+pkgbase='docbook45'
+vers='4.5'
+url="http://www.docbook.org/sgml/4.5/docbook-4.5.zip"
+digest="md5sum:07c581f4bbcba6d3aac85360a19f95f7"
 arch=noarch
-build=B2
-src="docbook31"
+build=B1
+src="docbook45"
 OPT_CONFIG=''
-DOCS='31chg.txt 40issues.txt 50issues.txt ChangeLog readme.txt'
+DOCS='README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -40,6 +40,10 @@ if [ $opt_download -eq 1 ] ; then
   if [ ! -f ${url##*/} ]; then
     wget $url
   fi
+  check_digest
+  if [ -d $S ]; then
+    rm -rf $S
+  fi
   mkdir $S
   ( cd $S && unzip $W/${url##*/} )
 fi
@@ -55,8 +59,7 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   sed -i -e '/ISO 8879/d' \
-       -e 's|DTDDECL "-//OASIS//DTD DocBook V3.1//EN"|SGMLDECL|g' \
-       docbook.cat
+       -e '/gml/d' docbook.cat
 fi
     
 if [ $opt_build -eq 1 ] ; then
@@ -68,9 +71,9 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  install -v -d -m755 $P/usr/share/sgml/docbook/sgml-dtd-3.1
-  install -v docbook.cat $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog
-  cp -v -af *.dtd *.mod *.dcl $P/usr/share/sgml/docbook/sgml-dtd-3.1
+  install -v -d -m755 $P/usr/share/sgml/docbook/sgml-dtd-${vers}
+  install -v docbook.cat $P/usr/share/sgml/docbook/sgml-dtd-${vers}/catalog
+  cp -v -af *.dtd *.mod *.dcl $P/usr/share/sgml/docbook/sgml-dtd-${vers}
 
   install -v -d $P/install
   cat <<EOF >> $P/install/initpkg
@@ -85,10 +88,15 @@ if [ ! -f /etc/sgml/sgml-docbook.cat ]; then
   install-catalog --add /etc/sgml/sgml-docbook.cat \
     /etc/sgml/sgml-ent.cat > /dev/null 2>&1
 fi
-install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
-    /usr/share/sgml/docbook/sgml-dtd-${vers}/catalog &&
-
-install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
+if [ -f /etc/sgml/sgml-docbook-dtd-4.5.cat ]; then
+  install-catalog --remove /etc/sgml/sgml-docbook-dtd-4.5.cat \
+    /usr/share/sgml/docbook/sgml-dtd-4.5/catalog > /dev/null 2>&1
+  install-catalog --remove /etc/sgml/sgml-docbook-dtd-4.5.cat \
+    /etc/sgml/sgml-docbook.cat > /dev/null 2>&1
+fi
+install-catalog --add /etc/sgml/sgml-docbook-dtd-4.5.cat \
+    /usr/share/sgml/docbook/sgml-dtd-4.5/catalog
+install-catalog --add /etc/sgml/sgml-docbook-dtd-4.5.cat \
     /etc/sgml/sgml-docbook.cat
 EOF
 
