@@ -1,14 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='docbook31'
-vers='3.1'
-url="http://www.docbook.org/sgml/3.1/docbk31.zip"
-digest="md5sum:432749c0c806dbae81c8bcb70da3b5d3"
-arch=noarch
-build=B2
-src="docbook31"
-OPT_CONFIG=''
-DOCS='31chg.txt 40issues.txt 50issues.txt ChangeLog readme.txt'
+pkgbase='OpenSP'
+vers='1.5.2'
+url="https://downloads.sourceforge.net/openjade/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:670b223c5d12cee40c9137be86b6c39b"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static 
+	--disable-doc-build --enable-default-catalog=/etc/sgml/catalog
+	--enable-http --enable-default-search-path=/usr/share/sgml"
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -37,65 +39,65 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  if [ ! -f ${url##*/} ]; then
-    wget $url
-  fi
-  mkdir $S
-  ( cd $S && unzip $W/${url##*/} )
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  sed -i 's/32,/253,/' lib/Syntax.cxx
+  sed -i 's/LITLEN          240 /LITLEN          8092/' \
+    unicode/{gensyntax.pl,unicode.syn}
 
-  sed -i -e '/ISO 8879/d' \
-       -e 's|DTDDECL "-//OASIS//DTD DocBook V3.1//EN"|SGMLDECL|g' \
-       docbook.cat
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  echo "Nothing to do"
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make pkgdatadir=/usr/share/sgml/OpenSP-${vers}
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make pkgdatadir=/usr/share/sgml/OpenSP-${vers} \
+       docdir=/usr/share/doc/OpenSP-${vers} install DESTDIR=$P
 
-  install -v -d -m755 $P/usr/share/sgml/docbook/sgml-dtd-3.1
-  install -v docbook.cat $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog
-  cp -v -af *.dtd *.mod *.dcl $P/usr/share/sgml/docbook/sgml-dtd-3.1
-
-  install -v -d $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ ! -x /usr/bin/install-catalog ]; then
-  echo "install-catalog command does not exist. Install sgml_common package."
-  exit 1
-fi
-if [ ! -f /etc/sgml/sgml-docbook.cat ]; then
-  echo "Generating /etc/sgml/sgml-docbook.cat"
-  install-catalog --add /etc/sgml/sgml-ent.cat \
-    /usr/share/sgml/sgml-iso-entities-8879.1986/catalog > /dev/null 2>&1
-  install-catalog --add /etc/sgml/sgml-docbook.cat \
-    /etc/sgml/sgml-ent.cat > /dev/null 2>&1
-fi
-if [ -f /etc/sgml/sgml-docbook-dtd-3.1.cat ]; then
-  install-catalog --remove /etc/sgml/sgml-docbook-dtd-3.1.cat \
-    /usr/share/sgml/docbook/sgml-dtd-${vers}/catalog &&
-  install-catalog --remove /etc/sgml/sgml-docbook-dtd-3.1.cat \
-    /etc/sgml/sgml-docbook.cat
-fi
-install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
-    /usr/share/sgml/docbook/sgml-dtd-${vers}/catalog &&
-install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
-    /etc/sgml/sgml-docbook.cat
-EOF
+  ln -v -sf onsgmls   $P/usr/bin/nsgmls
+  ln -v -sf osgmlnorm $P/usr/bin/sgmlnorm
+  ln -v -sf ospam     $P/usr/bin/spam
+  ln -v -sf ospcat    $P/usr/bin/spcat
+  ln -v -sf ospent    $P/usr/bin/spent
+  ln -v -sf osx       $P/usr/bin/sx
+  ln -v -sf osx       $P/usr/bin/sgml2xml
+  ln -v -sf libosp.so $P/usr/lib/libsp.so
 
 ################################
 #      install tweaks
