@@ -1,0 +1,118 @@
+#!/bin/sh
+##############################################################
+pkgbase='docbook_dsssl'
+vers='1.79'
+url="https://downloads.sourceforge.net/docbook/docbook-dsssl-${vers}.tar.bz2"
+digest="md5sum:bc192d23266b9a664ca0aba4a7794c7c"
+verify=""
+arch=noarch
+build=B1
+src="docbook-dsssl-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='ChangeLog README RELEASE-NOTES.html RELEASE-NOTES.txt RELEASE-NOTES.xml'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "There is nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  install -D -v -m755 bin/collateindex.pl $P/usr/bin/collateindex.pl
+  install -D -v -m644 bin/collateindex.pl.1 $P/usr/share/man/man1/collateindex.pl.1
+  
+  install -v -d -m755 $P/usr/share/sgml/docbook/dsssl-stylesheets-${vers}
+  cp -v -R * $P/usr/share/sgml/docbook/dsssl-stylesheets-${vers}
+
+  install -v -d $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -x /usr/bin/install-catalog ]; then
+  echo "install-catalog command does not exist. Install sgml_common package."
+  exit 1
+fi
+if [ ! -f /etc/sgml/sgml-docbook.cat ]; then
+  echo "Generating /etc/sgml/sgml-docbook.cat"
+  install-catalog --add /etc/sgml/sgml-ent.cat \
+    /usr/share/sgml/sgml-iso-entities-8879.1986/catalog > /dev/null 2>&1
+  install-catalog --add /etc/sgml/sgml-docbook.cat \
+    /etc/sgml/sgml-ent.cat > /dev/null 2>&1
+fi
+if [ -f /etc/sgml/dsssl-docbook-stylesheets.cat ]; then
+  install-catalog --remove /etc/sgml/dsssl-docbook-stylesheets.cat \
+    /usr/share/sgml/docbook/dsssl-stylesheets-1.79/catalog
+  install-catalog --remove /etc/sgml/dsssl-docbook-stylesheets.cat \
+    /usr/share/sgml/docbook/dsssl-stylesheets-1.79/common/catalog
+  install-catalog --remove /etc/sgml/sgml-docbook.cat              \
+    /etc/sgml/dsssl-docbook-stylesheets.cat
+fi
+install-catalog --add /etc/sgml/dsssl-docbook-stylesheets.cat \
+    /usr/share/sgml/docbook/dsssl-stylesheets-1.79/catalog
+install-catalog --add /etc/sgml/dsssl-docbook-stylesheets.cat \
+    /usr/share/sgml/docbook/dsssl-stylesheets-1.79/common/catalog
+install-catalog --add /etc/sgml/sgml-docbook.cat              \
+    /etc/sgml/dsssl-docbook-stylesheets.cat
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
