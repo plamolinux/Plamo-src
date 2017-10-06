@@ -3,11 +3,11 @@
 pkgbase='gsl'
 vers='2.4'
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify=""
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
 compress=txz
