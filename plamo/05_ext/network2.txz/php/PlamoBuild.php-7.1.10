@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=7.1.8
+vers=7.1.10
 url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m`
-build=P1
+build=P2
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
 OPT_CONFIG="
@@ -35,6 +35,7 @@ OPT_CONFIG="
 	--enable-opcache-file
 	--with-openssl=shared
 	--enable-exif=shared
+	--with-xmlrpc=shared
 	--enable-calendar"
 if [ $arch == 'x86_64' ]; then
   OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
