@@ -5,7 +5,7 @@ vers='7.0'
 url=""
 verify=""
 arch=noarch
-build=B2
+build=B3
 src="files"
 OPT_CONFIG=''
 DOCS=''
@@ -53,6 +53,9 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
   cp -a * $P/
+  if [ `id -u` -eq 0 ]; then
+    chown -R root:root $P/*
+  fi
   mkdir -p $docdir/$src
 
 ################################
