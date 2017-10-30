@@ -2,11 +2,11 @@
 ##############################################################
 pkgbase='openssl10'
 vers='1.0.2l'
-url="https://${pkgbase}.org/source/${pkgbase}-${vers}.tar.gz"
+url="https://openssl.org/source/openssl-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B1
-src="${pkgbase}-${vers}"
+build=B2
+src="openssl-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE install.com'
 blfs_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssl-${vers}-compat_versioned_symbols-1.patch"
@@ -96,7 +96,7 @@ if [ $opt_package -eq 1 ] ; then
   cp -Rv $P2/usr/${libdir}/openssl-1.0/* $P/usr/${libdir}/openssl-1.0/
   ln -sfv ../libssl.so.1.0.0 $P/usr/${libdir}/openssl-1.0/
   ln -sfv ../libcrypto.so.1.0.0 $P/usr/${libdir}/openssl-1.0/
-  sed 's@/include$@/include/openssl-1.0@' -i /usr/lib/openssl-1.0/pkgconfig/*.pc
+  sed 's@/include$@/include/openssl-1.0@' -i $P/usr/lib/openssl-1.0/pkgconfig/*.pc
 
   # includes
   install -v -d -m755 $P/usr/include/openssl-1.0
