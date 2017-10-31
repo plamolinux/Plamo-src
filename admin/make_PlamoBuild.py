@@ -199,7 +199,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG[$i]}}
+  $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}
     '''.format(prefix)
 
     elif method == 'cmake' :      # cmake では out of the tree build がデフォルト
@@ -219,7 +219,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${{libdir}}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${{libdir}}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG[$i]}} $S
+  cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG}} $S
   '''.format(prefix)
 
     elif method == 'python' :
