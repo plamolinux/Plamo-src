@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase=wget
-vers=1.19.1
-url="http://ftp.gnu.org/gnu/wget/wget-${vers}.tar.xz"
+vers=1.19.2
+url="http://ftp.gnu.org/gnu/wget/wget-${vers}.tar.gz"
 verify=$url.sig
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
 OPT_CONFIG=''
 DOCS="INSTALL COPYING README MAILING-LIST ChangeLog ABOUT-NLS AUTHORS NEWS"
-patchfiles='CVE-2017-6508.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
