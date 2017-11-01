@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase=php
-vers=7.1.10
+vers=7.1.11
 url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
 arch=`uname -m`
-build=P2
+build=P1
 src=${pkgbase}-${vers}
 CONFDIR="/etc/httpd/"
 OPT_CONFIG="
