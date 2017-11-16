@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssl10'
-vers='1.0.2l'
+vers='1.0.2m'
 url="https://openssl.org/source/openssl-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="openssl-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='INSTALL INSTALL.DJGPP INSTALL.MacOS INSTALL.NW INSTALL.OS2 INSTALL.VMS INSTALL.W32 INSTALL.W64 INSTALL.WCE LICENSE NEWS README README.ASN1 README.ENGINE install.com'
