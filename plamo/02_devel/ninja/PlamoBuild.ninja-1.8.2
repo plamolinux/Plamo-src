@@ -1,0 +1,91 @@
+#!/bin/sh
+##############################################################
+pkgbase='ninja'
+vers='1.8.2'
+url="https://github.com/${pkgbase}-build/${pkgbase}/archive/v${vers}/${pkgbase}-${vers}.tar.gz"
+verify=""
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='COPYING HACKING.md README'
+blfspatch="ninja-1.8.2-add_NINJAJOBS_var-1.patch"
+patchfiles="${blfspatch}"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  if [ ! -f $blfspatch ]; then
+    wget http://www.linuxfromscratch.org/patches/lfs/development/${blfspatch}
+  fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  python3 configure.py --bootstrap
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  install -v -m755 -D ninja $P/usr/bin/ninja
+  install -v -m644 -D misc/ninja.vim $P//usr/share/vim/vim80/syntax/ninja.vim
+  install -v -m644 -D misc/bash-completion $P/usr/share/bash-completion/completions/ninja
+  install -v -m644 -D misc/zsh-completion  $P/usr/share/zsh/site-functions/_ninja
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
