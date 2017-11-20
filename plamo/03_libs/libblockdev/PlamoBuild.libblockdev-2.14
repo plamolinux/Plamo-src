@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libblockdev'
-vers='2.13'
+vers='2.14'
 url="https://github.com/storaged-project/${pkgbase}/releases/download/${vers}-1/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:682af59af62afd8d44fb39ea492ede30"
+digest="md5sum:d13953db5247f326f730ff7ae64493de"
 verify=""
 arch=`uname -m`
 build=B1
