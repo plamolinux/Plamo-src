@@ -3,9 +3,9 @@
 pkgbase='enchant'
 vers='1.6.0'
 url="http://www.abisource.com/downloads/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.gz"
-verify="md5sum:de11011aff801dc61042828041fb59c7"
+digest="md5sum:de11011aff801dc61042828041fb59c7"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static'
 DOCS='AUTHORS COPYING.LIB ChangeLog HACKING MAINTAINERS NEWS README TODO'
