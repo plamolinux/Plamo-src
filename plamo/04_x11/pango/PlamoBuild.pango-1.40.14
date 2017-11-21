@@ -55,7 +55,7 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   cd $B
-  meson --prefix=/usr --sysconfdir=/etc $S
+  meson --prefix=/usr --libdir=${libdir} --sysconfdir=/etc $S
 fi
     
 if [ $opt_build -eq 1 ] ; then

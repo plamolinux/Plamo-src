@@ -58,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
-  meson --prefix=/usr $S
+  meson --prefix=/usr --libdir=${libdir} $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"

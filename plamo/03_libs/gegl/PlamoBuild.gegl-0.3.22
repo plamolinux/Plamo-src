@@ -3,13 +3,14 @@
 pkgbase='gegl'
 vers='0.3.22'
 url="https://download.gimp.org/pub/${pkgbase}/0.3/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:6613b8d473674980df51156cf16079c1"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LESSER ChangeLog INSTALL NEWS README'
-patchfiles='gegl-0.2.0-remove-src-over-op.patch gegl-0.2.0-libav54.patch gegl-0.2.0-CVE-2012-4433.patch'
+patchfiles=""
 compress=txz
 ##############################################################
 

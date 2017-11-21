@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gobject_introspection'
-vers='1.52.1'
-url="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.52/gobject-introspection-${vers}.tar.xz"
-verify="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.52/gobject-introspection-${vers}.sha256sum"
+vers='1.54.1'
+url="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.tar.xz"
+verify="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.sha256sum"
 arch=`uname -m`
 build=B1
 src="gobject-introspection-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --with-python=/usr/bin/python3'
 DOCS='AUTHORS COPYING COPYING.GPL COPYING.LGPL ChangeLog NEWS README TODO'
 patchfiles=''
 compress=txz

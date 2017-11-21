@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='babl'
-vers='0.1.38'
-url="https://download.gimp.org/pub/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:eb814d37e70aaf896243b105eea2b1a3"
+pkgbase='librsvg'
+vers='2.40.19'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/2.40/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:934eff469b34c732fb91ddb9afd40638"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING INSTALL NEWS README TODO'
+OPT_CONFIG='--disable-static --enable-shared --enable-vala'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,6 +53,10 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+  if [ ! -f .apidoc.patch ]; then
+    sed -i 's/ --nogtkinit//' doc/Makefile.in
+    touch .apidoc.patch
+  fi
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
