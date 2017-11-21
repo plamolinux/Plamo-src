@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='json_glib'
-vers='1.2.8'
-url="http://ftp.gnome.org/pub/gnome/sources/json-glib/1.2/json-glib-${vers}.tar.xz"
-digest="md5sum:ff31e7d0594df44318e12facda3d086e"
+vers='1.4.2'
+url="http://ftp.gnome.org/pub/gnome/sources/json-glib/${vers%.*}/json-glib-${vers}.tar.xz"
+digest="md5sum:35107e23a7bbbc70f31c34f7b9adf1c3"
 verify=""
 arch=`uname -m`
 build=B1
@@ -58,9 +58,7 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  meson --prefix=/usr $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -70,8 +68,7 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -82,8 +79,7 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
