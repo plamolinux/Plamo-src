@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ruby'
-vers='2.4.1'
+vers='2.4.2'
 url="https://cache.ruby-lang.org/pub/${pkgbase}/2.4/${pkgbase}-${vers}.tar.gz"
-digest="sha256sum:a330e10d5cb5e53b3a0078326c5731888bb55e32c4abfeb27d9e7f8e5d000250"
+digest="sha256sum:93b9e75e00b262bc4def6b26b7ae8717efc252c47154abb7392e54357e6c8c9c"
 verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/$src"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README.EXT README.EXT.ja README.ja.md README.md'
