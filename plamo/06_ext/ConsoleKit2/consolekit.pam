@@ -1,0 +1,6 @@
+# Begin ConsoleKit addition
+
+session   optional    pam_loginuid.so
+session   optional    pam_ck_connector.so nox11
+
+# End ConsoleKit addition

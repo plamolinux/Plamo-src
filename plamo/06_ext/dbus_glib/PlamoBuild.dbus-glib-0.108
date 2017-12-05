@@ -5,9 +5,9 @@ vers='0.108'
 url="http://dbus.freedesktop.org/releases/dbus-glib/dbus-glib-${vers}.tar.gz"
 digest="md5sum:a66a613705870752ca9786e0359aea97"
 arch=`uname -m`
-build=B2
+build=B3
 src="dbus-glib-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --runstatedir=/run'
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
 patchfiles=''
 compress=txz
