@@ -260,11 +260,17 @@ install_tweak() {
 
   # doc ファイルのインストールと圧縮
   cd $W
-  for doc in $DOCS ; do
-    install2 $S/$doc $docdir/$src/$doc
-    touch -r $S/$doc $docdir/$src/$doc
-    gzip_one $docdir/$src/$doc
-  done
+  if [ -n "$DOCS" ]; then
+    echo "Install docs"
+    for doc in $DOCS ; do
+      install2 $S/$doc $docdir/$src/$doc
+      touch -r $S/$doc $docdir/$src/$doc
+      gzip_one $docdir/$src/$doc
+    done
+  else
+    echo "No docs"
+    mkdir -v -p $docdir/$src
+  fi
   install -v $myname $docdir/$src
   gzip_one $docdir/$src/$myname
 
