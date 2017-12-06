@@ -8,7 +8,7 @@ arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
 #TODO: When qt and gtk packages is made, we should make pinentry_gtk and pinentry_qt, or pinentry_gui...
-OPT_CONFIG='--enable-inside-emacs=yes --enable-pinentry-qt=no --enable-pinentry-gtk2=no --enable-pinentry-gnome3=no'
+OPT_CONFIG='--enable-inside-emacs=yes --enable-pinentry-qt=no --enable-pinentry-gtk2=yes --enable-pinentry-gnome3=no'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog-old INSTALL NEWS README README.GIT THANKS TODO'
 patchfiles=''
 compress=txz
@@ -84,6 +84,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  ln -sf pinentry-curses $P/usr/bin/pinentry
 
 ################################
 #      install tweaks
