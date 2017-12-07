@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='btrfs_progs'
-vers='4.12'
+vers='4.14'
 url="https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="btrfs-progs-v${vers}"
-OPT_CONFIG="--bindir=/bin --disable-documentation"
+OPT_CONFIG="--bindir=/bin --disable-documentation --disable-zstd"
 DOCS='COPYING INSTALL README.md'
 patchfiles=''
 compress=txz
