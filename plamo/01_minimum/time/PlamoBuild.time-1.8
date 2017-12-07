@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='time'
-vers='1.7.2'
-url="http://git.savannah.gnu.org/cgit/${pkgbase}.git/snapshot/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:d1c00075edf3d9ab422b5e8119cf7c865d1e91e6"
-verify=""
+vers='1.8'
+url="https://ftp.gnu.org/gnu/time/time-1.8.tar.gz"
+digest="md5sum:4e00dcb8c3ab11c7cf5a0d698828ac96"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--infodir=/usr/share/info'
+OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles='time-1.7-Recompute-CPU-usage-at-microsecond-level.patch time-1.7-ru_maxrss-is-in-kilobytes-on-Linux.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
