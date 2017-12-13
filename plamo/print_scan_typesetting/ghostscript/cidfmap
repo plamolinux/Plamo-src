@@ -1,0 +1,13 @@
+/Ryumin-Light      << /FileType /TrueType /Path (/usr/share/fonts/TrueType/ipam.ttf) /CSI [(Japan1) 6] >> ;
+/GothicBBB-Medium  << /FileType /TrueType /Path (/usr/share/fonts/TrueType/ipag.ttf) /CSI [(Japan1) 6] >> ;
+/Ryumin-Medium     /Ryumin-Light ;
+/HeiseiMin-W3      /Ryumin-Light ;
+/HeiseiKakuGo-W5   /GothicBBB-Medium ;
+/Kochi-Mincho      /Ryumin-Light ;
+/Kochi-Gothic      /GothicBBB-Medium ;
+/Adobe-Japan1      /Ryumin-Light ;
+/Adobe-Japan2      /Ryumin-Light ;
+/FutoMinA101-Bold  /Ryumin-Light ;
+/FutoGoB101-Bold   /GothicBBB-Medium ;
+/GothicMB101-hea   /GothicBBB-Medium ;
+/ShinGo-Bold       /GothicBBB-Medium ;
