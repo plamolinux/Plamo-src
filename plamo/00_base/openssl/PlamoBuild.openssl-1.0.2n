@@ -2,7 +2,7 @@
 
 ######################################################################
 pkgbase=openssl
-vers=1.0.2m
+vers=1.0.2n
 url="http://www.openssl.org/source/openssl-${vers}.tar.gz
     ftp://plamo.linet.gr.jp/pub/Plamo-src.new/plamo/00_base/openssl/mkcabundle.pl"
 arch=`uname -m`
