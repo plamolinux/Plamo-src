@@ -2,12 +2,26 @@
 ##############################################################
 pkgbase='ghostscript'
 vers='9.22'
-url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs922/${pkgbase}-${vers}.tar.gz"
+url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:eff6bc41b1d7e26e988d2a5c813889d1"
 verify=""
 arch=`uname -m`
-build=B1
+build=B0
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG="--enable-dynamic
+	--with-ijs
+	--with-jbig2dec
+	--with-x
+	--with-drivers=ALL
+	--enable-fontconfig
+	--enable-freetype
+	--enable-openjpeg
+	--with-system-libtiff
+	--with-libpaper
+	--disable-compile-inits"
+fontpath="/usr/share/ghostscript/fonts
+	/usr/share/fonts
+	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
 patchfiles=''
 compress=txz
@@ -41,25 +55,31 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  # force to use system libraries
+  rm -r cups/libs freetype ijs jpeg lcms2 libpng openjpeg tiff zlib
+  autoreconf -vi
+
+  # fontpath
+  fp=
+  for p in $fontpath
+  do
+      fp=${fp}:$p
+  done
+  fp=${fp/:/}
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG} \
+	      --with-fontpath="$fp"
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -70,7 +90,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make
+  make so
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -83,6 +104,17 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  make soinstall DESTDIR=$P
+
+  # remove man of de
+  rm -rfv $P/usr/share/man/de
+
+  # header
+  install -v -m644 base/*.h $P/usr/include/ghostscript
+  ln -v -s ghostscript $P/usr/include/ps
+
+  # install cidfmap
+  install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
 
 ################################
 #      install tweaks
@@ -90,6 +122,7 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+  ln -sv ../ghostscript/${vers}/doc $P/usr/share/doc/${src}/doc
 
 #############################
 #   convert symlink to null file and 
