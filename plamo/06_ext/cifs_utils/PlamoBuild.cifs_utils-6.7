@@ -1,30 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='ghostscript'
-vers='9.22'
-url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:eff6bc41b1d7e26e988d2a5c813889d1"
-fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
-verify=""
+pkgbase='cifs_utils'
+vers='6.7'
+url="https://www.samba.org/ftp/linux-cifs/cifs-utils/cifs-utils-${vers}.tar.bz2"
+verify="${url}.asc"
 arch=`uname -m`
-build=B0
-src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-dynamic
-	--with-ijs
-	--with-jbig2dec
-	--with-x
-	--with-drivers=ALL
-	--enable-fontconfig
-	--enable-freetype
-	--enable-openjpeg
-	--with-system-libtiff
-	--with-libpaper
-	--disable-compile-inits"
-fontpath="/usr/share/ghostscript/fonts
-	/usr/share/fonts
-	/usr/share/poppler/cMap/"
-DOCS='LICENSE'
-patchfiles=''
+build=B1
+src="cifs-utils-${vers}"
+OPT_CONFIG="--disable-pam --disable-systemd --with-libcap"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+# pldlinux patch for cifs-utils with heimdal
+# https://github.com/pld-linux/cifs-utils
+pldlinuxpatch="https://raw.githubusercontent.com/pld-linux/cifs-utils/master/cifs-utils-heimdal.patch"
+patchfiles="${pldlinuxpatch##*/}"
 compress=txz
 ##############################################################
 
@@ -53,8 +41,8 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${fonturl##*/} ]; then
-    wget $fonturl
+  if [ ! -f ${pldlinuxpatch##*/} ]; then
+    wget $pldlinuxpatch
   fi
 fi
 
@@ -67,23 +55,14 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-
-  # force to use system libraries
-  rm -r cups/libs freetype ijs jpeg lcms2 libpng openjpeg tiff zlib
-  autoreconf -vi
-
-  # fontpath
-  fp=
-  for p in $fontpath
-  do
-      fp=${fp}:$p
-  done
-  fp=${fp/:/}
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  autoreconf -fiv
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG} \
-	      --with-fontpath="$fp"
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -94,8 +73,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make
-  make so
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -108,31 +86,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  make soinstall DESTDIR=$P
-
-  # remove man of de
-  rm -rfv $P/usr/share/man/de
-
-  # header
-  install -v -m644 base/*.h $P/usr/include/ghostscript
-  ln -v -s ghostscript $P/usr/include/ps
-
-  # install cidfmap
-  install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
-
-  # install std_font
-  tar xvf $W/${fonturl##*/} --no-same-owner -C $P/usr/share/ghostscript/
-
-  # link to /usr/share/fonts
-  mkdir -p $P/usr/share/fonts
-  ln -sfv ../ghostscript/fonts $P/usr/share/fonts/gsfonts
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/fc-cache ]; then
-  /usr/bin/fc-cache -v 
-fi
-EOF
 
 ################################
 #      install tweaks
@@ -140,7 +93,6 @@ EOF
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-  ln -sv ../ghostscript/${vers}/doc $P/usr/share/doc/${src}/doc
 
 #############################
 #   convert symlink to null file and 
