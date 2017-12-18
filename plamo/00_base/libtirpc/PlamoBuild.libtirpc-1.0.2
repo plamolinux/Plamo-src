@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libtirpc'
-vers='1.0.1'
+vers='1.0.2'
 url="https://jaist.dl.sourceforge.net/project/${pkgbase}/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:36ce1c0ff80863bb0839d54aa0b94014"
+digest="md5sum:d5a37f1dccec484f9cabe2b97e54e9a6"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --disable-gssapi"
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
-# CVE-2017-8779: https://github.com/guidovranken/rpcbomb
-patchfiles='CVE-2017-8779.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -42,25 +41,28 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
+    cd $B
     for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
+      patch -p1 < $W/$patch
     done
 
-    cd $B
     # if [ -f $S/autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    # fix issue with glibc 2.26
+    sed '/stdlib.h/a#include <stdint.h>' -i src/xdr_sizeof.c
+
+    # for NIS(?)
+    sed '/key_secret_is/s/secret/secretkey/' -i src/libtirpc.map
+    
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
