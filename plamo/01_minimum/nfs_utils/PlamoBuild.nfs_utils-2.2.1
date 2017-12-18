@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nfs_utils'
-vers='2.1.1'
+vers='2.2.1'
 url="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.sign"
 arch=`uname -m`
-build=B2
+build=B1
 src="nfs-utils-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --without-tcp-wrappers --disable-gss "
 DOCS='COPYING INSTALL NEWS README'
