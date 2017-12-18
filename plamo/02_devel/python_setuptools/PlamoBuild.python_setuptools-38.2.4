@@ -1,0 +1,131 @@
+#!/bin/sh
+##############################################################
+pkgbase='python_setuptools'
+vers='38.2.4'
+url="https://github.com/pypa/${pkgbase}/archive/v${vers}.tar.gz"
+digest="sha512sum:f06badd27f0b797482bf42314edb7ffde7fa80556825b0ef27b125a3fc876b9d2ec26bf2b540f88b39f52fb58536e762c5bef24d9a92115b5f5decdf01f00c6c"
+verify=""
+arch=`uname -m`
+build=B1
+src="setuptools-${vers}"
+OPT_CONFIG=''
+DOCS='LICENSE README.rst easy_install.py'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi
+  for i in 2 3
+  do
+    echo "==== configure for python${i} ===="
+    mkdir -p $B/${i}
+    cp -a $S/* $B/${i}/
+######################################################################
+#  copy srcs to build directory, patch and config in build dir
+######################################################################
+    cd $B/$i
+
+    for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+    done
+
+    # prevent downloading and install deps
+    sed -i '/pip.main(args)/d' bootstrap.py
+  
+    # Remove post-release tag since we are using stable tags
+    sed -e '/tag_build = .post/d' \
+	-e '/tag_date = 1/d' \
+	-i setup.cfg
+
+    # 'Clean' installation is expected to fail since we removed bundled packages
+    sed -i '/^def test_clean_env_install/i import pytest\n\n@pytest.mark.xfail' setuptools/tests/test_virtualenv.py
+
+    # Tests failed. Importing an unbundled new setuptools in a virtualenv does not work, but this won't
+    # affect normal virtualenv usage (which don't have to import the unbundled setuptools in *current*
+    # dir.
+    sed -e '/^def test_pip_upgrade_from_source/i @pytest.mark.xfail' \
+	-e '/^def test_test_command_install_requirements/i @pytest.mark.xfail' \
+	-i setuptools/tests/test_virtualenv.py
+
+    sed -i -e "s|^#\!.*/usr/bin/env python|#!/usr/bin/env python${i}|" setuptools/command/easy_install.py
+
+    python${i} bootstrap.py
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  for i in 2 3
+  do
+    echo "=== build for python${i} ==="
+    cd $B/$i
+    python${i} setup.py build
+    if [ $? != 0 ]; then
+      echo "build error for python${i}. $0 script stop"
+      exit 255
+    fi
+  done
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  for i in 2 3
+  do
+    P=$W/work/$i
+    docdir=$W/work/${i}/usr/share/doc
+    pkg=python${i}_setuptools-${vers}-${arch}-${build}
+    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+    cd $B/$i
+    python${i} setup.py install --root $P --skip-build
+
+    if [ $i = 3 ]; then
+      rm $P/usr/bin/easy_install
+    fi
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+    install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+    convert_links
+
+    cd $P
+    /sbin/makepkg ../../$pkg.$compress <<EOF
+y
+1
+EOF
+  done
+fi
