@@ -2,11 +2,11 @@
 ##############################################################
 pkgbase='python_setuptools'
 vers='38.2.4'
-url="https://github.com/pypa/${pkgbase}/archive/v${vers}.tar.gz"
+url="https://github.com/pypa/setuptools/archive/v${vers}.tar.gz"
 digest="sha512sum:f06badd27f0b797482bf42314edb7ffde7fa80556825b0ef27b125a3fc876b9d2ec26bf2b540f88b39f52fb58536e762c5bef24d9a92115b5f5decdf01f00c6c"
 verify=""
 arch=noarch
-build=B1
+build=B2
 src="setuptools-${vers}"
 OPT_CONFIG=''
 DOCS='LICENSE README.rst easy_install.py'
@@ -105,7 +105,7 @@ if [ $opt_package -eq 1 ] ; then
     cd $B/$i
     python${i} setup.py install --prefix=/usr --root $P --skip-build
 
-    if [ $i = 3 ]; then
+    if [ $i = 2 ]; then
       rm $P/usr/bin/easy_install
     fi
 

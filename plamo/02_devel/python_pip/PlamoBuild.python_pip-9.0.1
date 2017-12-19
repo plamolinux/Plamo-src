@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase='python_pip'
 vers='9.0.1'
-url="https://pypi.io/packages/source/p/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+url="https://pypi.io/packages/source/p/pip/pip-${vers}.tar.gz"
 digest="sha256sum:09f243e1a7b461f654c26a725fa373211bb7ff17a9300058b205c61658ca940d"
 verify=""
 arch=noarch
@@ -89,7 +89,9 @@ if [ $opt_package -eq 1 ] ; then
     cd $B/$i
     python${i} setup.py install --prefix=/usr --root $P
 
-    ( cd $P/usr/bin && mv pip pip${i} )
+    if [ $i = 2 ]; then
+	rm -vf $P/usr/bin/pip
+    fi
     sed -i "s|#!/usr/bin/env python$|#!/usr/bin/env python${i}|" \
 	$pythonlib/site-packages/pip/__init__.py
     python${i} -m compileall $pythonlib/site-packages/pip/__init__.py
@@ -97,7 +99,7 @@ if [ $opt_package -eq 1 ] ; then
     install -dm755 "$P"/usr/share/bash-completion/completions
     PYTHONPATH=$pythonlib/site-packages "$P"/usr/bin/pip${i} completion --bash > "$P"/usr/share/bash-completion/completions/pip${i}
     sed -i "s/pip/pip${i}/g" "$P"/usr/share/bash-completion/completions/pip${i}
-  
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 

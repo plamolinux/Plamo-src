@@ -5,7 +5,7 @@ vers='3.6.3'
 url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B3
+build=B4
 src="${pkgbase}-${vers}"
 # --enable-shared と --enable-optimizations は同時指定できない
 # https://bugs.python.org/issue29712
@@ -92,11 +92,27 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+
+  # Hack to avoid building again
+  sed -i 's/^all:.*$/all: build_all/' Makefile
+
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
   chmod -v 755 $P/usr/${libdir}/libpython3.6m.so
   chmod -v 755 $P/usr/${libdir}/libpython3.so
+
+  # Why are these not done by default...
+  ln -s python3               "$P"/usr/bin/python
+  ln -s python3-config        "$P"/usr/bin/python-config
+  ln -s idle3                 "$P"/usr/bin/idle
+  ln -s pydoc3                "$P"/usr/bin/pydoc
+  ln -s python${_pybasever}.1 "$P"/usr/share/man/man1/python.1
+
+  # some useful "stuff" FS#46146
+  install -dm755 "$P"/usr/lib/python3.6/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.6/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.6/Tools/scripts/
 
 ################################
 #      install tweaks

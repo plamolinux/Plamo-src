@@ -5,7 +5,7 @@ vers='2.7.14'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="Python-${vers}"
 OPT_CONFIG="--enable-shared --with-system-expat --with-system-ffi
 	--with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4
@@ -90,12 +90,35 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
 
-  chmod -v 755 $P/usr/$libdir/libpython2.7.so.1.0
+  # Hack to avoid building again
+  sed -i 's/^all:.*$/all: build_all/' Makefile
+  
+  export LDFLAGS='-Wl,--as-needed'
+  make altinstall maninstall DESTDIR=$P
+
+  # ref. https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/python2
+  rm $P/usr/share/man/man1/python.1
+  ln -sf python2.7        $P/usr/bin/python2
+  ln -sf python2.7-config $P/usr/bin/python2-config
+  ln -sf python2.7.1      $P/usr/share/man/man1/python2.1
+
+  ln -sf python-2.7.pc $P/usr/${libdir}/pkgconfig/python2.pc
+  ln -sf /usr/$libdir/libpython2.7.so $P/usr/$libdir/python2.7/config/libpython2.7.so
   mv -v $P/usr/bin/smtpd.py $P/usr/$libdir/python2.7/
-  ln -sf /usr/$libdir/libpython2.7.so $P/usr/$libdir/python2.7/config
+
+  install -dm755 "$P"/usr/lib/python2.7/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python2.7/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python2.7/Tools/scripts/
+
+  mv "$P"/usr/bin/idle{,2}
+  mv "$P"/usr/bin/pydoc{,2}
+  mv "$P"/usr/bin/2to3{,-2.7}
+
+  sed -i "s#${B}/Python-${vers}:##" "$P"/usr/lib/python2.7/config/Makefile
+
+  # ref. BLFS
+  chmod -v 755 $P/usr/$libdir/libpython2.7.so.1.0
 
 ################################
 #      install tweaks
