@@ -3,7 +3,7 @@
 pkgbase='rustc'
 vers='1.19.0'
 url="https://static.rust-lang.org/dist/rustc-${vers}-src.tar.gz"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="rustc-${vers}-src"
@@ -22,6 +22,8 @@ source /usr/share/plamobuild_functions.sh
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
+# because build size is too large.
+B=$W/build
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -41,36 +43,21 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  cp -v $W/config.toml $B/config.toml
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  python2 ./x.py build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -81,9 +68,10 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P python2 ./x.py install
 
+  rm -fv $P/usr/${libdir}/rustlib/{components,manifest-rustc,rust-installer-version}
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
