@@ -1,12 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gtk3'
-vers='3.18.9'
+vers='3.22.26'
 url="http://ftp.gnome.org/pub/gnome/sources/gtk+/${vers%.*}/gtk+-${vers}.tar.xz"
+digest="md5sum:eeeb8038fe0d386c7516fa46cd4fff6b"
 arch=`uname -m`
-build=B2
+build=B1
 src="gtk+-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-broadway-backend --enable-x11-backend'
+OPT_CONFIG='--disable-static --enable-shared --enable-broadway-backend --enable-x11-backend --enable-wayland-backend'
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS NEWS.pre-1-0 README README.commits README.win32'
 patchfiles=''
 compress=txz
@@ -54,8 +55,8 @@ if [ $opt_config -eq 1 ] ; then
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed -lgobject-2.0' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -79,6 +80,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -Dm644 -v $W/settings.ini $P/usr/share/gtk-3.0/settings.ini
+  
   mkdir -p $P/install
   cat <<EOF > $P/install/initpkg
 gtk-query-immodules-3.0 --update-cache
