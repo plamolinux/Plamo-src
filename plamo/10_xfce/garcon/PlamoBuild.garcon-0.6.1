@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libxfce4ui'
-vers='4.12.1'
-url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:ea9fad7d059fe8f531fe8db42dabb5a9"
+pkgbase='garcon'
+vers='0.6.1'
+url="http://archive.xfce.org/src/xfce/${pkgbase}/0.6/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:174690ad19243f7ef9529cb0c24b9080"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux"
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO xfce4-about'
-patchfiles='dialog-char-corruption.patch'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -60,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
