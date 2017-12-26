@@ -1,22 +1,23 @@
 #!/bin/sh
 ##############################################################
-pkgbase='wayland_protocols'
-vers='1.11'
-url="https://wayland.freedesktop.org/releases/wayland-protocols-${vers}.tar.xz"
-verify=""
-arch=noarch
-build=B1
-src="wayland-protocols-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='COPYING README'
-patchfiles=''
+pkgbase='mesa'
+vers='17.0.5'
+url="https://mesa.freedesktop.org/archive/${pkgbase}-${vers}.tar.xz"
+verify="${url}.sig"
+arch=`uname -m`
+build=B2
+src="${pkgbase}-${vers}"
+OPT_CONFIG=''
+DOCS='docs/*'
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/mesa-${vers}-add_xdemos-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-#
+# 
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -38,43 +39,54 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+    cd $B
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
 
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    export GLL_DRV="i915,r600,r300,nouveau,radeonsi,svga,swrast"
+    sed -i "/pthread_stubs_possible=/s/yes/no/" configure.ac
+    ./autogen.sh CFLAGS='-O2' CXXFLAGS='-O2'    \
+            --prefix=/usr           \
+            --sysconfdir=/etc               \
+            --enable-texture-float          \
+            --enable-osmesa                 \
+            --enable-xa                     \
+            --enable-glx-tls                \
+            --with-egl-platforms="drm,x11,wayland"  \
+            --with-gallium-drivers=$GLL_DRV
+
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+    make -C xdemos DEMOS_PREFIX=/usr
+
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -83,6 +95,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  make -C xdemos  install DEMOS_PREFIX=/usr DESTDIR=$P
+
 
 ################################
 #      install tweaks
