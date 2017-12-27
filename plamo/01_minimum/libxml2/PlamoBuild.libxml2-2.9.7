@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.9.6'
+vers='2.9.7'
 url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --with-history --with-threads'
+OPT_CONFIG='--disable-static --with-history --with-threads --with-python=/usr/bin/python3'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles=''
+patchfiles='libxml2-2.9.7-python3_hack-1.patch'
 compress=txz
 ##############################################################
 
