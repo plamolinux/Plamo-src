@@ -52,6 +52,7 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+  sed -i '/_PyVerify_fd/,+1d' python/types.c
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi

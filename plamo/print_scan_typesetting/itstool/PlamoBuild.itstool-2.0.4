@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='itstool'
-vers='2.0.2'
+vers='2.0.4'
 url="http://files.${pkgbase}.org/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:d472d877a7bc49899a73d442085b2f93"
-verify=""
+verify="${url}.sha256sum"
 arch=noarch
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING COPYING.GPL3 ChangeLog INSTALL NEWS README'
-patchfiles=''
+patchfiles='itstool-2.0.4-segfault-1.patch'
 compress=txz
 ##############################################################
 
@@ -60,7 +59,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  PYTHON=/usr/bin/python3 $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
