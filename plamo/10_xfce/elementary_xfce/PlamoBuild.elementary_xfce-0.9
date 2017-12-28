@@ -51,7 +51,6 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
   mkdir -pv $P/usr/share/icons
   cp -av * $P/usr/share/icons
 

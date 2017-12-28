@@ -53,7 +53,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
   mkdir -vp $P/usr/share/themes
-  cp -av * $P/usr/share/themes
+  cp -av $S $P/usr/share/themes/Greybird
 
 ################################
 #      install tweaks
