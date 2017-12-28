@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='docbook_xsl'
-vers='1.79.1'
-url="https://downloads.sourceforge.net/docbook/docbook-xsl-${vers}.tar.bz2"
-digest="md5sum:b48cbf929a2ad85e6672f710777ca7bc"
+vers='1.79.2'
+url="https://github.com/docbook/xslt10-stylesheets/releases/download/release%2F${vers}/docbook-xsl-${vers}.tar.gz"
+digest=""
 verify=""
 arch=noarch
 build=B1
 src="docbook-xsl-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING INSTALL NEWS NEWS.html NEWS.xml README RELEASE-NOTES.html RELEASE-NOTES.txt RELEASE-NOTES.xml TODO'
-patchfiles=''
+patchfiles='765567_non-recursive_string_subst.patch'
 compress=txz
 ##############################################################
 
@@ -48,7 +48,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    patch -p2 < $W/$patch
   done
 fi
     
@@ -60,13 +60,13 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  install -v -m755 -d $P/usr/share/xml/docbook/xsl-stylesheets-1.79.1
+  install -v -m755 -d $P/usr/share/xml/docbook/xsl-stylesheets-${vers}
   cp -v -R VERSION assembly common eclipse epub epub3 extensions fo  \
      highlighting html htmlhelp images javahelp lib manpages params  \
      profiling roundtrip slides template tests tools webhelp website \
      xhtml xhtml-1_1 xhtml5                                          \
-     $P/usr/share/xml/docbook/xsl-stylesheets-1.79.1
-  ln -s VERSION $P/usr/share/xml/docbook/xsl-stylesheets-1.79.1/VERSION.xsl
+     $P/usr/share/xml/docbook/xsl-stylesheets-${vers}
+  ln -s VERSION $P/usr/share/xml/docbook/xsl-stylesheets-${vers}/VERSION.xsl
   install -v -d -m755 $P/etc/xml
 
   install -v -d $P/install
@@ -76,23 +76,23 @@ if [ ! -f /etc/xml/catalog ]; then
 fi &&
 
 xmlcatalog --noout --add "rewriteSystem" \
-           "http://docbook.sourceforge.net/release/xsl/1.79.1" \
-           "/usr/share/xml/docbook/xsl-stylesheets-1.79.1" \
+           "http://docbook.sourceforge.net/release/xsl/${vers}" \
+           "/usr/share/xml/docbook/xsl-stylesheets-${vers}" \
     /etc/xml/catalog &&
 
 xmlcatalog --noout --add "rewriteURI" \
-           "http://docbook.sourceforge.net/release/xsl/1.79.1" \
-           "/usr/share/xml/docbook/xsl-stylesheets-1.79.1" \
+           "http://docbook.sourceforge.net/release/xsl/${vers}" \
+           "/usr/share/xml/docbook/xsl-stylesheets-${vers}" \
     /etc/xml/catalog &&
 
 xmlcatalog --noout --add "rewriteSystem" \
            "http://docbook.sourceforge.net/release/xsl/current" \
-           "/usr/share/xml/docbook/xsl-stylesheets-1.79.1" \
+           "/usr/share/xml/docbook/xsl-stylesheets-${vers}" \
     /etc/xml/catalog &&
 
 xmlcatalog --noout --add "rewriteURI" \
            "http://docbook.sourceforge.net/release/xsl/current" \
-           "/usr/share/xml/docbook/xsl-stylesheets-1.79.1" \
+           "/usr/share/xml/docbook/xsl-stylesheets-${vers}" \
     /etc/xml/catalog
 
 EOF
