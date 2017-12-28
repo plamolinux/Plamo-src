@@ -2,7 +2,8 @@
 ##############################################################
 pkgbase='gvfs'
 vers='1.34.1'
-url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/1.34/${pkgbase}-${vers}.tar.xz"
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:44012824aa75797a7d272cd60f07b488"
 verify=""
 arch=`uname -m`
 build=B1
@@ -83,6 +84,11 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+EOF
 
 ################################
 #      install tweaks
