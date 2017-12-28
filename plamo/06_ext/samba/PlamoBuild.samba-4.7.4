@@ -7,7 +7,7 @@ verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG="--with-piddir=/run/samba --with-pammodulesdir=/lib/security --enable-fhs --without-ad-dc --without-systemd --enable-selftest"
 DOCS='BUILD_SYSTEMS.txt COPYING PFIF.txt README README.Coding README.cifs-utils README.contributing WHATSNEW.txt install_with_python.sh prog_guide4.txt release-scripts'
 patchfiles=''
 compress=txz
@@ -41,25 +41,33 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+  echo "^samba4.rpc.echo.*on.*ncacn_np.*with.*object.*nt4_dc" >> selftest/knownfail
+
+  # Use python2
+  SAVEIFS=${IFS}
+  IFS=$(echo -en "\n\b")
+  PYTHON_CALLERS="$(find ${B} -name '*.py')
+$(find ${B} -name 'wscript*')
+$(find ${B} -name 'configure.ac')
+$(find ${B} -name 'upgrade_from_s3')
+$(find ${B}/buildtools -type f)
+$(find ${B}/source4/scripting -type f)"
+  sed -i -e "s|/usr/bin/env python$|/usr/bin/env python2|" \
+         -e "s|python-config|python2-config|" \
+         -e "s|bin/python|bin/python2|" \
+	 ${PYTHON_CALLERS}
+  IFS=${SAVEIFS}
+
+  export PYTHON=/usr/bin/python2
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -70,6 +78,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
+  export PYTHON=/usr/bin/python2
   make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -82,7 +91,27 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
+  export PYTHON=/usr/bin/python2
   make install DESTDIR=$P
+
+  # Libraries
+  mv -v $P/usr/lib/libnss_win{s,bind}.so*   $P/${libdir}
+  ln -v -sf ../../${libdir}/libnss_winbind.so.2 $P/usr/${libdir}/libnss_winbind.so
+  ln -v -sf ../../${libdir}/libnss_wins.so.2    $P/usr/${libdir}/libnss_wins.so
+
+  # config
+  install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
+
+  # init (default to not spawn)
+  install -v -m644 -D $W/samba.init $P/etc/rc.d/init.d/samba
+
+  # for openldap
+  mkdir -p -v $P/etc/openldap/schema
+  install -v -m644    examples/LDAP/samba* $P/etc/openldap/schema
+  install -v -m755    examples/LDAP/{get*,ol*} $P/etc/openldap/schema
+
+  # pam
+  install -v -m644 -D $W/samba.pam $P/etc/pam.d/samba
 
 ################################
 #      install tweaks
