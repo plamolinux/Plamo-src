@@ -1,14 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 ##############################################################
 pkgbase='alsa_lib'
-vers='1.1.4.1'
+vers='1.1.5'
 url="ftp://ftp.alsa-project.org/pub/lib/alsa-lib-${vers}.tar.bz2"
 verify=""
-digest="md5sum:29fa3e69122d3cf3e8f0e01a0cb1d183"
+digest="md5sum:a2b465c3a5265d8a57f3ff39c6c4fc29"
 arch=`uname -m`
 build=B1
 src="alsa-lib-${vers}"
-OPT_CONFIG='--with-pythonlibs="-lpthread -lm -ldl -lpython2.7" --with-pythonincludes=-I/usr/include/python2.7'
+OPT_CONFIG=('--with-pythonlibs="-lpthread -lm -ldl -lpython2.7"' '--with-pythonincludes="-I/usr/include/python2.7"' '--without-debug')
 DOCS='COPYING ChangeLog INSTALL TODO'
 patchfiles=''
 compress=txz
@@ -60,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man "$OPT_CONFIG"
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man "${OPT_CONFIG[@]}"
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
