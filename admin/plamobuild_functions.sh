@@ -251,6 +251,14 @@ install_tweak() {
     popd
   done
 
+  # /run や /var/run がある場合は削除
+  if [ -d $P/run ]; then
+    rm -vrf $P/run
+  fi
+  if [ -d $P/var/run ]; then
+    rm -vrf $P/var/run
+  fi
+
   #  man ページを圧縮
   if [ -d $P/usr/share/man ]; then
     for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
