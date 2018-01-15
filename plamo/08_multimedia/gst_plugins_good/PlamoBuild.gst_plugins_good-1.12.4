@@ -3,10 +3,9 @@
 pkgbase='gst_plugins_good'
 vers='1.12.4'
 url="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${vers}.tar.xz"
-digest="md5sum:bdf4791a2b788ec6a149b81ff4032038"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="gst-plugins-good-${vers}"
 OPT_CONFIG=('--disable-static' '--enable-shared'
 	    "--with-package-name='GStreamer Good Plugins ${vers} Plamo'"

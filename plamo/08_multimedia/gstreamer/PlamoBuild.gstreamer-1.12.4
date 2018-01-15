@@ -3,9 +3,9 @@
 pkgbase='gstreamer'
 vers='1.12.4'
 url="https://${pkgbase}.freedesktop.org/src/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=("--disable-static" "--with-package-name='GStreamer 1.12.4 Plamo'" "--with-package-origin='http://www.plamolinux.org/'")
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README RELEASE TODO meson_options.txt'

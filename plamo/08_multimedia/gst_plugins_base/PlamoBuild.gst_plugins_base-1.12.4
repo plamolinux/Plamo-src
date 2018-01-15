@@ -3,10 +3,9 @@
 pkgbase='gst_plugins_base'
 vers='1.12.4'
 url="https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-${vers}.tar.xz"
-digest="md5sum:b35b04071f69b8ab69a7f3a497ff0131"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="gst-plugins-base-${vers}"
 OPT_CONFIG=('--disable-static' '--enable-shared'
 	    "--with-package-name='GStreamer Base Plugins ${vers} Plamo'"
@@ -15,6 +14,7 @@ DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README RELEAS
 patchfiles=''
 compress=txz
 ##############################################################
+# パッケージビルドの際は、現在インストールされている gst-plugins-base を削除してからの方が良さそう。
 
 source /usr/share/plamobuild_functions.sh
 
