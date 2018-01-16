@@ -1,18 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='sudo'
-vers='1.8.20p2'
-url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:03da8e711caca6fd93e57751bfb74adc"
-verify=""
+pkgbase='autofs'
+vers='5.1.4'
+url="http://www.kernel.org/pub/linux/daemons/${pkgbase}/v5/${pkgbase}-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-${vers}.tar.sign"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-pam --with-env-editor
-	--libexecdir=/usr/lib --with-rundir=/run/sudo
-	--with-all-insults --with-secure-path --without-sendmail"
-DOCS='ABOUT-NLS ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
-patchfiles=''
+OPT_CONFIG="--without-openldap"
+DOCS='CHANGELOG COPYING INSTALL README README.active-restart README.amd-maps README.changer README.ncpfs README.replicated-server README.smbfs README.v5.release'
+patchfiles='autofs_init_sleep.patch'
 compress=txz
 ##############################################################
 
@@ -44,25 +41,22 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
-      touch .${patch}
-    fi
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
+  export LDFLAGS='-Wl,--as-needed'
+  export CPP='/usr/bin/cpp'
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -87,15 +81,26 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  mv -v $P/etc/sudoers $P/etc/sudoers.dist
+  chmod -v 644 $P/etc/rc.d/init.d/autofs
+  rm -v $P/etc/autofs_ldap_auth.conf
+
+  configfiles="autofs.conf auto.master auto.misc
+	auto.net auto.smb sysconfig/autofs"
+  for f in $configfiles
+  do
+    mv -v $P/etc/$f $P/etc/$f.dist
+  done
+
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/sudoers ]; then
-  ( cd /etc && cp sudoers.dist sudoers )
-fi
+configfiles="$configfiles"
+for f in \$configfiles
+do
+  if [ ! -f /etc/\$f ]; then
+    cp /etc/\$f.dist /etc/\$f
+  fi
+done
 EOF
-  
-  install -D -m644 $W/pam.sudo $P/etc/pam.d/sudo
 
 ################################
 #      install tweaks

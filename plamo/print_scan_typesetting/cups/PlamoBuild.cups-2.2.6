@@ -6,7 +6,7 @@ url="https://github.com/apple/${pkgbase}/releases/download/v${vers}/${pkgbase}-$
 digest="md5sum:e91c26d8d97b5a1630a962f530f02192"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-systemd --with-rcdir=/tmp/cupsinit --with-system-groups=lpadmin --with-docdir=/usr/share/cups/docs --with-rundir=/run"
 DOCS='CHANGES-1.0.txt CHANGES-1.1.txt CHANGES-1.2.txt CHANGES-1.3.txt CHANGES-1.4.txt CHANGES-1.5.txt CHANGES-1.6.txt CHANGES-1.7.txt CHANGES-2.0.txt CHANGES-2.1.txt INSTALL.md LICENSE.txt README.md'
@@ -95,13 +95,13 @@ if [ $opt_package -eq 1 ] ; then
   echo "ServerName /run/cups/cups.sock" > $P/etc/cups/client.conf
 
   mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
+  cat <<"EOF" >> $P/install/initpkg
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
   /usr/bin/gtk-update-icon-cache
 fi
 
-id -g lpadmin > /dev/null 2>&1
-if [ \$? -ne 0 ]; then
+grep lpadmin /etc/group > /dev/null 2>&1
+if [ $? -ne 0 ]; then
   /usr/sbin/groupadd lpadmin
 fi
 EOF

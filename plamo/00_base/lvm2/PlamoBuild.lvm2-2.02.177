@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lvm2"
-vers='2.02.176'
+vers='2.02.177'
 url="https://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.${vers}.tgz"
 verify="${url}.asc"
 arch=`uname -m`
