@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='intel_vaapi_driver'
-vers='2.0.0'
-url="https://github.com/01org/intel-vaapi-driver/releases/download/${vers}/intel-vaapi-driver-${vers}.tar.bz2"
-digest="md5sum:1288657b572b563b24ca27c60a10a032"
+pkgbase='gstreamer_vaapi'
+vers='1.12.4'
+url="https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="intel-vaapi-driver-${vers}"
+src="gstreamer-vaapi-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING NEWS README'
+DOCS='AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README meson_options.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -16,7 +16,7 @@ compress=txz
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -37,41 +37,44 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
-    done
-
-    cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
     fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
