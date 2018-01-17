@@ -1,29 +1,29 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dhcp'
-vers='4.3.5'
+vers='4.3.6'
 url="ftp://ftp.isc.org/isc/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-srv-lease-file=/var/lib/dhcpd/dhcpd.leases
-	--with-srv6-lease-file=/var/lib/dhcpd/dhcpd6.leases
-	--with-cli-lease-file=/var/lib/dhclient/dhclient.leases
-	--with-cli6-lease-file=/var/lib/dhclient/dhclient6.leases"
+OPT_CONFIG=("--with-srv-lease-file=/var/lib/dhcpd/dhcpd.leases"
+	    "--with-srv6-lease-file=/var/lib/dhcpd/dhcpd6.leases"
+	    "--with-cli-lease-file=/var/lib/dhclient/dhclient.leases"
+	    "--with-cli6-lease-file=/var/lib/dhclient/dhclient6.leases")
 DOCS='LICENSE README'
-patchfiles='dhcp-4.3.5-client_script-1.patch dhcp-4.3.5-missing_ipv6-1.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -46,19 +46,22 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  export LDFLAGS='-Wl,--as-needed'
+  CFLAGS="-D_PATH_DHCLIENT_SCRIPT='\"/sbin/dhclient-script\"' \
+          -D_PATH_DHCPD_CONF='\"/etc/dhcp/dhcpd.conf\"' \
+	  -D_PATH_DHCLIENT_CONF='\"/etc/dhcp/dhclient.conf\"'"
+  ./configure --prefix=/usr --sysconfdir=/etc/dhcp --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -83,16 +86,13 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -d $P/sbin
-  install -Dm755 -v client/scripts/linux $P/sbin/dhclient-script
-  install -d $P/var/lib/dhcpd
-  install -d $P/var/lib/dhclient
-  install -d $P/install
-  cat <<EOF >> initpkg
-if [ ! -f /etc/dhcpd.conf ]; then
-  ( cd /etc && cp dhcpd.conf.example dhcpd.conf )
-fi
-EOF
+  install -v -Dm0755 client/scripts/linux $P/sbin/dhclient-script
+  mv -v $P/usr/sbin/dhclient /sbin
+  
+  install -v -dm755 $P/var/lib/dhcpd
+  install -v -dm755 $P/var/lib/dhclient
+  install -v -Dm644 $W/dhclient.conf $P/etc/dhcp/dhclient.conf
+  install -v -Dm754 $W/dhclient.service $P/lib/services/dhclient
 
 ################################
 #      install tweaks
