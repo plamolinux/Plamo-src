@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='neon'
-vers='0.30.2'
-url="https://fossies.org/linux/www/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:e28d77bf14032d7f5046b3930704ef41"
+pkgbase='libmusicbrainz'
+vers='5.1.0'
+url="https://github.com/metabrainz/${pkgbase}/releases/download/release-${vers}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:4cc5556aa40ff7ab8f8cb83965535bc3"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='.release.sh AUTHORS ChangeLog ChangeLog.CVS INSTALL.win32 NEWS README THANKS TODO'
+OPT_CONFIG=''
+DOCS='AUTHORS.txt COPYING.txt INSTALL.txt NEWS.txt README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -44,25 +44,20 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#   patch apply to source tree but make at out of source tree
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
+    if [ -f .${patch} ]; then
       patch -p1 < $W/$patch
       touch .${patch}
     fi
   done
-  sed -e 's/client_set/set/'  \
-      -e 's/gnutls_retr/&2/'  \
-      -e 's/type = t/cert_&/' \
-      -i src/ne_gnutls.c
-
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S
+  
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -72,7 +67,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j1
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
