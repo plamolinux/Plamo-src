@@ -1,0 +1,21 @@
+diff -uNr libquicktime-1.2.4.orig/configure libquicktime-1.2.4/configure
+--- libquicktime-1.2.4.orig/configure	2012-03-30 04:45:15.000000000 +0900
++++ libquicktime-1.2.4/configure	2018-01-19 18:48:59.416666665 +0900
+@@ -17596,7 +17596,7 @@
+     int faad_minor;
+     faacDecHandle dec;
+ 
+-    if(sscanf(FAAD2_VERSION, "%d.%d", &faad_major, &faad_minor) < 2)
++    if(sscanf(FAAD2_VERSION, "%s", &faad_major) < 1)
+       return -1;
+     dec = faacDecOpen();
+     if(!dec)
+@@ -17649,7 +17649,7 @@
+     int faad_minor;
+     faacDecHandle dec;
+ 
+-    if(sscanf(FAAD2_VERSION, "%d.%d", &faad_major, &faad_minor) < 2)
++    if(sscanf(FAAD2_VERSION, "%s", &faad_major) < 1)
+       return -1;
+     dec = faacDecOpen();
+     if(!dec)
