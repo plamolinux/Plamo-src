@@ -1,7 +1,21 @@
-diff -ur emacs-24.4.orig/lisp/eshell/esh-util.el emacs-24.4/lisp/eshell/esh-util.el
---- emacs-24.4.orig/lisp/eshell/esh-util.el	2014-03-21 14:34:40.000000000 +0900
-+++ emacs-24.4/lisp/eshell/esh-util.el	2014-10-29 15:45:20.878182611 +0900
-@@ -72,7 +72,7 @@
+From 237171835bee4555f25040dca59f8cd894e189bc Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 22 Jan 2018 17:54:33 +0900
+Subject: [PATCH] Support .txz suffix
+
+---
+ lisp/eshell/esh-util.el | 2 +-
+ lisp/ibuffer.el         | 2 +-
+ lisp/ldefs-boot.el      | 2 +-
+ lisp/loaddefs.el        | 2 +-
+ lisp/pcmpl-gnu.el       | 4 ++--
+ 5 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/lisp/eshell/esh-util.el b/lisp/eshell/esh-util.el
+index d65839b..761b3e8 100644
+--- a/lisp/eshell/esh-util.el
++++ b/lisp/eshell/esh-util.el
+@@ -72,7 +72,7 @@ Setting this to nil is offered as an aid to debugging only."
    :group 'eshell-util)
  
  (defcustom eshell-tar-regexp
@@ -10,10 +24,11 @@ diff -ur emacs-24.4.orig/lisp/eshell/esh-util.el emacs-24.4/lisp/eshell/esh-util
    "Regular expression used to match tar file names."
    :version "24.1"			; added xz
    :type 'regexp
-diff -ur emacs-24.4.orig/lisp/ibuffer.el emacs-24.4/lisp/ibuffer.el
---- emacs-24.4.orig/lisp/ibuffer.el	2014-03-21 14:34:40.000000000 +0900
-+++ emacs-24.4/lisp/ibuffer.el	2014-10-29 15:46:05.650334998 +0900
-@@ -332,7 +332,7 @@
+diff --git a/lisp/ibuffer.el b/lisp/ibuffer.el
+index e0282f9..a73523a 100644
+--- a/lisp/ibuffer.el
++++ b/lisp/ibuffer.el
+@@ -332,7 +332,7 @@ directory, like `default-directory'."
    :group 'ibuffer)
  
  (defcustom ibuffer-compressed-file-name-regexp
@@ -22,10 +37,11 @@ diff -ur emacs-24.4.orig/lisp/ibuffer.el emacs-24.4/lisp/ibuffer.el
    "Regexp to match compressed file names."
    :version "24.1"                       ; added xz
    :type 'regexp
-diff -ur emacs-24.4.orig/lisp/ldefs-boot.el emacs-24.4/lisp/ldefs-boot.el
---- emacs-24.4.orig/lisp/ldefs-boot.el	2014-10-17 13:51:02.000000000 +0900
-+++ emacs-24.4/lisp/ldefs-boot.el	2014-10-29 15:46:35.475102159 +0900
-@@ -9366,7 +9366,7 @@
+diff --git a/lisp/ldefs-boot.el b/lisp/ldefs-boot.el
+index e018e6f..73a172d 100644
+--- a/lisp/ldefs-boot.el
++++ b/lisp/ldefs-boot.el
+@@ -9529,7 +9529,7 @@ Use the `etags' program to make a tags table file.")
  
  (custom-autoload 'tags-table-list "etags" t)
  
@@ -34,10 +50,11 @@ diff -ur emacs-24.4.orig/lisp/ldefs-boot.el emacs-24.4/lisp/ldefs-boot.el
  List of extensions tried by etags when `auto-compression-mode' is on.
  An empty string means search the non-compressed file.")
  
-diff -ur emacs-24.4.orig/lisp/loaddefs.el emacs-24.4/lisp/loaddefs.el
---- emacs-24.4.orig/lisp/loaddefs.el	2014-10-18 00:57:21.000000000 +0900
-+++ emacs-24.4/lisp/loaddefs.el	2014-10-29 15:46:55.549400577 +0900
-@@ -9366,7 +9366,7 @@
+diff --git a/lisp/loaddefs.el b/lisp/loaddefs.el
+index e018e6f..73a172d 100644
+--- a/lisp/loaddefs.el
++++ b/lisp/loaddefs.el
+@@ -9529,7 +9529,7 @@ Use the `etags' program to make a tags table file.")
  
  (custom-autoload 'tags-table-list "etags" t)
  
@@ -46,9 +63,10 @@ diff -ur emacs-24.4.orig/lisp/loaddefs.el emacs-24.4/lisp/loaddefs.el
  List of extensions tried by etags when `auto-compression-mode' is on.
  An empty string means search the non-compressed file.")
  
-diff -ur emacs-24.4.orig/lisp/pcmpl-gnu.el emacs-24.4/lisp/pcmpl-gnu.el
---- emacs-24.4.orig/lisp/pcmpl-gnu.el	2014-03-21 14:34:40.000000000 +0900
-+++ emacs-24.4/lisp/pcmpl-gnu.el	2014-10-29 15:48:02.059264808 +0900
+diff --git a/lisp/pcmpl-gnu.el b/lisp/pcmpl-gnu.el
+index bae322a..fb216ad 100644
+--- a/lisp/pcmpl-gnu.el
++++ b/lisp/pcmpl-gnu.el
 @@ -90,7 +90,7 @@
      (lambda (entry)
        (when (and (file-readable-p entry)
@@ -67,3 +85,6 @@ diff -ur emacs-24.4.orig/lisp/pcmpl-gnu.el emacs-24.4/lisp/pcmpl-gnu.el
    "A regexp which matches any tar archive."
    :version "24.3"                       ; added xz
    :type 'regexp
+-- 
+2.14.1
+

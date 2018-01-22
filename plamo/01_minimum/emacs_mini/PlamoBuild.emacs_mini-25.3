@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='emacs'
-vers='25.2'
+vers='25.3'
 url="https://ftp.gnu.org/pub/gnu/emacs/emacs-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -9,7 +9,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--without-all --without-x'
 DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
-patchfiles='emacs-24.2-add_txz.patch'
+patchfiles='emacs-25.3-support-txz.patch'
 compress=txz
 ##############################################################
 
