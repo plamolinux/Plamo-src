@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
-pkgbase='noto_emoji'
+pkgbase='noto_fonts_emoji'
 vers='2018_01_02'
 url="https://github.com/googlei18n/noto-emoji/archive/v${vers//_/-}-flag-update.tar.gz"
 verify=""
-arch=`uname -m`
+arch=noarch
 build=B1
 src="noto-emoji-${vers//_/-}-flag-update"
 OPT_CONFIG=""
