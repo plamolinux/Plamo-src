@@ -1,0 +1,175 @@
+#!/bin/sh
+##############################################################
+pkgbase='fcitx_mozc'
+vers="2.20.2673.102"
+
+_mozc_url=https://github.com/google/mozc.git
+_japanese_usage_dictionary_url=https://github.com/hiroyuki-komatsu/japanese-usage-dictionary.git
+_gyp_url=https://chromium.googlesource.com/external/gyp
+_protobuf_url=https://github.com/google/protobuf.git
+
+_mozc_rev=280e38fe3d9db4df52f0713acf2ca65898cd697a
+_japanese_usage_dictionary_rev=e5b3425575734c323e1d947009dd74709437b684
+_gyp_rev=920ee58c3d3109dea3cd37d88054014891a93db7
+_protobuf_rev=a428e42072765993ff674fda72863c9f1aa2d268
+_zipcode_rel=201703
+_fcitx_patchver=2.18.2612.102.1
+
+git_url=($_mozc_url
+	 $_japanese_usage_dictionary_url
+	 $_gyp_url
+	 $_protobuf_url)
+commit_ids=($_mozc_rev
+	    $_japanese_usage_dictionary_rev
+	    $_gyp_rev
+	    $_protobuf_rev)
+urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
+      https://downloads.sourceforge.net/pnsft-aur/jigyosyo-${_zipcode_rel}.zip
+      https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-${_fcitx_patchver}.patch
+      https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz)
+
+arch=`uname -m`
+build=B1
+src="mozc"
+OPT_CONFIG=""
+DOCS='AUTHORS LICENSE README.md'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+B=$W/build
+
+get_sources() {
+    cnt=0
+    for u in ${git_url[@]}
+    do
+	cd $W
+	if [ ! -d $(basename ${u##*/} .git) ]; then
+	    git clone $u
+	fi
+	cd $(basename ${u##*/} .git)
+	git checkout master
+	git pull origin master
+	git checkout ${commit_ids[$cnt]}
+	let cnt++
+    done
+    for f in ${urls[@]}
+    do
+	cd $W
+	if [ ! -f ${f##*/} ]; then
+	    wget $f
+	fi
+	case ${f##*/} in
+	    *.tar*) tar xvf ${f##*/} ;;
+	    *.zip) unzip -o ${f##*/} ;;
+	esac
+    done
+}
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  get_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  cd $B/src
+
+  # fcitx patch
+  rm -rf unix/fcitx
+  patch -Np2 -i $W/fcitx-mozc-${_fcitx_patchver}.patch
+
+  find . -name  \*.py        -type f -exec sed -i -e "1s|python.*$|python2|"  {} +
+  find . -regex '.*\.gypi?$' -type f -exec sed -i -e "s|'python'|'python2'|g" {} +
+
+  # Generate zip code seed
+  echo "Generating zip code seed..."
+  PYTHONPATH="$PWD:$PYTHONPATH" python2 dictionary/gen_zip_code_seed.py --zip_code="${W}/x-ken-all.csv" --jigyosyo="${W}/JIGYOSYO.CSV" >> data/dictionary_oss/dictionary09.txt
+  echo "Done."
+
+  mv $W/japanese-usage-dictionary $W/japanese_usage_dictionary
+
+  # Copy third party deps
+  for dep in gyp protobuf japanese_usage_dictionary
+  do
+    echo "Copy $dep to source tree for build"
+    cp -a ${W}/$dep third_party/
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B/src
+  export LDFLAGS='-Wl,--as-needed'
+  _targets="server/server.gyp:mozc_server gui/gui.gyp:mozc_tool unix/fcitx/fcitx.gyp:fcitx-mozc"
+
+  QTDIR=/usr GYP_DEFINES="document_dir=/usr/share/licenses/$pkgname use_libzinnia=1" python2 build_mozc.py gyp
+  python2 build_mozc.py build -c Release $_targets
+  
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B/src
+
+  install -v -D -m 755 out_linux/Release/mozc_server $P/usr/${libdir}/mozc/mozc_server
+  install -v    -m 755 out_linux/Release/mozc_tool   $P/usr/${libdir}/mozc/mozc_tool
+
+  install -v -D -m 644 out_linux/Release/gen/unix/fcitx/po/ja.mo $P/usr/share/locale/ja/LC_MESSAGES/fcitx-mozc.mo
+
+  install -v -D -m 755 out_linux/Release/fcitx-mozc.so $P/usr/lib/fcitx/fcitx-mozc.so
+  install -v -D -m 644 unix/fcitx/fcitx-mozc.conf $P/usr/share/fcitx/addon/fcitx-mozc.conf
+  install -v -D -m 644 unix/fcitx/mozc.conf $P/usr/share/fcitx/inputmethod/mozc.conf
+
+  install -v -Dm644 $W/fcitx-mozc-icons/*.png -t $P/usr/share/fcitx/mozc/icon/
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
