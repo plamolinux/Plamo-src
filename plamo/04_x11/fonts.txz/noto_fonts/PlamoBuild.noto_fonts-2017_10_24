@@ -5,12 +5,14 @@ vers='2017_10_24'
 url="https://github.com/googlei18n/noto-fonts/archive/v${vers/_/-}-phase3-second-cleanup.tar.gz"
 verify=""
 arch=noarch
-build=B1
+build=B2
 src="noto-fonts-${vers//_/-}-phase3-second-cleanup"
 OPT_CONFIG=''
 DOCS='LICENSE NEWS README.md'
 patchfiles=''
 compress=txz
+install_fonts_families=("NotoSans" "NotoSerif" "NotoSansDisplay" "NotoSerifDisplay" "NotoSansMono"
+		      "NotoMono" "NotoSansSymbols" "NotoSansSymbols2")
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -53,11 +55,14 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
 
-  install -v -Dm644 unhinted/Noto*.tt[fc] -t $P/usr/share/fonts/noto/
-  install -v -Dm644 hinted/Noto*.tt[fc] -t $P/usr/share/fonts/noto/
+  for font in ${install_fonts_families[@]}
+  do
+    install -v -Dm644 unhinted/${font}-*.tt[fc] -t $P/usr/share/fonts/noto/
+    install -v -Dm644 hinted/${font}-*.tt[fc] -t $P/usr/share/fonts/noto/
+  done
 
   # Already in NotoSans-*.ttc
-  rm $P/usr/share/fonts/noto/NotoSans-{Bold,BoldItalic,Italic,Regular}.ttf
+  rm -v $P/usr/share/fonts/noto/NotoSans-{Bold,BoldItalic,Italic,Regular}.ttf
 
   install -v -Dm644 $W/*.conf -t $P/etc/fonts/conf.avail/
   install -v -dm755 $P/etc/fonts/conf.d/
