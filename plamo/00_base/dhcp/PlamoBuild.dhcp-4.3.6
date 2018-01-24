@@ -5,7 +5,7 @@ vers='4.3.6'
 url="ftp://ftp.isc.org/isc/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=("--with-srv-lease-file=/var/lib/dhcpd/dhcpd.leases"
 	    "--with-srv6-lease-file=/var/lib/dhcpd/dhcpd6.leases"
@@ -87,12 +87,31 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   install -v -Dm0755 client/scripts/linux $P/sbin/dhclient-script
-  mv -v $P/usr/sbin/dhclient /sbin
+  mv -v $P/usr/sbin/dhclient $P/sbin
   
   install -v -dm755 $P/var/lib/dhcpd
   install -v -dm755 $P/var/lib/dhclient
   install -v -Dm644 $W/dhclient.conf $P/etc/dhcp/dhclient.conf
   install -v -Dm754 $W/dhclient.service $P/lib/services/dhclient
+
+  install -v -Dm644 $W/dhclient.conf $docdir/$src/dhclient.conf
+  install -v -Dm644 $W/dhclient.service $docdir/$src/dhclient.service
+  install -v -Dm644 $W/dhcpd.init $docdir/$src/dhcpd.init
+
+  # default not to start dhcpd 
+  install -v -Dm644 $W/dhcpd.init $P/etc/rc.d/init.d/dhcpd
+  for i in $(seq 0 6)
+  do
+      install -v -dm755 $P/etc/rc.d/rc"$i".d
+      case $i in
+	0|1|2|6)
+          ln -sf ../init.d/dhcpd $P/etc/rc.d/rc"$i".d/K30dhcpd
+	  ;;
+	3|4|5)
+          ln -sf ../init.d/dhcpd $P/etc/rc.d/rc"$i".d/S30dhcpd
+          ;;
+      esac
+  done
 
 ################################
 #      install tweaks
