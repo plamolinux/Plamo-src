@@ -87,6 +87,7 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m 0755 -D $W/sysctl.init $P/etc/rc.d/init.d/sysctl
   install -v -d $P/etc/rc.d/rcS.d
   ln -s -v ../init.d/sysctl $P/etc/rc.d/rcS.d/S90sysctl
+  install -v -m 0755 -D $W/sysctl.init $docdir/$src/sysctl.init
 
 ################################
 #      install tweaks

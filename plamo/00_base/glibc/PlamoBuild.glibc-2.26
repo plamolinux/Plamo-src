@@ -5,12 +5,13 @@ vers='2.26'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="glibc-${vers}"
 OPT_CONFIG="--enable-add-ons
 	--enable-kernel=3.2
 	--localedir=/usr/share/locale
 	--enable-tls
+	--enable-obsolete-nsl
 	--enable-obsolete-rpc
 	--enable-stack-protector=strong
 	--disable-profile

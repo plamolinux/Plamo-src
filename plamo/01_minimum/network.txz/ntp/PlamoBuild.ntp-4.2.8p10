@@ -86,7 +86,10 @@ if [ $opt_package -eq 1 ] ; then
 
   # install init script and configuration file
   install -D -m 0755 -v $W/ntp.init $P/etc/rc.d/init.d/ntp
+  install -D -m 0644 -v $W/ntp.init $docdir/$src/ntp.init
   install -D -m 0644 -v $W/ntp.conf $P/etc/ntp.conf.dist
+  install -D -m 0644 -v $W/ntp.conf $docdir/$src/ntp.conf
+
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
 if [ ! -f /etc/ntp.conf ]; then

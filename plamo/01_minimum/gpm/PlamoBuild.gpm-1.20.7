@@ -2,15 +2,16 @@
 ##############################################################
 pkgbase='gpm'
 vers='1.20.7'
-url="http://www.nico.schottelius.org/software/${pkgbase}/archives/${pkgbase}-${vers}.tar.bz2"
+url="http://nico.schottelius.org/software/${pkgbase}/archives/${pkgbase}-${vers}.tar.bz2"
 verify=""
 digest="md5sum:bf84143905a6a903dbd4d4b911a2a2b8"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static"
 DOCS='COPYING README README.gpm2 README.versions TODO'
-patchfiles=''
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/gpm-1.20.7-glibc_2.26-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
 
@@ -39,6 +40,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -47,6 +51,8 @@ if [ $opt_config -eq 1 ] ; then
 #  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
+  sed -i -e 's:<gpm.h>:"headers/gpm.h":' src/prog/{display-buttons,display-coords,get-versions}.c
+
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
@@ -85,6 +91,16 @@ if [ $opt_package -eq 1 ] ; then
   ( cd $P/usr/$libdir ; ln -s -v libgpm.so.2.* libgpm.so ; chmod -v 755 libgpm.so.* )
   install -D -v -m644 $S/conf/gpm-root.conf $P/etc
   install -D -v -m644 $W/gpm.init $P/etc/rc.d/init.d/gpm
+  install -D -v -m644 $W/gpm.init $docdir/$src/gpm.init
+
+  for i in $(seq 0 6)
+  do
+    install -dm0755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6) ln -sf ../init.d/gpm $P/etc/rc.d/rc"$i".d/K10gpm ;;
+      3|4|5)   ln -sf ../init.d/gpm $P/etc/rc.d/rc"$i".d/S70gpm ;;
+    esac
+  done
 
 ################################
 #      install tweaks

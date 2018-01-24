@@ -97,6 +97,7 @@ if [ ! -f /etc/logrotate.conf ]; then
   ( cd /etc && cp logrotate.conf.dist logrotate.conf )
 fi
 EOF
+  install -Dm644 -v $W/logrotate.conf $docdir/$src/logrotate.conf
 
   # install a file for running logrotate daily by cron
   install -d $P/etc/cron.daily/

@@ -100,6 +100,7 @@ if [ $opt_package -eq 1 ] ; then
   popd
 
   install -D -v -m 755 $W/run-parts $P/usr/bin/run-parts
+  install -Dm644 -v $W/run-parts $docdir/$src/run-parts
 
 ################################
 #      install tweaks

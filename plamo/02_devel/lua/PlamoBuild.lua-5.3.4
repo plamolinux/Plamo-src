@@ -81,7 +81,8 @@ if [ $opt_package -eq 1 ] ; then
        TO_LIB="liblua.so liblua.so.5.3 liblua.so.5.3.4" install
 
   install -v -m644 -D $W/lua.pc $P/usr/${libdir}/pkgconfig/lua.pc
-
+  install -v -m644 -D $W/lua.pc $docdir/$src/lua.pc
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 

@@ -95,6 +95,9 @@ if [ $opt_package -eq 1 ] ; then
   install -v -D -m755 $W/timeconfig $P/usr/sbin/timeconfig
   install -v -D -m755 $W/setup.timeconfig $P/usr/lib/setup/setup.timeconfig
   install -v -D -m755 $W/esetup.timeconfig $P/usr/lib/setup/esetup.timeconfig
+  install -v -D -m755 $W/timeconfig $docdir/$src/timeconfig
+  install -v -D -m755 $W/setup.timeconfig $docdir/$src/setup.timeconfig
+  install -v -D -m755 $W/esetup.timeconfig $docdir/$src/esetup.timeconfig
 
   install -v -d $P/var/log/setup
   ln -s /usr/lib/setup/setup.timeconfig $P/var/log/setup/setup.timeconfig

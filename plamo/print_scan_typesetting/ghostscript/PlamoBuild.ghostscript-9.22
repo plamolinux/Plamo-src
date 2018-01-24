@@ -119,6 +119,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # install cidfmap
   install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
+  install -v -m644 -D $W/cidfmap $docdir/$src/cidfmap
 
   # install std_font
   tar xvf $W/${fonturl##*/} --no-same-owner -C $P/usr/share/ghostscript/

@@ -91,6 +91,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # rules from LFS
   install -v -m 0644 $W/55-setclock.rules $P/"$libdir"/udev/rules.d/55-setclock.rules
+  install -Dm0644 -v $W/55-setclock.rules $docdir/$src/55-setclock.rules
 
   # Don't rename eth0 to enp0s3
   rm -v $P/"$libdir"/udev/rules.d/80-net-name-slot.rules
@@ -102,6 +103,9 @@ if [ $opt_package -eq 1 ] ; then
   install -v -d $P/etc/rc.d/rcS.d
   ln -v -sf ../init.d/eudev $P/etc/rc.d/rcS.d/S10eudev
   ln -v -sf ../init.d/eudev_retry $P/etc/rc.d/rcS.d/S50eudev_retry
+
+  install -v -Dm 0755 $W/eudev.init $docdir/$src/eudev.init
+  install -v -Dm 0755 $W/eudev_retry.init $docdir/$src/eudev_retry.init
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg

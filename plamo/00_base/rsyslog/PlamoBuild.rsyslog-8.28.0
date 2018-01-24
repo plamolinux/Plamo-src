@@ -89,6 +89,11 @@ if [ $opt_package -eq 1 ] ; then
   install -v -D -m644 $W/rsyslog.logrotate $P/etc/logrotate.d/rsyslog
   install -v -D -m755 $W/rsyslogd.init $P/etc/rc.d/init.d/rsyslogd
 
+  for f in rsyslog.conf rsyslog.logrotate rsyslogd.init
+  do
+      install -Dm644 -v $W/$f $docdir/$src/$f
+  done
+
   runlevels="0 1 2 3 4 5 6"
   for r in $runlevels
   do

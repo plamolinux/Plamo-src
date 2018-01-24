@@ -86,6 +86,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   install -v -D -m755 $W/gio.sh $P/etc/profile.d/gio.sh
+  install -v -D -m644 $W/gio.sh $docdir/$src/gio.sh
 
 ################################
 #      install tweaks

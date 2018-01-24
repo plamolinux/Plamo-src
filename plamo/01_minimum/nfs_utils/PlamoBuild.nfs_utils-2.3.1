@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='acpid'
-vers='2.0.28'
-url="https://downloads.sourceforge.net/acpid2/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:0432407b5ff75ae8e08afb43052fde2b"
-verify=""
+pkgbase='nfs_utils'
+vers='2.3.1'
+url="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='COPYING Changelog README TODO'
-patchfiles=''
+src="nfs-utils-${vers}"
+OPT_CONFIG="--sbindir=/sbin --disable-static --enable-shared --without-tcp-wrappers --disable-gss "
+DOCS='COPYING INSTALL NEWS README'
+patchfiles=
 compress=txz
 ##############################################################
 
@@ -44,16 +43,16 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
@@ -81,19 +80,59 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -v -m755 -d $P/etc/acpi/events
+  install -dm755 -v $P/usr/sbin/
+  mv -v $P/sbin/start-statd $P/usr/sbin/
 
-  cp -r samples $docdir/$src/
+  install -D -m 644 -v $S/utils/mount/nfsmount.conf $P/etc/nfsmount.conf
+  install -D -m 644 -v $S/nfs.conf $P/etc/nfs.conf
 
-  install -v -m644 $W/lid $P/etc/acpi/events/lid
-  install -v -m755 $W/lid.sh $P/etc/acpi/lid.sh
+  install -D -m 644 -v $W/exports $P/etc/exports
+  install -D -m 644 -v $W/exports $docdir/$src/exports
+  install -D -m 644 -v $W/id_resolver.conf $P/etc/request-key.d/id_resolver.conf
+  install -D -m 644 -v $W/id_resolver.conf $docdir/$src/id_resolver.conf
 
-  install -v -m755 -D $W/acpid.init $P/etc/rc.d/init.d/acpid
+  install -d -v $P/etc/exports.d
+  install -d -m 555 -v $P/var/lib/nfs/rpc_pipefs
+  install -d -v $P/var/lib/nfs/v4recovery
 
-  for f in lid lid.sh acpid.init
+  install -D -m 755 -v $W/nfs4_setup.sh $P/sbin/nfs4_setup.sh
+  install -D -m 755 -v $W/nfs4_setup.sh $docdir/$src/nfs4_setup.sh
+
+  install -Dm644 -v $S/support/nfsidmap/idmapd.conf $P/etc/idmapd.conf
+
+  install -Dm644 -v $W/nfs-server.config $P/etc/sysconfig/nfs-server
+  install -Dm644 -v $W/nfs-server.config $docdir/$src/nfs-server.config
+
+  # init script
+  install -D -m 755 -v $W/nfs-client.init $P/etc/rc.d/init.d/nfs-client
+  install -D -m 755 -v $W/nfs-client.init $docdir/$src/nfs-client.init
+  install -D -m 644 -v $W/nfs-server.init $P/etc/rc.d/init.d/nfs-server
+  install -D -m 644 -v $W/nfs-server.init $docdir/$src/nfs-server.init
+
+  for i in $(seq 0 6)
   do
-    install -Dm644 -v $W/$f $docdir/$src/$f
+    install -dm755 -v $P/etc/rc.d/rc"$i".d/
+    case $i in
+      0|1|2|6)
+        ln -sf ../init.d/nfs-client $P/etc/rc.d/rc"$i".d/K48nfs-client
+	ln -sf ../init.d/nfs-server $P/etc/rc.d/rc"$i".d/K48nfs-server
+	;;
+      3|4|5)
+	ln -sf ../init.d/nfs-client $P/etc/rc.d/rc"$i".d/S24nfs-client
+	ln -sf ../init.d/nfs-server $P/etc/rc.d/rc"$i".d/S24nfs-server
+	;;
+    esac
   done
+  
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+nfs_chk=\$(grep nfs /etc/services)
+if [ "\${nfs_chk}.x" = ".x" ]; then
+    echo "adding nfs service into /etc/services"
+    echo "nfs        2049/tcp" >> /etc/services
+    echo "nfs        2049/udp" >> /etc/services
+fi
+EOF
 
 ################################
 #      install tweaks

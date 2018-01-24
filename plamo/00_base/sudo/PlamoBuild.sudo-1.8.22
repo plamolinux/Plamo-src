@@ -1,15 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='nfs_utils'
-vers='2.2.1'
-url="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.xz"
-verify="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.sign"
+pkgbase='sudo'
+vers='1.8.22'
+url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
-src="nfs-utils-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --without-tcp-wrappers --disable-gss "
-DOCS='COPYING INSTALL NEWS README'
-patchfiles=
+src="${pkgbase}-${vers}"
+OPT_CONFIG=('--with-pam' '--with-env-editor'
+	'--libexecdir=/usr/lib' '--with-rundir=/run/sudo' '--with-env-editor'
+	'--with-all-insults' '--with-secure-path' '--without-sendmail'
+	--with-passprompt="[sudo] password for %p: "
+	"--docdir=/usr/share/doc/${src}")
+DOCS='ABOUT-NLS ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -41,21 +45,25 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man "${OPT_CONFIG[@]}" 
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -80,27 +88,16 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -D -m 644 -v $S/utils/mount/nfsmount.conf $P/etc/nfsmount.conf
-  install -D -m 644 -v $S/nfs.conf $P/etc/nfs.conf
-
-  install -D -m 644 -v $W/exports $P/etc/exports
-  install -D -m 644 -v $W/id_resolver.conf $P/etc/request-key.d/id_resolver.conf
-
-  install -d -v $P/etc/exports.d
-  install -d -m 555 -v $P/var/lib/nfs/rpc_pipefs
-  install -d -v $P/var/lib/nfs/v4recovery
-
-  install -D -m 755 -v $W/nfs4_setup.sh $P/sbin/nfs4_setup.sh
-
+  mv -v $P/etc/sudoers $P/etc/sudoers.dist
   mkdir -p $P/install
-  cat <<EOF > $P/install/initpkg
-nfs_chk=\$(grep nfs /etc/services)
-if [ "\${nfs_chk}.x" = ".x" ]; then
-    echo "adding nfs service into /etc/services"
-    echo "nfs        2049/tcp" >> /etc/services
-    echo "nfs        2049/udp" >> /etc/services
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/sudoers ]; then
+  ( cd /etc && cp sudoers.dist sudoers )
 fi
 EOF
+  
+  install -D -m644 -v $W/pam.sudo $P/etc/pam.d/sudo
+  install -D -m644 -v $W/pam.sudo $docdir/$src/pam.sudo
 
 ################################
 #      install tweaks

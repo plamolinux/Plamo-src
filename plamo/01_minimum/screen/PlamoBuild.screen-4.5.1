@@ -87,6 +87,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   install -D -m 644 -v $W/pam.screen $P/etc/pam.d/screen
+  install -D -m 644 -v $W/pam.screen $docdir/$src/pam.screen
   install -D -m 644 -v $S/etc/etcscreenrc $P/etc/screenrc
   install -D -m 644 -v $S/etc/screenrc $docdir/$src/dot.screenrc.sample
 

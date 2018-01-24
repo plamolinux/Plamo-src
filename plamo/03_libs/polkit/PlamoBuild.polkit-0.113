@@ -8,7 +8,7 @@ arch=`uname -m`
 build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --with-authfw=shadow'
-DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
+DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -84,6 +84,8 @@ if [ $opt_package -eq 1 ] ; then
   install -v -d $P/etc/pam.d
   install -v -m 0644 $W/polkit.pam $P/etc/pam.d/polkit-1
   install -v -o polkituser -d $P/home/polkituser
+
+  install -Dm644 -v $W/polkit.pam $docdir/$src/polkit.pam
 
 ################################
 #      install tweaks

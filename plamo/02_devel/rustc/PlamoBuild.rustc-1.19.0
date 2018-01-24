@@ -71,6 +71,7 @@ if [ $opt_package -eq 1 ] ; then
   DESTDIR=$P python2 ./x.py install
 
   rm -fv $P/usr/${libdir}/rustlib/{components,manifest-rustc,rust-installer-version}
+  install -v $W/config.toml $docdir/$src/config.toml
   
 ################################
 #      install tweaks

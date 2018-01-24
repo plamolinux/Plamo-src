@@ -100,6 +100,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -v -dm755 $P/etc/template/Source/.config/fontconfig
   install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
+  install -v -Dm644 $W/fonts.conf $docdir/$src/fonts.conf
 
 ################################
 #      install tweaks

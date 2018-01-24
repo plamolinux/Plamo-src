@@ -6,7 +6,7 @@ url="http://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 digest="md5sum:cf10cd41ed8228fc54c316191c1f07fe"
 verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --bindir=/sbin"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
@@ -43,16 +43,13 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
@@ -61,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -85,6 +82,16 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -Dm755 $W/rpcbind.init $P/etc/rc.d/init.d/rpcbind
+  for i in $(seq 0 6)
+  do
+      install -dm755 $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6) ln -sf ../init.d/rpcbind $P/etc/rc.d/rc"$i".d/K49rpcbind ;;
+	  3|4|5)   ln -sf ../init.d/rpcbind $P/etc/rc.d/rc"$i".d/S22rpcbind ;;
+      esac
+  done
 
 ################################
 #      install tweaks

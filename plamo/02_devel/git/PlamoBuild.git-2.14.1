@@ -86,6 +86,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # set-file-times
   install -v -m 755 $W/git-set-file-times $P/usr/libexec/git-core/git-set-file-times
+  install -v -m 755 $W/git-set-file-times $docdir/$src/git-set-file-times
 
   # install man pages
   install -v -d $P/usr/share/man

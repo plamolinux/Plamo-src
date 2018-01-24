@@ -89,6 +89,8 @@ if [ $opt_package -eq 1 ] ; then
 
   install -v -m644 -D $W/cups.init $P/etc/rc.d/init.d/cups
   install -v -m644 -D $W/cups.pam $P/etc/pam.d/cups
+  install -v -m644 -D $W/cups.init $docdir/$src/cups.init
+  install -v -m644 -D $W/cups.pam $docdir/$src/cups.pam
 
   rm -rf $P/tmp
 

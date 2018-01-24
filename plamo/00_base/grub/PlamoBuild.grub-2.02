@@ -142,6 +142,7 @@ if [ $opt_package -eq 1 ] ; then
 
   echo "Installing grub default file"
   install -D -m 644 -v $W/grub.default $P/etc/default/grub
+  install -D -m 644 -v $W/grub.default $docdir/$src/grub.default
 
   echo "Remove debug related files"
   for d in i386-pc i386-efi x86_64-efi
@@ -153,6 +154,7 @@ if [ $opt_package -eq 1 ] ; then
 
   echo "Installing plamo tools for grub"
   tar --strip-components=1 -xvf $W/plamo_grubconfig.tar.gz -C $P
+  install -D -m 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
 
 ################################
 #      install tweaks

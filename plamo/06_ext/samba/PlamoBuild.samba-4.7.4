@@ -5,7 +5,7 @@ vers='4.7.4'
 url="https://www.${pkgbase}.org/ftp/${pkgbase}/stable/${pkgbase}-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-piddir=/run/samba --with-pammodulesdir=/lib/security --enable-fhs --without-ad-dc --without-systemd --enable-selftest"
 DOCS='BUILD_SYSTEMS.txt COPYING PFIF.txt README README.Coding README.cifs-utils README.contributing WHATSNEW.txt install_with_python.sh prog_guide4.txt release-scripts'
@@ -102,9 +102,6 @@ if [ $opt_package -eq 1 ] ; then
   # config
   install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
 
-  # init (default to not spawn)
-  install -v -m644 -D $W/samba.init $P/etc/rc.d/init.d/samba
-
   # for openldap
   mkdir -p -v $P/etc/openldap/schema
   install -v -m644    examples/LDAP/samba* $P/etc/openldap/schema
@@ -112,6 +109,23 @@ if [ $opt_package -eq 1 ] ; then
 
   # pam
   install -v -m644 -D $W/samba.pam $P/etc/pam.d/samba
+
+  # init (default to not spawn)
+  install -v -m644 -D $W/samba.init $P/etc/rc.d/init.d/samba
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6) ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/K48samba ;;
+	  3|4|5)   ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/S45samba ;;
+      esac
+  done
+
+  # docdir
+  for f in samba.pam samba.init
+  do
+    install -Dm644 -v $W/$f $docdir/$src/$f
+  done
 
 ################################
 #      install tweaks

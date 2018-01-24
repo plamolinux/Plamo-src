@@ -85,6 +85,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   install -v -m644 -D $W/polkit-gnome-authentication-agent-1.desktop $P/etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop
+  install -v -m644 -D $W/polkit-gnome-authentication-agent-1.desktop $docdir/$src/polkit-gnome-authentication-agent-1.desktop
 
 ################################
 #      install tweaks

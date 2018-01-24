@@ -97,19 +97,28 @@ if [ $opt_package -eq 1 ] ; then
       ln -sfv ../../$libdir/$(readlink $P/usr/$libdir/lib${f}.so) $P/usr/lib/lib${f}.so
   done
 
-  install -Dm644 $W/console.handlers $P/etc/security/console.handlers
+  install -Dm644 -v $W/console.handlers $P/etc/security/console.handlers
+  install -Dm644 -v $W/console.handlers $docdir/$src/console.handlers
   
-  install -Dm644 $W/system-auth $P/etc/pam.d/system-auth
+  install -Dm644 -v $W/system-auth $P/etc/pam.d/system-auth
+  install -Dm644 -v $W/system-auth $docdir/$src/system-auth
+  
   for f in halt poweroff reboot
   do
-      install -Dm644 $W/halt $P/etc/pam.d/$f
+      install -Dm644 -v $W/halt $P/etc/pam.d/$f
   done
-  install -Dm644 $W/other $P/etc/pam.d/other
+  install -Dm644 -v $W/halt $docdir/$src/halt
+  
+  install -Dm644 -v $W/other $P/etc/pam.d/other
+  install -Dm644 -v $W/other $docdir/$src/ohter
+  
   ln -sfv system-auth $P/etc/pam.d/plamo-default
-  install -Dm644 $W/securetty $P/etc/securetty
+  
+  install -Dm644 -v $W/securetty $P/etc/securetty
   seq -f "tty%g" 12 >> $P/etc/securetty
   seq -f "ttyp%g" 12 >> $P/etc/securetty
   seq -f "ttyS%g" 0 3 >> $P/etc/securetty
+  install -Dm644 -v $W/securetty $docdir/$src/securetty
 
   install -d $P/usr/share/doc/$src/doc
   mv -v $P/usr/share/doc/$src/*.txt $P/usr/share/doc/$src/doc/
