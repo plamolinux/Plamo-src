@@ -1,34 +1,35 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.20.0'
-url="http://sqlite.org/2017/sqlite-autoconf-3200000.tar.gz"
-digest="md5sum:e262a28b73cc330e7e83520c8ce14e4d"
+vers='3.22.0'
+url="http://sqlite.org/2018/sqlite-autoconf-3220000.tar.gz"
+digest="sha1sum:2fb24ec12001926d5209d2da90d252b9825366ac"
 verify=""
 arch=`uname -m`
 build=B1
-src="sqlite-autoconf-3200000"
+src="sqlite-autoconf-3220000"
 OPT_CONFIG='--disable-static --enable-fts5'
 DOCS='INSTALL README.txt'
 patchfiles=''
 compress=txz
 ##############################################################
-export CPPFLAGS="$CPPFLAGS -DSQLITE_ENABLE_COLUMN_METADATA=1 \
-       -DSQLITE_ENABLE_UNLOCK_NOTIFY \
+export CPPFLAGS="$CPPFLAGS -DSQLITE_ENABLE_FTS4=1 \
+       -DSQLITE_ENABLE_COLUMN_METADATA=1 \
+       -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 \
        -DSQLITE_ENABLE_DBSTAT_VTAB=1 \
        -DSQLITE_ENABLE_FTS3_TOKENIZER=1 \
-       -DSQLITE_SECURE_DELETE \
+       -DSQLITE_SECURE_DELETE=1 \
        -DSQLITE_MAX_VARIABLE_NUMBER=250000 \
        -DSQLITE_MAX_EXPR_DEPTH=10000"
 
 source /usr/share/plamobuild_functions.sh
 
-# д│д╬е╣епеъе╫е╚д╟╗╚дж1╩╕╗·╩╤┐Їд╬░╒╠г
+# уБУуБоуВ╣уВпуГкуГЧуГИуБзф╜┐уБЖ1цЦЗхнЧхдЙцХ░уБоцДПхС│
 #
-# $W : д│д╬е╣епеъе╫е╚дЄ╞░длд╣елеьеєе╚е╟егеьепе╚еъ
-# $S : е╜б╝е╣е│б╝е╔д╬двдые╟егеьепе╚еъ(е╟е╒ейеые╚: $W/${src})
-# $B : е╙еые╔═╤е╟егеьепе╚еъ(е╟е╒ейеые╚: /tmp/build{,32})
-# $P : е╙еые╔д╖д┐е╒ебедеыдЄедеєе╣е╚б╝еыд╣дые╟егеьепе╚еъб╩е╟е╒ейеые╚: $W/work)
+# $W : уБУуБоуВ╣уВпуГкуГЧуГИуВТхЛХуБЛуБЩуВлуГмуГ│уГИуГЗуВгуГмуВпуГИуГк
+# $S : уВ╜уГ╝уВ╣уВ│уГ╝уГЙуБоуБВуВЛуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: $W/${src})
+# $B : уГУуГлуГЙчФиуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: /tmp/build{,32})
+# $P : уГУуГлуГЙуБЧуБЯуГХуВбуВдуГлуВТуВдуГ│уВ╣уГИуГ╝уГлуБЩуВЛуГЗуВгуГмуВпуГИуГкя╝ИуГЗуГХуВйуГлуГИ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
