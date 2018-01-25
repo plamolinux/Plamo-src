@@ -5,7 +5,7 @@ vers='2.26'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B3
 src="glibc-${vers}"
 OPT_CONFIG="--enable-add-ons
 	--enable-kernel=3.2
@@ -29,7 +29,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile"
+patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch"
 compress=txz
 ##############################################################
 
@@ -160,7 +160,7 @@ if [ $opt_package -eq 1 ] ; then
       mv -v $P2/usr/share/$i $P/usr/share
   done
 
-  # lib64 §Ú«—§π§Î§ø§·§Œ∞‹π‘¡º√÷
+  # lib64 „ÇíÂªÉ„Åô„Çã„Åü„ÇÅ„ÅÆÁßªË°åÊé™ÁΩÆ
   if [ "${arch}" == "x86_64" ]; then
       rm -rf $P/lib64
       mkdir -p $P/lib64
@@ -173,45 +173,13 @@ EOF
 
   fi
 
-  # $localedir §œ localedata §Œ√÷§≠æÏ§«°§¿∏¿Æ§∑§ø mo •’•°•§•Î§œ
-  # x86/x86_64 §»§‚ $msgcatdir §À√÷§Ø§Œ§¨∫«∂·§ŒŒÆµ∑§√§›§§
-  mkdir -p $P/usr/lib
-  ( cd $P/usr/lib ; ln -sf ../share/locale )
-  # ≤·µÓ§»§Œ∏ﬂ¥π¿≠§Œ§ø§·§À§≥§√§¡§‚•Í•Û•Ø§Úƒ•§√§∆§™§Ø
-  if [ "$arch" = "x86_64" ]; then
-      mkdir -p $P/usr/${libdir}
-      ( cd $P/usr/${libdir} ; ln -sf ../share/locale )
-  fi
-
-  ( cd $P/usr/share/locale ; mv ja ja_JP.eucJP )
-  #( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja )
-  #( cd $P/usr/share/locale ; ln -sf ja_JP.eucJP ja_JP )
-
-  gunzip $P/usr/share/i18n/charmaps/EUC-JP.gz
-  $P/usr/bin/localedef --charmap=$P/usr/share/i18n/charmaps/EUC-JP --inputfile=$P/usr/share/i18n/locales/ja_JP $P/usr/share/locale/ja_JP.eucJP
-  gzip -f $P/usr/share/i18n/charmaps/EUC-JP
-
-  ( cd $P/usr/share/locale ; mkdir ja_JP.UTF-8 )
-  gunzip $P/usr/share/i18n/charmaps/UTF-8.gz
-  $P/usr/bin/localedef --charmap=$P/usr/share/i18n/charmaps/UTF-8 --inputfile=$P/usr/share/i18n/locales/ja_JP $P/usr/share/locale/ja_JP.UTF-8
-  gzip -f $P/usr/share/i18n/charmaps/UTF-8
-
-  ln -sfv ja_JP.UTF-8 $P/usr/share/locale/ja
-  ln -sfv ja_JP.UTF-8 $P/usr/share/locale/ja_JP
-
-  for i in $P/usr/share/locale/* ; do
-      chk=`echo $i | grep ja`
-      if [ "$chk.x" = ".x" ]; then
-  	  rm -rf $i
-      fi
-  done
+  install -dm755 -v $P/usr/${libdir}/locale
 
   cat <<EOF >> $P/etc/ld.so.conf.new
 /${libdir}
 /usr/${libdir}
 /usr/local/${libdir}
 EOF
-
 
   cat << "EOF" > $P/etc/nsswitch.conf.new
 # /etc/nsswitch.conf
@@ -243,27 +211,33 @@ EOF
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 echo "glibc package initializing"
-# /usr/lib{,64}/§Œ∞‹π‘¡º√÷§Œ§ø§·°§ld.so.conf.new §ÚÕ•¿Ë§π§Î
+# /usr/lib{,64}/„ÅÆÁßªË°åÊé™ÁΩÆ„ÅÆ„Åü„ÇÅÔºåld.so.conf.new „ÇíÂÑ™ÂÖà„Åô„Çã
 if [ -f /etc/ld.so.conf ]; then
   mv /etc/ld.so.conf /etc/ld.so.conf.old
 fi
 mv /etc/ld.so.conf.new /etc/ld.so.conf
 ldconfig
 
-# ¥˚¬∏§Œ nsswitch.conf §¨Ãµ§±§Ï§–ø∑§∑§Ø nsswitch.conf.new §Ú nsswitch.conf §»§π§Î§¨
-# §¢§Ï§–§Ω§Œ§ﬁ§ﬁ§À§∑§∆§™§Ø
+# Êó¢Â≠ò„ÅÆ nsswitch.conf „ÅåÁÑ°„Åë„Çå„Å∞Êñ∞„Åó„Åè nsswitch.conf.new „Çí nsswitch.conf „Å®„Åô„Çã„Åå
+# „ÅÇ„Çå„Å∞„Åù„ÅÆ„Åæ„Åæ„Å´„Åó„Å¶„Åä„Åè
 if [ ! -f /etc/nsswitch.conf ]; then
   mv /etc/nsswitch.conf.new /etc/nsswitch.conf
 else
   rm /etc/nsswitch.conf.new
 fi
 echo "glibc timezone configuring"
-# ¥˚¬∏§Œlocaltime§¨§¢§Ï§–§Ω§Œ§ﬁ§ﬁ°§Ãµ§±§Ï§–JST§«∫Ó§Î
+# Êó¢Â≠ò„ÅÆlocaltime„Åå„ÅÇ„Çå„Å∞„Åù„ÅÆ„Åæ„ÅæÔºåÁÑ°„Åë„Çå„Å∞JST„Åß‰Ωú„Çã
 if [ ! -e /etc/localtime ]; then
    TIMEZONE="Japan"
    ( cd /usr/share/zoneinfo ; ln -sf posix/$TIMEZONE localtime )
    ( cd /etc ; cp ../usr/share/zoneinfo/localtime localtime )
 fi
+
+echo "glibc Generating locale (en_US.UTF-8, ja_JP.UTF-8, ja_JP.eucJP)"
+rm -rf /usr/${libdir}/locale/*
+localedef -i en_US -c -f UTF-8  -A /usr/share/locale/locale.alias en_US.UTF-8
+localedef -i ja_JP -c -f UTF-8  -A /usr/share/locale/locale.alias ja_JP.UTF-8
+localedef -i ja_JP -c -f EUC-JP -A /usr/share/locale/locale.alias ja_JP.eucJP
 
 echo "glibc initialize finished"
 
