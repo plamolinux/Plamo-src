@@ -2,7 +2,7 @@
 export LANG=C
 ##############################################################
 pkgbase=nss
-vers=3.33
+vers=3.35
 url="http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_${vers//./_}_RTM/src/nss-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
