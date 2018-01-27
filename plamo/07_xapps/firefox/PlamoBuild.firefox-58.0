@@ -1,17 +1,19 @@
 #!/bin/sh
+unset LS_BLOCK_SIZE
 ##############################################################
-pkgbase='libpng'
-vers='1.6.32'
-url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+pkgbase='firefox'
+vers='58.0'
+url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
+langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
+digest="md5sum:0d5b70d2cf074ed6716b13c3e8d43a18"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
-apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
-apng_digest="md5sum:1760dbaa13c2569fdda6d83f6483701e"
-patchfiles=$(basename ${apng_patch##*/} .gz)
+OPT_CONFIG=
+DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
 
@@ -40,14 +42,11 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${apng_patch_url##*/} ]; then
-    save_url=$url
-    wget $apng_patch_url
-    url=$apng_patch_url
-    digest=$apng_digest
-    check_digest
-    url=$save_url
-    gzip -d ${apng_patch_url##*/}
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
+  fi
+  if [ ! -f ${langpack_ja##*/} ]; then
+    wget $langpack_ja
   fi
 fi
 
@@ -63,25 +62,18 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  LIBS=-lpthread $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
+  rm -f $S/.mozconfig
+  cp -v $W/mozconfig $S/.mozconfig
+  mkdir -p path
+  if [ ! -h path/python ]; then
+    ln -s /usr/bin/python2 path/python
   fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  cd $S
+  export PATH="$S/path:$PATH"
+  ./mach build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -91,9 +83,33 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
+  cd $S
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ./mach install
+
+  # plugin
+  install -dm755 -v $P/usr/${libdir}/mozilla/plugins
+  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox-${vers}/browser
+
+  # config to docdir
+  install -Dm644 -v $W/mozconfig $docdir/$src/mozconfig
+
+  # desktop file
+  install -Dm644 -v $W/firefox.desktop $P/usr/share/applications/firefox.desktop
+  install -Dm644 -v $W/firefox.desktop $docdir/$src/firefox.desktop
+
+  # icon
+  install -dm755 -v $P/usr/share/pixmaps
+  ln -sfv /usr/${libdir}/firefox-${vers}/browser/icons/mozicon128.png \
+     $P/usr/share/pixmaps/firefox.png
+
+  # lang pack
+  install -Dm644 -v $W/ja.xpi \
+	  $P/usr/${libdir}/firefox-${vers}/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
+  install -Dm644 -v $W/vendor.js \
+	  $P/usr/${libdir}/firefox-${vers}/browser/defaults/preferences/vendor.js
+  install -Dm644 -v $W/vendor.js \
+	  $docdir/$src/vendor.js
 
 ################################
 #      install tweaks

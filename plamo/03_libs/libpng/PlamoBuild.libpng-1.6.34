@@ -1,15 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rustc'
-vers='1.19.0'
-url="https://static.rust-lang.org/dist/rustc-${vers}-src.tar.gz"
-verify="${url}.asc"
+pkgbase='libpng'
+vers='1.6.34'
+url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify=""
 arch=`uname -m`
 build=B1
-src="rustc-${vers}-src"
+src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='LICENSE-APACHE LICENSE-MIT README.md RELEASES.md'
-patchfiles=''
+DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
+#apng_digest="1760dbaa13c2569fdda6d83f6483701e"
+patchfiles="$(basename ${apng_patch_url##*/} .gz)"
 compress=txz
 ##############################################################
 
@@ -22,8 +24,6 @@ source /usr/share/plamobuild_functions.sh
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
-# because build size is too large.
-B=$W/build
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -40,24 +40,43 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f "$(basename ${apng_patch_url##*/} .gz)" ]; then
+    wget $apng_patch_url
+    gzip -d ${apng_patch_url##*/}
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
-  cp -v $W/config.toml $B/config.toml
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  LIBS=-lpthread $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  python2 ./x.py build
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -68,11 +87,9 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  DESTDIR=$P python2 ./x.py install
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
-  rm -fv $P/usr/${libdir}/rustlib/{components,manifest-rustc,rust-installer-version}
-  install -v $W/config.toml $docdir/$src/config.toml
-  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
