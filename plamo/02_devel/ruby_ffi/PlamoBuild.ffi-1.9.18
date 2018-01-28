@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xfce_theme_Greybird'
-vers='1.6.2'
-url="https://github.com/shimmerproject/Greybird/archive/v${vers}.tar.gz"
+gemname="ffi"
+pkgbase='ruby_ffi'
+vers='1.9.18'
+url="https://github.com/${pkgbase}/${pkgbase}/archive/${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
-src="Greybird-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='LICENSE.CC LICENSE.GPL README'
+src="ffi-${vers}"
+OPT_CONFIG=
+DOCS='COPYING LICENSE LICENSE.SPECS README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -41,19 +42,33 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  echo "There is nothing to do."
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  echo "There is nothing to do."
+  cd $B
+  gem build ${gemname}.gemspec  
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
-  mkdir -vp $P/usr/share/themes
-  cp -av $S $P/usr/share/themes/Greybird
+  cd $B
+  gemdir=$(gem env gemdir)
+  gem install --ignore-dependencies --no-user-install \
+      -i "$P/$gemdir" -n "$P/usr/bin" $gemname-$vers.gem
+  rm "$P/$gemdir/cache/$gemname-$vers.gem"
 
 ################################
 #      install tweaks
