@@ -2,18 +2,19 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='58.0'
+vers='58.0.1'
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
-digest="md5sum:0d5b70d2cf074ed6716b13c3e8d43a18"
+digest="sha256sum:6032d4cf4c6d74f05c41c4268041de4d700d62fe31043f883977ad39e18d0038"
 arch=`uname -m`
-build=B2
+build=B0
 src="${pkgbase}-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-patchfiles="${blfspatch##*/}"
+#blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-58.0-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/} firefox-install-dir.patch"
 compress=txz
 ##############################################################
 
@@ -100,14 +101,14 @@ if [ $opt_package -eq 1 ] ; then
 
   # icon
   install -dm755 -v $P/usr/share/pixmaps
-  ln -sfv /usr/${libdir}/firefox-${vers}/browser/icons/mozicon128.png \
+  ln -sfv /usr/${libdir}/firefox/browser/icons/mozicon128.png \
      $P/usr/share/pixmaps/firefox.png
 
   # lang pack
   install -Dm644 -v $W/ja.xpi \
-	  $P/usr/${libdir}/firefox-${vers}/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
+	  $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
   install -Dm644 -v $W/vendor.js \
-	  $P/usr/${libdir}/firefox-${vers}/browser/defaults/preferences/vendor.js
+          $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor.js
   install -Dm644 -v $W/vendor.js \
 	  $docdir/$src/vendor.js
 
