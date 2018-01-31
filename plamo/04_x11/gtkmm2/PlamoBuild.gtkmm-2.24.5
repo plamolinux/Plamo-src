@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='cairo'
-vers='1.14.10'
-url="https://www.${pkgbase}graphics.org/releases/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:146f5f4d0b4439fc3792fd3452b7b12a"
+pkgbase='gtkmm2'
+vers='2.24.5'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/2.24/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:6c59ae8bbff48fad9132f23af347acf1"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-tee --enable-gl'
-DOCS='AUTHORS COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1 ChangeLog ChangeLog.pre-1.0 ChangeLog.pre-1.10 ChangeLog.pre-1.12 ChangeLog.pre-1.2 ChangeLog.pre-1.4 ChangeLog.pre-1.6 ChangeLog.pre-1.8 HACKING INSTALL NEWS README README.win32'
+src="gtkmm-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING COPYING.tools ChangeLog INSTALL NEWS README README.SUN README.win32 win32_installer'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,9 +53,8 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+  sed -e "/^libdocdir =/ s/\$(book_name)/gtkmm-${vers}/" \
+      -i docs/Makefile.in
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
