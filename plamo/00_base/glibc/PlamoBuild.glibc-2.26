@@ -5,7 +5,7 @@ vers='2.26'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B3
+build=B4
 src="glibc-${vers}"
 OPT_CONFIG="--enable-add-ons
 	--enable-kernel=3.2
@@ -28,8 +28,10 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
+# glibc-c-utf8-locale.patch
+# https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch"
+patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch glibc-c-utf8-locale.patch"
 compress=txz
 ##############################################################
 
@@ -238,6 +240,7 @@ rm -rf /usr/${libdir}/locale/*
 localedef -i en_US -c -f UTF-8  -A /usr/share/locale/locale.alias en_US.UTF-8
 localedef -i ja_JP -c -f UTF-8  -A /usr/share/locale/locale.alias ja_JP.UTF-8
 localedef -i ja_JP -c -f EUC-JP -A /usr/share/locale/locale.alias ja_JP.eucJP
+localedef -i C -c -f UTF-8  -A /usr/share/locale/locale.alias C.UTF-8
 
 echo "glibc initialize finished"
 
