@@ -5,11 +5,11 @@ vers='5.1.4'
 url="http://www.kernel.org/pub/linux/daemons/${pkgbase}/v5/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-${vers}.tar.sign"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--without-openldap"
 DOCS='CHANGELOG COPYING INSTALL README README.active-restart README.amd-maps README.changer README.ncpfs README.replicated-server README.smbfs README.v5.release'
-patchfiles='autofs_init_sleep.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -81,7 +81,13 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  chmod -v 644 $P/etc/rc.d/init.d/autofs
+  # install init script
+  install -v -Dm644 $W/autofs.init $P/etc/rc.d/init.d/autofs
+  install -v -Dm644 $W/autofs.init $docdir/$src/autofs.init
+
+  # remove original init script
+  rm -v -rf $P/etc/init.d
+  
   rm -v $P/etc/autofs_ldap_auth.conf
 
   configfiles="autofs.conf auto.master auto.misc
