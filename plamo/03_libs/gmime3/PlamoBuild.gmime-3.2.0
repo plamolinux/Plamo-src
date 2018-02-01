@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='totem_pl_parser'
-vers='3.26.0'
-url="http://ftp.gnome.org/pub/gnome/sources/totem-pl-parser/3.26/totem-pl-parser-${vers}.tar.xz"
-digest="md5sum:f609b4a758055bca5045c83604638723"
+pkgbase='gmime3'
+vers='3.2.0'
+url="http://ftp.gnome.org/pub/gnome/sources/gmime/${vers%.*}/gmime-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
 build=B1
-src="totem-pl-parser-${vers}"
-OPT_CONFIG=(--buildtype=release)
-DOCS='AUTHORS COPYING.LIB ChangeLog.pre-2.27.2 MAINTAINERS NEWS README meson_options.txt'
-patchfiles=""
+src="gmime-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.md TODO'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -53,18 +52,25 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
   cd $B
-  meson --prefix=/usr --libdir=${libdir} ${OPT_CONFIG[@]} $S
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
   if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
+    echo "configure error. $0 script stop"
     exit 255
   fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  ninja
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -76,7 +82,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  DESTDIR=$P ninja install
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks

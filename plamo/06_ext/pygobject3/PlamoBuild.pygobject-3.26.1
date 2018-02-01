@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pygobject2'
-vers='2.28.7'
+pkgbase='pygobject3'
+vers='3.26.1'
 url="http://ftp.gnome.org/pub/gnome/sources/pygobject/${vers%.*}/pygobject-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
 build=B1
 src="pygobject-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-2.18 INSTALL NEWS README README.win32 pygobject_postinstall.py'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -42,32 +42,40 @@ fi
 
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  for i in 2 3
+  do
+    echo "==== configure for python${i} ===="
+    mkdir -p $B/${i}
+    cp -a $S/* $B/${i}/
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy srcs to build directory, patch and config in build dir
 ######################################################################
-  cd $B
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
-  done
-  find . \( -name '*.py' -o -name '*.py.in' \) -exec sed -i '1s|python$|&2|' {} +
-  autoreconf -fvi
+    cd $B/$i
 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+    done
+
+    ./configure --prefix=/usr --with-python=/usr/bin/python${i} ${OPT_CONFIG}
     
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  for i in 2 3
+  do
+    echo "=== build for python${i} ==="
+    cd $B/$i
+    make
+    if [ $? != 0 ]; then
+      echo "build error for python${i}. $0 script stop"
+      exit 255
+    fi
+  done
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -75,7 +83,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make -C 2 install DESTDIR=$P
+  make -C 3 install DESTDIR=$P
 
 ################################
 #      install tweaks

@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='totem_pl_parser'
-vers='3.26.0'
-url="http://ftp.gnome.org/pub/gnome/sources/totem-pl-parser/3.26/totem-pl-parser-${vers}.tar.xz"
-digest="md5sum:f609b4a758055bca5045c83604638723"
+pkgbase='pygobject2'
+vers='2.28.7'
+url="http://ftp.gnome.org/pub/gnome/sources/pygobject/${vers%.*}/pygobject-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B1
-src="totem-pl-parser-${vers}"
-OPT_CONFIG=(--buildtype=release)
-DOCS='AUTHORS COPYING.LIB ChangeLog.pre-2.27.2 MAINTAINERS NEWS README meson_options.txt'
-patchfiles=""
+build=B2
+src="pygobject-${vers}"
+OPT_CONFIG='--disable-introspection'
+DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-2.18 INSTALL NEWS README README.win32 pygobject_postinstall.py'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -42,33 +41,41 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi
+  for i in 2 3
+  do
+    mkdir -p $B/$i
+    cp -a $S/* $B/$i/
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
+    cd $B/$i
+    for patch in $patchfiles ; do
       patch -p1 < $W/$patch
-      touch .${patch}
+    done
+    find . \( -name '*.py' -o -name '*.py.in' \) -exec sed -i '1s|python$|&2|' {} +
+    autoreconf -fvi
+
+    PYTHON=/usr/bin/python$i ./configure --prefix=/usr ${OPT_CONFIG}
+    
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
     fi
   done
-
-  cd $B
-  meson --prefix=/usr --libdir=${libdir} ${OPT_CONFIG[@]} $S
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  ninja
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  for i in 2 3
+  do
+    cd $B/$i
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+      echo "build error. $0 script stop"
+      exit 255
+    fi
+  done
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -76,7 +83,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  DESTDIR=$P ninja install
+  make -C 2 install DESTDIR=$P
+  make -C 3 install DESTDIR=$P
 
 ################################
 #      install tweaks
