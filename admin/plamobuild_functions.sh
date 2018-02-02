@@ -92,7 +92,7 @@ gzip_one() {
 
 verify_sig_auto() {
   j=${url%.*}
-  for sig in asc sig{,n} {sha{256,1},md5}{,sum} ; do
+  for sig in asc sig{,n} {sha{512,256,1},md5}{,sum} ; do
     if wget --spider $url.$sig ; then
       wget $url.$sig
       break
@@ -109,7 +109,7 @@ verify_sig_auto() {
   if [ -f ${url##*/}.$sig ] ; then
     case $sig in
       asc|sig|sign) gpg2 --verify ${url##*/}.$sig ;;
-      sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
+      sha512|sha256|sha1|md5) ${sig}sum -c ${url##*/}.$sig ;;
       *) $sig -c ${url##*/}.$sig ;;
     esac
     if [ $? -ne 0 ] ; then echo "archive verify failed" ; exit ; fi
@@ -156,7 +156,7 @@ verify_specified_sig() {
   fi
   case $sig_suffix in
     asc|sig|sign|dsc) gpg2 --verify ${sigfile} ;;
-    sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
+    sha512|sha256|sha1|md5) ${sig_suffix}sum -c ${sigfile} ;;
     *) ${sig_suffix} -c ${sigfile};;
   esac
   if [ $? -ne 0 ]; then
