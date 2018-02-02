@@ -5,7 +5,7 @@ vers='2.26'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B4
+build=B5
 src="glibc-${vers}"
 OPT_CONFIG="--enable-add-ons
 	--enable-kernel=3.2
@@ -115,6 +115,10 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install install_root=$P
 
+  # install locale (/usr/lib/locale/locale-archives)
+  cp $W/SUPPORTED.plamo $S/localedata/SUPPORTED
+  make localedata/install-locales install_root=$P
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
@@ -174,41 +178,27 @@ if [ $opt_package -eq 1 ] ; then
 EOF
 
   fi
-
-  install -dm755 -v $P/usr/${libdir}/locale
-
   cat <<EOF >> $P/etc/ld.so.conf.new
 /${libdir}
 /usr/${libdir}
 /usr/local/${libdir}
 EOF
 
-  cat << "EOF" > $P/etc/nsswitch.conf.new
-# /etc/nsswitch.conf
-#
-# Name Service Switch configuration file.
-#
+  # locale
+  install -dm755 -v $P/usr/${libdir}/locale
+  mv -v $P2/usr/${libdir}/locale/locale-archive $P/usr/${libdir}/locale/locale-archive
 
-passwd:     files db nis
-shadow:     files
-group:      files db nis
+  # nsswitch.conf
+  install -Dm644 -v $W/nsswitch.conf.plamo $P/etc/nsswitch.conf.new
 
-hosts:      files nisplus nis dns
-networks:   files nisplus
-
-ethers:     files db nisplus
-protocols:  files db nisplus
-rpc:        files db nisplus
-services:   files db nisplus
-autofs:     files
-EOF
-
-  mkdir -p $docdir/$src
+  # docs
+  install -dm755 -v $docdir/$src
+  install  -m644 -v $W/nsswitch.conf.plamo $docdir/$src/nsswitch.conf.plamo
   for i in $DOCS ; do
-      cp $W/$src/$i $docdir/$src
+    install -m644 -v $W/$src/$i $docdir/$src/$i
   done
-
-  cp $W/PlamoBuild.glibc-$vers $docdir/$src
+  install  -m644 -v $W/PlamoBuild.glibc-$vers $docdir/$src/
+  install  -m644 -v $W/SUPPORTED.plamo $docdir/$src/
 
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
@@ -225,7 +215,7 @@ ldconfig
 if [ ! -f /etc/nsswitch.conf ]; then
   mv /etc/nsswitch.conf.new /etc/nsswitch.conf
 else
-  rm /etc/nsswitch.conf.new
+  mv /etc/nsswitch.conf.new /etc/nsswitch.conf_plamo_default
 fi
 echo "glibc timezone configuring"
 # 既存のlocaltimeがあればそのまま，無ければJSTで作る
@@ -235,12 +225,14 @@ if [ ! -e /etc/localtime ]; then
    ( cd /etc ; cp ../usr/share/zoneinfo/localtime localtime )
 fi
 
-echo "glibc Generating locale (en_US.UTF-8, ja_JP.UTF-8, ja_JP.eucJP)"
-rm -rf /usr/${libdir}/locale/*
-localedef -i en_US -c -f UTF-8  -A /usr/share/locale/locale.alias en_US.UTF-8
-localedef -i ja_JP -c -f UTF-8  -A /usr/share/locale/locale.alias ja_JP.UTF-8
-localedef -i ja_JP -c -f EUC-JP -A /usr/share/locale/locale.alias ja_JP.eucJP
-localedef -i C -c -f UTF-8  -A /usr/share/locale/locale.alias C.UTF-8
+# initpkg で locale 生成する場合は以下を有効化
+# make localedata/install-locales でパッケージに含めるようにしたが一応残しておく
+#Echo "glibc Generating locale (en_US.UTF-8, ja_JP.UTF-8, ja_JP.eucJP)"
+#rm -rf /usr/${libdir}/locale/*
+#localedef -i en_US -c -f UTF-8  -A /usr/share/locale/locale.alias en_US.UTF-8
+#localedef -i ja_JP -c -f UTF-8  -A /usr/share/locale/locale.alias ja_JP.UTF-8
+#localedef -i ja_JP -c -f EUC-JP -A /usr/share/locale/locale.alias ja_JP.eucJP
+#localedef -i C -c -f UTF-8  -A /usr/share/locale/locale.alias C.UTF-8
 
 echo "glibc initialize finished"
 
