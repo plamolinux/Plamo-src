@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xscreensaver'
-vers='5.38'
-url="http://www.jwz.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:c2c1f09a31b10939858b67dd3cdec8ab"
+pkgbase='lollypop'
+vers='0.9.306'
+portal_vers="0.9.5"
+url="https://gitlab.gnome.org/gnumdk/lollypop/uploads/b769805b7063ef9807e4e832e7e87ad2/lollypop-${vers}.tar.xz"
+portal_url="https://gitlab.gnome.org/gnumdk/lollypop-portal/uploads/53e3fbe2d27328fc2a7b9e4073e9500b/lollypop-portal-${portal_vers}.tar.xz"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='INSTALL README README.VMS README.hacking'
+OPT_CONFIG=(--buildtype='release')
+DOCS='AUTHORS LICENSE README.md TODO meson_post_install.py'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -39,55 +40,77 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${portal_url##*/} ]; then
+    wget $portal_url
+  fi
+  tar xvf ${portal_url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi
+  for s in $(basename ${url##*/} .tar.xz) $(basename ${portal_url##*/} .tar.xz)
+  do
+    echo
+    echo "=== configure $s ==="
+    echo
+    mkdir -p $B/$s  
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
+    cd $W/$s
+    for patch in $patchfiles ; do
+      if [ ! -f .${patch} ]; then
+        patch -p1 < $W/$patch
+        touch .${patch}
+      fi
+    done
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    meson --prefix=/usr --libdir=${libdir} ${OPT_CONFIG[@]} $B/$s
+    
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  for s in $(basename ${url##*/} .tar.xz) $(basename ${portal_url##*/} .tar.xz)
+  do
+    echo
+    echo "=== Build $s ==="
+    echo
+    cd $W/$s
+    export LDFLAGS='-Wl,--as-needed'
+    ninja -C $B/$s
+    if [ $? != 0 ]; then
+      echo "build error. $0 script stop"
+      exit 255
+    fi
+  done
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install install_prefix=$P
+  for s in $(basename ${url##*/} .tar.xz) $(basename ${portal_url##*/} .tar.xz)
+  do
+    echo
+    echo "=== Install $s ==="
+    echo
+    cd $W/$s
+    export LDFLAGS='-Wl,--as-needed'
+    DESTDIR=$P ninja -C $B/$s install
+  done
 
-  install -v -Dm644 $W/xscreensaver.pam $P/etc/pam.d/xscreensaver
-  install -v -Dm644 $W/xscreensaver.pam $docdir/$src/xscreensaver.pam
-
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/glib-compile-schemas ]; then
+  /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas/
+fi
+EOF
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
