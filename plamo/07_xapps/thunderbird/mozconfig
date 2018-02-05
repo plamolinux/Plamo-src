@@ -11,7 +11,7 @@ ac_add_options --with-system-libvpx
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
 ac_add_options --with-system-icu
-ac_add_options --enable-systemn-ffi
+ac_add_options --enable-system-ffi
 ac_add_options --enable-system-pixman
 ac_add_options --with-system-bz2
 ac_add_options --with-system-jpeg
@@ -32,3 +32,10 @@ ac_add_options --disable-tests
 ac_add_options --enable-gio
 ac_add_options --enable-safe-browsing
 ac_add_options --enable-url-classifier
+
+# Branding
+ac_add_options --disable-official-branding
+ac_add_options --with-branding=mail/branding/aurora
+ac_add_options --with-distribution-id=org.plamolinux
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
