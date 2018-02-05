@@ -1,23 +1,20 @@
 #!/bin/sh
-unset LS_BLOCK_SIZE
 ##############################################################
-pkgbase='thunderbird'
-vers='52.6.0'
-url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
-langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
+pkgbase='orage'
+vers='4.12.1'
+url="http://archive.xfce.org/src/apps/${pkgbase}/4.12/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:2b7f5d38cb5c6edbcc65d0f52a742e46"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS mailnews other-licenses sourcestamp.txt'
-patchfiles='thunderbird-install-dir.patch'
+OPT_CONFIG='--disable-static --enable-shared --enable-libical --disable-debug'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+patchfiles='libical3.patch'
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-
-B=$W/build
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -42,9 +39,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${langpack_ja##*/} ]; then
-    wget $langpack_ja
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -59,16 +53,25 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  rm -f $S/.mozconfig
-  cp -v $W/mozconfig $S/.mozconfig
-  mkdir -p path
-  ln -sf /usr/bin/python2 path/python
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $S
-  export PATH="$W/path:$PATH"
-  make -f client.mk -j3 build
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -78,34 +81,10 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
+  cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -f client.mk install DESTDIR=$P INSTALL_SDK=
+  make install DESTDIR=$P
 
-  # Install langpack
-  install -Dm644 -v $W/${langpack_ja##*/} \
-	  $P/usr/${libdir}/thunderbird/extensions/langpack-ja@thunderbird.mozilla.org.xpi
-
-  # desktop file
-  install -Dm644 -v $W/thunderbird.desktop \
-	  $P/usr/share/applications/thunderbird.desktop
-  install -Dm644 -v $W/thunderbird.desktop \
-	  $docdir/$src/thunderbird.desktop
-
-  # vendor.js (default configuration)
-  install -Dm644 -v $W/vendor.js \
-	  $P/usr/${libdir}/thunderbird/defaults/preferences/vendor.js
-
-  # icon
-  install -dm755 -v $P/usr/share/pixmaps
-  ln -sfv /usr/${libdir}/thunderbird/chrome/icons/default/default256.png \
-     $P/usr/share/pixmaps/thunderbird.png
-  for i in 16 22 24 32 48 256
-  do
-    install -Dm644 other-licenses/branding/thunderbird/mailicon$i.png \
-	    $P/usr/share/icons/hicolor/${i}x${i}/apps/thunderbird.png
-  done
-  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
