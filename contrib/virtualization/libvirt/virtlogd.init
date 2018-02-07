@@ -1,0 +1,55 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides: virtlogd
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Required-Start:
+# Required-Stop:
+# Should-Start: $network $remote_fs
+# Should-Stop: $network $remote_fs
+# Short-Description: virtual machine log manager
+# Description: This is a daemon for managing logs
+#              of virtual machine consoles
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+PIDFILE=/run/$SERVICE.pid
+SERVICE=/usr/sbin/virtlogd
+
+VIRTLOGD_ARGS=
+
+test -f /etc/sysconfig/virtlogd && . /etc/sysconfig/virtlogd
+
+case "${1}" in
+    start)
+	log_info_msg "Starting..."
+	start_daemon -p $PIDFILE $SERVICE --daemon $VIRTLOGD_ARGS
+	evaluate_retval
+	;;
+
+    stop)
+	log_info_msg "Stopping..."
+	killproc $SERVICE
+	;;
+
+    restart)
+	${0} stop
+	sleep 1
+	${0} start
+	;;
+
+    status)
+	statusproc $SERVICE
+	;;
+
+    *)
+	echo "Usage: ${0} {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+exit 0
+
+# End scriptname
