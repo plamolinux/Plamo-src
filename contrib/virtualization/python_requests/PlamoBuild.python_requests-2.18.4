@@ -1,26 +1,26 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libxml2'
-vers='2.9.7'
-url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="${url}.asc"
+pkgbase='python_requests'
+vers='2.18.4'
+url="https://github.com/requests/requests/archive/v${vers}.tar.gz"
+verify=""
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --with-history --with-threads'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-patchfiles="libxml2-2.9.4-remove-pyverify_fd.patch libxml2-2.9.7-python3_hack-1.patch"
+build=B1
+src="requests-${vers}"
+OPT_CONFIG=''
+DOCS='AUTHORS.rst HISTORY.rst LICENSE README.rst requirements.txt'
+patchfiles='certs.patch'
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -44,22 +44,18 @@ if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi
   for i in 2 3
   do
-    OPT_CONFIG="$OPT_CONFIG --with-python=/usr/bin/python${i}"
     mkdir -p $B/$i
     cp -a $S/* $B/$i
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy srcs to build directory, patch and config in build dir
 ######################################################################
     cd $B/$i
     for patch in $patchfiles ; do
       patch -p1 < $W/$patch
     done
-    sed -i '/_PyVerify_fd/,+1d' python/types.c
 
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+    python${i} setup.py config
+  
     if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
       exit 255
@@ -71,11 +67,7 @@ if [ $opt_build -eq 1 ] ; then
   for i in 2 3
   do
     cd $B/$i
-    export LDFLAGS='-Wl,--as-needed'
-    if [ $i -eq 3 ]; then
-      export PYTHONHASHSEED=0
-    fi
-    make -j3
+    python${i} setup.py build
     if [ $? != 0 ]; then
       echo "build error. $0 script stop"
       exit 255
@@ -88,13 +80,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   for i in 2 3
   do
-    echo "Install with python${i}"
     cd $B/$i
-    export LDFLAGS='-Wl,--as-needed'
-    if [ $i -eq 3 ]; then
-      export PYTHONHASHSEED=0
-    fi
-    make install DESTDIR=$P
+    python${i} setup.py install --skip-build -O1 --root $P
   done
 
 ################################
