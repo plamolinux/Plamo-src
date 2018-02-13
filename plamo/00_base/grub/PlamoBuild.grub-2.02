@@ -5,18 +5,20 @@ vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B2
+build=B6
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
+	--sbindir=/sbin
         --enable-device-mapper
         --enable-cache-stats
         --enable-boot-time
-        --disable-grub-mkfont
-        --disable-grub-mount
+        --enable-grub-mkfont
+        --enable-grub-mount
         --disable-mm-debug
         --disable-werror"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2015 INSTALL NEWS README THANKS TODO'
-patchfiles='0001-os-naming.patch 0002-intel-ucode.patch'
+debianpatch="http://http.debian.net/debian/pool/main/g/grub2/grub2_2.02-2.debian.tar.xz"
+#patchfiles='0001-os-naming.patch 0002-intel-ucode.patch'
 compress=txz
 ## variations for build
 BUILD_VARS="common_bios efi"
@@ -52,6 +54,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${debianpatch##*/} ]; then
+      wget $debianpatch
+      rm -vf $W/debian/patches/dpkg_version_comparison.patch
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -64,6 +70,14 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
       touch .${patch}
     fi
+  done
+
+  for p in $(cat $W/debian/patches/series)
+  do
+      if [ ! -f ."$p" ]; then
+	  patch -Np1 -i $W/debian/patches/$p
+	  touch .${p}
+      fi
   done
 
   for var in $BUILD_VARS

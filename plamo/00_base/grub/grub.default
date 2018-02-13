@@ -7,7 +7,7 @@ GRUB_TIMEOUT=10
 # Display countdown or not
 #GRUB_HIDDEN_TIMEOUT_QUIET=false
 # Command line arguments for default linux entry
-GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 quiet"
 ## default until Plamo 6.x
 ## GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
 # Command line arguments for all linux entry
