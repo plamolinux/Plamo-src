@@ -5,9 +5,9 @@ vers='0.113+git_2919920+js38'
 url="http://anduin.linuxfromscratch.org/BLFS/polkit/polkit-${vers}.tar.xz"
 digest="md5sum:11ec10c04899651e40ef66766932254d"
 arch=`uname -m`
-build=B3
+build=B4
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --with-authfw=shadow'
+OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no'
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
 patchfiles=''
 compress=txz
