@@ -3,7 +3,7 @@
 pkgbase='libvirt_python'
 vers='4.0.0'
 url="https://pypi.python.org/packages/37/ba/961cee6fad1d3587da4b900c5048fc12c0c73176a95a7d4f7c5ca5da72b7/libvirt-python-${vers}.tar.gz"
-verify="md5sum:b3db91358dd759b89fbe38bfe24e5ca1"
+digest="md5sum:b3db91358dd759b89fbe38bfe24e5ca1"
 arch=`uname -m`
 build=B1
 src="libvirt-python-${vers}"
