@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2018-02-15 20:04:32 karma>
+#                           Time-stamp: <2018-02-15 20:05:22 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -58,34 +58,3 @@ fi
 if [ `date +%m%d` \> "1222" -a `date +%m%d` \< "1227" ] ; then
   [ -x /usr/bin/xsnow ] && /usr/bin/xsnow &
 fi
-
-if [ -n "$XDG_SESSION_COOKIE" -a -x /usr/bin/dbus-launch ] ; then
-  LAUNCH="dbus-launch --exit-with-session"
-elif [ -x /usr/bin/ck-launch-session -a -x /usr/bin/dbus-launch ] ; then
-  LAUNCH="ck-launch-session dbus-launch --exit-with-session"
-else
-  LAUNCH=""
-fi
-
-mesg n
-
-# ウィンドウマネージャを終了すると X が終了します。
-case $WM in
-"twm")
-  exec $LAUNCH twm
-  ;;
-"xfce")
-  exec startxfce4 --with-ck-launch
-  ;;
-"mate")
-  exec $LAUNCH mate-session
-  ;;
-"lxde")
-  exec $LAUNCH startlxde
-  ;;
-"lxqt")
-  exec $LAUNCH startlxqt
-  ;;
-esac
-
-mesg y
