@@ -18,10 +18,15 @@
       (cons (cons "\\.html$" 'yahtml-mode)
 	    auto-mode-alist))
 
-(setq YaTeX-kanji-code 3)	; EUCにする
-(setq yahtml-kanji-code 3)	; EUCにする
+;; 漢字コード
+(setq YaTeX-kanji-code 4)	; UTF-8にする
+(setq yahtml-kanji-code 4)	; UTF-8にする
 (setq yahtml-www-browser "firefox")
-(setq tex-command "platex")
-(setq dviprint-from-format "-p %b")
-(setq dviprint-to-format "-l %e")
-(setq dviprint-command-format "dvips %f %t -f %s | lpr")
+
+;; 起動コマンド
+;(setq tex-command "platex")
+;(setq dviprint-from-format "-p %b")
+;(setq dviprint-to-format "-l %e")
+;(setq dviprint-command-format "dvi2ps %f %t %s | lpr")
+;(setq YaTeX-dvipdf-command "dvipdfmx")
+(setq dvi2-command "evince") ; プレビューア
