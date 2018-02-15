@@ -29,7 +29,7 @@ urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
       https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz)
 
 arch=`uname -m`
-build=B1
+build=B2
 src="mozc"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md'
@@ -130,10 +130,12 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B/src
   export LDFLAGS='-Wl,--as-needed'
-  _targets="server/server.gyp:mozc_server gui/gui.gyp:mozc_tool unix/fcitx/fcitx.gyp:fcitx-mozc"
+  _targets="server/server.gyp:mozc_server gui/gui.gyp:mozc_tool unix/fcitx/fcitx.gyp:fcitx-mozc unix/emacs/emacs.gyp:mozc_emacs_helper"
 
   QTDIR=/usr GYP_DEFINES="document_dir=/usr/share/licenses/$pkgname use_libzinnia=1" python2 build_mozc.py gyp
   python2 build_mozc.py build -c Release $_targets
+
+  ( cd unix/emacs ; emacs -batch -f batch-byte-compile mozc.el )
   
 fi
 
@@ -152,6 +154,10 @@ if [ $opt_package -eq 1 ] ; then
   install -v -D -m 644 unix/fcitx/mozc.conf $P/usr/share/fcitx/inputmethod/mozc.conf
 
   install -v -Dm644 $W/fcitx-mozc-icons/*.png -t $P/usr/share/fcitx/mozc/icon/
+  install -v -Dm755 out_linux/Release/mozc_emacs_helper $P/usr/bin/mozc_emacs_helper
+  install -v -Dm644 unix/emacs/mozc.el $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.el
+  install -v -Dm644 unix/emacs/mozc.elc $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.elc
+  install -v -Dm644 $W/mozc-el_el $P/etc/template/Source/.emacs.d/site-start.d/mozc-el_el
 
 ################################
 #      install tweaks
