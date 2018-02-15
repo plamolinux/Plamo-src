@@ -1,6 +1,6 @@
 ###################################################################
 #  Plamo Linux ユーザ設定ファイルサンプル for bash
-#                            Time-stamp: <2005-02-02 20:09:17 cyamauch>
+#                            Time-stamp: <2018-02-15 22:03:55 karma>
 #                            Time-stamp: <2016-01-22 17:19:56 kojima>
 
 # prevent illegal line wrapping
@@ -216,6 +216,24 @@ alias mu='mule -rv'
 #alias xv='xv -nolimits'
 
 fi
+
+# gpg-agent を ssh-agent っぽく使いたい場合の設定
+
+# start gpg-agent
+#if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
+#  gpg-connect-agent /bye >/dev/null 2>&1
+#fi
+#
+#unset SSH_AGENT_PID
+#if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+#  export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+#fi
+#
+#export GPG_TTY=$(tty)
+#
+#gpg-connect-agent updatestartuptty /bye > /dev/null
+
+# gpg-agent の設定ここまで
 
 # Source global definitions
 if [ -f /etc/bashrc ] ; then
