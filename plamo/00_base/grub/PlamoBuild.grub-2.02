@@ -5,7 +5,7 @@ vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B6
+build=B7
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
 	--sbindir=/sbin
@@ -56,6 +56,7 @@ if [ $opt_download -eq 1 ] ; then
   download_sources
   if [ ! -f ${debianpatch##*/} ]; then
       wget $debianpatch
+      tar xvf ${debianpatch##*/}
       rm -vf $W/debian/patches/dpkg_version_comparison.patch
   fi
 fi
