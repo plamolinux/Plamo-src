@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="ImageMagick"
+pkgbase="imagemagick7"
 vers='7.0.7_22'
 url="https://www.imagemagick.org/download/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
@@ -9,7 +9,8 @@ build=B1
 src="ImageMagick-${vers/_/-}"
 OPT_CONFIG="--disable-static --enable-shared
             --enable-hdri --with-modules --with-perl
-	    --enable-rsvg --with-wmf
+	    --with-rsvg --with-wmf
+	    --with-perl-options=INSTALLDIRS=vendor
 	    --with-dejavu-font-dir=/usr/share/fonts/TTF"
 DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
 patchfiles=''
