@@ -190,11 +190,16 @@ download_sources() {
   case ${url##*/} in
   *.tar*) tar xvf ${url##*/} ;;
   *.zip) unzip ${url##*/} ;;
-  git)
+  *git)
     ( cd $(basename ${url##*/} .git)
       git checkout master
-      if [ -n "$commitid" ]; then
-        git checkout -b build $commitid
+      
+      if git branch | grep build > /dev/null; then
+	git checkout build
+      else
+        if [ -n "$commitid" ]; then
+          git checkout -b build $commitid
+	fi
       fi
     ) ;;
   esac
