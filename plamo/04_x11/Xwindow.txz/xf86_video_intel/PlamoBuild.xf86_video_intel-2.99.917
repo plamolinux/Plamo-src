@@ -6,7 +6,7 @@ url="https://anongit.freedesktop.org/git/xorg/driver/xf86-video-intel.git"
 commitid="75795523003798d789d417e82aaa81c7ea1ed616"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="xf86-video-intel"
 OPT_CONFIG='--disable-static --enable-shared --enable-kms-only --enable-uxa --with-default-dri=3'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
@@ -67,9 +67,7 @@ if [ $opt_config -eq 1 ] ; then
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export CFLAGS=${CFLAGS/-fno-plt}
-  export CXXFLAGS=${CXXFLAGS/-fno-plt}
-  export LDFLAGS='-Wl,--as-needed,-z,now' 
+  export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
@@ -80,10 +78,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export CFLAGS=${CFLAGS/-fno-plt}
-  export CXXFLAGS=${CXXFLAGS/-fno-plt}
-  export LDFLAGS='-Wl,--as-needed,-z,now'
-  make
+  export LDFLAGS='-Wl,--as-needed'
+  make V=1
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
