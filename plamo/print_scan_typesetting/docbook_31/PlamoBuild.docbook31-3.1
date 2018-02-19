@@ -5,7 +5,7 @@ vers='3.1'
 url="http://www.docbook.org/sgml/3.1/docbk31.zip"
 digest="md5sum:432749c0c806dbae81c8bcb70da3b5d3"
 arch=noarch
-build=B2
+build=B3
 src="docbook31"
 OPT_CONFIG=''
 DOCS='31chg.txt 40issues.txt 50issues.txt ChangeLog readme.txt'
@@ -71,6 +71,14 @@ if [ $opt_package -eq 1 ] ; then
   install -v -d -m755 $P/usr/share/sgml/docbook/sgml-dtd-3.1
   install -v docbook.cat $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog
   cp -v -af *.dtd *.mod *.dcl $P/usr/share/sgml/docbook/sgml-dtd-3.1
+
+  cat >> $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog << "EOF"
+  -- Begin Single Major Version catalog changes --
+
+PUBLIC "-//Davenport//DTD DocBook V3.0//EN" "docbook.dtd"
+
+  -- End Single Major Version catalog changes --
+EOF
 
   install -v -d $P/install
   cat <<EOF >> $P/install/initpkg

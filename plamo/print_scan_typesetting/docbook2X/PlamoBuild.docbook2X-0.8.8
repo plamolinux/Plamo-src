@@ -6,7 +6,7 @@ url="http://jaist.dl.sourceforge.net/project/docbook2x/docbook2x/${vers}/${pkgba
 digest="md5sum:b9b76a6af198c4f44574cfd17a322f01"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=(--program-transform-name='s,docbook2,docbook2x-,')
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
@@ -87,7 +87,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
   sed -i 's|http://docbook2x.sf.net/latest|/usr/share/docbook2X|g' \
-    "$pkgdir"/usr/bin/db2x_xsltproc
+    $P/usr/bin/db2x_xsltproc
 
 ################################
 #      install tweaks
