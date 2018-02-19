@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='lxc'
-vers='2.1.1'
-url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify=""
+pkgbase='dnsmasq'
+vers='2.78'
+url="http://www.thekelleys.org.uk/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-patchfiles=''
+OPT_CONFIG="-DHAVE_DNSSEC -DHAVE_DBUS -DHAVE_IDN"
+DOCS='CHANGELOG CHANGELOG.archive COPYING COPYING-v3'
+patchfiles='0001-DNSSEC-fix-for-wildcard-NSEC-records.patch'
 compress=txz
 ##############################################################
 
@@ -41,36 +41,23 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make COPTS="$OPT_CONFIG" \
+       CFLAGS="$CFLAGS" \
+       PREFIX=/usr \
+       all-i18n
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -82,7 +69,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make COPTS="$OPT_CONFIG" \
+       PREFIX=/usr \
+       DESTDIR=$P \
+       install
+
+  install -Dm644 -v $S/dnsmasq.conf.example $P/etc/dnsmasq.conf.example
 
 ################################
 #      install tweaks
