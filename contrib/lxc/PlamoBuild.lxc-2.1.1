@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='docbook2X'
-vers='0.8.8'
-url="http://jaist.dl.sourceforge.net/project/docbook2x/docbook2x/${vers}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:b9b76a6af198c4f44574cfd17a322f01"
+pkgbase='lxc'
+vers='2.1.1'
+url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=(--program-transform-name='s,docbook2,docbook2x-,')
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
-patchfiles='datadir.patch'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -53,8 +52,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -e 's/AM_CONFIG_HEADER(/AC_CONFIG_HEADERS(/' -i configure.ac
-  autoreconf -i -f
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -62,7 +59,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -86,8 +83,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  sed -i 's|http://docbook2x.sf.net/latest|/usr/share/docbook2X|g' \
-    "$pkgdir"/usr/bin/db2x_xsltproc
 
 ################################
 #      install tweaks
