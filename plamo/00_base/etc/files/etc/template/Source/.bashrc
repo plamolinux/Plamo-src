@@ -1,6 +1,6 @@
 ###################################################################
 #  Plamo Linux ユーザ設定ファイルサンプル for bash
-#                            Time-stamp: <2018-02-15 22:03:55 karma>
+#                            Time-stamp: <2018-02-20 18:04:45 karma>
 #                            Time-stamp: <2016-01-22 17:19:56 kojima>
 
 # prevent illegal line wrapping
@@ -21,40 +21,15 @@ HISTCONTROL=ignoreboth
 # Ctrl+D は 3 回無視する
 IGNOREEOF=3
 
-# 端末によって日本語表示する/しないの切り替え
-#if [ "$TERM" = "linux" ] ; then
-#  LANG=C
-#else
-#  LANG=ja_JP.eucJP
-#fi
-#LANG=ja_JP.eucJP
-#export LANG
-
-# JISで表示できない端末はEUCにする
-#if [ "$TERM" = "xterm" -o "$TERM" = "dtterm" ] ; then
-#  JLESSCHARSET=japanese-euc
-#fi
-
-#if [ "$TERM" == "linux" ] ; then
-#  LANG=ja_JP.eucJP
-#  JLESSCHARSET=japanese-euc
-#  OUTPUT_CHARSET=EUC-JP
-#  export LANG JLESSCHARSET OUTPUT_CHARSET
-#else
-  source $HOME/.set_lang_bsh @LOCALE@
-#fi
+source $HOME/.set_lang_bsh @LOCALE@
 
 # less で行番号をつけ，終了後に画面を残す
 LESS='-R -M -X'
 
-EDITOR='vi'
+EDITOR='vim'
 #EDITOR='emacs -nw'
 PAGER='less'
 export LESS EDITOR PAGER
-
-# for Python 2.7
-#PYTHONPATH=/usr/lib64/python2.7/site-packages:/opt/kde/lib64/python2.7/site-packages
-#export PYTHONPATH
 
 # if [ $SHLVL = 1 ] ; then
 #   PATH="$PATH:." ;
@@ -77,6 +52,7 @@ export LS_OPTIONS
 alias ls='ls $LS_OPTIONS'
 alias dir='dir $LS_OPTIONS';
 alias vdir='vdir $LS_OPTIONS';
+alias vi='vim'
 
 # Windowのタイトルバーにカレントディレクトリ
 # が表示不可能な場合のプロンプト設定
