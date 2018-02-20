@@ -87,15 +87,15 @@ if [ $opt_package -eq 1 ] ; then
   install -v -d $P/usr/bin
   mv -v $P/usr/sbin/unbound-host $P/usr/bin/unbound-host
 
-  # copy default config file to docdir
-  install -D -v -m 644 $P/etc/unbound/unbound.conf $docdir/"$src"/example.conf
-
   # copy config file for plamo to /etc/unbound
   install -v -m 644 $W/unbound.conf $P/etc/unbound/unbound.conf.dist
 
   # copy init.file
   install -v -D -m 644 $W/unbound.init $P/etc/rc.d/init.d/unbound
   install -v -D -m 644 $W/unbound.init $docdir/$src/unbound.init
+
+  # copy default config file to docdir
+  mv -v $P/etc/unbound/unbound.conf $docdir/"$src"/example.conf
 
   for i in $(seq 0 6)
   do
