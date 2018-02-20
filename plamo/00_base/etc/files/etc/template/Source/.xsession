@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2018-02-15 20:05:22 karma>
+#                           Time-stamp: <2018-02-20 17:59:12 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -49,12 +49,3 @@ GTK_IM_MODULE=uim
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 
-# African Penguin Day!!
-if [ `date +%m%d` \> "0925" -a `date +%m%d` \< "1003" -a `date +%u` -ge 5 ] ; then
-  [ -x /usr/bin/xpenguins ] && /usr/bin/xpenguins &
-fi
-
-# Keep Christmas!!
-if [ `date +%m%d` \> "1222" -a `date +%m%d` \< "1227" ] ; then
-  [ -x /usr/bin/xsnow ] && /usr/bin/xsnow &
-fi

@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2018-02-15 20:04:32 karma>
+#                           Time-stamp: <2018-02-20 17:58:46 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -12,7 +12,6 @@
 
 #WM="twm"
 WM="xfce"
-#WM="kde"
 #WM="mate"
 #WM="lxde"
 #WM="lxqt"
@@ -49,23 +48,7 @@ GTK_IM_MODULE=uim
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 
-# African Penguin Day!!
-if [ `date +%m%d` \> "0925" -a `date +%m%d` \< "1003" -a `date +%u` -ge 5 ] ; then
-  [ -x /usr/bin/xpenguins ] && /usr/bin/xpenguins &
-fi
-
-# Keep Christmas!!
-if [ `date +%m%d` \> "1222" -a `date +%m%d` \< "1227" ] ; then
-  [ -x /usr/bin/xsnow ] && /usr/bin/xsnow &
-fi
-
-if [ -n "$XDG_SESSION_COOKIE" -a -x /usr/bin/dbus-launch ] ; then
-  LAUNCH="dbus-launch --exit-with-session"
-elif [ -x /usr/bin/ck-launch-session -a -x /usr/bin/dbus-launch ] ; then
-  LAUNCH="ck-launch-session dbus-launch --exit-with-session"
-else
-  LAUNCH=""
-fi
+LAUNCH="ck-launch-session dbus-launch --exit-with-session"
 
 mesg n
 
@@ -75,7 +58,7 @@ case $WM in
   exec $LAUNCH twm
   ;;
 "xfce")
-  exec startxfce4 --with-ck-launch
+  exec $LAUNCH startxfce4
   ;;
 "mate")
   exec $LAUNCH mate-session

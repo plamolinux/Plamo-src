@@ -1,57 +1,19 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Plamo Linux ユーザ設定ファイルサンプル .Xdefaults
-!!                          Time-stamp: <2018-02-15 19:59:43 karma>
+!!                          Time-stamp: <2018-02-20 17:51:42 karma>
 !!                          Time-stamp: <2011-08-31 15:08:04 karma>
 !!                          Time-stamp: <2011-10-06 07:34:24 tamuki>
 !!
 !! X 上で使う各アプリケーション用のデフォルトの設定値です。
 !! このホストのクライアントのみに適用されます。
 
-!!
-!! Skkinput
-!!
-Skkinput*xim.conversionStartKey: \
-	Shift<Key>space,Cntrl<Key>Henkan_Mode,\
-	<Key>Kanji,Mod1<Key>Kanji,\
-	<Key>Zenkaku_Hankaku,Mod1<Key>Zenkaku_Hankaku
-Skkinput*xim.conversionEndKey: \
-	Shift<Key>space,Cntrl<Key>Henkan_Mode,\
-	<Key>Kanji,Mod1<Key>Kanji,\
-	<Key>Zenkaku_Hankaku,Mod1<Key>Zenkaku_Hankaku
-Skkinput*background:			#c0c0c0
-Skkinput*foreground:			black
-Skkinput*overthespot.borderWidth:	1
-Skkinput*offthespot.borderWidth:	1
-Skkinput*overthespot.input:		False
-Skkinput*offthespot.input:		False
-
-!!
-!! XTerm
-!!
-!! XTerm
-XTerm*locale:           true
-XTerm*utf8:             1
-XTerm*cjkWidth:         true
-XTerm*wideChars:        true
-XTerm*rightScrollBar:   true
-XTerm*fontDoublesize:   true
-XTerm*faceSize:         8
-XTerm*faceName:         Noto Sans Mono:style=Regular:antialias=false
-XTerm*faceNameDoublesize:       Noto Sans Mono CJK JP:style=Regular:antialias=true
-
-!!
-!! Rxvt
-!!
-Rxvt*font:		-*-fixed-medium-r-normal--@FSIZE_TERM@-*-*-*-c-*-iso8859-1
-Rxvt*mfont:		-*-fixed-medium-r-normal--@FSIZE_TERM@-*-*-*-c-*-jisx0208.1983-0
-! for old version
-Rxvt*kfont:		-*-fixed-medium-r-normal--@FSIZE_TERM@-*-*-*-c-*-jisx0208.1983-0
-Rxvt*inputMethod:	xim
-Rxvt*preeditType:	OverTheSpot
-!Rxvt*visualBell:	True
+! uim を使う場合はこちら
+*inputMethod:           uim
+! fcitx を使う場合はこちら
+!*inputMethod:          fcitx
 
 !!
 !! Emacs
 !!
-! XIM を利用するには，この行を有効にします。
-Emacs*useXim:	false
+! XIM を利用するには，この値をtrueにします
+Emacs*useXim:		false
