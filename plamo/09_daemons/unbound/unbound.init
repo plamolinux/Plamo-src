@@ -1,70 +1,59 @@
-#!/bin/bash
-# Time-stamp: <2017-04-18 17:50:55 root>
+#!/bin/sh
+########################################################################
+# Begin unbound
+#
+# Description : Unbound DNS resolver boot script
+#
+# Author      : Igor Živković <contact@igor-zivkovic.from.hr>
+#
+# Version     : BLFS SVN
+#
+########################################################################
 
-# This file is derived from  avahi.
-# Start/stop/restart daemon in init.d/XXXX
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DESC="unbound"
-NAME="unbound"
-DAEMON="/usr/sbin/unbound"
-PIDFILE="/run/unbound.pid"
+### BEGIN INIT INFO
+# Provides:          unbound
+# Required-Start:    $network $remote_fs $syslog
+# Required-Stop:     $network $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Starts Unbound DNS resolver
+# X-LFS-Provided-By: BLFS
+### END INIT INFO
 
-start()
-{
-  echo "Starting $DESC:  $DAEMON "
-  $DAEMON 
-}
+. /lib/lsb/init-functions
 
-status()
-{
-  pgrep -f $DAEMON > /dev/null 2>&1
-}
-
-stop()
-{
-
-  if ( ! status ); then
-     echo "$DESC seems already stopped"
-  else
-     echo -n "Stopping $DESC: "
-     kill $( cat $PIDFILE )
-     if [ $? -eq 0 ]; then
-       echo "done."
-     else
-       echo "failed."
-     fi
-  fi
-}
-
-restart()
-{
-  stop
-  start
-}
+#$LastChangedBy: igor $
+#$Date: 2013-07-21 18:16:47 -0500 (Sun, 21 Jul 2013) $
 
 case "$1" in
-'start')
-  if ( ! status ); then
-    start
-  else
-    echo "$DESC is already running (will not start it twice)."
-  fi
-  ;;
-'stop')
-  stop
-  ;;
-'restart')
-  restart
-  ;;
-'status')
-  if ( status ); then
-    echo "$DESC is currently running"
-  else
-    echo "$DESC is not running."
-  fi
-  ;;
-*)
-  echo "usage $0 start|stop|status|restart"
+   start)
+      log_info_msg "Starting Unbound DNS resolver..."
+      unbound-anchor
+      start_daemon /usr/sbin/unbound
+      evaluate_retval
+      ;;
+
+   stop)
+      log_info_msg "Stopping Unbound DNS resolver..."
+      killproc -p "/run/unbound.pid" /usr/sbin/unbound
+      evaluate_retval
+      ;;
+
+   restart)
+      $0 stop
+      sleep 1
+      $0 start
+      ;;
+
+   status)
+      statusproc /usr/sbin/unbound
+      ;;
+
+   *)
+      echo "Usage: $0 {start|stop|restart|status}"
+      exit 1
+      ;;
 esac
 
+# End unbound
