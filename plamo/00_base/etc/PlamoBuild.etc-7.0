@@ -5,7 +5,7 @@ vers='7.0'
 url=""
 verify=""
 arch=noarch
-build=B3
+build=B8
 src="files"
 OPT_CONFIG=''
 DOCS=''
@@ -43,7 +43,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
   echo "There is nothing to do."
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   echo "There is nothing to do."
 fi
@@ -60,7 +60,7 @@ if [ $opt_package -eq 1 ] ; then
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
