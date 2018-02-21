@@ -4,12 +4,12 @@ pkgbase='virt_manager'
 vers='1.5.0'
 url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
 verify=""
-arch=`uname -m`
-build=B1
+arch=noarch
+build=B2
 src="virt-manager-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles=''
+patchfiles='plamo-group.patch'
 compress=txz
 ##############################################################
 
