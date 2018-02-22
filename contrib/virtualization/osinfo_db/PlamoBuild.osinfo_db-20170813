@@ -4,7 +4,7 @@ pkgbase='osinfo_db'
 vers='20170813'
 url="https://releases.pagure.org/libosinfo/osinfo-db-${vers}.tar.xz"
 verify="${url}.asc"
-arch=`uname -m`
+arch=noarch
 build=B1
 src="osinfo-db-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
@@ -50,7 +50,8 @@ fi
 
 if [ $opt_package -eq 1 ] ; then
   # copy plamo linux info to source dir
-  cp -a $W/osinfo-db-plamo/* $S/
+  rm -rfv $S/os/plamolinux.org
+  cp -av $W/osinfo-db-plamo/* $S/
 
   # Re-generate osinfo-db archive
   tar Jcvf $W/${pkgbase}-${vers}.tar.xz ${pkgbase/_/-}-${vers}
