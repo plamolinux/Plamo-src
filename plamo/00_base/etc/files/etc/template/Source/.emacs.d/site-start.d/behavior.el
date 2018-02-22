@@ -36,11 +36,6 @@
 (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt)
 (setq comint-password-prompt-regexp "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|login \\|Kerberos \\|CVS \\|UNIX \\| SMB \\|^\\|\\[sudo\\] \\)パスワード\\|[Pp]assword\\( (again)\\)?\\|pass phrase\\|\\(Enter\\|Repeat\\|Bad\\) passphrase\\)\\(?:, try again\\)?\\(?: for [^:]+\\)?:\\s *\\'")
 
-;;; C-x b で補完する場合に前方一致でなく部分一致とする
-(iswitchb-mode 1)
-(setq read-buffer-function 'iswitchb-read-buffer)
-(setq iswitchb-prompt-newbuffer nil)
-
 ;;; URL の扱い
 (setq browse-url-browser-function 'browse-url-generic
       browse-url-generic-program "exo-open")
