@@ -6,11 +6,11 @@ url="http://archive.xfce.org/src/xfce/xfce4-session/4.12/xfce4-session-${vers}.t
 digest="md5sum:f4921fb2e606e74643daf1212263076c"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="xfce4-session-${vers}"
 OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles=''
+patchfiles='0001-Pass-VT-number-to-xinit-if-XDG_VTNR-is-set.patch 0001-Make-verbose-logging-conditional-Bug-11698.patch'
 compress=txz
 ##############################################################
 
