@@ -75,10 +75,10 @@ if [ $opt_package -eq 1 ] ; then
     install -dm755 -v $P/etc/rc.d/rc"$i".d
     case $i in
       0|1|6)
-        ln -sfv ../init.d/cgroupfs-mount /etc/rc.d/rc"$i".d/K02cgroupfs-mount
+        ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/K02cgroupfs-mount
 	;;
       2|3|4|5)
-	ln -sfv ../init.d/cgroupfs-mount /etc/rc.d/rc"$i".d/S98cgroupfs-mount
+	ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/S98cgroupfs-mount
 	;;
     esac
   done
