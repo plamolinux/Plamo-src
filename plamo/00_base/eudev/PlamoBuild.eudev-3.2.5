@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='eudev'
-vers='3.2.2'
+vers='3.2.5'
 url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
 	--with-rootprefix= --with-rootlibdir=/lib
@@ -13,6 +13,7 @@ OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
 DOCS='COPYING'
 patchfiles=''
 compress=txz
+lfsfiles="http://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.bz2"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -40,6 +41,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${lfsfiles##*/} ]; then
+    wget $lfsfiles
+  fi
+  tar xvf ${lfsfiles##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -51,7 +56,7 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-  sed -i '/keyboard_lookup_key/d' src/udev/udev-builtin-keyboard.c
+  sed -r -i 's|/usr(/bin/test)|\1|' test/udev-test.pl
 
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
@@ -85,16 +90,23 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  install -dm755 -v /lib/udev/rules.d
+  install -dm755 -v /etc/udev/rules.d
+  
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  # rules from LFS
-  install -v -m 0644 $W/55-setclock.rules $P/"$libdir"/udev/rules.d/55-setclock.rules
-  install -Dm0644 -v $W/55-setclock.rules $docdir/$src/55-setclock.rules
+  # Install custom rules and support files for LFS
+  pushd $W
+  make -f $(basename ${lfsfiles##*/} .tar.bz2)/Makefile.lfs install DESTDIR=$P
+  popd
+  rm -rfv $P/usr/share/doc/udev-*/
 
-  # Don't rename eth0 to enp0s3
-  rm -v $P/"$libdir"/udev/rules.d/80-net-name-slot.rules
+  rm -fv $P/etc/udev/rules.d/55-lfs.rules
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/README
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/55-lfs.txt
 
   # init scripts
   install -v -d $P/etc/rc.d/init.d
