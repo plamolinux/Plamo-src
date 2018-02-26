@@ -5,7 +5,7 @@ vers='5.1.4'
 url="http://www.kernel.org/pub/linux/daemons/${pkgbase}/v5/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-${vers}.tar.sign"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--without-openldap"
 DOCS='CHANGELOG COPYING INSTALL README README.active-restart README.amd-maps README.changer README.ncpfs README.replicated-server README.smbfs README.v5.release'
@@ -81,9 +81,19 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  # This is config for init script in autofs source archive
+  # But we use init srcipt in BLFS initscripts, so unneeded
+  rm -vf $P/etc/sysconfig/autofs
+
   # install init script
   install -v -Dm644 $W/autofs.init $P/etc/rc.d/init.d/autofs
   install -v -Dm644 $W/autofs.init $docdir/$src/autofs.init
+
+  install -v -Dm644 $W/autofs.conf $P/etc/sysconfig/autofs.conf
+  install -v -Dm644 $W/autofs.conf $docdir/$src/autofs.conf
+
+  install -dm755 -v $P/etc/rc.d/rcS.d
+  ln -sfv ../init.d/autofs $P/etc/rc.d/rcS.d/S52autofs
 
   # remove original init script
   rm -v -rf $P/etc/init.d
@@ -91,7 +101,7 @@ if [ $opt_package -eq 1 ] ; then
   rm -v $P/etc/autofs_ldap_auth.conf
 
   configfiles="autofs.conf auto.master auto.misc
-	auto.net auto.smb sysconfig/autofs"
+	auto.net auto.smb sysconfig/autofs.conf"
   for f in $configfiles
   do
     mv -v $P/etc/$f $P/etc/$f.dist
