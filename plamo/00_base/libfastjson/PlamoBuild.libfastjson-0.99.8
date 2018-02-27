@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libfastjson'
-vers='0.99.4'
-url="https://github.com/rsyslog/${pkgbase}/archive/v${vers}.tar.gz"
-digest="sha256sum:03ef63dcc88417e71c19ce4436804159e3397e3a20d3529efef6a43c3bef5c8d"
+vers='0.99.8'
+url="http://download.rsyslog.com/libfastjson/libfastjson-${vers}.tar.gz"
+digest="sha256sum:3544c757668b4a257825b3cbc26f800f59ef3c1ff2a260f40f96b48ab1d59e07"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog NEWS README README.html README.md RELEASE_CHECKLIST.txt'
+DOCS='AUTHORS COPYING ChangeLog INSTALL README.html'
 patchfiles=''
 compress=txz
 ##############################################################

@@ -5,7 +5,7 @@ vers='1.24.0'
 url="https://launchpad.net/${pkgbase}/1.24/${vers}/+download/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 
 source /usr/share/plamobuild_functions.sh

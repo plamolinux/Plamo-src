@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsyslog'
-vers='8.28.0'
+vers='8.33.0'
 url="http://www.rsyslog.com/files/download/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="sha256sum:4ca5405908d612d45da700e36856430510875518eb8028d296d1ee4d2c44678e"
+digest="sha256sum:2df39d91baddb75c575aa03525cd9d4d20aad75011c6d6d25ef773ac26ff5c12"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog"
 DOCS='AUTHORS COPYING COPYING.ASL20 COPYING.LESSER ChangeLog INSTALL NEWS README README.md'
