@@ -35,7 +35,7 @@
 	     ) t)
 
 ;;; navi2ch
-(autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t)
+;(autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t)
 
 ;;; Ruby
 ;(autoload 'ruby-mode "ruby-mode" "Ruby Mode" t)

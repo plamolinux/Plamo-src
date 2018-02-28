@@ -1,5 +1,5 @@
-﻿;; uim.el
-;; read uim.el
+;; UIM
+
 (require 'uim)
 ;; uncomment next and comment out previous to load uim.el on-demand
 ;; (autoload 'uim-mode "uim" nil t)

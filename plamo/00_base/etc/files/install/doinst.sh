@@ -4,10 +4,8 @@
 ( cd etc ; ln -sf template/Default skel )
 ( cd etc ; rm -rf HOSTNAME )
 ( cd etc ; ln -sf hostname HOSTNAME )
-( cd etc/template/Source ; rm -rf .xsession )
-( cd etc/template/Source ; ln -sf .xinitrc .xsession )
-( cd etc/template/Source ; rm -rf .xprofile )
-( cd etc/template/Source ; ln -sf .xinitrc .xprofile )
+( cd etc ; rm -rf mtab )
+( cd etc ; ln -sf /proc/self/mounts )
 ( cd var/log ; rm -rf utmp )
 ( cd var/log ; ln -sf /var/run/utmp utmp)
 if [ ! -r etc/passwd ] ; then

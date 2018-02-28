@@ -1,44 +1,41 @@
 ###################################################################
-#  PJE-0.1 ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for screen 3.07.02
+#  PJE-0.1 ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for screen 3.07.02
 #                       MATSUMOTO Shoji (shom@i.h.kyoto-u.ac.jp)
-#                            Time-stamp: <97/12/04 05:59:17 shom>
+#                            Time-stamp: <2018-02-16 20:42:54 karma>
 
 ####
-# kterm/rxvt ¾å¤Ç screen (ver. 3.07.02) ¤òÆ°¤«¤·¤Æ¡¢
-# EUC ¤ª¤è¤Ó¿§¤ò°·¤¦¤¿¤á¤Î¥µ¥ó¥×¥ë¤Ç¤¹
-# Ãí°Õ¡§screen ¤Ï PJE ¤Ë¤Ï´Ş¤Ş¤ì¤Æ¤¤¤Ş¤»¤ó¡£
-#       ¥Ù¡¼¥¹¥Ç¥£¥¹¥È¥ê¥Ó¥å¡¼¥·¥ç¥ó¤«¤é¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¤«¡¢
-#       ¸ÄÊÌ¤Ë¥³¥ó¥Ñ¥¤¥ë¡¦¥¤¥ó¥¹¥È¡¼¥ë¤·¤Æ¤¯¤À¤µ¤¤
+# kterm/rxvt ä¸Šã§ screen (ver. 3.07.02) ã‚’å‹•ã‹ã—ã¦ã€
+# EUC ãŠã‚ˆã³è‰²ã‚’æ‰±ã†ãŸã‚ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã™
+# æ³¨æ„ï¼šscreen ã¯ PJE ã«ã¯å«ã¾ã‚Œã¦ã„ã¾ã›ã‚“ã€‚
+#       ãƒ™ãƒ¼ã‚¹ãƒ‡ã‚£ã‚¹ãƒˆãƒªãƒ“ãƒ¥ãƒ¼ã‚·ãƒ§ãƒ³ã‹ã‚‰ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ã‹ã€
+#       å€‹åˆ¥ã«ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ãƒ»ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„
 
 escape ^ll
 vbell off
+startup_message off
 autodetach on
+
+defutf8 on
+defencoding utf8
+encoding utf8 utf8
 
 defhstatus screen@$HOSTNAME
 #hardstatus off
 msgminwait 0
 
-# hardstatus ¤ò¥¿¥¤¥È¥ë¥Ğ¡¼/¥¢¥¤¥³¥ó¤ËÉ½¼¨
+defhstatus screen@$HOSTNAME
+hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %Y %m/%d %C:%s%a"
+hardstatus off
+msgminwait 0
+
+# hardstatus ã‚’ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼/ã‚¢ã‚¤ã‚³ãƒ³ã«è¡¨ç¤º
 termcapinfo xterm 'hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007'
 termcapinfo kterm 'hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007'
 
 termcapinfo  xterm* LP:hs
 termcapinfo  kterm* LP:G0:hs
 
-
-########################################## EUC ¤Î¤¿¤á¤ÎÀßÄê
-defcharset B^BIB01
-defkanji euc
-termcap kterm* eA=\E(B:
-terminfo kterm* enacs=\E(B:
-termcapinfo kterm* KJ=euc
-
-########################################## JIS ¤Î¤¿¤á¤ÎÀßÄê
-#defkanji jis
-#termcap  kterm* KJ=jis
-#terminfo kterm* KJ=jis
-
-########################################## ¿§¤ò»È¤¦¤¿¤á¤ÎÀßÄê (ansi-pc-color)
+########################################## è‰²ã‚’ä½¿ã†ãŸã‚ã®è¨­å®š (ansi-pc-color)
 termcap  xterm 'AF=\E[3%dm:AB=\E[4%dm'
 terminfo xterm 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
 termcap  kterm 'AF=\E[3%dm:AB=\E[4%dm'
