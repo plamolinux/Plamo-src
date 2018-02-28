@@ -6,8 +6,6 @@
 ( cd etc ; ln -sf hostname HOSTNAME )
 ( cd etc ; rm -rf mtab )
 ( cd etc ; ln -sf /proc/self/mounts )
-( cd etc/template/Source ; rm -rf .xprofile )
-( cd etc/template/Source ; ln -sf .xinitrc .xprofile )
 ( cd var/log ; rm -rf utmp )
 ( cd var/log ; ln -sf /var/run/utmp utmp)
 if [ ! -r etc/passwd ] ; then
