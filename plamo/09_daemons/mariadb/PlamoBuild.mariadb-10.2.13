@@ -1,28 +1,46 @@
 #!/bin/sh
 ##############################################################
-pkgbase='heimdal'
-vers='7.4.0'
-url="https://github.com/heimdal/heimdal/releases/download/heimdal-${vers}/heimdal-${vers}.tar.gz"
-verify="${url}.sig"
+pkgbase='mariadb'
+vers='10.2.13'
+url="https://downloads.${pkgbase}.org/interstitial/${pkgbase}-${vers}/source/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:20c61bd4059ba287e54cfb2862bae81d"
+verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-# program-prefix=
-OPT_CONFIG="--disable-static --enable-shared
-	--with-sqlite3=/usr"
-DOCS='ChangeLog ChangeLog.1998 ChangeLog.1999 ChangeLog.2000 ChangeLog.2001 ChangeLog.2002 ChangeLog.2003 ChangeLog.2004 ChangeLog.2005 ChangeLog.2006 LICENSE NEWS README TODO'
+OPT_CONFIG=(-DCMAKE_BUILD_TYPE=Release
+	-DINSTALL_DOCDIR=share/doc/${src}
+	-DINSTALL_DOCREADMEDIR=share/doc/${src}
+	-DINSTALL_MANDIR=share/man
+	-DINSTALL_MYSQLSHAREDIR=share/mysql
+	-DINSTALL_MYSQLTESTDIR=share/mysql/test
+	-DINSTALL_PLUGINDIR=lib/mysql/plugin
+	-DINSTALL_SBINDIR=sbin
+	-DINSTALL_SCRIPTDIR=bin
+	-DINSTALL_SQLBENCHDIR=share/mysql/bench
+	-DINSTALL_SUPPORTFILESDIR=share/mysql
+	-DMYSQL_DATADIR=/srv/mysql
+	-DMYSQL_UNIX_ADDR=/run/mysqld/mysqld.sock
+	-DWITH_EXTRA_CHARSETS=complex
+	-DWITH_EMBEDDED_SERVER=ON
+	-DCMAKE_C_FLAGS="-fPIC $CFLAGS -fno-strict-aliasing -DBIG_JOINS=1 -fomit-frame-pointer -fno-delete-null-pointer-checks"
+	-DCMAKE_CXX_FLAGS="-fPIC $CXXFLAGS -fno-strict-aliasing -DBIG_JOINS=1 -felide-constructors -fno-rtti -fno-delete-null-pointer-checks"
+	-DWITH_MYSQLD_LDFLAGS="-pie ${LDFLAGS},-z,now"
+	-DSKIP_TESTS=ON
+	-DTOKUDB_OK=0)
+DOCS='COPYING COPYING.thirdparty INSTALL-SOURCE INSTALL-WIN-SOURCE KNOWN_BUGS.txt README.md'
 patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -43,22 +61,22 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#   patch apply to source tree but make at out of source tree
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG[@]} $S
+  
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -68,7 +86,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j1 VERBOSE=1
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -81,10 +99,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  mv -v $P/usr/bin/su $P/usr/bin/ksu
-  mv -v $P/usr/share/man/man1/su.1 $P/usr/share/man/man1/ksu.1
-  mv -v $P/usr/share/man/cat1/su.1 $P/usr/share/man/cat1/ksu.1
 
 ################################
 #      install tweaks
