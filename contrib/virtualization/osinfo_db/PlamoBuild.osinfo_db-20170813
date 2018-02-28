@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='virt_manager'
-vers='1.5.0'
-url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
-verify=""
+pkgbase='osinfo_db'
+vers='20170813'
+url="https://releases.pagure.org/libosinfo/osinfo-db-${vers}.tar.xz"
+verify="${url}.asc"
 arch=noarch
-build=B2
-src="virt-manager-${vers}"
-OPT_CONFIG=''
-DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles='plamo-group.patch'
+build=B1
+src="osinfo-db-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='LICENSE install-script'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -41,37 +41,24 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
-######################################################################
-#  copy srcs to build directory, patch and config in build dir
-######################################################################
-  cd $B
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
-  done
-
-  python2 setup.py config
-  
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  python2 setup.py build
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
 
 if [ $opt_package -eq 1 ] ; then
+  # copy plamo linux info to source dir
+  rm -rfv $S/os/plamolinux.org
+  cp -av $W/osinfo-db-plamo/* $S/
+
+  # Re-generate osinfo-db archive
+  tar Jcvf $W/${pkgbase}-${vers}.tar.xz ${pkgbase/_/-}-${vers}
+
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  python2 setup.py install --root $P
+  osinfo-db-import --root=$P --system ${pkgbase}-${vers}.tar.xz
 
 ################################
 #      install tweaks

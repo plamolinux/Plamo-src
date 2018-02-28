@@ -5,7 +5,7 @@ vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B6
+build=B8
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
 	--sbindir=/sbin
@@ -56,6 +56,7 @@ if [ $opt_download -eq 1 ] ; then
   download_sources
   if [ ! -f ${debianpatch##*/} ]; then
       wget $debianpatch
+      tar xvf ${debianpatch##*/}
       rm -vf $W/debian/patches/dpkg_version_comparison.patch
   fi
 fi
@@ -154,9 +155,30 @@ if [ $opt_package -eq 1 ] ; then
     make install DESTDIR=$P
   done
 
-  echo "Installing grub default file"
-  install -D -m 644 -v $W/grub.default $P/etc/default/grub
-  install -D -m 644 -v $W/grub.default $docdir/$src/grub.default
+  # これくらいは書きこんじゃう方が楽な気がする．
+  mkdir -p $P/etc/default
+  cat <<"EOF" > $P/etc/default/grub
+# Default menu entry
+GRUB_DEFAULT=0
+# Time after the menu displayed
+GRUB_TIMEOUT=10
+# Time before displaying the menu
+#GRUB_HIDDEN_TIMEOUT=0
+# Display countdown or not
+#GRUB_HIDDEN_TIMEOUT_QUIET=false
+# Command line arguments for default linux entry
+GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 quiet"
+## default until Plamo 6.x
+## GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
+# Command line arguments for all linux entry
+#GRUB_CMDLINE_LINUX=
+# Distributor
+GRUB_DISTRIBUTOR=Plamo
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+
+EOF
 
   echo "Remove debug related files"
   for d in i386-pc i386-efi x86_64-efi
@@ -166,8 +188,15 @@ if [ $opt_package -eq 1 ] ; then
       rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
   done
 
+  # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
+  # とりあえずはこのままにしておく．
   echo "Installing plamo tools for grub"
   tar --strip-components=1 -xvf $W/plamo_grubconfig.tar.gz -C $P
+  # 為念
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
+  fi
   install -D -m 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
 
 ################################

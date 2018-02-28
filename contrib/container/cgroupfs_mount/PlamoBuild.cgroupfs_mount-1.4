@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='virt_manager'
-vers='1.5.0'
-url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
+pkgbase='cgroupfs_mount'
+vers='1.4'
+url="https://github.com/tianon/cgroupfs-mount/archive/${vers}.tar.gz"
 verify=""
-arch=noarch
-build=B2
-src="virt-manager-${vers}"
+arch=`uname -m`
+build=B1
+src="cgroupfs-mount-${vers}"
 OPT_CONFIG=''
-DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles='plamo-group.patch'
+DOCS='README.md'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -41,37 +41,47 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
 
-  python2 setup.py config
-  
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  sed -i -e 's/log_begin_msg/log_info_msg/g' \
+         -e 's/log_end_msg/evaluate_retval/g' $S/debian/cgroupfs-mount.init
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  python2 setup.py build
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  python2 setup.py install --root $P
+  cd $S
+  install -Dm755 -v $S/cgroupfs-mount  $P/usr/bin/cgroupfs-mount
+  install -Dm755 -v $S/cgroupfs-umount  $P/usr/bin/cgroupfs-umount
+  install -Dm644 -v $S/cgroupfs-mount.8 $P/usr/share/man/man8/cgroupfs-mount.8
+  install -Dm755 -v $S/debian/cgroupfs-mount.init $P/etc/rc.d/init.d/cgroupfs-mount
+
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|6)
+        ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/K02cgroupfs-mount
+	;;
+      2|3|4|5)
+	ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/S98cgroupfs-mount
+	;;
+    esac
+  done
 
 ################################
 #      install tweaks

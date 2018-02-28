@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='virt_manager'
-vers='1.5.0'
-url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
-verify=""
-arch=noarch
-build=B2
-src="virt-manager-${vers}"
-OPT_CONFIG=''
-DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles='plamo-group.patch'
+pkgbase='unbound'
+vers='1.6.8'
+url="http://www.unbound.net/downloads/${pkgbase}-${vers}.tar.gz"
+verify="$url.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static --with-pidfile=/run/unbound.pid"
+DOCS='LICENSE README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -41,17 +41,26 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
-  python2 setup.py config
-  
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -60,7 +69,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  python2 setup.py build
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -71,7 +81,45 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python2 setup.py install --root $P
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -v -d $P/usr/bin
+  mv -v $P/usr/sbin/unbound-host $P/usr/bin/unbound-host
+
+  # copy config file for plamo to /etc/unbound
+  install -v -m 644 $W/unbound.conf $P/etc/unbound/unbound.conf.dist
+
+  # copy init.file
+  install -v -D -m 644 $W/unbound.init $P/etc/rc.d/init.d/unbound
+  install -v -D -m 644 $W/unbound.init $docdir/$src/unbound.init
+
+  # copy default config file to docdir
+  mv -v $P/etc/unbound/unbound.conf $docdir/"$src"/example.conf
+
+  for i in $(seq 0 6)
+  do
+    install -dm755 $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/K79unbound
+	;;
+      3|4|5)
+	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/S21unbound
+	;;
+    esac
+  done
+
+  install -d $P/install
+  cat <<EOF >> $P/install/initpkg
+if ! id unbound >/dev/null 2>&1 ; then
+  groupadd -g 88 unbound
+  useradd -c "Unbound DNS resolver" -d /var/lib/unbound -u 88 -g unbound -s /bin/false unbound
+fi
+if [ ! -f /etc/unbound/unbound.conf ]; then
+  ( cd /etc/unbound && cp unbound.conf.dist unbound.conf )
+fi
+EOF
 
 ################################
 #      install tweaks

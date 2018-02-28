@@ -1,16 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='autofs'
-vers='5.1.4'
-url="http://www.kernel.org/pub/linux/daemons/${pkgbase}/v5/${pkgbase}-${vers}.tar.xz"
-verify="https://www.kernel.org/pub/linux/daemons/autofs/v5/autofs-${vers}.tar.sign"
+pkgbase='eudev'
+vers='3.2.5'
+url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--without-openldap"
-DOCS='CHANGELOG COPYING INSTALL README README.active-restart README.amd-maps README.changer README.ncpfs README.replicated-server README.smbfs README.v5.release'
+OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
+	--with-rootprefix= --with-rootlibdir=/lib
+	--enable-manpages --disable-static --config-cache"
+DOCS='COPYING'
 patchfiles=''
 compress=txz
+lfsfiles="http://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.bz2"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -38,25 +41,35 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${lfsfiles##*/} ]; then
+    wget $lfsfiles
+  fi
+  tar xvf ${lfsfiles##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
-      patch -p1 < $W/$patch
+    patch -p1 < $W/$patch
   done
+  sed -r -i 's|/usr(/bin/test)|\1|' test/udev-test.pl
+
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-
+  
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed'
-  export CPP='/usr/bin/cpp'
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  export LDFLAGS='-Wl,--as-needed' 
+  ./configure --prefix=/usr \
+              --sysconfdir=/etc \
+              --localstatedir=/var \
+              --libdir=/usr/$libdir \
+              --libexecdir=/$libdir \
+              --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -77,45 +90,38 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  install -dm755 -v /lib/udev/rules.d
+  install -dm755 -v /etc/udev/rules.d
+  
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  # This is config for init script in autofs source archive
-  # But we use init srcipt in BLFS initscripts, so unneeded
-  rm -vf $P/etc/sysconfig/autofs
+  # Install custom rules and support files for LFS
+  pushd $W
+  make -f $(basename ${lfsfiles##*/} .tar.bz2)/Makefile.lfs install DESTDIR=$P
+  popd
+  rm -rfv $P/usr/share/doc/udev-*/
 
-  # install init script
-  install -v -Dm644 $W/autofs.init $P/etc/rc.d/init.d/autofs
-  install -v -Dm644 $W/autofs.init $docdir/$src/autofs.init
+  rm -fv $P/etc/udev/rules.d/55-lfs.rules
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/README
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/55-lfs.txt
 
-  install -v -Dm644 $W/autofs.conf $P/etc/sysconfig/autofs.conf
-  install -v -Dm644 $W/autofs.conf $docdir/$src/autofs.conf
+  # init scripts
+  install -v -d $P/etc/rc.d/init.d
+  install -v -m 0755 $W/eudev.init $P/etc/rc.d/init.d/eudev
+  install -v -m 0755 $W/eudev_retry.init $P/etc/rc.d/init.d/eudev_retry
+  install -v -d $P/etc/rc.d/rcS.d
+  ln -v -sf ../init.d/eudev $P/etc/rc.d/rcS.d/S10eudev
+  ln -v -sf ../init.d/eudev_retry $P/etc/rc.d/rcS.d/S50eudev_retry
 
-  install -dm755 -v $P/etc/rc.d/rcS.d
-  ln -sfv ../init.d/autofs $P/etc/rc.d/rcS.d/S52autofs
-
-  # remove original init script
-  rm -v -rf $P/etc/init.d
-  
-  rm -v $P/etc/autofs_ldap_auth.conf
-
-  configfiles="autofs.conf auto.master auto.misc
-	auto.net auto.smb sysconfig/autofs.conf"
-  for f in $configfiles
-  do
-    mv -v $P/etc/$f $P/etc/$f.dist
-  done
+  install -v -Dm 0755 $W/eudev.init $docdir/$src/eudev.init
+  install -v -Dm 0755 $W/eudev_retry.init $docdir/$src/eudev_retry.init
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-configfiles="$configfiles"
-for f in \$configfiles
-do
-  if [ ! -f /etc/\$f ]; then
-    cp /etc/\$f.dist /etc/\$f
-  fi
-done
+/sbin/udevadm hwdb --update
 EOF
 
 ################################

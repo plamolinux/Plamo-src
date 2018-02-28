@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='virt_manager'
-vers='1.5.0'
-url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
-verify=""
-arch=noarch
-build=B2
-src="virt-manager-${vers}"
-OPT_CONFIG=''
-DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles='plamo-group.patch'
+pkgbase='dnsmasq'
+vers='2.78'
+url="http://www.thekelleys.org.uk/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="-DHAVE_DNSSEC -DHAVE_DBUS -DHAVE_IDN"
+DOCS='CHANGELOG CHANGELOG.archive COPYING COPYING-v3'
+patchfiles='0001-DNSSEC-fix-for-wildcard-NSEC-records.patch'
 compress=txz
 ##############################################################
 
@@ -41,26 +41,23 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-
-  python2 setup.py config
-  
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  python2 setup.py build
+  export LDFLAGS='-Wl,--as-needed'
+  make COPTS="$OPT_CONFIG" \
+       CFLAGS="$CFLAGS" \
+       PREFIX=/usr \
+       all-i18n
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -71,7 +68,13 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python2 setup.py install --root $P
+  export LDFLAGS='-Wl,--as-needed'
+  make COPTS="$OPT_CONFIG" \
+       PREFIX=/usr \
+       DESTDIR=$P \
+       install
+
+  install -Dm644 -v $S/dnsmasq.conf.example $P/etc/dnsmasq.conf.example
 
 ################################
 #      install tweaks

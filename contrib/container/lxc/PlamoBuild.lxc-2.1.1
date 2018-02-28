@@ -1,15 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='virt_manager'
-vers='1.5.0'
-url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
-verify=""
-arch=noarch
-build=B2
-src="virt-manager-${vers}"
-OPT_CONFIG=''
-DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
-patchfiles='plamo-group.patch'
+pkgbase='lxc'
+vers='2.1.1'
+url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static --enable-shared
+            --with-runtime-path=/run
+	    --without-systemdsystemunitdir
+	    --enable-deprecated"
+DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -21,7 +24,6 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -41,17 +43,30 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  sed -i -e 's/log_daemon_msg/log_info_msg/g' \
+         -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-net.in
+  sed -i -e 's/log_daemon_msg/log_info_msg/g' \
+         -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-containers.in
 
-  python2 setup.py config
-  
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -60,7 +75,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  python2 setup.py build
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -71,7 +87,25 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python2 setup.py install --root $P
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -Dm644 -v $W/lxc-net $P/etc/sysconfig/lxc-net
+
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|6)
+	ln -sfv ../init.d/lxc-net $P/etc/rc.d/rc"$i".d/K01lxc-net
+	ln -sfv ../init.d/lxc $P/etc/rc.d/rc"$i".d/K01lxc
+	;;
+      2|3|4|5)
+	ln -sfv ../init.d/lxc-net $P/etc/rc.d/rc"$i".d/S98lxc-net
+	ln -sfv ../init.d/lxc $P/etc/rc.d/rc"$i".d/S99lxc
+	;;
+    esac
+  done
 
 ################################
 #      install tweaks
