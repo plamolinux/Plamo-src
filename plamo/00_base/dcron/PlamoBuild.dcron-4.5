@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dcron'
-vers='4.5'
-url="http://www.jimpryor.net/linux/releases/dcron-${vers}.tar.gz"
+vers='v4.5_12_g5da6519'
+url="https://github.com/dubiousjim/dcron.git"
+commitid="5da6519"
 arch=`uname -m`
 build=B1
-src="dcron-${vers}"
+src="dcron"
 OPT_CONFIG=""
 DOCS='CHANGELOG CHANGELOG.working README'
-patchfiles='init.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -75,8 +76,21 @@ if [ $opt_package -eq 1 ] ; then
   install -Dm755 -v extra/prune-cronstamps $P/etc/cron.d/prune-cronstamps
   install -Dm600 -v extra/root.crontab $P/var/spool/cron/crontabs/root
   install -d -v $P/etc/cron.{hourly,daily,weekly,monthly}
-  install -d -v $P/etc/rc.d/init.d
-  install -m 744 extra/crond.rc $P/etc/rc.d/init.d/crond
+
+  install -Dm755 $W/dcron.init $P/etc/rc.d/init.d/crond
+  install -Dm755 $W/dcron.init $docdir/$src/dcron.init
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/crond $P/etc/rc.d/rc"$i".d/K08crond
+	;;
+      3|4|5)
+	ln -sfv ../init.d/crond $P/etc/rc.d/rc"$i".d/S40crond
+	;;
+    esac
+  done
 
 ################################
 #      install tweaks
@@ -84,6 +98,8 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  ( cd $docdir ; mv -v $src $pkgbase-$vers )
 
 #############################
 #   convert symlink to null file and 
