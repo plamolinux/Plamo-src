@@ -5,9 +5,9 @@ vers='8.33.0'
 url="http://www.rsyslog.com/files/download/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 digest="sha256sum:2df39d91baddb75c575aa03525cd9d4d20aad75011c6d6d25ef773ac26ff5c12"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog"
+OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog --disable-libcurl"
 DOCS='AUTHORS COPYING COPYING.ASL20 COPYING.LESSER ChangeLog INSTALL NEWS README README.md'
 patchfiles=''
 compress=txz
