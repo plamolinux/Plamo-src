@@ -4,7 +4,7 @@ pkgbase='libcap'
 vers='2.25'
 url="https://kernel.org/pub/linux/libs/security/linux-privs/${pkgbase}2/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CHANGELOG License README pam_cap/capability.conf'
@@ -49,6 +49,7 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
+    sed -i '/install.*STALIBNAME/d' libcap/Makefile
 fi
     
 if [ $opt_build -eq 1 ] ; then
@@ -70,10 +71,6 @@ if [ $opt_package -eq 1 ] ; then
   make DESTDIR=$P lib=/${libdir} RAISE_SETFCAP=no install
 
   chmod -v 755 $P/${libdir}/libcap.so
-
-  # move static lib to /usr/lib
-  install -d $P/usr/${libdir}
-  mv -v $P/${libdir}/libcap.a $P/usr/${libdir}/
 
   # create link in /usr/lib
   rm -vf $P/${libdir}/libcap.so
