@@ -1,22 +1,31 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers='2.1.1'
-url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+url="https://github.com/tenforward/lxc.git"
+branch="plamo_template"
+commitid="711467b9fe290aa5613b6f5992caba4e4c5776ec"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared
+src="${pkgbase}"
+OPT_CONFIG="--enable-shared --enable-static=no
             --with-runtime-path=/run
-	    --without-systemdsystemunitdir
-	    --enable-deprecated"
+            --without-systemdsystemunitdir
+            --enable-deprecated"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
+
+pushd $S
+vers=$(git describe --tags)
+vers=${vers#*-}
+vers=${vers//-/_}
+popd
+
+pkg=$pkgbase-$vers-$arch-$build
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -39,7 +48,25 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    if [ ! -d $src ]; then
+        git clone $url
+    fi
+    cd $src
+    git checkout master
+    if [ -n $branch ]; then
+        if git branch | grep $branch; then
+            git checkout $branch
+        else
+            git checkout -b $branch origin/$branch
+        fi
+    fi
+    git pull origin --tags
+    if git branch | grep build; then
+        git branch -D build
+    fi
+    if [ -n $commitid ]; then
+        git checkout -b build $commitid
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -54,9 +81,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+  if [ -f autogen.sh ] ; then
+    sh ./autogen.sh
+  fi
   if [ ! -f .init_script_patched ]; then
       sed -i -e 's/log_daemon_msg/log_info_msg/g' \
           -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-net.in
@@ -79,7 +106,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j1
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
