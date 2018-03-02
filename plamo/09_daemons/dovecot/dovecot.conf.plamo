@@ -1,0 +1,16 @@
+# Dovecot sample configration for plamo
+# This is SAMPLE.
+# Please refer to http://wiki2.dovecot.org/ and configure it appropriately
+protocols = imap
+ssl = no
+listen = *
+mail_location = Maildir:~/Maildir
+
+userdb {
+       driver	= passwd
+}
+
+passdb {
+       driver	= pam
+       args	= system-auth
+}
