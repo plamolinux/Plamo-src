@@ -5,7 +5,7 @@ vers='2.3.1'
 url="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/utils/nfs-utils/${vers}/nfs-utils-${vers}.tar.sign"
 arch=`uname -m`
-build=B1
+build=B2
 src="nfs-utils-${vers}"
 OPT_CONFIG="--sbindir=/sbin --disable-static --enable-shared --without-tcp-wrappers --disable-gss "
 DOCS='COPYING INSTALL NEWS README'
@@ -108,6 +108,8 @@ if [ $opt_package -eq 1 ] ; then
   install -D -m 755 -v $W/nfs-client.init $docdir/$src/nfs-client.init
   install -D -m 644 -v $W/nfs-server.init $P/etc/rc.d/init.d/nfs-server
   install -D -m 644 -v $W/nfs-server.init $docdir/$src/nfs-server.init
+  install -D -m 755 -v $W/netfs.init $P/etc/rc.d/init.d/netfs
+  install -D -m 644 -v $W/netfs.init $docdir/$src/netfs.init
 
   for i in $(seq 0 6)
   do
@@ -116,10 +118,12 @@ if [ $opt_package -eq 1 ] ; then
       0|1|2|6)
         ln -sf ../init.d/nfs-client $P/etc/rc.d/rc"$i".d/K48nfs-client
 	ln -sf ../init.d/nfs-server $P/etc/rc.d/rc"$i".d/K48nfs-server
+	ln -sf ../init.d/netfs $P/etc/rc.d/rc"$i".d/K47netfs
 	;;
       3|4|5)
 	ln -sf ../init.d/nfs-client $P/etc/rc.d/rc"$i".d/S24nfs-client
 	ln -sf ../init.d/nfs-server $P/etc/rc.d/rc"$i".d/S24nfs-server
+	ln -sf ../init.d/netfs $P/etc/rc.d/rc"$i".d/S28netfs
 	;;
     esac
   done
