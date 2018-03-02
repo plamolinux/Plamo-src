@@ -6,7 +6,7 @@ url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar
 verify=${url}.sig
 islvers="0.18"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--build=${arch}-pc-linux-gnu
 	--host=${arch}-pc-linux-gnu

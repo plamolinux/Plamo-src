@@ -1,13 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase='binutils'
-vers='2.29'
+vers='2.30'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify=${url}.sig
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-shared --disable-werror --enable-plugins"
+OPT_CONFIG="--enable-gold
+	--enable-ld=default
+	--enable-plugins
+	--enable-shared
+	--disable-werror
+	--enable-64-bit-bfd
+	--with-system-zlib"
 DOCS='COPYING COPYING.LIB COPYING3 COPYING3.LIB ChangeLog MAINTAINERS README README-maintainer-mode src-release.sh'
 patchfiles=''
 compress=txz
