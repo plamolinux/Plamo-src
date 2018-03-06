@@ -1,33 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-url="https://github.com/tenforward/lxc.git"
-template="https://github.com/lxc/lxc-templates.git"
-branch="master"
-commitid="9574bd5"
+vers='3.0.0.beta1'
+url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+template="https://github.com/lxc/lxc-templates/archive/lxc-templates-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}"
-templates_src="lxc-templates"
-OPT_CONFIG="--enable-shared --enable-static=no
+src="${pkgbase}-${vers}"
+template_src="lxc-templates-lxc-templates-${vers}"
+OPT_CONFIG="--disable-static --enable-shared
             --with-runtime-path=/run
-	    --enable-pam --with-pamdir=/lib/security
-            --without-systemdsystemunitdir
-            --enable-deprecated"
+	    --without-systemdsystemunitdir
+	    --enable-deprecated"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-
-pushd $S
-vers=$(git describe --tags)
-vers=${vers#*-}
-vers=${vers//-/_}
-popd
-
-pkg=$pkgbase-$vers-$arch-$build
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -50,29 +41,12 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    if [ ! -d $src ]; then
-        git clone $url
-    fi
-    cd $src
-    git checkout master
-    if [ -n $branch ]; then
-        if git branch | grep $branch; then
-            git checkout $branch
-        else
-            git checkout -b $branch origin/$branch
-        fi
-    fi
-    git pull origin --tags
-    if git branch | grep build; then
-        git branch -D build
-    fi
-    if [ -n $commitid ]; then
-        git checkout -b build $commitid
-    fi
-    cd $W
-    if [ ! -d ${template##*/} ]; then
-      git clone $template
-    fi
+  download_sources
+  if [ ! -f ${template##*/} ]; then
+    wget $template
+  fi
+  rm -rf $template_src
+  tar xvf ${template##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -87,9 +61,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  if [ -f autogen.sh ] ; then
-    sh ./autogen.sh
-  fi
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
   if [ ! -f .init_script_patched ]; then
       sed -i -e 's/log_daemon_msg/log_info_msg/g' \
           -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-net.in
@@ -108,22 +82,26 @@ if [ $opt_config -eq 1 ] ; then
     exit 255
   fi
 
-  cp -a $W/"$templates_src" $W/templates_build
-  cd $W/templates_build
+  cd $W
+  cp -a $template_src template_build
+  cd $W/template_build
   ./autogen.sh
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j1
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
   fi
-  echo "Build templates"
-  cd $W/templates_build
+  cd $W/template_build
   make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -155,8 +133,7 @@ if [ $opt_package -eq 1 ] ; then
     esac
   done
 
-  echo "=== Install templates ==="
-  cd $W/templates_build
+  cd $W/template_build
   make install DESTDIR=$P
 
 ################################

@@ -5,7 +5,7 @@ vers='8.33.0'
 url="http://www.rsyslog.com/files/download/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 digest="sha256sum:2df39d91baddb75c575aa03525cd9d4d20aad75011c6d6d25ef773ac26ff5c12"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog --disable-libcurl"
 DOCS='AUTHORS COPYING COPYING.ASL20 COPYING.LESSER ChangeLog INSTALL NEWS README README.md'
@@ -85,7 +85,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   install -v -d $P/etc/rsyslog.d
-  install -v -m644 $W/rsyslog.conf $P/etc/rsyslog.conf
+  install -v -m644 $W/rsyslog.conf $P/etc/rsyslog.conf.dist
   install -v -D -m644 $W/rsyslog.logrotate $P/etc/logrotate.d/rsyslog
   install -v -D -m755 $W/rsyslogd.init $P/etc/rc.d/init.d/rsyslogd
 
@@ -111,6 +111,13 @@ if [ $opt_package -eq 1 ] ; then
   do
     install -v -D -m 644 $W/"$f" $docdir/$src/"$f"
   done
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/rsyslog.conf ]; then
+  ( cd /etc ; cp rsyslog.conf.dist rsyslog.conf )
+fi
+EOF
 
 ################################
 #      install tweaks
