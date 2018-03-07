@@ -5,7 +5,7 @@ vers='1.8.22'
 url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=('--with-pam' '--with-env-editor'
 	'--libexecdir=/usr/lib' '--with-rundir=/run/sudo' '--with-env-editor'

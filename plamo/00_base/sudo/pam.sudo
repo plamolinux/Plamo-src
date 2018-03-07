@@ -1,5 +1,5 @@
-#%PAM-1.0
-auth		include		plamo-default
-account		include		plamo-default
-password	include		plamo-default
-session		include		plamo-default
+# /etc/pam.d/sudo
+auth		include		system-auth
+account		include		system-account
+password	include		system-password
+session		include		system-session
