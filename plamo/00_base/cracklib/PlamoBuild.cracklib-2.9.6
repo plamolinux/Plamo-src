@@ -4,9 +4,9 @@ pkgbase='cracklib'
 vers='2.9.6'
 url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-${vers}.tar.gz"
 digest="md5sum:c52f463585d85924b28cdc1e373ae06d"
-w_url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-words-2.9.6.gz"
+w_url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-words-${vers}.gz"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --without-python --with-default-dict=/lib/cracklib/pw_dict'
 DOCS='ABOUT-NLS AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README README-DAWG README-LICENSE README-WORDS'
@@ -16,12 +16,12 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 # 
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -89,19 +89,20 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -v -d $P/$libdir
+  install -dm755 -v $P/$libdir
   mv -v $P/usr/$libdir/libcrack.so.* $P/$libdir
-  ln -sfv ../../$libdir/$(readlink $P/usr/lib/libcrack.so) $P/usr/lib/libcrack.so.2
   ln -sfv ../../$libdir/$(readlink $P/usr/lib/libcrack.so) $P/usr/lib/libcrack.so
 
-  install -v -d $P/usr/share/dict
-  zcat -v $W/${w_url##*/} > $P/usr/share/dict/cracklib-words
-  echo `hostname` >> $P/usr/share/dict/cracklib-extra-words
-  ln -vs cracklib-words $P/usr/share/dict/words
+  # dict
+  install -Dm644 -v $W/${w_url##*/} $P/usr/share/dict/cracklib-words.gz
+  gzip -d -v $P/usr/share/dict/cracklib-words.gz
+  ln -sfv cracklib-words $P/usr/share/dict/words
+
+  echo $(hostname) >> $P/usr/share/dict/cracklib-extra-words
   install -v -m755 -d $P/$libdir/cracklib
 
   install -d -v $P/install
-  echo <<EOF
+  cat <<EOF >> $P/install/initpkg
 create-cracklib-dict     /usr/share/dict/cracklib-words \
                          /usr/share/dict/cracklib-extra-words
 EOF

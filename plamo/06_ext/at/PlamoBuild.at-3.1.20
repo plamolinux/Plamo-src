@@ -4,7 +4,7 @@ pkgbase='at'
 vers='3.1.20'
 url="http://ftp.jp.debian.org/debian/pool/main/a/at/at_${vers}.orig.tar.gz"
 arch=`uname -m`
-build=P1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING ChangeLog README'
@@ -81,6 +81,20 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 -v $W/atd.pam $P/etc/pam.d/atd
   install -Dm644 -v $W/atd.pam $docdir/$src/atd.pam
+
+  install -Dm644 -v $W/atd.init $P/etc/rc.d/init.d/atd
+  for i in $(seq 0 6)
+  do
+    install -dm755 $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/atd $P/etc/rc.d/rc"$i".d/K29atd
+	;;
+      3|4|5)
+        ln -sfv ../init.d/atd $P/etc/rc.d/rc"$i".d/S68atd
+	;;
+    esac
+  done
 
 ################################
 #      install tweaks
