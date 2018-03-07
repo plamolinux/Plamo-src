@@ -1,7 +1,4 @@
-#%PAM-1.0
-#
-# The PAM configuration file for other
-#
+# /etc/pam.d/other
 
 auth            required        pam_deny.so
 auth            required        pam_warn.so

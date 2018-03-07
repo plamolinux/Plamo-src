@@ -5,11 +5,11 @@ vers="4.5"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
 digest="md5sum:c350da50c2120de6bb29177699d89fe3"
 arch=`uname -m`
-build=B1
+build=B4
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='tweak_pamd.patch update_login_defs.patch disable-nls-manpages.patch'
+patchfiles='disable-nls-manpages.patch'
 compress=txz
 ##############################################################
 # BuildRequirements:
@@ -68,6 +68,31 @@ if [ $opt_config -eq 1 ] ; then
     sed -i '/^GROUP=/s@1000@100@g' etc/useradd
     # do not create mail spool when useradd
     sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
+    # set encrypt method to sha256
+    sed -i 's@#ENCRYPT_METHOD DES@ENCRYPT_METHOD SHA512@' etc/login.defs
+    # set dict path of cracklib to /lib/cracklib/pw_dict
+    sed -i 's@DICTPATH.*@DICTPATH\t/lib/cracklib/pw_dict@' etc/login.defs
+
+    disable_func=(FAIL_DELAY
+		  FAILLOG_ENAB
+                  LASTLOG_ENAB
+                  MAIL_CHECK_ENAB
+                  OBSCURE_CHECKS_ENAB
+                  PORTTIME_CHECKS_ENAB
+                  QUOTAS_ENAB
+                  CONSOLE MOTD_FILE
+                  FTMP_FILE NOLOGINS_FILE
+                  ENV_HZ PASS_MIN_LEN
+                  SU_WHEEL_ONLY
+                  CRACKLIB_DICTPATH
+                  PASS_CHANGE_TRIES
+                  PASS_ALWAYS_WARN
+                  CHFN_AUTH ENCRYPT_METHOD
+                  ENVIRON_FILE)
+    for func in ${disable_func[@]}
+    do
+	sed -i "s/^${func}/# &/" etc/login.defs
+    done
 
     #if [ -f $S/autogen.sh ] ; then
     #  sh ./autogen.sh
@@ -76,7 +101,7 @@ if [ $opt_config -eq 1 ] ; then
 
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -101,12 +126,28 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  # mv passwd from /usr/bin to /bin
+  mv -v $P/usr/bin/passwd $P/bin/passwd
+
   # install adduser command
-  install $W/shadow-adduser-20160122 $P/usr/sbin/adduser
-  install $W/shadow-adduser-20160122 $docdir/$src/shadow-adduser-20160122
+  install -Dm755 -v $W/shadow-adduser-20160122 $P/usr/sbin/adduser
+  install -Dm644 -v $W/shadow-adduser-20160122 $docdir/$src/shadow-adduser-20160122
+
+  # pam.d
+  for f in chage login passwd su
+  do
+    install -Dm644 -v $W/"$f".pam $P/etc/pam.d/$f
+    install -Dm644 -v $W/"$f".pam $docdir/$src/$f
+  done
+  for f in chfn chgpasswd chpasswd chsh groupadd groupdel \
+	   groupmems groupmod newusers useradd userdel usermod
+  do
+      install -m644 -v $P/etc/pam.d/chage $P/etc/pam.d/$f
+      sed -i "s/chage/$f/" $P/etc/pam.d/$f
+  done
 
   # mkdir man dirs
-  install -v -d $mandir/ja
+  install -dm755 -v $mandir/ja
   for d in $( cd man/ja ; ls -d man? )
   do
     cp -av man/ja/$d $P/usr/share/man/ja/$d 
@@ -114,21 +155,22 @@ if [ $opt_package -eq 1 ] ; then
 
   # initpkg
   mkdir -p $P/install
-  cat <<- "EOF" >> $P/install/initpkg
-if [ "$LANG" = "ja_JP.UTF-8" ]; then  
-    if [ -z "`grep "^root:" /etc/shadow | cut -d: -f2`" ] ; then
-        echo "root(システム管理者)のパスワードを設定してください。"
-        until passwd root ; do
-            echo "root(システム管理者)のパスワードを設定してください。"
-        done
-        echo "rootのパスワードの設定が完了しました。"
+  cat <<"EOF" >> $P/install/initpkg
+if [ -z "`grep "^root:" /etc/shadow | cut -d: -f2`" ] ; then
+    if [ "$LANG" = "ja_JP.UTF-8" ]; then
+	echo "root(システム管理者)のパスワードを設定してください。"
+	until passwd root ; do
+	    echo "root(システム管理者)のパスワードを設定してください。"
+	done
+	echo "rootのパスワードの設定が完了しました。"
     else
-        echo "Password for root(Admin) ?"
-        until passwd root ; do
-            echo "Password for root(Admin)?"
-        done
+	echo "Password for root(Admin)?"
+	until passwd root ; do
+	    echo "Password for root(Admin)?"
+	done
 	echo "Root password setup was done."
     fi
+fi
 EOF
 
 ################################

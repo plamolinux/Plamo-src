@@ -1,16 +1,2 @@
-#%PAM-1.0
-#
-# The PAM configuration file for system authentication
-#
-
-auth            required        pam_env.so
-auth            sufficient      pam_unix.so try_first_pass nullok
-auth            required        pam_deny.so
-
-account         required        pam_unix.so
-
-password        sufficient      pam_unix.so try_first_pass nullok md5 shadow
-password        required        pam_deny.so
-
-session         required        pam_limits.so
-session         required        pam_unix.so
+# /etc/pam.d/system-auth
+auth	required	pam_unix.so

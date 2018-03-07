@@ -4,12 +4,11 @@ pkgbase='linux_pam'
 vers='1.3.0'
 url="http://linux-pam.org/library/Linux-PAM-${vers}.tar.bz2"
 digest="md5sum:da4b2289b7cfb19583d54e9eaaef1c3a"
+doc_url="http://linux-pam.org/documentation/Linux-PAM-1.2.0-docs.tar.bz2"
 arch=`uname -m`
-build=B1
+build=B2
 src="Linux-PAM-${vers}"
-# See below
-# --disable-regenerate-docu 
-OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db"
+OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
 patchfiles=''
 compress=txz
@@ -38,7 +37,13 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
+  if [ ! -f ${doc_url##*/} ]; then
+    wget $doc_url
+  fi
+  cd $S
+  echo "Unpacking document tar ball"
+  tar -xf ../${doc_url##*/} --strip-components=1 
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -63,7 +68,7 @@ if [ $opt_config -eq 1 ] ; then
     $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
                  --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]} \
                  --libdir=/usr/$libdir --enable-securedir=/$libdir/security \
-                 --sbindir=/$libdir/security --docdir=/usr/share/doc/$src
+                 --docdir=/usr/share/doc/$src
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -88,9 +93,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -dv $P/sbin
-  ln -s /$libdir/security/pam_tally $P/sbin
-  chmod 4755 $P/$libdir/security/unix_chkpwd
+  chmod -v 4755 $P/sbin/unix_chkpwd
   for f in pam pam_misc pamc
   do
       mv -v $P/usr/$libdir/lib${f}.so.* $P/$libdir
@@ -99,21 +102,18 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 -v $W/console.handlers $P/etc/security/console.handlers
   install -Dm644 -v $W/console.handlers $docdir/$src/console.handlers
-  
-  install -Dm644 -v $W/system-auth $P/etc/pam.d/system-auth
-  install -Dm644 -v $W/system-auth $docdir/$src/system-auth
-  
-  for f in halt poweroff reboot
+
+  # pam.d
+  for f in system-account system-auth system-password system-session other halt
   do
-      install -Dm644 -v $W/halt $P/etc/pam.d/$f
+    install -Dm644 -v $W/${f} $P/etc/pam.d/${f}
+    install -Dm644 -v $W/${f} $docdir/$src/${f}
   done
-  install -Dm644 -v $W/halt $docdir/$src/halt
-  
-  install -Dm644 -v $W/other $P/etc/pam.d/other
-  install -Dm644 -v $W/other $docdir/$src/ohter
-  
-  ln -sfv system-auth $P/etc/pam.d/plamo-default
-  
+  for f in reboot poweroff
+  do
+    install -Dm644 -v $P/etc/pam.d/halt $P/etc/pam.d/${f}
+  done
+
   install -Dm644 -v $W/securetty $P/etc/securetty
   seq -f "tty%g" 12 >> $P/etc/securetty
   seq -f "ttyp%g" 12 >> $P/etc/securetty
