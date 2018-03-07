@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='samba'
-vers='4.7.4'
-url="https://www.${pkgbase}.org/ftp/${pkgbase}/stable/${pkgbase}-${vers}.tar.gz"
-verify=""
+vers='4.7.5'
+url="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.gz"
+verify="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.asc"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-piddir=/run/samba --with-pammodulesdir=/lib/security --enable-fhs --without-ad-dc --without-systemd --enable-selftest"
 DOCS='BUILD_SYSTEMS.txt COPYING PFIF.txt README README.Coding README.cifs-utils README.contributing WHATSNEW.txt install_with_python.sh prog_guide4.txt release-scripts'
