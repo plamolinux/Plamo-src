@@ -1,6 +1,7 @@
-#%PAM-1.0
-auth            sufficient      pam_rootok.so
-auth            include         system-auth
-account         required        pam_permit.so
-session         required        pam_limits.so
-                                
+# /etc/pam.d/atd
+auth	include		system-auth
+account	include		system-account
+session	required	pam_loginuid.so
+session	include		system-session
+session	required	pam_limits.so
+session	required	pam_env.so user_readenv=1
