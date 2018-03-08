@@ -4,7 +4,7 @@ pkgbase='dcron'
 vers='4.5'
 url="http://www.jimpryor.net/linux/releases/dcron-${vers}.tar.gz"
 arch=`uname -m`
-build=B3
+build=B4
 src="dcron-${vers}"
 OPT_CONFIG=""
 DOCS='CHANGELOG CHANGELOG.working README'
@@ -75,8 +75,11 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm755 -v extra/run-cron $P/usr/sbin/run-cron
   install -Dm755 -v extra/prune-cronstamps $P/etc/cron.d/prune-cronstamps
-  install -Dm600 -v extra/root.crontab $P/var/spool/cron/crontabs/root
   install -Dm644 -v extra/crontab.vim $P/usr/share/vim/vimfiles/ftplugin/crontab.vim
+
+  # Install crontab for root to $docdir temporally.
+  # After the package is installed, crontab for root is copied if it don't exist
+  install -Dm644 -v extra/root.crontab $docdir/$src/root.crontab
 
   install -Dm755 $W/dcron.init $P/etc/rc.d/init.d/crond
   install -Dm755 $W/dcron.init $docdir/$src/dcron.init
@@ -93,14 +96,19 @@ if [ $opt_package -eq 1 ] ; then
     esac
   done
 
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /var/spool/cron/crontabs/root ]; then
+   install -m600 -v /usr/share/doc/${pkgbase}-${vers}/root.crontab /var/spool/cron/crontabs/root
+fi
+EOF
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-
-  ( cd $docdir ; mv -v $src $pkgbase-$vers )
 
 #############################
 #   convert symlink to null file and 
