@@ -32,13 +32,13 @@ PIDFILE="/run/crond.pid"
 
 case "${1}" in
    start)
-      log_info_msg "Starting..."
+      log_info_msg "Starting cron daemon..."
       start_daemon -p $PIDFILE $DAEMON $CROND_ARGS
       evaluate_retval
       ;;
 
    stop)
-      log_info_msg "Stopping..."
+      log_info_msg "Stopping cron daemon..."
       killproc $DAEMON
       evaluate_retval
       ;;
