@@ -5,10 +5,10 @@ vers='2.4.29'
 url="https://archive.apache.org/dist/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=(--enable-layout=Plamo-FHS
-	    --enable-mpm-shared=all
+	    --enable-mpms-shared=all
 	    --enable-modules=all
 	    --enable-mods-shared=all
 	    --mandir=/usr/share/man
