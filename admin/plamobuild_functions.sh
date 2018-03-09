@@ -234,7 +234,9 @@ check_root() {
 install_tweak() {
   # バイナリファイルを strip
   cd $P
-  strip_all
+  if [ -z $NO_STRIP ]; then
+      strip_all
+  fi
 
   # dir ファイルの削除
   if [ -d $infodir ]; then
