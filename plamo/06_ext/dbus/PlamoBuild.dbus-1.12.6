@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dbus'
-vers='1.12.2'
+vers='1.12.6'
 url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-doxygen-docs
 	--disable-xml-docs
