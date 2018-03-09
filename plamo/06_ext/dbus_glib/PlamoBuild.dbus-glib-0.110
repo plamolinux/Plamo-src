@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dbus_glib'
-vers='0.108'
+vers='0.110'
 url="http://dbus.freedesktop.org/releases/dbus-glib/dbus-glib-${vers}.tar.gz"
-digest="md5sum:a66a613705870752ca9786e0359aea97"
+digest="md5sum:d7cebf1d69445cbd28b4983392145192"
 arch=`uname -m`
 build=B3
 src="dbus-glib-${vers}"
