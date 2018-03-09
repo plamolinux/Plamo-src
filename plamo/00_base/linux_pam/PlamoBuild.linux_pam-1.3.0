@@ -6,7 +6,7 @@ url="http://linux-pam.org/library/Linux-PAM-${vers}.tar.bz2"
 digest="md5sum:da4b2289b7cfb19583d54e9eaaef1c3a"
 doc_url="http://linux-pam.org/documentation/Linux-PAM-1.2.0-docs.tar.bz2"
 arch=`uname -m`
-build=B2
+build=B4
 src="Linux-PAM-${vers}"
 OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
@@ -106,13 +106,14 @@ if [ $opt_package -eq 1 ] ; then
   # pam.d
   for f in system-account system-auth system-password system-session other halt
   do
-    install -Dm644 -v $W/${f} $P/etc/pam.d/${f}
+    install -Dm644 -v $W/${f} $P/etc/pam.d.dist/${f}
     install -Dm644 -v $W/${f} $docdir/$src/${f}
   done
-  for f in reboot poweroff
-  do
-    install -Dm644 -v $P/etc/pam.d/halt $P/etc/pam.d/${f}
-  done
+  install -dm755 -v $P/etc/pam.d
+  #for f in reboot poweroff
+  #do
+  #  install -Dm644 -v $P/etc/pam.d/halt $P/etc/pam.d/${f}
+  #done
 
   install -Dm644 -v $W/securetty $P/etc/securetty
   seq -f "tty%g" 12 >> $P/etc/securetty
@@ -123,6 +124,22 @@ if [ $opt_package -eq 1 ] ; then
   install -d $P/usr/share/doc/$src/doc
   mv -v $P/usr/share/doc/$src/*.txt $P/usr/share/doc/$src/doc/
   mv -v $P/usr/share/doc/$src/*.html $P/usr/share/doc/$src/doc/
+
+  mkdir -p $P/install
+  cat <<"EOF" >> $P/install/initpkg
+for f in system-account system-auth system-password system-session other halt
+do
+  if [ ! -f /etc/pam.d/$f ]; then
+    cp /etc/pam.d.dist/$f /etc/pam.d/$f
+  fi
+done
+for f in reboot poweroff
+do
+  if [ ! -f /etc/pam.d/$f ]; then
+    cp /etc/pam.d/halt /etc/pam.d/$f
+  fi
+done
+EOF
 
 ################################
 #      install tweaks
