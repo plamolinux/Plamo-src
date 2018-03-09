@@ -14,7 +14,7 @@ OPT_CONFIG="--disable-static --enable-shared
 	    --without-systemdsystemunitdir
 	    --enable-deprecated"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-patchfiles=''
+patchfiles='tools_config_h.patch'
 compress=txz
 ##############################################################
 
@@ -74,6 +74,7 @@ if [ $opt_config -eq 1 ] ; then
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export CFLAGS="$CFLAGS"  
   export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
@@ -95,7 +96,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
+  export CFLAGS="$CFLAGS"  
+  export LDFLAGS="$LDFLAGS -Wl,--as-needed"
   make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -113,6 +115,7 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+  export CFLAGS="$CFLAGS"  
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
