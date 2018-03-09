@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ConsoleKit2'
-vers='1.0.2'
+vers='1.2.1'
 url="https://github.com/Consolekit2/${pkgbase}/releases/download/${vers}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:e03dd98322c78425a87418af9d788518"
+digest=""
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--enable-udev-acl
@@ -89,11 +89,19 @@ if [ $opt_package -eq 1 ] ; then
 
   mv -v $P/etc/X11/app-defaults/xinitrc.d/90-consolekit{,.sh}
 
-  install -v -m644 -D $W/consolekit.pam $P/etc/pam.d/system-session
   install -v -m755 -D $W/pam-foreground-compat.ck $P/usr/${libdir}/ConsoleKit/run-session.d/pam-foreground-compat.ck
-
-  install -v -m644 -D $W/consolekit.pam $docdir/$src/consolekit.pam
   install -v -m755 -D $W/pam-foreground-compat.ck $docdir/$src/pam-foreground-compat.ck
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if ! grep pam_ck_connector /etc/pam.d/system-session; then
+  cat >> /etc/pam.d/system-session << "EOF2"
+# ConsoleKit addition
+session	optional	pam_loginuid.so
+session	optional	pam_ck_connector.so nox11
+EOF2
+fi
+EOF
 
 
 ################################
