@@ -1,13 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iptables'
-vers='1.6.1'
+vers='1.6.2'
 url="http://www.netfilter.org/projects/iptables/files/iptables-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--enable-libipq --enable-nftables'
+OPT_CONFIG="--enable-libipq --enable-nftables
+            --with-xtlibdir=/lib/xtables
+	    --sbindir=/sbin"
 DOCS='COPYING INSTALL release.sh'
 patchfiles=''
 compress=txz
@@ -79,6 +81,21 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  ln -sfv ../../sbin/xtables-multi $P/usr/bin/iptables-xml
+
+  for file in ip4tc ip6tc ipq iptc xtables
+  do
+    mv -v /usr/lib/lib${file}.so.* $P/lib
+    ln -sfv ../../lib/$(readlink /usr/lib/lib${file}.so) $P/usr/lib/lib${file}.so
+  done
+
+  install -Dm755 -v $W/iptables.init $P/etc/rc.d/init.d/iptables
+  for i in $(seq 3 5)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      ln -sfv ../init.d/iptables $P/etc/rc.d/rc"$i".d/S19iptables
+  done
 
 ################################
 #      install tweaks
