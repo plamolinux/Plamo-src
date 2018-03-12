@@ -5,7 +5,7 @@ vers='1.6.2'
 url="http://www.netfilter.org/projects/iptables/files/iptables-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-libipq --enable-nftables
             --with-xtlibdir=/lib/xtables
@@ -86,8 +86,8 @@ if [ $opt_package -eq 1 ] ; then
 
   for file in ip4tc ip6tc ipq iptc xtables
   do
-    mv -v /usr/lib/lib${file}.so.* $P/lib
-    ln -sfv ../../lib/$(readlink /usr/lib/lib${file}.so) $P/usr/lib/lib${file}.so
+    mv -v $P/usr/${libdir}/lib${file}.so.* $P/lib
+    ln -sfv ../../${libdir}/$(readlink /usr/lib/lib${file}.so) $P/usr/lib/lib${file}.so
   done
 
   install -Dm755 -v $W/iptables.init $P/etc/rc.d/init.d/iptables
