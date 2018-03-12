@@ -6,7 +6,7 @@ url="https://github.com/Consolekit2/${pkgbase}/releases/download/${vers}/${pkgba
 digest=""
 verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--enable-udev-acl
@@ -14,7 +14,10 @@ OPT_CONFIG="
 	--enable-polkit
 	--with-rundir=/run
 	--with-xinitrc-dir=/etc/X11/app-defaults/xinitrc.d
-	--with-systemdsystemunitdir=no"
+	--with-dbus-services=/usr/share/dbus-1/services
+	--with-dbus-sys=/usr/share/dbus-1/system.d
+	--with-systemdsystemunitdir=no
+	--disable-cgroups"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
@@ -91,17 +94,6 @@ if [ $opt_package -eq 1 ] ; then
 
   install -v -m755 -D $W/pam-foreground-compat.ck $P/usr/${libdir}/ConsoleKit/run-session.d/pam-foreground-compat.ck
   install -v -m755 -D $W/pam-foreground-compat.ck $docdir/$src/pam-foreground-compat.ck
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if ! grep pam_ck_connector /etc/pam.d/system-session; then
-  cat >> /etc/pam.d/system-session << "EOF2"
-# ConsoleKit addition
-session	optional	pam_loginuid.so
-session	optional	pam_ck_connector.so nox11
-EOF2
-fi
-EOF
 
 
 ################################
