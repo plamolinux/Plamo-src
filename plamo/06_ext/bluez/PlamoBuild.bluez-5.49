@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.47'
+vers='5.49'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
-verify=""
+verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-library --disable-systemd"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
-blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-${vers}-obexd_without_systemd-1.patch"
+blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.48-obexd_without_systemd-1.patch"
 patchfiles="${blfs_patch##*/}"
 compress=txz
 ##############################################################
@@ -83,6 +83,54 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -dm755 -v $P/usr/sbin
+  ln -svf ../libexec/bluetooth/bluetoothd $P/usr/sbin/bluetoothd
+
+  install -Dm644 -v $S/src/main.conf $P/etc/bluetooth/main.conf
+
+  install -dm755 -v $docdir/$src
+  install -m644  -v $S/doc/*.txt $docdir/$src/
+
+  # init script
+  install -Dm644 -v $W/bluetooth.init $P/etc/rc.d/init.d/bluetooth
+  install -Dm644 -v $W/bluetooth.init $docdir/$src/bluetooth.init
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/K27bluetooth
+	;;
+      3|4|5)
+        ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/S35bluetooth
+	;;
+    esac
+  done
+
+  # sysconfig file
+  install -Dm755 -v $W/bluetooth.config $P/etc/sysconfig/bluetooth
+  install -Dm755 -v $W/bluetooth.config $docdir/$src/bluetooth.config
+
+  # create empty files
+  cat > $P/etc/bluetooth/rfcomm.conf <<"EOF"
+# Start rfcomm.conf
+# Set up the RFCOMM configuration of the Bluetooth subsystem in the Linux kernel.
+# Use one line per command
+# See the rfcomm man page for options
+
+
+# End of rfcomm.conf
+EOF
+
+  cat > $P/etc/bluetooth/uart.conf <<"EOF"
+# Start uart.conf
+# Attach serial devices via UART HCI to BlueZ stack
+# Use one line per device
+# See the hciattach man page for options
+
+# End of uart.conf
+EOF
 
 ################################
 #      install tweaks
