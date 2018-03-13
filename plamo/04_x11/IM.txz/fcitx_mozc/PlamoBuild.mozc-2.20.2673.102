@@ -26,10 +26,11 @@ commit_ids=($_mozc_rev
 urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
       https://downloads.sourceforge.net/pnsft-aur/jigyosyo-${_zipcode_rel}.zip
       https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-${_fcitx_patchver}.patch
-      https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz)
+      https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz
+      https://raw.githubusercontent.com/iRi-E/mozc-el-extensions/master/mozc-isearch.el)
 
 arch=`uname -m`
-build=B2
+build=B3
 src="mozc"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md'
@@ -117,14 +118,13 @@ if [ $opt_config -eq 1 ] ; then
   PYTHONPATH="$PWD:$PYTHONPATH" python2 dictionary/gen_zip_code_seed.py --zip_code="${W}/x-ken-all.csv" --jigyosyo="${W}/JIGYOSYO.CSV" >> data/dictionary_oss/dictionary09.txt
   echo "Done."
 
-  mv $W/japanese-usage-dictionary $W/japanese_usage_dictionary
-
   # Copy third party deps
-  for dep in gyp protobuf japanese_usage_dictionary
+  for dep in gyp protobuf
   do
     echo "Copy $dep to source tree for build"
     cp -a ${W}/$dep third_party/
   done
+  cp -v $W/japanese-usage-dictionary/* third_party/japanese_usage_dictionary/
 fi
     
 if [ $opt_build -eq 1 ] ; then
@@ -136,6 +136,7 @@ if [ $opt_build -eq 1 ] ; then
   python2 build_mozc.py build -c Release $_targets
 
   ( cd unix/emacs ; emacs -batch -f batch-byte-compile mozc.el )
+  ( cd $W ; emacs -batch -f batch-byte-compile mozc-isearch.el )
   
 fi
 
@@ -158,6 +159,8 @@ if [ $opt_package -eq 1 ] ; then
   install -v -Dm644 unix/emacs/mozc.el $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.el
   install -v -Dm644 unix/emacs/mozc.elc $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.elc
   install -v -Dm644 $W/mozc-el_el $P/etc/template/Source/.emacs.d/site-start.d/mozc-el_el
+  install -v -Dm644 $W/mozc-isearch.el $P/usr/share/emacs/site-lisp/emacs-mozc/mozc-isearch.el
+  install -v -Dm644 $W/mozc-isearch.elc $P/usr/share/emacs/site-lisp/emacs-mozc/mozc-isearch.elc
 
 ################################
 #      install tweaks
