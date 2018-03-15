@@ -108,13 +108,13 @@ msg_locale() {
   echo
   if [ "$LNG" == "JAPANESE" ] ; then
     echo "日本語 locale の設定"
-    echo "1 : ja_JP.eucJP(従来通り)"
-    echo "2 : ja_JP.UTF-8(今風)"
+    echo "1 : ja_JP.UTF-8(今風)"
+    echo "2 : ja_JP.eucJP(obsolete)"
     echo -n "$LOGIN はどちらの locale を使いますか？ [1]: "
   else
     echo "Japanese locale setting"
-    echo "1 : ja_JP.eucJP (traditional)"
-    echo "2 : ja_JP.UTF-8 (modern)"
+    echo "1 : ja_JP.UTF-8 (current)"
+    echo "2 : ja_JP.eucJP (obsolete)"
     echo -n "$LOGIN's locale? [1]: "
   fi
 }
