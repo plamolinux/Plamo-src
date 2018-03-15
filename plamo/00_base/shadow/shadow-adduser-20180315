@@ -4,7 +4,7 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
-# Time-stamp: <2006-02-03 21:46:55 kojima>
+# Time-stamp: <2018-03-15 19:25:34 karma>
 # Time-stamp: <2011-01-05 01:24:06 plamo>
 # Time-stamp: <2011-07-25 19:03:24 karma>
 # Time-stamp: <2011-10-08 13:32:46 tamuki>
@@ -123,45 +123,39 @@ msg_w_manager() {
   echo
   if [ "$LNG" == "JAPANESE" ] ; then
     n=0 ; echo "ウィンドウマネージャ設定"
-    if [ -x /usr/bin/afterstep ] ; then
-      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : AfterStep(NextStep 風)"
-    fi
-    if [ -x /usr/bin/qvwm ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Qvwm(Windows 95/98/2000 風)"
-    fi
     if [ -x /usr/bin/twm ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : Twm(ごくシンプル)"
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm(ごくシンプル)"
+    fi
+    if [ -x /usr/bin/startlxde ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : LXDE"
+    fi
+    if [ -x /usr/bin/startlxqt ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXQt"
     fi
     if [ -x /usr/bin/startxfce4 ] ; then
       n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop(お勧め)"
     fi
-    if [ -x /opt/kde/bin/startkde ] ; then
-      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : KDE Desktop(便利だけどやや重い)"
-    fi
     if [ -x /usr/bin/mate-session ] ; then
-      n=$((n + 1)) ; IWM[$n]=6 ; echo "$n : MATE Desktop(GNOME2 の進化版)"
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop(GNOME2 の進化版)"
     fi
     NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN が使う WM は？ [$DWM]: "
   else
     n=0 ; echo "Window Manager setting"
-    if [ -x /usr/bin/afterstep ] ; then
-      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : AfterStep (NextStep like)"
-    fi
-    if [ -x /usr/bin/qvwm ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Qvwm (Windows 95/98/2000 like)"
-    fi
     if [ -x /usr/bin/twm ] ; then
       n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : Twm (too simple)"
+    fi
+    if [ -x /usr/bin/startlxde ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : LXDE"
+    fi
+    if [ -x /usr/bin/startlxqt ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXQt"
     fi
     if [ -x /usr/bin/startxfce4 ] ; then
       n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop (recommended)"
     fi
-    if [ -x /opt/kde/bin/startkde ] ; then
-      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : KDE Desktop (useful, but somewhat heavy)"
-    fi
     if [ -x /usr/bin/mate-session ] ; then
-      n=$((n + 1)) ; IWM[$n]=6 ; echo "$n : MATE Desktop (advanced GNOME2)"
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop (advanced GNOME2)"
     fi
     NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN's WM? [$DWM]: "
@@ -535,14 +529,12 @@ $SKELDIR/mkdefaultenv.sh $SKELDIR/Source \
 echo " OK"
 
 if [ "${IWM[WM]}" -eq 1 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="step"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 2 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="qvwm"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 3 ] ; then
   sed -i 's/WM="xfce"/#&/;s/#\(WM="twm"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 2 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="lxde"\)/\1/' $SKELDIR/Default/.xinitrc
+elif [ "${IWM[WM]}" -eq 3 ] ; then
+  sed -i 's/WM="xfce"/#&/;s/#\(WM="lxqt"\)/\1/' $SKELDIR/Default/.xinitrc
 elif [ "${IWM[WM]}" -eq 5 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="kde"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 6 ] ; then
   sed -i 's/WM="xfce"/#&/;s/#\(WM="mate"\)/\1/' $SKELDIR/Default/.xinitrc
 fi
 
