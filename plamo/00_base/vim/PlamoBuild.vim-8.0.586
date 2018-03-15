@@ -5,7 +5,7 @@ vers='8.0.586'
 url="http://ftp.vim.org/vim/unix/vim-${vers}.tar.bz2"
 digest="md5sum:b35e794140c196ff59b492b56c1e73db"
 arch=`uname -m`
-build=B2
+build=B3
 src="vim80"
 OPT_CONFIG='--enable-multibyte --enable-gui=no --without-x --disable-gpm'
 DOCS='README.md README.txt README_ami.txt README_amibin.txt README_amisrc.txt README_bindos.txt README_dos.txt README_extra.txt README_mac.txt README_ole.txt README_os2.txt README_os390.txt README_src.txt README_srcdos.txt README_unix.txt README_vms.txt README_w32s.txt uninstal.txt'
@@ -85,6 +85,8 @@ if [ $opt_package -eq 1 ] ; then
 
   # fr/  fr.ISO8859-1/  fr.UTF-8/  it/  it.ISO8859-1/  it.UTF-8/  ja/  man1/  pl/  pl.ISO8859-2/  pl.UTF-8/  ru.KOI8-R/  ru.UTF-8/
   rm -rfv $P/usr/share/man/{fr,it,pl,ru}*
+
+  ln -sfv vim $P/usr/bin/vi
   
 ################################
 #      install tweaks
