@@ -2,19 +2,21 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='58.0.2'
-url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
+vers='59.0'
+commitid="c61f5f5ead48c78a80c80db5c489bdc7cfaf8175"
+url="https://hg.mozilla.org/releases/mozilla-release/archive/${commitid}.tar.bz2"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
-digest="md5sum:a64c6cd4785ba1ae094faae16105dbf2"
+digest=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
+src="mozilla-release-${commitid}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
 #blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-58.0-system_graphite2_harfbuzz-1.patch"
-patchfiles="${blfspatch##*/} firefox-install-dir.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-59.0-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/} no-crmf.diff"
 compress=txz
 ##############################################################
 
@@ -42,7 +44,10 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+  if [ ! -f ${pkgbase}-${vers}.tar.bz2 ]; then
+    wget -O ${pkgbase}-${vers}.tar.bz2 $url
+  fi
+  tar xvf ${pkgbase}-${vers}.tar.bz2
   if [ ! -f ${blfspatch##*/} ]; then
     wget $blfspatch
   fi
