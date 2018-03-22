@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='global'
-vers='6.5.7'
+vers='6.6.2'
 url="http://ftp.gnu.org/pub/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -84,6 +84,12 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  mkdir -p $P/usr/share/emacs/site-lisp
+  mv -v $P/usr/share/gtags/gtags.el $P/usr/share/emacs/site-lisp/gtags.el
+  mkdir -p $P/usr/share/vim/vimfiles/plugin
+  mv -v $P/usr/share/gtags/gtags.vim $P/usr/share/vim/vimfiles/plugin/gtags.vim
+  mv -v $P/usr/share/gtags/gtags-cscope.vim $P/usr/share/vim/vimfiles/plugin/gtags-cscope.vim
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
