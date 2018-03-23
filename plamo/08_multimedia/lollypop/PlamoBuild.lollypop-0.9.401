@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lollypop'
-vers='0.9.306'
-portal_vers="0.9.5"
-url="https://gitlab.gnome.org/gnumdk/lollypop/uploads/b769805b7063ef9807e4e832e7e87ad2/lollypop-${vers}.tar.xz"
-portal_url="https://gitlab.gnome.org/gnumdk/lollypop-portal/uploads/53e3fbe2d27328fc2a7b9e4073e9500b/lollypop-portal-${portal_vers}.tar.xz"
+vers='0.9.401'
+portal_vers="0.9.6"
+url="https://gitlab.gnome.org/gnumdk/lollypop/uploads/6cbec90c1a3c8a6a657f75fea3f64bbb/lollypop-${vers}.tar.xz"
+portal_url="https://gitlab.gnome.org/gnumdk/lollypop-portal/uploads/7bcb3e4bc40ff460904ae7edaf10d54b/lollypop-portal-${portal_vers}.tar.xz"
 verify=""
 arch=`uname -m`
 build=B1
