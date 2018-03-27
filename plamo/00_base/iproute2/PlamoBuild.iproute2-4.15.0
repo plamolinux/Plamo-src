@@ -1,10 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iproute2'
-vers='4.11.0'
+vers='4.15.0'
 url="https://www.kernel.org/pub/linux/utils/net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-${vers}.tar.sign"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README README.decnet README.devel README.distribution README.iproute2+tc README.lnstat'
@@ -49,6 +50,10 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
+    sed -i /ARPD/d Makefile
+    rm -fv man/man8/arpd.8
+    sed -i 's/m_ipt.o//' tc/Makefile
+
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
@@ -62,13 +67,19 @@ if [ $opt_config -eq 1 ] ; then
     fi
 
     # if detect berkeley_db, it's disabled
-    sed -i /HAVE_BERKELEY_DB/s/=y/=n/ Config
+    sed -i /HAVE_BERKELEY_DB/s/=y/=n/ config.mk
+
+    # if detect libmnl, it's disabled
+    sed -i -e "/HAVE_MNL/s/=y/=n/" \
+	-e '/LIBMNL/d' \
+	-e '/lmnl/d' \
+	config.mk
 fi
     
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -j3 LIBDIR=/usr/$libdir
+    make LIBDIR=/usr/$libdir
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -82,6 +93,9 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P SBINDIR=/sbin LIBDIR=/usr/$libdir \
        MANDIR=/usr/share/man DOCDIR=/usr/share/doc/$src
+
+  install -dm755 -v $P/bin
+  ln -sfv ../sbin/ip $P/bin/ip
 
 ################################
 #      install tweaks
