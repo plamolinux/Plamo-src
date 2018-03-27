@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='util_linux'
-vers='2.30.1'
+vers='2.32'
 url="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
@@ -9,7 +9,8 @@ src="util-linux-${vers}"
 OPT_CONFIG="--disable-setpriv --disable-last
     --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
     --disable-sulogin --disable-su --enable-write --disable-pylibmount --disable-wall
-    --without-user --without-python --without-systemd --without-systemdsystemunitdir"
+    --without-user --without-python --without-systemd --without-systemdsystemunitdir
+    --docdir=/usr/share/doc/${src}"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
 patchfiles=''
 compress=txz
@@ -91,6 +92,93 @@ if [ $opt_package -eq 1 ] ; then
   mv $P/bin/mount $P/sbin/ ; ln -s /sbin/mount $P/bin
   mv $P/bin/umount $P/sbin ; ln -s /sbin/umount $P/bin
   install -d $P/var/lib/hwclock
+
+  mkdir -p $P/etc/rc.d/init.d
+  cat <<"EOF" > $P/etc/rc.d/init.d/setclock
+#!/bin/sh
+########################################################################
+# Begin setclock
+#
+# Description : Setting Linux Clock
+#
+# Authors     : Gerard Beekmans - gerard@linuxfromscratch.org
+#               DJ Lucas - dj@linuxfromscratch.org
+# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+#
+# Version     : LFS 7.0
+#
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            
+# Required-Start:
+# Should-Start:        modules
+# Required-Stop:
+# Should-Stop:         $syslog
+# Default-Start:       S
+# Default-Stop:
+# Short-Description:   Stores and restores time from the hardware clock
+# Description:         On boot, system time is obtained from hwclock.  The
+#                      hardware clock can also be set on shutdown.
+# X-LFS-Provided-By:   LFS BLFS
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+[ -r /etc/sysconfig/clock ] && . /etc/sysconfig/clock
+
+
+case "${UTC}" in
+   yes|true|1)
+      CLOCKPARAMS="${CLOCKPARAMS} --utc"
+      ;;
+
+   no|false|0)
+      CLOCKPARAMS="${CLOCKPARAMS} --localtime"
+      ;;
+
+esac
+
+case ${1} in
+   start)
+      hwclock --hctosys ${CLOCKPARAMS} >/dev/null
+      ;;
+
+   stop)
+      log_info_msg "Setting hardware clock..."
+      hwclock --systohc ${CLOCKPARAMS} >/dev/null
+      evaluate_retval
+      ;;
+
+   *)
+      echo "Usage: ${0} {start|stop}"
+      exit 1
+      ;;
+
+esac
+
+exit 0
+EOF
+
+  chmod +x $P/etc/rc.d/init.d/setclock
+  mkdir -p $P/etc/rc.d/rcS.d
+  ( cd $P/etc/rc.d/rcS.d ; ln -sf ../init.d/setclock S35setclock )
+  mkdir -p $P/etc/rc.d/rc0.d
+  ( cd $P/etc/rc.d/rc0.d ; ln -sf ../init.d/setclock K35setclock )
+
+
+  mkdir -p $P/etc/sysconfig
+  cat > $P/etc/sysconfig/clock << "EOF"
+# Begin /etc/sysconfig/clock
+
+UTC=1
+
+# Set this to any options you might need to give to hwclock,
+# such as machine hardware clock type for Alphas.
+CLOCKPARAMS=
+
+# End /etc/sysconfig/clock
+EOF
 
 ################################
 #      install tweaks
