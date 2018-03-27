@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers='52.6.0'
+vers='52.7.0'
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
@@ -83,7 +83,8 @@ if [ $opt_package -eq 1 ] ; then
   make -f client.mk install DESTDIR=$P INSTALL_SDK=
 
   # Install langpack
-  install -Dm644 -v $W/${langpack_ja##*/} \
+  sh $W/langpack.sh $W
+  install -Dm644 -v $W/ja.xpi.plamo \
 	  $P/usr/${libdir}/thunderbird/extensions/langpack-ja@thunderbird.mozilla.org.xpi
 
   # desktop file
@@ -95,6 +96,7 @@ if [ $opt_package -eq 1 ] ; then
   # vendor.js (default configuration)
   install -Dm644 -v $W/vendor.js \
 	  $P/usr/${libdir}/thunderbird/defaults/preferences/vendor.js
+  install -Dm644 -v $W/vendor.js $docdir/$src/vendor.js
 
   # icon
   install -dm755 -v $P/usr/share/pixmaps
