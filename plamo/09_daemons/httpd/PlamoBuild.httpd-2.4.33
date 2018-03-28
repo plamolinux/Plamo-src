@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='httpd'
-vers='2.4.29'
+vers='2.4.33'
 url="https://archive.apache.org/dist/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=(--enable-layout=Plamo-FHS
 	    --enable-mpms-shared=all
