@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers='3.0.0.beta4'
+vers='3.0.0'
 template_vers="3.0.0"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_vers}.tar.gz"
