@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='git'
-vers='2.14.1'
+vers='2.17.0'
 url="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.sign"
 man_url="https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--with-gitconfig=/etc/gitconfig'
+OPT_CONFIG='--with-gitconfig=/etc/gitconfig --with-libpcre2 --without-tcltk --without-python'
 DOCS='COPYING INSTALL README.md command-list.txt'
 patchfiles=''
 compress=txz
@@ -70,7 +70,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j3 perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}')
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -82,7 +82,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P INSTALLDIRS=vendor
+
+  make install DESTDIR=$P perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}')
 
   # set-file-times
   install -v -m 755 $W/git-set-file-times $P/usr/libexec/git-core/git-set-file-times
