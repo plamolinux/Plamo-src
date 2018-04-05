@@ -1,0 +1,36 @@
+# This is a sample file for connecting network using wifi with wpa_suppliant
+# This uses /lib/services/wpa
+
+### Use DHCP ###
+#ONBOOT="yes"
+#IFACE="wlan0"
+#SERVICE="wpa"
+
+# Additional arguments to wpa_supplicant
+#WPA_ARGS=""
+
+#WPA_SERVICE="dhclient"
+#DHCP_START=""
+#DHCP_STOP=""
+
+## Set PRINTIP="yes" to have the script print
+## the DHCP assigned IP address
+#PRINTIP="no"
+
+## Set PRINTALL="yes" to print the DHCP assigned values for
+## IP, SM, DG, and 1st NS. This requires PRINTIP="yes".
+#PRINTALL="no"
+
+### Use static IP ###
+#ONBOOT="yes"
+#IFACE="wlan0"
+#SERVICE="wpa"
+
+## Additional arguments to wpa_supplicant
+#WPA_ARGS=""
+
+#WPA_SERVICE="ipv4-static"
+#IP="192.168.1.1"
+#GATEWAY="192.168.1.2"
+#PREFIX="24"
+#BROADCAST="192.168.1.255"
