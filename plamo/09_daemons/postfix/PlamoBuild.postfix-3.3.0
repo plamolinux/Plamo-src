@@ -5,7 +5,7 @@ vers='3.3.0'
 url="http://mirror.${pkgbase}.jp/${pkgbase}-release/official/${pkgbase}-${vers}.tar.gz"
 #verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 CCARGS_OPTS="-DUSE_SASL_AUTH -DHAS_SQLITE -DUSE_TLS -I/usr/include/openssl/"
 AUXLIBS_OPTS="-lsqlite3 -lpthread -lssl -lcrypto"
@@ -58,6 +58,10 @@ if [ $opt_config -eq 1 ] ; then
 	$command_directory/smtp-sink:f:root:root:-:755
 	$command_directory/qmqp-source:f:root:root:-:755
 	$command_directory/qmqp-sink:f:root:root:-:755
+	$manpage_directory/man1/smtp-sink.1:f:root:-:644
+	$manpage_directory/man1/smtp-source.1:f:root:-:644
+	$manpage_directory/man1/qmtp-sink.1:f:root:-:644
+	$manpage_directory/man1/qmtp-source.1:f:root:-:644
 	EOF
     
   make makefiles CCARGS="$CCARGS_OPTS" AUXLIBS="$AUXLIBS_OPTS"
