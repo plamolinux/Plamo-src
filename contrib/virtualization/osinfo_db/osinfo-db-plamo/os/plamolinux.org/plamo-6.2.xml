@@ -15,7 +15,6 @@
     <vendor xml:lang="uk">Plamo Linux Project</vendor>
     <family>linux</family>
     <distro>plamo</distro>
-    <upgrades id="http://plamolinux.org/plamo/6.1"/>
 
     <release-date>2017-03-04</release-date>
 

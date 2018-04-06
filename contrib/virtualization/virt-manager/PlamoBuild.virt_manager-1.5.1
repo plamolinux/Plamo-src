@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='virt_manager'
-vers='1.5.0'
+vers='1.5.1'
 url="https://virt-manager.org/download/sources/virt-manager/virt-manager-${vers}.tar.gz"
 verify=""
 arch=noarch
-build=B2
+build=B1
 src="virt-manager-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING HACKING.md INSTALL.md NEWS.md README.md virt-install'
@@ -71,7 +71,17 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python2 setup.py install --root $P
+  python2 setup.py --no-update-icon-cache --no-compile-schemas install --root $P
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/gtk-update-icon-cache ]; then
+  /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
+fi
+if [ -x /usr/bin/glib-compile-schemas ]; then
+  /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+fi
+EOF
 
 ################################
 #      install tweaks
