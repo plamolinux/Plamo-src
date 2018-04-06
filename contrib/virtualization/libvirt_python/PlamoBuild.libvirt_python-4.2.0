@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libvirt_python'
-vers='4.0.0'
-url="https://pypi.python.org/packages/37/ba/961cee6fad1d3587da4b900c5048fc12c0c73176a95a7d4f7c5ca5da72b7/libvirt-python-${vers}.tar.gz"
-digest="md5sum:b3db91358dd759b89fbe38bfe24e5ca1"
+vers='4.2.0'
+url="https://pypi.python.org/packages/2e/bf/0c77b44ed6f85314fe3207df7c8858b7ad35d37ef490b7220fe25c9f4524/libvirt-python-${vers}.tar.gz"
+digest="md5sum:26cf17943cd0a42fa16d75037a434046"
 arch=`uname -m`
 build=B1
 src="libvirt-python-${vers}"
