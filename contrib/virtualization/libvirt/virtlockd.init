@@ -24,13 +24,13 @@ test -f /etc/sysconfig/virtlockd && . /etc/sysconfig/virtlockd
 
 case "${1}" in
     start)
-	log_info_msg "Starting..."
+	log_info_msg "Starting virtlockd..."
 	start_daemon -p $PIDFILE $SERVICE --daemon $VIRTLOCKD_ARGS
 	evaluate_retval
 	;;
 
     stop)
-	log_info_msg "Stopping..."
+	log_info_msg "Stopping virtlockd..."
 	killproc $SERVICE
 	evaluate_retval
 	;;

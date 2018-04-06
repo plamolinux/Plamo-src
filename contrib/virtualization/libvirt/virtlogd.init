@@ -24,14 +24,15 @@ test -f /etc/sysconfig/virtlogd && . /etc/sysconfig/virtlogd
 
 case "${1}" in
     start)
-	log_info_msg "Starting..."
+	log_info_msg "Starting virtlogd..."
 	start_daemon -p $PIDFILE $SERVICE --daemon $VIRTLOGD_ARGS
 	evaluate_retval
 	;;
 
     stop)
-	log_info_msg "Stopping..."
+	log_info_msg "Stopping virtlogd..."
 	killproc $SERVICE
+	evaluate_retval
 	;;
 
     restart)

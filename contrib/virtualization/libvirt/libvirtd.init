@@ -32,7 +32,7 @@ fi
 
 case "${1}" in
     start)
-	log_info_msg "Starting..."
+	log_info_msg "Starting libvirtd..."
 	mkdir -p /var/cache/libvirt
 	rm -rf   /var/cache/libvirt/*
 
@@ -47,7 +47,7 @@ case "${1}" in
 	;;
 
     stop)
-	log_info_msg "Stopping..."
+	log_info_msg "Stopping libvirtd..."
 	killproc $SERVICE
 	evaluate_retval
 	;;
