@@ -5,7 +5,7 @@ vers='1.6.2'
 url="http://www.netfilter.org/projects/iptables/files/iptables-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-libipq --enable-nftables
             --with-xtlibdir=/lib/xtables
@@ -91,10 +91,17 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   install -Dm755 -v $W/iptables.init $P/etc/rc.d/init.d/iptables
-  for i in $(seq 3 5)
+  for i in $(seq 0 6)
   do
       install -dm755 -v $P/etc/rc.d/rc"$i".d
-      ln -sfv ../init.d/iptables $P/etc/rc.d/rc"$i".d/S19iptables
+      case $i in
+	  3|4|5)
+	      ln -sfv ../init.d/iptables $P/etc/rc.d/rc"$i".d/S19iptables
+	      ;;
+	  0|1|2|6)
+	      ln -sfv ../init.d/iptables $P/etc/rc.d/rc"$i".d/K81iptables
+	      ;;
+      esac
   done
 
 ################################

@@ -26,56 +26,110 @@
 
 . /lib/lsb/init-functions
 
-#$LastChangedBy: krejzi $
-#$Date: 2013-06-11 11:01:46 -0500 (Tue, 11 Jun 2013) $
+IPTABLES_TYPES=("iptables" "ip6tables")
+IPTABLES=""
+
+start() {
+    IPTABLES=$1
+    log_info_msg "Starting ${IPTABLES}..."
+    if [ -f /etc/sysconfig/$IPTABLES ]; then
+	/sbin/"$IPTABLES"-restore /etc/sysconfig/$IPTABLES
+    fi
+    evaluate_retval
+}
+
+lock() {
+    IPTABLES=$1
+    log_info_msg "Locking system $IPTABLES firewall..."
+    /sbin/$IPTABLES --policy INPUT   DROP && \
+	/sbin/$IPTABLES --policy OUTPUT  DROP && \
+	/sbin/$IPTABLES --policy FORWARD DROP && \
+	/sbin/$IPTABLES           --flush && \
+	/sbin/$IPTABLES -t nat    --flush && \
+	/sbin/$IPTABLES -t mangle --flush && \
+	/sbin/$IPTABLES           --delete-chain && \
+	/sbin/$IPTABLES -t nat    --delete-chain && \
+	/sbin/$IPTABLES -t mangle --delete-chain && \
+	/sbin/$IPTABLES -A INPUT  -i lo -j ACCEPT && \
+	/sbin/$IPTABLES -A OUTPUT -o lo -j ACCEPT && \
+    evaluate_retval
+}
+
+clear() {
+    IPTABLES=$1
+    log_info_msg "Clearing system iptables iptables..."
+    /sbin/$IPTABLES --policy INPUT   ACCEPT && \
+	/sbin/$IPTABLES --policy OUTPUT  ACCEPT && \
+	/sbin/$IPTABLES --policy FORWARD ACCEPT && \
+	/sbin/$IPTABLES           --flush && \
+	/sbin/$IPTABLES -t nat    --flush && \
+	/sbin/$IPTABLES -t mangle --flush && \
+	/sbin/$IPTABLES           --delete-chain && \
+	/sbin/$IPTABLES -t nat    --delete-chain && \
+	/sbin/$IPTABLES -t mangle --delete-chain
+    evaluate_retval
+}
+
+status() {
+    IPTABLES=$1
+    /sbin/$IPTABLES           --numeric --list
+    /sbin/$IPTABLES -t nat    --numeric --list
+    /sbin/$IPTABLES -t mangle --numeric --list
+}
+
+save() {
+    IPTABLES=$1
+    log_info_msg "Saving ${IPTABLES} rules..."
+    /sbin/"$IPTABLES"-save > /etc/sysconfig/$IPTABLES
+    evaluate_retval
+}
 
 case "$1" in
     start)
-        if [ -x /etc/rc.d/rc.iptables ]; then
-          log_info_msg "Starting iptables..."
-          /etc/rc.d/rc.iptables
-          evaluate_retval
-        fi
+	for t in ${IPTABLES_TYPES[@]}
+	do
+	    start $t
+	done
+        ;;
+
+    stop)
+	for t in ${IPTABLES_TYPES[@]}
+	do
+	    clear $t
+	done
         ;;
 
     lock)
-        log_info_msg "Locking system iptables firewall..."
-        /sbin/iptables --policy INPUT   DROP
-        /sbin/iptables --policy OUTPUT  DROP
-        /sbin/iptables --policy FORWARD DROP
-        /sbin/iptables           --flush
-        /sbin/iptables -t nat    --flush
-        /sbin/iptables -t mangle --flush
-        /sbin/iptables           --delete-chain
-        /sbin/iptables -t nat    --delete-chain
-        /sbin/iptables -t mangle --delete-chain
-        /sbin/iptables -A INPUT  -i lo -j ACCEPT
-        /sbin/iptables -A OUTPUT -o lo -j ACCEPT
-        evaluate_retval
+	for t in ${IPTABLES_TYPES[@]}
+	do
+	    lock $t
+	done
+        ;;
+
+    save)
+	for t in ${IPTABLES_TYPES[@]}
+	do
+	    save $t
+	done
         ;;
 
     clear)
-        log_info_msg "Clearing system iptables iptables..."
-        /sbin/iptables --policy INPUT   ACCEPT
-        /sbin/iptables --policy OUTPUT  ACCEPT
-        /sbin/iptables --policy FORWARD ACCEPT
-        /sbin/iptables           --flush
-        /sbin/iptables -t nat    --flush
-        /sbin/iptables -t mangle --flush
-        /sbin/iptables           --delete-chain
-        /sbin/iptables -t nat    --delete-chain
-        /sbin/iptables -t mangle --delete-chain
-        evaluate_retval
+	for t in ${IPTABLES_TYPES[@]}
+	do
+	    clear $t
+	done
         ;;
 
     status)
-        /sbin/iptables           --numeric --list
-        /sbin/iptables -t nat    --numeric --list
-        /sbin/iptables -t mangle --numeric --list
+	status iptables
         ;;
 
+    status6)
+	status ip6tables
+	;;
+
     *)
-        echo "Usage: $0 {start|clear|lock|status}"
+        echo "Usage: $0 {start|stop|clear|lock|status|status6|save}"
         exit 1
         ;;
 esac
