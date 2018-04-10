@@ -1,15 +1,28 @@
 #!/bin/sh
 ##############################################################
-pkgbase=httpd
-vers=2.4.28
-url="http://archive.apache.org/dist/httpd/httpd-${vers}.tar.gz"
+pkgbase=curl
+vers=7.59.0
+url="http://curl.haxx.se/download/curl-${vers}.tar.bz2"
 verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --enable-xml2enc --enable-proxy-html --mandir=/usr/share/man"
-DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
-patchfiles='httpdlogrotate_plamo.patch'
+OPT_CONFIG='--with-gssapi --with-gssapi-includes=/usr/heimdal/include  --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt --without-nghttp2 --enable-threaded-resolver'
+if [ "$arch" = "x86_64" ]; then
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib64"
+else
+    OPT_CONFIG=$OPT_CONFIG" --with-gssapi-libs=/usr/heimdal/lib"
+fi
+DOCS="COPYING README RELEASE-NOTES
+      docs/CHECKSRC.md docs/CODE_STYLE.md docs/HTTP2.md
+      docs/CODE_OF_CONDUCT.md docs/HTTP-COOKIES.md docs/ROADMAP.md
+      docs/BINDINGS docs/BUGS docs/CONTRIBUTE docs/FAQ docs/FEATURES docs/HISTORY
+      docs/INSTALL docs/INSTALL.devcpp docs/INTERNALS docs/KNOWN_BUGS
+      docs/LICENSE-MIXING docs/MAIL-ETIQUETTE docs/MANUAL docs/README.netware docs/README.win32
+      docs/RELEASE-PROCEDURE docs/RESOURCES docs/SECURITY docs/SSL-PROBLEMS 
+      docs/SSLCERTS docs/THANKS docs/TODO docs/TheArtOfHttpScripting docs/VERSIONS
+      docs/curl.html docs/index.html docs/mk-ca-bundle.html"
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -17,20 +30,40 @@ install2() {
   install -d ${2%/*} ; install -m 644 $1 $2
 }
 
-strip_all() {
-  for chk in `find . ` ; do
-    chk_elf=`file $chk | grep ELF`
-    if [ "$chk_elf.x" != ".x" ]; then
-      chk_lib=`echo $chk | grep lib`
-      if [ "$chk_lib.x" != ".x" ]; then
-         echo "stripping $chk with -g "
-         strip -g $chk
-      else
-         echo "stripping $chk"
-         strip $chk
+strip_bindir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in * ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`file $i | grep "not stripped"`" ] ; then #`
+         echo "stripping -p $i"
+         strip -p $i
       fi
-    fi
-  done
+    done
+  ) fi
+}
+
+strip_libdir() {
+  echo "compressing in $1"
+  if [ -d $1 ] ; then (
+    shopt -s nullglob
+    cd $1
+    for i in *.so *.so.* *.a ; do
+      echo "$i"
+      if [ -h $i ] ; then continue ; fi
+      if [ -n "`nm -a $i | grep " a "`" ] ; then #`
+        if [ $i != ${i%.a} ] ; then
+          echo -n "ranlib and "
+          touch -r $i $i.mt ; ranlib $i ; touch -r $i.mt $i ; rm $i.mt
+        fi
+        echo "stripping -gp $i"
+        strip -gp $i
+      fi
+    done
+  ) fi
 }
 
 gzip_dir() {
@@ -67,23 +100,53 @@ gzip_one() {
   gzip $1 ; mv $1.gz $C ; mv $C/${1##*/}.gz ${1%/*}
 }
 
-compress_all() {
-  cd $P
-  strip_all
-}  
+compress() {
+  for i in {$P,$P/usr,$P/usr/X11R7}/{sbin,bin} ; do strip_bindir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib ; do strip_libdir $i ; done
+  for i in {$P,$P/usr,$P/usr/X11R7}/lib64 ; do strip_libdir $i ; done
+  if [ -f $infodir/dir ] ; then rm -f $infodir/dir ; fi
+  gzip_dir $infodir
+  for i in `seq 9` n ; do gzip_dir $mandir/man$i ; done
+  for i in `seq 9` n ; do gzip_dir $xmandir/man$i ; done
+}
 
-verify_checksum() {
-  echo "Verify Checksum..."
-  checksum_command=$1
-  verify_file=${verify##*/}
-  for s in $url ; do
-    srcsum=`$checksum_command ${s##*/}`
-    verifysum=`grep ${s##*/} $verify_file`
-    if [ x"$srcsum" != x"$verifysum" ]; then
-      exit 1
-    fi
-  done
-  exit 0
+prune_symlink() {
+  echo "pruning symlink in $1"
+  if [ -d $1 ] ; then (
+    cd $P
+    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
+    for i in `find ${1#$P/} -type l` ; do
+      target=`readlink $i`
+      echo "$i -> $target"
+      echo $i$'
+'$target >> /tmp/iNsT-a.$$
+    done
+    COUNT=1
+    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    while [ -n "$LINE" ] ; do
+      LINKGOESIN=`dirname $LINE`
+      LINKNAMEIS=`basename $LINE`
+      COUNT=$(($COUNT + 1))
+      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+      if [ ! -d install ] ; then mkdir install ; fi
+      cat <<- EOF >> install/doinst.sh
+	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
+	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
+	EOF
+      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      COUNT=$(($COUNT + 1))
+      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
+    done
+    rm -f /tmp/iNsT-a.$$
+  ) fi
+}
+
+convert() {
+  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
+  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
+  prune_symlink $infodir
+  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
 }
 
 W=`pwd`
@@ -104,13 +167,11 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-  target="-m64"
-  libdir="lib64"
-  suffix="64"
+    target="-m64"
+    libdir="lib64"
 else
-  target="-m32"
-  libdir="lib"
-  suffix=""
+    target="-m32"
+    libdir="lib"
 fi
 
 if [ $# -eq 0 ] ; then
@@ -128,9 +189,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then
-      wget $i
-    fi
+    if [ ! -f ${i##*/} ] ; then wget $i ; fi
   done
   for i in $verify ; do
     if [ ! -f ${i##*/} ] ; then
@@ -152,13 +211,12 @@ if [ $opt_download -eq 1 ] ; then
   done
   for i in $url ; do
     case ${i##*.} in
+    tar) tar xvpf ${i##*/} ;;
     gz) tar xvpzf ${i##*/} ;;
     bz2) tar xvpjf ${i##*/} ;;
-    *) tar xvpf ${i##*/} ;;
     esac
   done
 fi
-
 if [ $opt_config -eq 1 ] ; then
   for i in `seq 0 $((${#B[@]} - 1))` ; do
     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
@@ -173,21 +231,19 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
 
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
 
     if [ -x configure ] ; then
-      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-      export LDFLAGS='-Wl,--as-needed' 
-      export CC="gcc -isystem /usr/include $target" 
-      export CXX="g++ -isystem /usr/include $target "
-      sed -i -e "s|\${prefix}/lib|\${prefix}/${libdir}|" config.layout
-      exec ./configure ${OPT_CONFIG[$i]}
-    fi
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
+       export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+       export LDFLAGS='-Wl,--as-needed' 
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
+          ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+      if [ $? != 0 ]; then
+	  echo "configure error. $0 script stop"
+	  exit 255
+      fi
     fi
   done
 fi
@@ -207,6 +263,7 @@ if [ $opt_package -eq 1 ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
   fi
+
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
   touch $W/i.st ; sleep 1
@@ -219,107 +276,31 @@ if [ $opt_package -eq 1 ] ; then
       export LDFLAGS='-Wl,--as-needed'
       make install DESTDIR=$P
     fi
-
-    chk_me=`whoami | grep root`
-    if [ "$chk_me.x" != ".x" ]; then
-      echo "chown"
-      chown -R root:root $P/usr/sbin
-      chown -R root:root $P/usr/bin
-      chown -R root:root $P/usr/${libdir}
-      chown -R root:root $P/usr/share/man
-      chown -R root:root $P/srv/httpd
-    fi
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  mkdir -p $P/etc/logrotate.d
-  cp ${B[i]}/build/rpm/httpd.logrotate $P/etc/logrotate.d/
-  mv $P/etc/httpd/httpd.conf $P/etc/httpd/httpd.conf.dist
-  mv $P/etc/httpd/extra $P/etc/httpd/extra.dist
-  for d in htdocs icons error cgi-bin
-  do
-    mv $P/srv/httpd/$d $P/srv/httpd/$d.dist
-  done
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-  MYHOST=\`cat /etc/HOSTNAME\`
-  sed -i -e 's/^User\sdaemon/User www/' \
-    -e 's/Group\sdaemon/Group apache/'  \
-    -e 's/mpm_event/mpm_prefork/g' \
-    -e "s/^#ServerName.*$/ServerName \$MYHOST/" /etc/httpd/httpd.conf.dist
-if [ ! -f /etc/httpd/httpd.conf ]; then
-  ( cd /etc/httpd ; cp httpd.conf.dist httpd.conf )
-fi
-if [ ! -d /etc/httpd/extra ]; then
-  ( cd /etc/httpd ; cp -rp extra.dist extra )
-fi
-( cd /etc/rc.d/init.d ; ln -sf /usr/sbin/apachectl )
-if [ -d /etc/httpd/conf ]; then
-  echo "Caution!: sysconfdir was changed to /etc/httpd (previously /etc/httpd/conf)"
-fi
-if [ -d /var/www ]; then
-  echo "Caution!: datadir was changed to /srv (previously /var/www)"
-fi
-for d in htdocs icons error cgi-bin
-do
-  if [ ! -d /srv/httpd/\$d ]; then
-    ( cd /srv/httpd ; mv \$d.dist \$d )
-  fi
-done
-EOF
-  mkdir -p $docdir/$src
-  if [ -d $P/usr/share/omf ]; then
-    mkdir -p $P/install
-    for omf in $P/usr/share/omf/* ; do
-      omf_name=`basename $omf`
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/scrollkeeper-update ]; then
-  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
-fi
-EOF
-    done
-  fi
-
-  if [ -d $P/etc/gconf/schemas ]; then
-    mkdir -p $P/install
-    for schema in $P/etc/gconf/schemas/* ; do
-      cat << EOF >> $P/install/initpkg
-if [ -x /usr/bin/gconftool-2 ]; then
-    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
-fi
-EOF
-    done
-  fi
-
 # remove locales except ja
 # 
-  for loc_dir in `find $P -name locale` ; do
-    pushd $loc_dir
+  if [ -d $P/usr/share/locale ]; then
+    pushd $P/usr/share/locale  
     for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
+        if [ "$loc" != "ja" ]; then
+            rm -rf $P/usr/share/locale/$loc
+        fi
     done
     popd
-  done      
-
-######################################################################
-# path に lib があるバイナリは strip -g, ないバイナリは strip する
-######################################################################
-  cd $P
-  compress_all
-  if [ -d $P/usr/share/man ]; then
-    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-      gzip_dir $mdir
-    done
   fi
+
+  touch $W/i.et
+  cd $W
+  find $P ! -type l -newer i.st ! -newer i.et       -exec touch -t `date '+%m%d0900'` {} \;
+  compress
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
 # * 他のアーカイブから追加したいファイルがある場合はここに記述します。
 ######################################################################
-  cd $W
   for i in `seq 0 $((${#DOCS[@]} - 1))` ; do
     for j in ${DOCS[$i]} ; do
       for k in ${S[$i]}/$j ; do
@@ -330,6 +311,7 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
+      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -338,20 +320,13 @@ EOF
   done
 
   for patch in $patchfiles ; do
-    cp $W/$patch $docdir/$src/$patch
-    gzip_one $docdir/$src/$patch
+      cp $W/$patch $docdir/$src/$patch
+      gzip_one $docdir/$src/$patch
   done
-
-############################################################
-#   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
-#   紛れこみがちなので
-############################################################
-
-  chk_me=`whoami | grep root`
-  if [ "$chk_me.x" != ".x" ]; then
-      chown -R root.root $P/usr/share/doc
-  fi
-
+######################################################################
+# * ドキュメントツリーの調整が必要な場合はここに記述します。
+######################################################################
+  convert
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。

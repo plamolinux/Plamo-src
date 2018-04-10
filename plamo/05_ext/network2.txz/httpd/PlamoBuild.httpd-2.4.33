@@ -1,47 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase=php
-vers=7.1.15
-url="http://jp2.php.net/get/${pkgbase}-${vers}.tar.bz2/from/this/mirror"
+pkgbase=httpd
+vers=2.4.33
+url="http://archive.apache.org/dist/httpd/httpd-${vers}.tar.gz"
+verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers}
-CONFDIR="/etc/httpd/"
-OPT_CONFIG="
-	--with-apxs2=/usr/bin/apxs
-	--with-zlib
-	--with-curl=shared,/usr
-	--with-gd=shared,/usr
-	--enable-gd-jis-conv
-	--with-freetype-dir=/usr
-	--with-jpeg-dir=/usr
-	--enable-mbstring
-	--enable-mysqlnd=shared,/opt/mariadb
-	--with-mysqli=shared,mysqlnd
-	--enable-pdo
-	--with-pdo-mysql=shared,mysqlnd
-	--with-mysql-sock=$(/opt/mariadb/bin/mysql_config --socket 2>/dev/null)
-	--with-pdo-sqlite
-	--with-config-file-path=$CONFDIR
-	--enable-zip=shared
-	--with-libzip
-	--enable-ftp=shared
-	--with-bz2=shared
-	--with-db4=shared,/usr
-	--with-gdbm=shared
-	--enable-exif=shared
-	--with-ldap=shared
-	--enable-opcache=shared
-	--enable-opcache-file
-	--with-openssl=shared
-	--enable-exif=shared
-	--with-xmlrpc=shared
-	--enable-calendar"
-if [ $arch == 'x86_64' ]; then
-  OPT_CONFIG="$OPT_CONFIG --with-libdir=lib64"
-fi
-DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.namespaces'
-patchfiles=''
+OPT_CONFIG="--enable-layout=Slackware-FHS --enable-mods-shared=all --enable-mods-shared=cgi --enable-mpms-shared=all --enable-xml2enc --enable-proxy-html --mandir=/usr/share/man"
+DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.platforms'
+patchfiles='httpdlogrotate_plamo.patch'
 compress=txz
 ##############################################################
 
@@ -64,7 +32,6 @@ strip_all() {
     fi
   done
 }
-
 
 gzip_dir() {
   echo "compressing in $1"
@@ -105,43 +72,18 @@ compress_all() {
   strip_all
 }  
 
-prune_symlink() {
-  echo "pruning symlink in $1"
-  if [ -d $1 ] ; then (
-    cd $P
-    rm -f /tmp/iNsT-a.$$ ; touch /tmp/iNsT-a.$$
-    for i in `find ${1#$P/} -type l` ; do
-      target=`readlink $i`
-      echo "$i -> $target"
-      echo $i$'
-'$target >> /tmp/iNsT-a.$$
-    done
-    COUNT=1
-    LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    while [ -n "$LINE" ] ; do
-      LINKGOESIN=`dirname $LINE`
-      LINKNAMEIS=`basename $LINE`
-      COUNT=$(($COUNT + 1))
-      LINKPOINTSTO=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-      if [ ! -d install ] ; then mkdir install ; fi
-      cat <<- EOF >> install/doinst.sh
-	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
-	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
-	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
-      COUNT=$(($COUNT + 1))
-      LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
-    done
-    rm -f /tmp/iNsT-a.$$
-  ) fi
-}
-
-convert() {
-  for i in {$P,$P/usr}/{sbin,bin} ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib ; do prune_symlink $i ; done
-  for i in {$P,$P/usr}/lib64 ; do prune_symlink $i ; done
-  prune_symlink $infodir
-  for i in `seq 9` n ; do prune_symlink $mandir/man$i ; done
+verify_checksum() {
+  echo "Verify Checksum..."
+  checksum_command=$1
+  verify_file=${verify##*/}
+  for s in $url ; do
+    srcsum=`$checksum_command ${s##*/}`
+    verifysum=`grep ${s##*/} $verify_file`
+    if [ x"$srcsum" != x"$verifysum" ]; then
+      exit 1
+    fi
+  done
+  exit 0
 }
 
 W=`pwd`
@@ -162,13 +104,13 @@ myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
 if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    suffix="64"
+  target="-m64"
+  libdir="lib64"
+  suffix="64"
 else
-    target="-m32"
-    libdir="lib"
-    suffix=""
+  target="-m32"
+  libdir="lib"
+  suffix=""
 fi
 
 if [ $# -eq 0 ] ; then
@@ -186,9 +128,35 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   for i in $url ; do
-    if [ ! -f ${i##*/} ] ; then wget -O $src.tar.bz2 $i ; fi
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
   done
-  tar xvpf  $src.tar.bz2
+  for i in $verify ; do
+    if [ ! -f ${i##*/} ] ; then
+      wget $i
+    fi
+  done
+  for i in $verify ; do
+    case ${i##*.} in
+    asc) gpg2 --verify ${i##*/} ;;
+    sig) gpg2 --verify ${i##*/} ;;
+    sha256sum) verify_checksum "sha256sum" ;;
+    esac
+    if [ $? -ne 0 ]; then
+      echo "archive verify was failed."
+      exit 1
+    else
+      echo "archive verify was successed."
+    fi
+  done
+  for i in $url ; do
+    case ${i##*.} in
+    gz) tar xvpzf ${i##*/} ;;
+    bz2) tar xvpjf ${i##*/} ;;
+    *) tar xvpf ${i##*/} ;;
+    esac
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -209,20 +177,18 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-    # not for creating ZTS PHP
-    sed '/APACHE_THREADED_MPM=/d' -i sapi/apache2handler/config.m4 -i configure
-
-      if [ -x configure ] ; then
-         export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-         export LDFLAGS='-Wl,--as-needed' 
-         export CC="gcc -isystem /usr/include $target" 
-         export CXX="g++ -isystem /usr/include $target "
-         ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-     fi
-      if [ $? != 0 ]; then
-	  echo "configure error. $0 script stop"
-	  exit 255
-      fi
+    if [ -x configure ] ; then
+      export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+      export LDFLAGS='-Wl,--as-needed' 
+      export CC="gcc -isystem /usr/include $target" 
+      export CXX="g++ -isystem /usr/include $target "
+      sed -i -e "s|\${prefix}/lib|\${prefix}/${libdir}|" config.layout
+      exec ./configure ${OPT_CONFIG[$i]}
+    fi
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
 if [ $opt_build -eq 1 ] ; then
@@ -251,71 +217,103 @@ if [ $opt_package -eq 1 ] ; then
     done
     if [ -f Makefile ] ; then
       export LDFLAGS='-Wl,--as-needed'
-      # copy dummy httpd.conf
-      mkdir -p $P/$CONFDIR
-      cp $CONFDIR/original/httpd.conf $P/$CONFDIR
-      make install INSTALL_ROOT=$P
-      # delete unused files
-      rm -rf $P/$CONFDIR/httpd.conf*
-      ( cd $P ; rm -rf .channels .depdb .filemap .lock .registry .depdblock )
-      # /usr/${libdir}/build 以下を使用するソフトがある模様．
-      #( cd $P/usr/lib64/ ; rm -rf build )
-      ln -sf phar.phar $P/usr/bin/phar
+      make install DESTDIR=$P
+    fi
+
+    chk_me=`whoami | grep root`
+    if [ "$chk_me.x" != ".x" ]; then
+      echo "chown"
+      chown -R root:root $P/usr/sbin
+      chown -R root:root $P/usr/bin
+      chown -R root:root $P/usr/${libdir}
+      chown -R root:root $P/usr/share/man
+      chown -R root:root $P/srv/httpd
     fi
   done
 ######################################################################
 # * make install でコピーされないファイルがある場合はここに記述します。
 ######################################################################
-  # Install php.ini
-  install -m 644 ${B[$i]}/php.ini-production $P/$CONFDIR/php.ini.dist
-  # Install Apache Configuration File
-  mkdir -p $P/$CONFDIR/extra.dist/
-  cat <<EOF > $P/$CONFDIR/extra.dist/php7.conf
-LoadModule php7_module        ${libdir}/httpd/modules/libphp7.so
-
-<FilesMatch \.php$>
-  SetHandler application/x-httpd-php
-</FilesMatch>
-EOF
+  mkdir -p $P/etc/logrotate.d
+  cp ${B[i]}/build/rpm/httpd.logrotate $P/etc/logrotate.d/
+  mv $P/etc/httpd/httpd.conf $P/etc/httpd/httpd.conf.dist
+  mv $P/etc/httpd/extra $P/etc/httpd/extra.dist
+  for d in htdocs icons error cgi-bin
+  do
+    mv $P/srv/httpd/$d $P/srv/httpd/$d.dist
+  done
   mkdir -p $P/install
-  cat <<EOF > $P/install/initpkg
-if [ ! -f $CONFDIR/extra/php7.conf ]; then
-  ( cd $CONFDIR ; cp extra.dist/php7.conf extra/php7.conf )
+  cat <<EOF >> $P/install/initpkg
+  MYHOST=\`cat /etc/HOSTNAME\`
+  sed -i -e 's/^User\sdaemon/User www/' \
+    -e 's/Group\sdaemon/Group apache/'  \
+    -e 's/mpm_event/mpm_prefork/g' \
+    -e "s/^#ServerName.*$/ServerName \$MYHOST/" /etc/httpd/httpd.conf.dist
+if [ ! -f /etc/httpd/httpd.conf ]; then
+  ( cd /etc/httpd ; cp httpd.conf.dist httpd.conf )
 fi
-if [ ! -f $CONFDIR/php.ini ]; then
-  ( cd $CONFDIR ; cp php.ini.dist php.ini )
+if [ ! -d /etc/httpd/extra ]; then
+  ( cd /etc/httpd ; cp -rp extra.dist extra )
+fi
+( cd /etc/rc.d/init.d ; ln -sf /usr/sbin/apachectl )
+if [ -d /etc/httpd/conf ]; then
+  echo "Caution!: sysconfdir was changed to /etc/httpd (previously /etc/httpd/conf)"
+fi
+if [ -d /var/www ]; then
+  echo "Caution!: datadir was changed to /srv (previously /var/www)"
+fi
+for d in htdocs icons error cgi-bin
+do
+  if [ ! -d /srv/httpd/\$d ]; then
+    ( cd /srv/httpd ; mv \$d.dist \$d )
+  fi
+done
+EOF
+  mkdir -p $docdir/$src
+  if [ -d $P/usr/share/omf ]; then
+    mkdir -p $P/install
+    for omf in $P/usr/share/omf/* ; do
+      omf_name=`basename $omf`
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/scrollkeeper-update ]; then
+  scrollkeeper-update -p /var/lib/rarian -o /usr/share/omf/$omf_name
 fi
 EOF
+    done
+  fi
 
-  mkdir -p $docdir/$src
+  if [ -d $P/etc/gconf/schemas ]; then
+    mkdir -p $P/install
+    for schema in $P/etc/gconf/schemas/* ; do
+      cat << EOF >> $P/install/initpkg
+if [ -x /usr/bin/gconftool-2 ]; then
+    ( cd /etc/gconf/schemas ; GCONF_CONFIG_SOURCE=xml:merged:/etc/gconf/gconf.xml.defaults /usr/bin/gconftool-2 --makefile-install-rule `basename $schema` )
+fi
+EOF
+    done
+  fi
 
 # remove locales except ja
 # 
-  if [ -d $P/usr/share/locale ]; then
-    pushd $P/usr/share/locale  
+  for loc_dir in `find $P -name locale` ; do
+    pushd $loc_dir
     for loc in * ; do
-        if [ "$loc" != "ja" ]; then
-            rm -rf $P/usr/share/locale/$loc
-        fi
+      if [ "$loc" != "ja" ]; then
+        rm -rf $loc
+      fi
     done
     popd
-  fi
+  done      
 
 ######################################################################
 # path に lib があるバイナリは strip -g, ないバイナリは strip する
 ######################################################################
   cd $P
   compress_all
-  for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
-     gzip_dir mdir
-  done
-
-  if [ -d $P/usr/share/man ] ; then
-      for mdir in `find $P/usr/share/man -name "man[0-9mno]" -type d` ; do
-	  gzip_dir $mdir
-      done
+  if [ -d $P/usr/share/man ]; then
+    for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
+      gzip_dir $mdir
+    done
   fi
-
 ######################################################################
 # * compress 対象以外で圧縮したいディレクトリやファイルがある場合はここ
 #   に記述します(strip_{bin,lib}dir や gzip_{dir,one} を使います)。
@@ -332,7 +330,6 @@ EOF
     done
     if [ $i -eq 0 ] ; then
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
       gzip_one $docdir/$src/$myname
     else
       ln $docdir/$src/$myname.gz $docdir/${src[$i]}
@@ -341,17 +338,20 @@ EOF
   done
 
   for patch in $patchfiles ; do
-      cp $W/$patch $docdir/$src/$patch
-      gzip_one $docdir/$src/$patch
+    cp $W/$patch $docdir/$src/$patch
+    gzip_one $docdir/$src/$patch
   done
+
 ############################################################
 #   /usr/share/doc 以下には一般ユーザのIDのままのファイルが
 #   紛れこみがちなので
 ############################################################
+
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
       chown -R root.root $P/usr/share/doc
   fi
+
 ######################################################################
 # * convert 対象以外で刈り取りたいシンボリックリンクがある場合はここに
 #   記述します(prune_symlink を使います)。
