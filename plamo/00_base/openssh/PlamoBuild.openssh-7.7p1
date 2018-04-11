@@ -1,20 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssh'
-vers='7.6p1'
+vers='7.7p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
-    --with-privsep-path=/var/lib/sshd --with-md5-passwords"
+    --with-privsep-path=/var/lib/sshd --with-md5-passwords --with-pid-dir=/run"
 DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     README README.dns README.platform README.privsep README.tun
     PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
     PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
     TODO"
-openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-7.6p1-openssl-1.1.0-1.patch"
+openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-7.7p1-openssl-1.1.0-1.patch"
 patchfiles="${openssl_patch_url##*/}"
 compress=txz
 ##############################################################
@@ -220,10 +220,6 @@ if [ ! -f /etc/ssh/ssh_config ]; then
 fi
 
 if [ -x /usr/bin/ssh-keygen ] ; then
-    if [ ! -f /etc/ssh/ssh_host_key ] ; then
-        echo "/etc/ssh/ssh_host_key doesn't exist, generating..."
-    	ssh-keygen -t rsa1 -f /etc/ssh/ssh_host_key -N ""
-    fi
     if [ ! -f /etc/ssh/ssh_host_dsa_key ] ; then
        echo "/etc/ssh/ssh_host_dsa_key doesn't exist, generating..."
        ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key -N ""
