@@ -1,15 +1,30 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gvfs'
-vers='1.34.1'
+vers='1.36.0'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:44012824aa75797a7d272cd60f07b488"
+digest="md5sum:216d461c5e96e2cea74253be407af6dc"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog.pre-1-2 INSTALL MAINTAINERS NEWS README README.commits'
+# multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
+OPT_CONFIG="-Dfuse=true
+	-Dgphoto2=true
+	-Dafc=false
+	-Dafp=true
+	-Dbluray=false
+	-Dnfs=false
+	-Dmtp=true
+	-Dsmb=true
+	-Dtmpfilesdir=no
+	-Dlogind=false
+	-Ddnssd=true
+	-Dcdda=true
+	-Dgoa=false
+	-Dgoogle=false
+	-Dsystemduserunitdir=false"
+DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,14 +68,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  meson --prefix=/usr --libdir=${libdir} $OPT_CONFIG $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -71,7 +81,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -83,7 +93,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
