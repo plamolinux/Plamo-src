@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
-pkgbase='fuse'
+pkgbase='fuse2'
 vers='2.9.7'
-url="https://github.com/lib${pkgbase}/lib${pkgbase}/releases/download/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.gz"
+url="https://github.com/libfuse/libfuse/releases/download/fuse-${vers}/fuse-${vers}.tar.gz"
 digest="md5sum:9bd4ce8184745fd3d000ca2692adacdb"
 verify=""
 arch=`uname -m`
-build=B1
-src="${pkgbase}-${vers}"
+build=B2
+src="fuse-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --exec-prefix=/"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog NEWS README.NFS README.md'
 patchfiles=''
@@ -81,20 +81,33 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  P2=$W/tmp
+  if [ -d $P2 ] ; then rm -rf $P2 ; fi ; mkdir -p $P2
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  # Temporaly install
+  make install DESTDIR=$P2
 
-  mkdir -p $P/usr/lib
-  ln -v -sf ../../${libdir}/libfuse.so.${vers} $P/usr/lib/libfuse.so
+  # Install libs
+  install -Dm755 -v $P2/${libdir}/libfuse.so.2.9.7     $P/${libdir}/libfuse.so.2.9.7
+  install -Dm755 -v $P2/${libdir}/libulockmgr.so.1.0.1 $P/${libdir}/libulockmgr.so.1.0.1 
+  mkdir -pv $P/usr/lib
+  ln -v -sf ../../${libdir}/libfuse.so.${vers}   $P/usr/lib/libfuse.so
   ln -v -sf ../../${libdir}/libulockmgr.so.1.0.1 $P/usr/lib/libulockmgr.so
 
   # move pkgconfig to /usr/lib
-  mv -v $P/${libdir}/pkgconfig $P/usr/lib/pkgconfig
+  mv -v $P2/${libdir}/pkgconfig $P/usr/lib/pkgconfig
 
-  # delete unneeded files
-  rm -v -rf $P/dev
-  rm -v -rf $P/etc/init.d
+  # binaries
+  install -Dm4755 -v $P2/bin/fusermount      $P/bin/fusermount
+  install -Dm755  -v $P2/bin/ulockmgr_server $P/bin/ulockmgr_server
+  install -Dm755  -v $P2/sbin/mount.fuse     $P/sbin/mount.fuse
+
+  # includes
+  mv -v $P2/usr/include $P/usr/include
+
+  # man
+  mv -v $P2/usr/share/ $P/usr/share/
   
 ################################
 #      install tweaks
