@@ -5,13 +5,13 @@ vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B8
+build=B11
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
 	--sbindir=/sbin
         --enable-device-mapper
         --enable-cache-stats
-        --enable-boot-time
+	--enable-boot-time
         --enable-grub-mkfont
         --enable-grub-mount
         --disable-mm-debug
@@ -197,7 +197,8 @@ EOF
   if [ "$chk_me.x" != ".x" ]; then
       chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
   fi
-  install -D -m 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
+  install -Dm 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
+  install -Dm 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
 
 ################################
 #      install tweaks
