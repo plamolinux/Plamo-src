@@ -89,8 +89,9 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P2
 
   # Install libs
-  install -Dm755 -v $P2/${libdir}/libfuse.so.2.9.7     $P/${libdir}/libfuse.so.2.9.7
-  install -Dm755 -v $P2/${libdir}/libulockmgr.so.1.0.1 $P/${libdir}/libulockmgr.so.1.0.1 
+  mkdir -pv $P/${libdir}
+  mv -v $P2/${libdir}/libfuse.so.2* $P/${libdir}/
+  mv -v $P2/${libdir}/libulockmgr.so.1* $P/${libdir}/
   mkdir -pv $P/usr/lib
   ln -v -sf ../../${libdir}/libfuse.so.${vers}   $P/usr/lib/libfuse.so
   ln -v -sf ../../${libdir}/libulockmgr.so.1.0.1 $P/usr/lib/libulockmgr.so
