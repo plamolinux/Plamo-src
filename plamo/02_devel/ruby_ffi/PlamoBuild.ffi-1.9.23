@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-gemname="sass"
-pkgbase="ruby_sass"
-vers='3.5.5'
-url="https://github.com/sass/sass/archive/${vers}.tar.gz"
-digest="sha256sum:53766fd5a410d01f98d6aecfa948519b2b8004751d4a35a607fc3d5ab8abe654"
+gemname="ffi"
+pkgbase='ruby_ffi'
+vers='1.9.23'
+url="https://rubygems.org/downloads/${gemname}-${vers}.gem"
 verify=""
 arch=`uname -m`
 build=B1
-src="sass-${vers}"
+src="ffi-${vers}"
 OPT_CONFIG=
-DOCS='MIT-LICENSE README.md'
+DOCS='COPYING LICENSE LICENSE.SPECS README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -43,34 +42,21 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
-######################################################################
-#  copy sources into build directory, patch and make in the build dir
-######################################################################
-  cd $B
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
-  done
-
-  sed -r 's|~>|>=|g' -i ${gemname}.gemspec
+  echo "There is nothing to do."
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  gem build ${gemname}.gemspec
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  gemdir=$(gem env gemdir)
-  gem install --ignore-dependencies --no-user-install -i "${P}${gemdir}" -n "${P}/usr/bin" ${gemname}-${vers}.gem
-  rm -v "${P}/${gemdir}/cache/${gemname}-${vers}.gem"
+  cd $W
+  gemdir=$(ruby -e'puts Gem.default_dir')
+  gem install --ignore-dependencies --no-user-install \
+      -i "$P/$gemdir" -n "$P/usr/bin" $gemname-$vers.gem
+  rm "$P/$gemdir/cache/$gemname-$vers.gem"
 
 ################################
 #      install tweaks

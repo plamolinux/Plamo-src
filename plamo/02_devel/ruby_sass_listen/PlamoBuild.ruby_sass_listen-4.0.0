@@ -7,7 +7,7 @@ url="https://github.com/sass/listen/archive/v${vers}.tar.gz"
 digest="sha256sum:5b09daf811df4ae3d8657cf919976b9795d275a3792ab08bdf3b1cccaecd3f4b"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="listen-${vers}"
 OPT_CONFIG=
 DOCS='.rubocop_todo.yml CHANGELOG.md LICENSE.txt README.md'
@@ -72,7 +72,8 @@ if [ $opt_package -eq 1 ] ; then
   gemdir=$(gem env gemdir)
   gem install --ignore-dependencies --no-user-install \
       -i "${P}${gemdir}" -n "${P}/usr/bin" ${gemname}-${vers}.gem
-  rm -v "${P}/${gemdir}/cache/${gemname}-${vers}.gem"
+  rm -vrf $P/${gemdir}/cache/
+  rm -vrf $P/${gemdir}/extensions
 
 ################################
 #      install tweaks

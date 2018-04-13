@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-gemname="ffi"
-pkgbase='ruby_ffi'
-vers='1.9.18'
-url="https://github.com/${pkgbase}/${pkgbase}/archive/${vers}.tar.gz"
+gemname="maruku"
+pkgbase="ruby_${gemname}"
+vers='0.7.3'
+url="https://github.com/bhollis/${gemname}/archive/v${vers}.tar.gz"
+digest="sha256sum:d503927c2bc04075bbc57c04e5786d55ed872cb6f79ef76781086e142e69c125"
 verify=""
 arch=`uname -m`
-build=B1
-src="ffi-${vers}"
+build=B2
+src="maruku-${vers}"
 OPT_CONFIG=
-DOCS='COPYING LICENSE LICENSE.SPECS README.md'
+DOCS='AUTHORS CHANGELOG.md MIT-LICENSE.txt README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -44,17 +45,18 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+  sed -r 's|~>|>=|g' -i ${gemname}.gemspec
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  gem build ${gemname}.gemspec  
+  gem build ${gemname}.gemspec
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -65,10 +67,10 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  gemdir=$(gem env gemdir)
+  gemdir="$(gem env gemdir)"
   gem install --ignore-dependencies --no-user-install \
-      -i "$P/$gemdir" -n "$P/usr/bin" $gemname-$vers.gem
-  rm "$P/$gemdir/cache/$gemname-$vers.gem"
+      -i "$P${gemdir}" -n "$P/usr/bin" ${gemname}-${vers}.gem
+  rm -v ${P}/${gemdir}/cache/${gemname}-${vers}.gem
 
 ################################
 #      install tweaks

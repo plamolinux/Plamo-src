@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-gemname="yard"
-pkgbase='ruby_yard'
-vers='0.9.11'
-url="https://github.com/lsegal/yard/archive/v${vers}.tar.gz"
+gemname="sass"
+pkgbase="ruby_sass"
+vers='3.5.6'
+url="https://github.com/sass/sass/archive/${vers}.tar.gz"
+digest="sha256sum:7ba95dbb21806ad086e32a863b7f2d5033c9d5f49f0de65bb25b4ce223b0e63d"
 verify=""
 arch=`uname -m`
 build=B1
-src="yard-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='CHANGELOG.md LICENSE README.md'
+src="sass-${vers}"
+OPT_CONFIG=
+DOCS='MIT-LICENSE README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -50,6 +51,7 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+
   sed -r 's|~>|>=|g' -i ${gemname}.gemspec
 fi
     
@@ -67,9 +69,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   gemdir=$(gem env gemdir)
-  gem install --ignore-dependencies --no-user-install \
-      -i "${P}${gemdir}" -n "${P}/usr/bin" ${gemname}-${vers}.gem
-  rm "${P}/${gemdir}/cache/${gemname}-${vers}.gem"
+  gem install --ignore-dependencies --no-user-install -i "${P}${gemdir}" -n "${P}/usr/bin" ${gemname}-${vers}.gem
+  rm -v "${P}/${gemdir}/cache/${gemname}-${vers}.gem"
 
 ################################
 #      install tweaks

@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-gemname="maruku"
-pkgbase="ruby_${gemname}"
-vers='0.7.3'
-url="https://github.com/bhollis/${pkgbase}/archive/v${vers}.tar.gz"
-digest="sha256sum:d503927c2bc04075bbc57c04e5786d55ed872cb6f79ef76781086e142e69c125"
+gemname="yard"
+pkgbase='ruby_yard'
+vers='0.9.12'
+url="https://github.com/lsegal/yard/archive/v${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
-src="maruku-${vers}"
-OPT_CONFIG=
-DOCS='AUTHORS CHANGELOG.md MIT-LICENSE.txt README.md'
+src="yard-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='CHANGELOG.md LICENSE README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -45,7 +44,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
@@ -67,10 +66,10 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  gemdir="$(gem env gemdir)"
+  gemdir=$(gem env gemdir)
   gem install --ignore-dependencies --no-user-install \
-      -i "$P${gemdir}" -n "$P/usr/bin" ${gemname}-${vers}.gem
-  rm -v ${P}/${gemdir}/cache/${gemname}-${vers}.gem
+      -i "${P}${gemdir}" -n "${P}/usr/bin" ${gemname}-${vers}.gem
+  rm "${P}/${gemdir}/cache/${gemname}-${vers}.gem"
 
 ################################
 #      install tweaks
