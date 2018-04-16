@@ -5,12 +5,13 @@ vers="4.5"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
 digest="md5sum:c350da50c2120de6bb29177699d89fe3"
 arch=`uname -m`
-build=B5
+build=B6
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
 patchfiles='disable-nls-manpages.patch'
 compress=txz
+_adduser_rev=20180416
 ##############################################################
 # BuildRequirements:
 # plamo/05_ext/docbook.txz/libxslt
@@ -130,8 +131,8 @@ if [ $opt_package -eq 1 ] ; then
   mv -v $P/usr/bin/passwd $P/bin/passwd
 
   # install adduser command
-  install -Dm755 -v $W/shadow-adduser-20160122 $P/usr/sbin/adduser
-  install -Dm644 -v $W/shadow-adduser-20160122 $docdir/$src/shadow-adduser-20160122
+  install -Dm755 -v $W/shadow-adduser-${_adduser_rev} $P/usr/sbin/adduser
+  install -Dm644 -v $W/shadow-adduser-${_adduser_rev} $docdir/$src/shadow-adduser-${_adduser_rev}
 
   # pam.d
   for f in chage login passwd su

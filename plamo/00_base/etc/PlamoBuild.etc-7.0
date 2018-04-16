@@ -5,7 +5,7 @@ vers='7.0'
 url=""
 verify=""
 arch=noarch
-build=B12
+build=B13
 src="files"
 OPT_CONFIG=''
 DOCS=''
@@ -97,11 +97,6 @@ else
   rm -f etc/networks-incoming
 fi
 EOF
-
-cat <<EOF > $P/install/initpkg
-etc/template/mkdefaultenv.sh etc/template/Source 1 12 14 16 1> /dev/null
-EOF
-
 
 ################################
 #      install tweaks

@@ -1,16 +1,10 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Plamo Linux ユーザ設定ファイルサンプル .Xdefaults
-!!                          Time-stamp: <2018-02-20 17:51:42 karma>
-!!                          Time-stamp: <2011-08-31 15:08:04 karma>
-!!                          Time-stamp: <2011-10-06 07:34:24 tamuki>
 !!
 !! X 上で使う各アプリケーション用のデフォルトの設定値です。
 !! このホストのクライアントのみに適用されます。
 
-! uim を使う場合はこちら
-*inputMethod:           uim
-! fcitx を使う場合はこちら
-!*inputMethod:          fcitx
+*inputMethod:           @IM@
 
 !!
 !! Emacs

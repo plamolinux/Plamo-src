@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2018-02-20 17:58:46 karma>
+#                           Time-stamp: <2018-03-30 17:58:08 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -10,11 +10,7 @@
 
 # startx，xdm から実行されるファイルです。
 
-#WM="twm"
-WM="xfce"
-#WM="mate"
-#WM="lxde"
-#WM="lxqt"
+WM="@WM@"
 
 unset TERM
 
@@ -33,18 +29,9 @@ userresources=$HOME/.Xdefaults
 [ -x /usr/bin/uim-toolbar-qt4 -a $WM == "kde" ] && uim-toolbar-qt4 &
 [ -x /usr/bin/uim-toolbar-gtk-systray -a $WM == "mate" ] && uim-toolbar-gtk-systray &
 
-# skkinput を使う場合はこちら
-#XMODIFIERS="@im=skkinput"
-#QT_IM_MODULE=xim
-#GTK_IM_MODULE=xim
-# uim を使う場合はこちら
-XMODIFIERS="@im=uim"
-QT_IM_MODULE=uim
-GTK_IM_MODULE=uim
-# fcitx を使う場合はこちら
-#XMODIFIERS="@im=fcitx"
-#QT_IM_MODULE=fcitx
-#GTK_IM_MODULE=fcitx
+XMODIFIERS="@im=@IM@"
+QT_IM_MODULE=@IM@
+GTK_IM_MODULE=@IM@
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 

@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='bundler'
+gemname='bundler'
+pkgbase='ruby_bundler'
 vers='1.16.1'
-url="https://rubygems.org/downloads/${pkgbase}-${vers}.gem"
+url="https://rubygems.org/downloads/${gemname}-${vers}.gem"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=
 DOCS=''
 patchfiles=''
 compress=txz
@@ -41,48 +42,21 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-######################################################################
-#  don't copy sources, so need patch in the src dir
-######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  gemdir="$(ruby -e'puts Gem.default_dir')"
+  HOME="/tmp" GEM_HOME="$gemdir" GEM_PATH="$gemdir" \
+      gem install --no-user-install --ignore-dependencies \
+      -i $P/$gemdir -n $P/usr/bin $gemname-$vers.gem
+  rm -vrf $P/$gemdir/{cache,extensions}
 
 ################################
 #      install tweaks

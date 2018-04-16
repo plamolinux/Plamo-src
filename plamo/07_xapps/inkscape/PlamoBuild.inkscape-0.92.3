@@ -1,20 +1,23 @@
 #!/bin/sh
 ##############################################################
-pkgbase='cups_filters'
-vers='1.17.9'
-url="https://www.openprinting.org/download/cups-filters/cups-filters-${vers}.tar.xz"
-digest="md5sum:2ef5f2b902bcdcb963c5ef5858976bbc"
+pkgbase='inkscape'
+vers='0.92.3'
+url="https://media.${pkgbase}.org/dl/resources/file/${pkgbase}-${vers}.tar.bz2"
 verify=""
 arch=`uname -m`
-build=B2
-src="cups-filters-${vers}"
-OPT_CONFIG="--disable-static --enable-shared
-     --with-cups-rundir=/run/cups
-     --without-rcdir --disable-avahi --docdir=/usr/share/doc/${src} --runstatedir=/run"
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='-DCMAKE_BUILD_TYPE=Release'
+DOCS='AUTHORS COPYING ChangeLog GPL2.txt GPL3.txt INSTALL LGPL2.1.txt NEWS README README.ca.txt README.de.txt README.es.txt README.fr.txt README.it.txt README.osx.txt README.pt_BR.txt README.sk.txt README.sr.txt'
+blfspatches=( http://www.linuxfromscratch.org/patches/blfs/svn/inkscape-0.92.3-use_versioned_ImageMagick6-1.patch )
+patchfiles=""
 compress=txz
 ##############################################################
+
+for p in ${blfspatches[@]}
+do
+    patchfiles="$patchfiles ${p##*/}"
+done
 
 source /usr/share/plamobuild_functions.sh
 
@@ -41,25 +44,32 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  for p in ${blfspatches[@]}
+  do
+    if [ ! -f ${p##*/} ]; then
+      wget $p
+    fi
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#   patch apply to source tree but make at out of source tree
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
+  sed -i 's| abs(| std::fabs(|g' src/ui/tools/flood-tool.cpp
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S
+  
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -82,6 +92,17 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  rm -v $P/usr/${libdir}/inkscape/lib*_LIB.a
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/gtk-update-icon-cache ]; then
+  /usr/bin/gtk-update-icon-cache
+fi
+if [ -x /usr/bin/update-desktop-database ]; then
+  /usr/bin/update-desktop-database
+fi
+EOF
 
 ################################
 #      install tweaks

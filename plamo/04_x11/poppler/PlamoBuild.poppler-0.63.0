@@ -1,19 +1,27 @@
 #!/bin/sh
 ##############################################################
 pkgbase='poppler'
-vers='0.62.0'
+vers='0.63.0'
 url="https://${pkgbase}.freedesktop.org/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:42b801f2defaccb6b6cf1bf783ee1552"
+digest="md5sum:66a54da4896b1408611699feda5c1821"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release
+	--DTESTDATADIR=$W/testfiles
 	-DENABLE_XPDF_HEADERS=ON"
 DOCS='AUTHORS COPYING COPYING3 ChangeLog INSTALL NEWS README README-XPDF README.contributors'
 patchfiles=''
 compress=txz
 ##############################################################
+# poppler を更新したら影響を受けるパッケージ
+# cups_filters
+# texlive
+# gimp
+# inkscape
+# atril
+# tumbler
 
 source /usr/share/plamobuild_functions.sh
 

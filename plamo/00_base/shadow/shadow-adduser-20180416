@@ -4,12 +4,12 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
-# Time-stamp: <2018-03-15 19:25:34 karma>
-# Time-stamp: <2011-01-05 01:24:06 plamo>
-# Time-stamp: <2011-07-25 19:03:24 karma>
-# Time-stamp: <2011-10-08 13:32:46 tamuki>
-# Time-stamp: <2011-12-07 00:22:20 kojima>
+# Time-stamp: <2018-04-16 15:07:13 karma>
 # Time-stamp: <2016-01-22 19:55:16 kojima>
+# Time-stamp: <2011-12-07 00:22:20 kojima>
+# Time-stamp: <2011-10-08 13:32:46 tamuki>
+# Time-stamp: <2011-07-25 19:03:24 karma>
+# Time-stamp: <2011-01-05 01:24:06 plamo>
 
 DEFAULT_GROUP=users
 DEFAULT_AGID=audio,dialout,video,cdrom,kvm,pulse,pulse-access,mlocate,libvirt
@@ -126,121 +126,54 @@ msg_w_manager() {
     if [ -x /usr/bin/twm ] ; then
       n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm(ごくシンプル)"
     fi
+    if [ -x /usr/bin/startxfce4 ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop(お勧め)"
+    fi
     if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : LXDE"
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop(軽量)"
     fi
     if [ -x /usr/bin/startlxqt ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXQt"
-    fi
-    if [ -x /usr/bin/startxfce4 ] ; then
-      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop(お勧め)"
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXQt Desktop(LXDE後継)"
     fi
     if [ -x /usr/bin/mate-session ] ; then
       n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop(GNOME2 の進化版)"
     fi
-    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN が使う WM は？ [$DWM]: "
   else
     n=0 ; echo "Window Manager setting"
     if [ -x /usr/bin/twm ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : Twm (too simple)"
-    fi
-    if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : LXDE"
-    fi
-    if [ -x /usr/bin/startlxqt ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXQt"
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm (too simple)"
     fi
     if [ -x /usr/bin/startxfce4 ] ; then
-      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : Xfce Desktop (recommended)"
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop (recommended)"
+    fi
+    if [ -x /usr/bin/startlxde ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop (Lightweight, suspended by LXQt)"
+    fi
+    if [ -x /usr/bin/startlxqt ] ; then
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXDE Desktop (Lightweight)"
     fi
     if [ -x /usr/bin/mate-session ] ; then
       n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop (advanced GNOME2)"
     fi
-    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 4 ] ; then break ; fi ; done
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN's WM? [$DWM]: "
-  fi
-}
-
-msg_trad_im_input() {
-  echo
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo "日本語入力設定(伝統的な IM と SKK 利用時のみ有効)"
-    echo "1 : ローマ字入力"
-    echo "2 : かな入力"
-    echo "3 : NICOLA(親指シフト)入力"
-    echo -n "$LOGIN はローマ字，かな入力，NICOLA 入力のどれを使いますか？ [1]: "
-  else
-    echo "Japanese input method (traditional IM and SKK only)"
-    echo "1 : Roma"
-    echo "2 : Kana (Japanese keyboard only)"
-    echo "3 : NICOLA (Japanese keyboard only)"
-    echo -n "Which is $LOGIN's method, roma, kana or NICOLA? [1]: "
   fi
 }
 
 msg_use_newgen_im() {
   echo
   if [ "$LNG" == "JAPANESE" ] ; then
-    echo "uim/SCIM/ibus の選択"
+    echo "IM の選択"
     [ -x /usr/bin/uim-xim ]     && echo "1 : uim"
-    [ -x /usr/bin/scim ]        && echo "2 : SCIM"
-    [ -x /usr/bin/ibus-daemon ] && echo "3 : ibus"
-    echo "0 : 今は uim/SCIM/ibus を使用しない"
-    echo -n "$LOGIN は伝統的な IM の代わりに新世代 IM を使いますか？ [1]: "
+    [ -x /usr/bin/fcitx ]       && echo "2 : fcitx"
+    echo -n "$LOGIN が使う IM は？ [1]: "
   else
     echo "uim/SCIM/ibus"
     [ -x /usr/bin/uim-xim ]     && echo "1 : uim"
-    [ -x /usr/bin/scim ]        && echo "2 : SCIM"
-    [ -x /usr/bin/ibus-daemon ] && echo "3 : ibus"
-    echo "0 : No, I don't want to use uim/SCIM/ibus for now"
-    echo -n "Does $LOGIN want to use new IMs instead of the traditional IM? [1]: "
-  fi
-}
-
-msg_visual_bell() {
-  echo
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo -n "$LOGIN はビジュアルベルを使いますか？ (Emacs，kterm などで有効) [y/N]: "
-  else
-    echo -n "Does $LOGIN want to use visual bell? (for Emacs, kterm, etc.) [y/N]: "
-  fi
-}
-
-msg_font_size() {
-  echo
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo "標準の X(非 Xfce/KDE/MATE)環境フォントサイズ設定"
-    echo "(AfterStep，Qvwm 環境に適用されます)"
-    echo "12，14，16，18 の偶数値を指定してください。"
-  else
-    echo "Font size settings for the standard X11 environments"
-    echo "(AfterStep and Qvwm environments)"
-    echo "Choose 12, 14, 16 or 18."
-  fi
-}
-
-msg_font_size_ui() {
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo -n "ユーザインタフェースのフォントサイズ [12]: "
-  else
-    echo -n "User interface [12]: "
-  fi
-}
-
-msg_font_size_term() {
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo -n "端末・テキストエリアのフォントサイズ [14]: "
-  else
-    echo -n "Terminal and text area [14]: "
-  fi
-}
-
-msg_font_size_editor() {
-  if [ "$LNG" == "JAPANESE" ] ; then
-    echo -n "エディタ(Emacs)のフォントサイズ [16]: "
-  else
-    echo -n "Editor (Emacs) [16]: "
+    [ -x /usr/bin/scim ]        && echo "2 : fcitx"
+    echo -n "Which IM does $LOGIN use? [1]: "
   fi
 }
 
@@ -320,7 +253,12 @@ wait_press_enter() {
 
 ######################################################################
 
-SKELDIR=/etc/template
+SKELDIR=${SKELDIR:-"/etc/template"}
+SOURCE_DIR="$SKELDIR"/Source
+DEFAULT_DIR="$SKELDIR"/Default
+
+rm -rf $DEFAULT_DIR
+cp -a $SOURCE_DIR $DEFAULT_DIR
 
 if [ -n "$1" ] ; then
   if [ "${1::2}" == "ja" ] ; then ANS="y" ; fi
@@ -422,54 +360,15 @@ elif [ "$WM" -gt "$NWM" ] ; then
   WM=$DWM
 fi
 
-#日本語入力設定(伝統的な IM と SKK 利用時のみ有効)
-msg_trad_im_input
-read TRAD_IM_INPUT
-if [ -z "$TRAD_IM_INPUT" ] ; then
-  TRAD_IM_INPUT=1
-elif [ "$TRAD_IM_INPUT" -lt 1 ] ; then
-  TRAD_IM_INPUT=1
-elif [ "$TRAD_IM_INPUT" -gt 3 ] ; then
-  TRAD_IM_INPUT=1
-fi
-
-#uim/SCIM/ibus の選択
+# Select IM
 msg_use_newgen_im
-read USE_NEWGEN_IM
-if [ -z "$USE_NEWGEN_IM" ] ; then
-  USE_NEWGEN_IM=1
-elif [ "$USE_NEWGEN_IM" -lt 0 ] ; then
-  USE_NEWGEN_IM=1
-elif [ "$USE_NEWGEN_IM" -gt 3 ] ; then
-  USE_NEWGEN_IM=1
-fi
-
-#$LOGIN はビジュアルベルを使いますか？ (Emacs，kterm などで有効)
-msg_visual_bell
-read VISUALBELL
-if [ "$VISUALBELL" == "Y" ] ; then
-  VISUALBELL="y"
-fi
-
-#標準の X(非 Xfce/KDE/MATE)環境フォントサイズ設定
-msg_font_size
-#ユーザインタフェースのフォントサイズ
-msg_font_size_ui
-read FSIZE_UI
-if [ -z "$FSIZE_UI" ] ; then
-  FSIZE_UI=12
-fi
-#端末・テキストエリアのフォントサイズ
-msg_font_size_term
-read FSIZE_TERM
-if [ -z "$FSIZE_TERM" ] ; then
-  FSIZE_TERM=14
-fi
-#エディタ(Emacs)のフォントサイズ
-msg_font_size_editor
-read FSIZE_EDITOR
-if [ -z "$FSIZE_EDITOR" ] ; then
-  FSIZE_EDITOR=16
+read IM_NO
+if [ -z "$IM_NO" ] ; then
+  IM_NO=1
+elif [ "$IM_NO" -lt 0 ] ; then
+  IM_NO=1
+elif [ "$IM_NO" -gt 3 ] ; then
+  IM_NO=1
 fi
 
 #$LOGIN のアカウントの有効期限は？ (YYYY-MM-DD)
@@ -520,87 +419,30 @@ fi
 msg_conf2
 read FOO
 
-# mkdefaultenv.sh は /etc/template/Default 以下をすべて削除し，
-# /etc/template/Source から /etc/template/Default を再作成します。
-echo -n "Executing $SKELDIR/mkdefaultenv.sh $SKELDIR/Source "
-echo -n "$LOC $FSIZE_UI $FSIZE_TERM $FSIZE_EDITOR ..."
-$SKELDIR/mkdefaultenv.sh $SKELDIR/Source \
-    $LOC $FSIZE_UI $FSIZE_TERM $FSIZE_EDITOR 1> /dev/null
-echo " OK"
+# Configure Window Manager/IM/Locale
+WM_NAME=("" "twm" "xfce" "lxde" "lxqt" "mate")
+IM=("" "uim" "fcitx")
+LOCALE=("" "UTF-8" "EUC-JP")
+sed -e "s/@WM@/${WM_NAME[$WM]}/" \
+    -e "s/@IM@/${IM[$IM_NO]}/" \
+    -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+    $SOURCE_DIR/.xinitrc > $DEFAULT_DIR/.xinitrc
+sed -e "s/@WM@/${WM_NAME[$WM]}/" \
+    -e "s/@IM@/${IM[$IM_NO]}/" \
+    -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+    $SOURCE_DIR/.xprofile > $DEFAULT_DIR/.xprofile
 
-if [ "${IWM[WM]}" -eq 1 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="twm"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 2 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="lxde"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 3 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="lxqt"\)/\1/' $SKELDIR/Default/.xinitrc
-elif [ "${IWM[WM]}" -eq 5 ] ; then
-  sed -i 's/WM="xfce"/#&/;s/#\(WM="mate"\)/\1/' $SKELDIR/Default/.xinitrc
-fi
+# Configure .Xdefaults
+sed -e "s/@IM@/${IM[$IM_NO]}/" \
+    $SOURCE_DIR/.Xdefaults > $DEFAULT_DIR/.Xdefaults
 
-if [ "$TRAD_IM_INPUT" -eq 1 ] ; then
-  sed -i -e 's/\[ -x.*uim/#&/;s/#\(.*CC\)/\1/;s/#\(\[ -[fx].*kinput2\)/\1/' \
-      -e 's/XM.*uim/#&/;s/#\(XM.*kinput2\)/\1/' \
-      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i 's/\*in.*uim/!&/;s/!\(\*in.*kinput2\)/\1/' \
-      $SKELDIR/Default/.Xdefaults
-elif [ "$TRAD_IM_INPUT" -eq 2 ] ; then
-  sed -i -e 's/\[ -x.*uim/#&/;s/#\(.*CC\)/\1/;s/#\(\[ -[fx].*kinput2\)/\1/' \
-      -e 's/XM.*uim/#&/;s/#\(XM.*kinput2\)/\1/' \
-      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i -e 's/\*in.*uim/!&/;s/!\(\*in.*kinput2\)/\1/' \
-      -e 's/!\(Emacs\*useXim\)/\1/' $SKELDIR/Default/.Xdefaults
-  sed -i -e 's/(setq canna-input-method "roma")/;&/' \
-      -e 's/;\((setq canna-input-method "kana")\)/\1/' \
-      $SKELDIR/Default/.canna
-  sed -i -e 's/;\((setq skk-use-kana-keyboard t)\)/\1/' \
-      -e "s/;\((setq skk-kanagaki-keyboard-type '106-jis)\)/\1/" \
-      $SKELDIR/Default/.skk
-elif [ "$TRAD_IM_INPUT" -eq 3 ] ; then
-  sed -i -e 's/\[ -x.*uim/#&/;s/#\(\[ -x.*nicola\)/\1/' \
-      -e 's/XM.*uim/#&/;s/#\(XM.*nicola\)/\1/' \
-      -e 's/QT.*uim/#&/;s/GTK.*uim/#&/;s/#\(QT.*xim\)/\1/;s/#\(GTK.*xim\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i 's/\*in.*uim/!&/;s/!\(\*in.*nicola\)/\1/' \
-      $SKELDIR/Default/.Xdefaults
-  sed -i -e 's/;\((setq skk-use-kana-keyboard t)\)/\1/' \
-      -e "s/;\((setq skk-kanagaki-keyboard-type 'nicola-jis)\)/\1/" \
-      $SKELDIR/Default/.skk
-fi
-
-if [ "$USE_NEWGEN_IM" -eq 1 ] ; then
-  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
-      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*uim\)/\1/' \
-      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*uim\)/\1/' \
-      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*uim\)/\1/;s/#\(GTK.*uim\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*uim\)/\1/' \
-      $SKELDIR/Default/.Xdefaults
-elif [ "$USE_NEWGEN_IM" -eq 2 ] ; then
-  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
-      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*scim\)/\1/' \
-      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*SCIM\)/\1/' \
-      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*scim\)/\1/;s/#\(GTK.*scim\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*SCIM\)/\1/' \
-      $SKELDIR/Default/.Xdefaults
-elif [ "$USE_NEWGEN_IM" -eq 3 ] ; then
-  sed -i -e 's/^.*CC/#&/;s/^\[ -[fx].*kinput2/#&/' \
-      -e 's/^\[ -x.*nicola/#&/;s/#\(\[ -x.*ibus\)/\1/' \
-      -e 's/^XM.*kinput2/#&/;s/^XM.*nicola/#&/;s/#\(XM.*ibus\)/\1/' \
-      -e 's/QT.*xim/#&/;s/GTK.*xim/#&/;s/#\(QT.*ibus\)/\1/;s/#\(GTK.*ibus\)/\1/' \
-      $SKELDIR/Default/.xinitrc
-  sed -i 's/^\*in.*kinput2/!&/;s/^\*in.*nicola/!&/;s/!\(\*in.*ibus\)/\1/' \
-      $SKELDIR/Default/.Xdefaults
-fi
-
-if [ "$VISUALBELL" == "y" ] ; then
-  sed -i 's/;\((setq visible-bell t)\)/\1/' \
-      $SKELDIR/Default/.emacs.d/site-start.d/behavior.el
-  sed -i 's/!\(.*\*visualBell\)/\1/' $SKELDIR/Default/.Xdefaults
-fi
+# Configure config file for shell
+FILELIST=(".bashrc" ".tcshrc" ".zshrc")
+for f in ${FILELIST[@]}
+do
+    sed -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+	$SOURCE_DIR/"$f" > $DEFAULT_DIR/"$f"
+done
 
 #新規アカウント作成中...
 msg_creating
@@ -611,14 +453,6 @@ fi
 
 useradd $GHME -m $GEXP $GGID $GAGID $GSHL $GUID $LOGIN
 chmod $DEFAULT_HOME_DIR_MODE $HME
-
-if [ -x /usr/sbin/sendmail ] ; then
-  if [ ! -f /usr/spool/mail/$LOGIN ] ; then
-    cat $SKELDIR/mime-mail.sample > /usr/spool/mail/$LOGIN
-    chown $LOGIN.mail /usr/spool/mail/$LOGIN
-    chmod 660 /usr/spool/mail/$LOGIN
-  fi
-fi
 
 echo
 chfn $LOGIN
