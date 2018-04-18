@@ -1,18 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='evince'
-vers='3.26.0'
-url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/3.26/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:51c112ea5448c8aa35c29b8ae8aad7fc"
-verify=""
+pkgbase='microcode_intel'
+vers='20180312'
+url="https://downloadmirror.intel.com/27591/eng/microcode-${vers}.tgz"
+digest="md5sum:be315cd99a7ca392a2f917ceacbe14f2"
+verify=
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-gtk-doc
-	    --disable-multimedia --enable-compile-warnings=minimum
-	    --enable-introspection --disable-nautilus --without-keyring
-	    --disable-browser-plugin"
-DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README TODO'
+OPT_CONFIG=""
+DOCS=''
 patchfiles=''
 compress=txz
 ##############################################################
@@ -45,55 +42,23 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-######################################################################
-#  don't copy sources, so need patch in the src dir
-######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to config."
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to build."
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
 
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/glib-compile-schemas ]; then
-  /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas/
-fi
-EOF
+  MICDIR          = /lib/firmware
+  MICDIRINTEL     = $(MICDIR)/intel-ucode
+
+  install -dm755 -v $P/$MICDIRINTEL
+  install -m644  -v $S/* $P/$MICDIRINTEL
 
 ################################
 #      install tweaks
