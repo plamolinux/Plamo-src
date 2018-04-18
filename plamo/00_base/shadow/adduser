@@ -4,7 +4,7 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
-# Time-stamp: <2018-04-16 15:07:13 karma>
+# Time-stamp: <2018-04-18 18:16:04 karma>
 # Time-stamp: <2016-01-22 19:55:16 kojima>
 # Time-stamp: <2011-12-07 00:22:20 kojima>
 # Time-stamp: <2011-10-08 13:32:46 tamuki>
@@ -124,38 +124,38 @@ msg_w_manager() {
   if [ "$LNG" == "JAPANESE" ] ; then
     n=0 ; echo "ウィンドウマネージャ設定"
     if [ -x /usr/bin/twm ] ; then
-      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm(ごくシンプル)"
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm(X付属のごくシンプルなWM)" ; WM_NAME[$n]='twm'
     fi
     if [ -x /usr/bin/startxfce4 ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop(お勧め)"
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop(お勧め)" ; WM_NAME[$n]='xfce'
     fi
     if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop(軽量)"
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop(Gtkベースの軽めの環境)" ; WM_NAME[$n]='lxde'
     fi
     if [ -x /usr/bin/startlxqt ] ; then
-      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXQt Desktop(LXDE後継)"
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXQt Desktop(Qtベースの軽めの環境)" ; WM_NAME[$n]='lxqt'
     fi
     if [ -x /usr/bin/mate-session ] ; then
-      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop(GNOME2 の進化版)"
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop(GNOME2 の進化版)" ; WM_NAME[$n]='mate'
     fi
     NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN が使う WM は？ [$DWM]: "
   else
     n=0 ; echo "Window Manager setting"
     if [ -x /usr/bin/twm ] ; then
-      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm (too simple)"
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm (too simple)" ; WM_NAME[$n]='twm'
     fi
     if [ -x /usr/bin/startxfce4 ] ; then
-      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop (recommended)"
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop (recommended)" ; WM_NAME[$n]='xfce'
     fi
     if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop (Lightweight, suspended by LXQt)"
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop (Gtk based Lightweight environment)" ; WM_NAME[$n]='lxde'
     fi
     if [ -x /usr/bin/startlxqt ] ; then
-      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXDE Desktop (Lightweight)"
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXqt Desktop (Qt based Lightweight environment)" ; WM_NAME[$n]='lxqt'
     fi
     if [ -x /usr/bin/mate-session ] ; then
-      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop (advanced GNOME2)"
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop (GNOME2 successor)" ; WM_MATE[$n]='mate'
     fi
     NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
     DWM=$i ; echo -n "$LOGIN's WM? [$DWM]: "
@@ -163,11 +163,15 @@ msg_w_manager() {
 }
 
 msg_use_newgen_im() {
-  echo
+  n=0 ; echo
   if [ "$LNG" == "JAPANESE" ] ; then
     echo "IM の選択"
-    [ -x /usr/bin/uim-xim ]     && echo "1 : uim"
-    [ -x /usr/bin/fcitx ]       && echo "2 : fcitx"
+      if [ -x /usr/bin/uim-xim ] ; then
+	  n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
+      fi
+      if [ -x /usr/bin/fcitx ] ; then
+	  n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fctix"
+      fi
     echo -n "$LOGIN が使う IM は？ [1]: "
   else
     echo "uim/SCIM/ibus"
@@ -420,8 +424,8 @@ msg_conf2
 read FOO
 
 # Configure Window Manager/IM/Locale
-WM_NAME=("" "twm" "xfce" "lxde" "lxqt" "mate")
-IM=("" "uim" "fcitx")
+# WM_NAME=("" "twm" "xfce" "lxde" "lxqt" "mate")
+# IM=("" "uim" "fcitx")
 LOCALE=("" "UTF-8" "EUC-JP")
 sed -e "s/@WM@/${WM_NAME[$WM]}/" \
     -e "s/@IM@/${IM[$IM_NO]}/" \

@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ntp'
-vers='4.2.8p10'
+vers='4.2.8p11'
 url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
 verify="$url.md5"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-linuxcap --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="--enable-linuxcaps --with-lineeditlibs=readline --docdir=/usr/share/doc/${src}"
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.pullrequests README.refclocks README.versions TODO readme.y2kfixes'
 patchfiles=''
 compress=txz
@@ -55,6 +55,8 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  sed -e 's/"(\\S+)"/"?([^\\s"]+)"?/' \
+      -i scripts/update-leap/update-leap.in
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
@@ -83,6 +85,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -dm755 -v $P/usr/sbin
+  mv -v $P/usr/bin/ntpd $P/usr/sbin/ntpd
 
   # install init script
   install -D -m 0755 -v $W/ntp.init $P/etc/rc.d/init.d/ntpd

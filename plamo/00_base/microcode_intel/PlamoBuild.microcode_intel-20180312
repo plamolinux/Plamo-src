@@ -7,7 +7,7 @@ digest="md5sum:be315cd99a7ca392a2f917ceacbe14f2"
 verify=
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="intel-ucode"
 OPT_CONFIG=""
 DOCS=''
 patchfiles=''
@@ -39,6 +39,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -52,13 +53,13 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
 
-  MICDIR          = /lib/firmware
-  MICDIRINTEL     = $(MICDIR)/intel-ucode
+  MICDIR=/lib/firmware
+  MICDIRINTEL=$MICDIR/intel-ucode
 
   install -dm755 -v $P/$MICDIRINTEL
   install -m644  -v $S/* $P/$MICDIRINTEL
+  install -Dm644 -v $W/releasenote $docdir/$pkgbase-$vers/releasenote
 
 ################################
 #      install tweaks
