@@ -29,7 +29,7 @@
 #$LastChangedBy: krejzi $
 #$Date: 2013-01-25 12:12:00 -0600 (Fri, 25 Jan 2013) $
 
-BINFILE=/usr/lib/postfix/master
+BINFILE=/usr/libexec/postfix/master
 PIDFILE=/var/spool/postfix/pid/master.pid
 
 case "$1" in
