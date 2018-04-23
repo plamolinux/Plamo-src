@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='freetype'
-vers='2.8.1'
+vers='2.9'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:bf0a210b6fe781228fa0e4a80691a521"
-verify=""
+digest=""
+verify="${url}.sig"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
