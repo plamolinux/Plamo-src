@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libva'
-vers='2.0.0'
+vers='2.1.0'
 url="https://github.com/01org/libva/releases/download/${vers}/libva-${vers}.tar.bz2"
-digest="md5sum:b863f99b7ae41960a0e2e7a4cc959b46"
+digest="md5sum:9d6e4f1d36c407566343e9dde5a972b8"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"

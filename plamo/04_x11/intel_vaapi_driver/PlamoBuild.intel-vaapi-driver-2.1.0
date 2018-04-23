@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='intel_vaapi_driver'
-vers='2.0.0'
+vers='2.1.0'
 url="https://github.com/01org/intel-vaapi-driver/releases/download/${vers}/intel-vaapi-driver-${vers}.tar.bz2"
-digest="md5sum:1288657b572b563b24ca27c60a10a032"
+digest="md5sum: ab4c33ab31183787dece9b99a86f7b8c"
 arch=`uname -m`
 build=B1
 src="intel-vaapi-driver-${vers}"
