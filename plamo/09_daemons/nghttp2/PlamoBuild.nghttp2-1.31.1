@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nghttp2'
-vers='1.30.0'
+vers='1.31.1'
 url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --disable-examples --disable-python-bindings --enable-asio-lib'
+OPT_CONFIG='--disable-static --enable-shared --disable-examples --disable-python-bindings --enable-asio-lib --enable-lib-only'
 DOCS='AUTHORS CMakeOptions.txt COPYING ChangeLog INSTALL NEWS README README.rst'
 patchfiles=''
 compress=txz
