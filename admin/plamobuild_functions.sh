@@ -230,15 +230,15 @@ check_root() {
   fi
 }
 
-# ¥¤¥ó¥¹¥È¡¼¥ë¸å¤Î³Æ¼ïÄ´À°
+# ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å¾Œã®å„ç¨®èª¿æ•´
 install_tweak() {
-  # ¥Ğ¥¤¥Ê¥ê¥Õ¥¡¥¤¥ë¤ò strip
+  # ãƒã‚¤ãƒŠãƒªãƒ•ã‚¡ã‚¤ãƒ«ã‚’ strip
   cd $P
   if [ -z $NO_STRIP ]; then
       strip_all
   fi
 
-  # dir ¥Õ¥¡¥¤¥ë¤Îºï½ü
+  # dir ãƒ•ã‚¡ã‚¤ãƒ«ã®å‰Šé™¤
   if [ -d $infodir ]; then
     rm -f $infodir/dir
     for info in $infodir/*
@@ -247,7 +247,7 @@ install_tweak() {
     done
   fi
 
-  # ja °Ê³°¤Îlocale¥Õ¥¡¥¤¥ë¤òºï½ü
+  # ja ä»¥å¤–ã®localeãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤
   for loc_dir in `find $P/usr/share -type d -name locale` ; do
     pushd $loc_dir
     for loc in * ; do
@@ -258,7 +258,7 @@ install_tweak() {
     popd
   done
 
-  # /run ¤ä /var/run ¤¬¤¢¤ë¾ì¹ç¤Ïºï½ü
+  # /run ã‚„ /var/run ãŒã‚ã‚‹å ´åˆã¯å‰Šé™¤
   if [ -d $P/run ]; then
     rm -vrf $P/run
   fi
@@ -266,14 +266,14 @@ install_tweak() {
     rm -vrf $P/var/run
   fi
 
-  #  man ¥Ú¡¼¥¸¤ò°µ½Ì
+  #  man ãƒšãƒ¼ã‚¸ã‚’åœ§ç¸®
   if [ -d $P/usr/share/man ]; then
     for mdir in `find $P/usr/share/man -name man[0-9mno] -type d`; do
       gzip_dir $mdir
     done
   fi
 
-  # doc ¥Õ¥¡¥¤¥ë¤Î¥¤¥ó¥¹¥È¡¼¥ë¤È°µ½Ì
+  # doc ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã¨åœ§ç¸®
   cd $W
   if [ -n "$DOCS" ]; then
     echo "Install docs"
@@ -289,13 +289,13 @@ install_tweak() {
   install -v $myname $docdir/$src
   gzip_one $docdir/$src/$myname
 
-  # ¥Ñ¥Ã¥Á¥Õ¥¡¥¤¥ë¤Î¥¤¥ó¥¹¥È¡¼¥ë
+  # ãƒ‘ãƒƒãƒãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
   for patch in $patchfiles ; do
     cp $W/$patch $docdir/$src/$patch
     gzip_one $docdir/$src/$patch
   done
 
-  # /usr/share/doc °Ê²¼¤Îowner.groupÀßÄê
+  # /usr/share/doc ä»¥ä¸‹ã®owner.groupè¨­å®š
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
     chown -R root.root $P/usr/share/doc
