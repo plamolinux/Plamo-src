@@ -1,0 +1,12 @@
+diff -uNr gcc-6.3.0.orig/gcc/config/i386/linux64.h gcc-6.3.0/gcc/config/i386/linux64.h
+--- gcc-6.3.0.orig/gcc/config/i386/linux64.h	2016-01-04 23:30:50.000000000 +0900
++++ gcc-6.3.0/gcc/config/i386/linux64.h	2017-06-05 19:40:58.419214900 +0900
+@@ -28,7 +28,7 @@
+ #define GNU_USER_LINK_EMULATIONX32 "elf32_x86_64"
+ 
+ #define GLIBC_DYNAMIC_LINKER32 "/lib/ld-linux.so.2"
+-#define GLIBC_DYNAMIC_LINKER64 "/lib64/ld-linux-x86-64.so.2"
++#define GLIBC_DYNAMIC_LINKER64 "/lib/ld-linux-x86-64.so.2"
+ #define GLIBC_DYNAMIC_LINKERX32 "/libx32/ld-linux-x32.so.2"
+ 
+ #undef MUSL_DYNAMIC_LINKER32

@@ -1,0 +1,195 @@
+#!/bin/sh
+##############################################################
+pkgbase='shadow'
+vers="4.5"
+url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
+digest="md5sum:c350da50c2120de6bb29177699d89fe3"
+arch=`uname -m`
+build=B7
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
+DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
+patchfiles='disable-nls-manpages.patch'
+compress=txz
+##############################################################
+# BuildRequirements:
+# plamo/05_ext/docbook.txz/libxslt
+# plamo/05_ext/docbook.txz/docbook_xml_4.1.2
+# plamo/05_ext/docbook.txz/docbook_xsl
+# plamo/05_ext/gnome_parts.txz/gnome_doc_utils
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+    done
+
+    # do not make groups command, because coreutils has groups command
+    sed -i 's/groups$(EXEEXT) //' src/Makefile.in
+
+    # do not install groups.1, getspnam.3, passwd.5
+    # because man_pages has those
+    find man -name Makefile.in -exec sed -i 's/groups\.1 / /'   {} \;
+    find man -name Makefile.in -exec sed -i 's/getspnam\.3 / /' {} \;
+    find man -name Makefile.in -exec sed -i 's/passwd\.5 / /'   {} \;
+
+    # change default group for useradd to 100 (from 1000)
+    sed -i '/^GROUP=/s@1000@100@g' etc/useradd
+    # do not create mail spool when useradd
+    sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
+    # set encrypt method to sha256
+    sed -i 's@#ENCRYPT_METHOD DES@ENCRYPT_METHOD SHA512@' etc/login.defs
+    # set dict path of cracklib to /lib/cracklib/pw_dict
+    sed -i 's@DICTPATH.*@DICTPATH\t/lib/cracklib/pw_dict@' etc/login.defs
+
+    disable_func=(FAIL_DELAY
+		  FAILLOG_ENAB
+                  LASTLOG_ENAB
+                  MAIL_CHECK_ENAB
+                  OBSCURE_CHECKS_ENAB
+                  PORTTIME_CHECKS_ENAB
+                  QUOTAS_ENAB
+                  CONSOLE MOTD_FILE
+                  FTMP_FILE NOLOGINS_FILE
+                  ENV_HZ PASS_MIN_LEN
+                  SU_WHEEL_ONLY
+                  CRACKLIB_DICTPATH
+                  PASS_CHANGE_TRIES
+                  PASS_ALWAYS_WARN
+                  CHFN_AUTH ENCRYPT_METHOD
+                  ENVIRON_FILE)
+    for func in ${disable_func[@]}
+    do
+	sed -i "s/^${func}/# &/" etc/login.defs
+    done
+
+    #if [ -f $S/autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
+    autoreconf -i
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  # mv passwd from /usr/bin to /bin
+  mv -v $P/usr/bin/passwd $P/bin/passwd
+
+  # install adduser command
+  install -Dm755 -v $W/adduser $P/usr/sbin/adduser
+  install -Dm644 -v $W/adduser $docdir/$src/adduser
+
+  # pam.d
+  for f in chage login passwd su
+  do
+    install -Dm644 -v $W/"$f".pam $P/etc/pam.d/$f
+    install -Dm644 -v $W/"$f".pam $docdir/$src/$f
+  done
+  for f in chfn chgpasswd chpasswd chsh groupadd groupdel \
+	   groupmems groupmod newusers useradd userdel usermod
+  do
+      install -m644 -v $P/etc/pam.d/chage $P/etc/pam.d/$f
+      sed -i "s/chage/$f/" $P/etc/pam.d/$f
+  done
+
+  # mkdir man dirs
+  install -dm755 -v $mandir/ja
+  for d in $( cd man/ja ; ls -d man? )
+  do
+    cp -av man/ja/$d $P/usr/share/man/ja/$d 
+  done
+
+  # initpkg
+  mkdir -p $P/install
+  cat <<"EOF" >> $P/install/initpkg
+if [ -z "`grep "^root:" /etc/shadow | cut -d: -f2`" ] ; then
+    if [ "$LANG" = "ja_JP.UTF-8" ]; then
+	echo "root(システム管理者)のパスワードを設定してください。"
+	until passwd root ; do
+	    echo "root(システム管理者)のパスワードを設定してください。"
+	done
+	echo "rootのパスワードの設定が完了しました。"
+    else
+	echo "Password for root(Admin)?"
+	until passwd root ; do
+	    echo "Password for root(Admin)?"
+	done
+	echo "Root password setup was done."
+    fi
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

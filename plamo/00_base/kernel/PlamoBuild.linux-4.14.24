@@ -1,0 +1,141 @@
+#!/bin/sh
+##############################################################
+pkgbase='kernel'
+vers='4.14.24'
+url="https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.14.24.tar.xz"
+arch=`uname -m`
+build=B1
+src="linux-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='COPYING MAINTAINERS README'
+patchfiles='linux-4.14.24-cjk_tty.patch cjktty-kernel-font-JP.patch linux-4.14.24-tuxonice.patch'
+configfile='config-4.14.24-plamo_x86_64'
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+B=`pwd`/build
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+    cp $W/$configfile .config
+
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  mkdir -p $P/boot
+
+  cd $B
+  make modules_install INSTALL_MOD_PATH=$P
+  ( cd $P/lib/modules/${vers}-plamo64 ; rm -rf source ; ln -sf /usr/src/linux source )
+  ( cd $P/lib/modules/${vers}-plamo64 ; rm -rf build ; ln -sf /usr/src/linux build )
+  
+  install System.map $P/boot/System.map-${vers}_plamo64
+  install .config $P/boot/config-${vers}_plamo64
+  install arch/x86/boot/bzImage $P/boot/vmlinuz-${vers}_plamo64
+
+  ( cd $P/boot ; ln -sf System.map-${vers}_plamo64 System.map )
+  ( cd $P/boot ; ln -sf config-${vers}_plamo64 .config )
+  ( cd $P/boot ; ln -sf vmoinuz-${vers}_plamo64 vmlinuz )
+  
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+  echo "Building header package"
+  P2=$W/headers
+  mkdir -p $P2
+  cd $B
+  make headers_install INSTALL_HDR_PATH=$P2/usr
+  cd $P2
+  /sbin/makepkg ../kernel_headers-${vers}-${arch}-${build}.${compress} <<EOF
+y
+1
+EOF
+
+  echo "Building source package"
+  rm -rf $P
+  mkdir -p $P/usr/src/linux-${vers}
+  cd $B
+  make clean
+  chk=`whoami | grep root`
+  if [ "$chk.x" != ".x" ]; then
+      chown -R root.root *
+  else
+      not_root=1
+  fi
+  cp -a * $P/usr/src/linux-${vers}
+  cd $P
+  ( cd usr/src ; ln -sf linux-$vers linux )
+  /sbin/makepkg ../kernelsrc-${vers}-${arch}-${build}.${compress} <<EOF
+y
+1
+EOF
+  if [ "$not_root" = "1" ]; then
+      echo "Packaged by non-root user account."
+      echo "Be sure to set files ownerships."
+  fi
+  
+fi

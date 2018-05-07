@@ -1,0 +1,109 @@
+#!/bin/sh
+##############################################################
+pkgbase='os_prober'
+vers='1.76'
+url="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.tar.xz"
+verify="http://http.debian.net/debian/pool/main/o/os-prober/os-prober_${vers}.dsc"
+arch=`uname -m`
+build=B1
+src="os-prober-${vers}"
+OPT_CONFIG=''
+DOCS='README TODO'
+patchfiles='plamo-detect.patch'
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  # allow to detect some 64bit distros
+  sed -i -e "s:/lib/ld\*\.so\*:/lib*/ld*.so*:g" os-probes/mounted/common/90linux-distro
+
+  #rm -f Makefile
+
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make newns
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  install -v -Dm755 linux-boot-prober "$P"/usr/bin/linux-boot-prober
+  install -v -Dm755 os-prober "$P"/usr/bin/os-prober
+  install -v -Dm755 newns "$P"/usr/lib/os-prober/newns
+  install -v -Dm755 common.sh $P/usr/share/os-prober/common.sh  
+
+  for dir in os-probes os-probes/mounted os-probes/init linux-boot-probes linux-boot-probes/mounted; do
+    install -v -dm755 "$P/usr/lib/$dir"
+    install -v -m755 -t "$P/usr/lib/$dir" "$dir"/common/*
+    [[ -d "$dir"/x86 ]] && cp -v -r "$dir"/x86/* "$P/usr/lib/$dir"
+  done
+
+  install -v -Dm755 os-probes/mounted/powerpc/20macosx "$P"/usr/lib/os-probes/mounted/20macosx
+
+  install -v -dm755 "$P"/var/lib/os-prober
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

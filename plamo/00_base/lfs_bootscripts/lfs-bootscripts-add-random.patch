@@ -1,0 +1,111 @@
+diff -uprN lfs-bootscripts-20170626.patched/Makefile lfs-bootscripts-20170626.patched2/Makefile
+--- lfs-bootscripts-20170626.patched/Makefile	2018-03-06 14:54:17.973522141 +0900
++++ lfs-bootscripts-20170626.patched2/Makefile	2018-03-30 15:06:07.150538189 +0900
+@@ -45,6 +45,7 @@
+ 	install -m ${MODE} lfs/init.d/swap          ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/netfs	    ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/template      ${ETCDIR}/rc.d/init.d/
++	install -m ${MODE} lfs/init.d/random        ${ETCDIR}/rc.d/init.d
+ 	install -m ${MODE} lfs/sbin/ifup            ${SBIN}
+ 	install -m ${MODE} lfs/sbin/ifdown          ${SBIN}
+ 	install -m ${CONFMODE} lfs/sbin/ifup.8      ${MAN8}
+@@ -86,26 +86,32 @@ rc0: files
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc0.d/S70mountfs
+ 	ln -sf ../init.d/localnet    ${ETCDIR}/rc.d/rc0.d/S90localnet
+ 	ln -sf ../init.d/halt        ${ETCDIR}/rc.d/rc0.d/S99halt
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc0.d/K45random
+ 
+ rc1: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc1.d/K80network
+ 	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc1.d/K75netfs
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc1.d/S25random
+ 
+ rc2: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc2.d/K80network
+ 	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc2.d/K75netfs
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc2.d/S25random
+ 
+ rc3: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc3.d/S20network
+ 	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc3.d/S25netfs
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc3.d/S25random
+ 
+ rc4: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc4.d/S20network
+ 	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc4.d/S25netfs
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc4.d/S25random
+ 
+ rc5: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc5.d/S20network
+ 	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc5.d/S25netfs
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc5.d/S25random
+ 
+ rc6: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc6.d/K80network
+@@ -115,6 +121,7 @@ rc6: files
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc6.d/S70mountfs
+ 	ln -sf ../init.d/localnet    ${ETCDIR}/rc.d/rc6.d/S90localnet
+ 	ln -sf ../init.d/reboot      ${ETCDIR}/rc.d/rc6.d/S99reboot
++	ln -sf ../init.d/random	     ${ETCDIR}/rc.d/rc1.d/K45random
+ 
+ uninstall:
+ 	rm -rf ${DESTDIR}/lib/services ${DESTDIR}/lib/lsb ${ETCDIR}/rc.d ${ETCDIR}/init.d \
+diff -uprN lfs-bootscripts-20170626.patched/lfs/init.d/random lfs-bootscripts-20170626.patched2/lfs/init.d/random
+--- lfs-bootscripts-20170626.patched/lfs/init.d/random	1970-01-01 09:00:00.000000000 +0900
++++ lfs-bootscripts-20170626.patched2/lfs/init.d/random	2018-03-30 15:06:33.746758709 +0900
+@@ -0,0 +1,55 @@
++#!/bin/sh
++########################################################################
++# Begin random
++#
++# Description : Seed /dev/urandom
++#
++# Author      : Larry Lawrence
++#
++# Version     : LFS 7.0
++#
++########################################################################
++
++### BEGIN INIT INFO
++# Provides:          random
++# Required-Start:    $local_fs
++# Should-Start:
++# Required-Stop:     $local_fs
++# Should-Stop:
++# Default-Start:     2 3 4 5
++# Default-Stop:      0 1 6
++# Short-Description: Initialises /dev/urandom
++# Description:       Initialises /dev/urandom from a seed stored in /var/tmp.
++# X-LFS-Provided-By: BLFS / LFS 7.0
++### END INIT INFO
++
++. /lib/lsb/init-functions
++
++#$LastChangedBy: bdubbs $
++#$Date: 2011-12-05 23:56:33 -0600 (Mon, 05 Dec 2011) $
++
++case "$1" in
++   start)
++      log_info_msg "Initializing kernel random number generator..."
++      
++      if [ -f /var/tmp/random-seed ]; then
++         /bin/cat /var/tmp/random-seed >/dev/urandom
++      fi
++      
++      /bin/dd if=/dev/urandom of=/var/tmp/random-seed count=1 &>/dev/null
++      evaluate_retval
++      ;;
++
++   stop)
++      log_info_msg "Saving random seed..."
++      /bin/dd if=/dev/urandom of=/var/tmp/random-seed count=1 &>/dev/null
++      evaluate_retval
++      ;;
++
++   *)
++      echo "Usage: $0 {start|stop}"
++      exit 1
++      ;;
++esac
++
++# End /etc/init.d/random

@@ -1,0 +1,146 @@
+#!/bin/sh
+##############################################################
+pkgbase='eudev'
+vers='3.2.5'
+url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
+	--with-rootprefix= --with-rootlibdir=/lib
+	--enable-manpages --disable-static --config-cache"
+DOCS='COPYING'
+patchfiles=''
+compress=txz
+lfsfiles="http://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.bz2"
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  if [ ! -f ${lfsfiles##*/} ]; then
+    wget $lfsfiles
+  fi
+  tar xvf ${lfsfiles##*/}
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+  sed -r -i 's|/usr(/bin/test)|\1|' test/udev-test.pl
+
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  ./configure --prefix=/usr \
+              --sysconfdir=/etc \
+              --localstatedir=/var \
+              --libdir=/usr/$libdir \
+              --libexecdir=/$libdir \
+              --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  install -dm755 -v /lib/udev/rules.d
+  install -dm755 -v /etc/udev/rules.d
+  
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  # Install custom rules and support files for LFS
+  pushd $W
+  make -f $(basename ${lfsfiles##*/} .tar.bz2)/Makefile.lfs install DESTDIR=$P
+  popd
+  rm -rfv $P/usr/share/doc/udev-*/
+
+  rm -fv $P/etc/udev/rules.d/55-lfs.rules
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/README
+  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/55-lfs.txt
+
+  # init scripts
+  install -v -d $P/etc/rc.d/init.d
+  install -v -m 0755 $W/eudev.init $P/etc/rc.d/init.d/eudev
+  install -v -m 0755 $W/eudev_retry.init $P/etc/rc.d/init.d/eudev_retry
+  install -v -d $P/etc/rc.d/rcS.d
+  ln -v -sf ../init.d/eudev $P/etc/rc.d/rcS.d/S10eudev
+  ln -v -sf ../init.d/eudev_retry $P/etc/rc.d/rcS.d/S50eudev_retry
+
+  install -v -Dm 0755 $W/eudev.init $docdir/$src/eudev.init
+  install -v -Dm 0755 $W/eudev_retry.init $docdir/$src/eudev_retry.init
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/sbin/udevadm hwdb --update
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

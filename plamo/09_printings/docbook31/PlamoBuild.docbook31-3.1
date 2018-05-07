@@ -1,0 +1,127 @@
+#!/bin/sh
+##############################################################
+pkgbase='docbook31'
+vers='3.1'
+url="http://www.docbook.org/sgml/3.1/docbk31.zip"
+digest="md5sum:432749c0c806dbae81c8bcb70da3b5d3"
+arch=noarch
+build=B3
+src="docbook31"
+OPT_CONFIG=''
+DOCS='31chg.txt 40issues.txt 50issues.txt ChangeLog readme.txt'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  if [ ! -f ${url##*/} ]; then
+    wget $url
+  fi
+  mkdir $S
+  ( cd $S && unzip $W/${url##*/} )
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  sed -i -e '/ISO 8879/d' \
+       -e 's|DTDDECL "-//OASIS//DTD DocBook V3.1//EN"|SGMLDECL|g' \
+       docbook.cat
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "Nothing to do"
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  install -v -d -m755 $P/usr/share/sgml/docbook/sgml-dtd-3.1
+  install -v docbook.cat $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog
+  cp -v -af *.dtd *.mod *.dcl $P/usr/share/sgml/docbook/sgml-dtd-3.1
+
+  cat >> $P/usr/share/sgml/docbook/sgml-dtd-3.1/catalog << "EOF"
+  -- Begin Single Major Version catalog changes --
+
+PUBLIC "-//Davenport//DTD DocBook V3.0//EN" "docbook.dtd"
+
+  -- End Single Major Version catalog changes --
+EOF
+
+  install -v -d $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -x /usr/bin/install-catalog ]; then
+  echo "install-catalog command does not exist. Install sgml_common package."
+  exit 1
+fi
+if [ ! -f /etc/sgml/sgml-docbook.cat ]; then
+  echo "Generating /etc/sgml/sgml-docbook.cat"
+  install-catalog --add /etc/sgml/sgml-ent.cat \
+    /usr/share/sgml/sgml-iso-entities-8879.1986/catalog > /dev/null 2>&1
+  install-catalog --add /etc/sgml/sgml-docbook.cat \
+    /etc/sgml/sgml-ent.cat > /dev/null 2>&1
+fi
+if [ -f /etc/sgml/sgml-docbook-dtd-3.1.cat ]; then
+  install-catalog --remove /etc/sgml/sgml-docbook-dtd-3.1.cat \
+    /usr/share/sgml/docbook/sgml-dtd-${vers}/catalog &&
+  install-catalog --remove /etc/sgml/sgml-docbook-dtd-3.1.cat \
+    /etc/sgml/sgml-docbook.cat
+fi
+install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
+    /usr/share/sgml/docbook/sgml-dtd-${vers}/catalog &&
+install-catalog --add /etc/sgml/sgml-docbook-dtd-3.1.cat \
+    /etc/sgml/sgml-docbook.cat
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

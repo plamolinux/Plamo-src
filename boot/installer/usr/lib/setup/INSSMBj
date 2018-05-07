@@ -1,0 +1,194 @@
+#!/bin/sh
+modprobe smbfs
+while [ 0 ]; do
+rm -f /tmp/SeTDS /tmp/SeTmount
+
+ cat << EOF > /tmp/tmpmsg
+
+SMBを使って、Windowsの共有ディスクからインストール
+する方法はまだまだ開発途上で、条件によっては正しく機能し
+ない場合があります。SBM経由でインストールするためには、
+サーバとなるマシンで必要なディスクやCD-ROMをあらかじめ
+共有するように設定し、そのマシンのIPアドレス、NetBIOS名、
+共有サービス名、パスワードをチェックしておいてください。
+
+本当にSMB経由のインストールを行いますか？
+EOF
+ dialog --title "SMB経由のインストール" --yesno "`cat /tmp/tmpmsg`" 16 68
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg
+  exit
+ fi
+ rm -f /tmp/tmpmsg
+ T_PX="`cat /tmp/SeTT_PX`"
+ UPNRUN=1
+ if [ "$T_PX" = "/" ]; then
+  cat << EOF > /tmp/tmpmsg
+
+今、ハードディスクのファイルシステムから実行しています。この
+マシンは現在インストール元となるサーバとネットワークで接続さ
+れていますか？もしそうなら、イーサネットカードのリコンフィグ
+は行いません。
+
+ネットワークに接続していますか？
+EOF
+  dialog --title "SMBインストール" --yesno "`cat /tmp/tmpmsg`" 11 68
+  UPNRUN=$?
+ fi
+ if [ $UPNRUN = 1 ]; then
+  cat << EOF > /tmp/tmpmsg
+
+このマシンに割り当てるIPアドレスを入力してください。
+例えば：111.112.113.114
+
+IPアドレスは何ですか？
+EOF
+  dialog --title "IPアドレスの設定" --inputbox "`cat /tmp/tmpmsg`" 13 65 2> /tmp/local
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/tmpmsg /tmp/local
+   exit
+  fi
+  LOCAL_IPADDR="`cat /tmp/local`"
+  rm -f /tmp/local
+  cat << EOF > /tmp/tmpmsg
+
+ネットマスクを設定する必要があります。
+典型的には255.255.255.0ですが、
+これはローカルの設定によって、異なる
+可能性があります。
+
+ネットマスクは何ですか？
+EOF
+  dialog --title "ネットマスクの設定" --inputbox "`cat /tmp/tmpmsg`" 15 65 2> /tmp/mask
+  if [ $? = 1 -o $? = 255 ]; then
+   rm -f /tmp/tmpmsg /tmp/mask
+   exit
+  fi
+  LOCAL_NETMASK="`cat /tmp/mask`"
+  rm /tmp/mask
+#  cat << EOF > /tmp/tmpmsg
+#
+#Typically your broadcast address will be the same as
+#your IP address with 255 replacing the final value.
+#Example: 111.112.113.255
+#
+#What is your broadcast address?
+#EOF
+#  dialog --title "ASSIGN BROADCAST ADDRESS" --inputbox "`cat /tmp/tmpmsg`" 14 65 2> /tmp/broadc
+#  if [ $? = 1 -o $? = 255 ]; then
+#   rm -f /tmp/tmpmsg /tmp/broadc
+#   exit
+#  fi
+#  LOCAL_BROADCAST="`cat /tmp/broadc`"
+#  rm /tmp/broadc
+#  cat << EOF > /tmp/tmpmsg
+#
+#Now we need your network address.
+#
+#Your network address will usually be the same as your IP
+#address, with the last value replaced by 0.
+#For example: 111.112.113.0
+#
+#What is your network address? 
+#EOF
+#  dialog --title "ASSIGN NETWORK ADDRESS" --inputbox "`cat /tmp/tmpmsg`" 16 65 2> /tmp/netw
+#  if [ $? = 1 -o $? = 255 ]; then
+#   rm -f /tmp/tmpmsg /tmp/netw
+#   exit
+#  fi
+#  LOCAL_NETWORK="`cat /tmp/netw`"
+#  rm /tmp/netw
+LOCAL_BROADCAST=`ipmask $LOCAL_NETMASK $LOCAL_IPADDR | cut -f 1 -d ' '`
+LOCAL_NETWORK=`ipmask $LOCAL_NETMASK $LOCAL_IPADDR | cut -f 2 -d ' '`
+
+ fi # ! UPNRUN
+
+ cat << EOF > /tmp/tmpmsg
+
+このマシンの設定は終りました。次にサーバとなるマシンの
+情報を登録します。まず、Plamo Linuxのパッケージを共有で
+提供しているWindowsマシンのIPアドレスを設定します。
+
+EOF
+ if [ "$UPNRUN" = "0" ]; then
+  cat << EOF >> /tmp/tmpmsg
+もうネットワークに接続されてますから、必要ならIPアドレスの
+かわりにホスト名が使用できるはずです。
+
+EOF
+ fi
+ echo "サーバーのIPアドレスは何ですか？ " >> /tmp/tmpmsg
+ dialog --title "ENTER IP ADDRESS OF SMB SERVER" --inputbox \
+ "`cat /tmp/tmpmsg`" 17 70 2> /tmp/remote
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/remote
+  exit
+ fi
+ REMOTE_IPADDR="`cat /tmp/remote`"
+ rm /tmp/remote
+ if [ ! "$UPNRUN" = "0" ]; then
+   ENET_DEVICE="eth0" 
+ fi # ! UPNRUN
+
+ cat << EOF > /tmp/tmpmsg
+
+ 次に、パッケージを提供しているWindowsマシンの
+NetBIOS名(Windowsネットワークでの名前)を指定してください。
+EOF
+ dialog --title "サーバのNetBIOS名" --inputbox "`cat /tmp/tmpmsg`" 17 70 2> /tmp/netbios
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/netbios
+  exit
+ fi
+ REMOTE_NETBIOS="`cat /tmp/netbios`"
+# rm /tmp/netbios
+ cat << EOF > /tmp/tmpmsg
+
+ 次に、パッケージを提供しているWindowsマシンの共有名
+(そのフォルダにアクセスするためのサービス名)を指定してください。
+EOF
+ dialog --title "共有サービス名の指定" --inputbox "`cat /tmp/tmpmsg`" 17 70 2> /tmp/resource
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tmpmsg /tmp/resource
+  exit
+ fi
+ REMOTE_SERVICE="`cat /tmp/resource`"
+# rm /tmp/resource
+
+ echo 
+ echo
+ echo "エラーを確認するため、テキストモードに切替えます。"
+ echo
+ if [ ! "$UPNRUN" = "0" ]; then
+  echo
+  echo "エラーを確認するため、テキストモードに切替えます。"
+  echo
+  echo "イーサネットカード設定中..."
+  ifconfig $ENET_DEVICE $LOCAL_IPADDR netmask $LOCAL_NETMASK broadcast $LOCAL_BROADCAST
+  route add -net $LOCAL_NETWORK
+  if [ "$HAVE_GATEWAY" != "0" ]; then
+   echo "ゲートウェイの設定中..."
+   route add default gw $LOCAL_GATEWAY metric 1
+  fi
+ fi
+ echo "smbmount でマウント中..."
+ echo "パスワードを尋ねますので、パスワードを設定している場合は"
+ echo "入力してください。設定していなければEnterで進めます"
+ echo 
+ smbmount //$REMOTE_NETBIOS/$REMOTE_SERVICE /var/adm/mount -I $REMOTE_IPADDR 
+ echo "/var/adm/mount" > /tmp/SeTDS
+ echo "-source_mounted" > /tmp/SeTmount
+ echo "/dev/null" > /tmp/SeTsource
+ echo
+ echo "現在のマウントテーブル："
+ mount
+ echo -n "smbmountをやり直す必要がありますか ([y]es, [n]o)? "
+ read TRY_AGAIN;
+ if [ "$TRY_AGAIN" = "n" -o "$TRY_AGAIN" = "N" ]; then
+  exit
+ fi
+ if [ "$UPNRUN" = "1" ]; then
+  route del $LOCAL_NETWORK
+  ifconfig $ENET_DEVICE down 
+ fi
+done

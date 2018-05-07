@@ -1,0 +1,20 @@
+diff -uNr libxfce4ui-4.12.1.orig/libxfce4ui/xfce-dialogs.c libxfce4ui-4.12.1/libxfce4ui/xfce-dialogs.c
+--- libxfce4ui-4.12.1.orig/libxfce4ui/xfce-dialogs.c	2015-02-19 01:57:43.000000000 +0900
++++ libxfce4ui-4.12.1/libxfce4ui/xfce-dialogs.c	2015-03-27 17:10:33.245706617 +0900
+@@ -197,6 +197,7 @@
+   GdkScreen   *screen;
+ 
+   g_return_if_fail (parent == NULL || GTK_IS_WINDOW (parent));
++  xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
+ 
+   /* get the user's locale without encoding */
+   locale = g_strdup (setlocale (LC_MESSAGES, NULL));
+@@ -784,7 +785,7 @@
+   g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), 0);
+ 
+   va_start (args, first_button_text);
+-  dialog = xfce_message_dialog_new_valist (parent, title, stock_id, primary_text,
++  dialog = xfce_message_dialog_new_valist (parent, g_filename_display_name(title), stock_id, primary_text,
+                                            secondary_text, first_button_text, args);
+   va_end (args);
+ 

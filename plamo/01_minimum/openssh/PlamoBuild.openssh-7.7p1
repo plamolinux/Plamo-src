@@ -1,0 +1,262 @@
+#!/bin/sh
+##############################################################
+pkgbase='openssh'
+vers='7.7p1'
+url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
+    --with-privsep-path=/var/lib/sshd --with-md5-passwords --with-pid-dir=/run"
+DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
+    README README.dns README.platform README.privsep README.tun
+    PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
+    PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
+    TODO"
+openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-7.7p1-openssl-1.1.0-1.patch"
+patchfiles="${openssl_patch_url##*/}"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+    if [ ! -f ${openssl_patch_url##*/} ]; then
+        wget ${openssl_patch_url}
+    fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    # tweak sshd_config
+    sed -i -e "s/#PermitUserEnvironment no/PermitUserEnvironment yes/" \
+        -e "s/#UsePAM no/UsePAM yes/" sshd_config
+
+    # replace lib to lib64 when arch is x86_64
+    sed -i "s@/lib/@/${libdir}/@" contrib/sshd.pam.generic
+
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    export LDFLAGS='-Wl,--as-needed' 
+    ./configure --prefix=/usr \
+                --localstatedir=/var \
+                --mandir='${prefix}'/share/man \
+                ${OPT_CONFIG[$i]}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  # slogin -> ssh
+  ln -sv ssh $P/usr/bin/slogin
+  ln -sv ssh.1 $mandir/man1/slogin.1
+
+  # owner of /var/lib/sshd is root:sys
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -v root:sys $P/var/lib/sshd
+  fi
+
+  mv -v $P/etc/ssh/ssh_config{,.dist}
+  mv -v $P/etc/ssh/sshd_config{,.dist}
+
+  install -v -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  install -v -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
+  install -v -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
+
+  mkdir -p $P/etc/rc.d/init.d
+  cat <<"EOF" > $P/etc/rc.d/init.d/sshd
+#!/bin/sh
+########################################################################
+# Begin sshd
+#
+# Description : Start sshd daemon
+#
+# Author      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+#
+# Version     : LFS 7.0
+#
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            sshd
+# Required-Start:      $network
+# Should-Start:
+# Required-Stop:       sendsignals
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:        0 1 2 6
+# Short-Description:   Starts sshd daemon.
+# Description:         Starts sshd daemon.
+# X-LFS-Provided-By:   LFS
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+#$LastChangedBy: dj $
+#$Date: 2012-06-18 18:42:28 -0500 (Mon, 18 Jun 2012) $
+
+case "$1" in
+    start)
+        log_info_msg "Starting SSH Server..."
+        start_daemon -f /usr/sbin/sshd
+        evaluate_retval
+        # Also prevent ssh from being killed by out of memory conditions
+        sleep 1
+        pid=`cat /run/sshd.pid 2>/dev/null`
+        echo "-16" >/proc/${pid}/oom_score_adj
+        ;;
+
+    stop)
+        log_info_msg "Stopping SSH Server..."
+        killproc -p "/run/sshd.pid" /usr/sbin/sshd
+        evaluate_retval
+        ;;
+
+    reload)
+        log_info_msg "Reloading SSH Server..."
+        pid=`cat /run/sshd.pid 2>/dev/null`
+
+        if [ -n "${pid}" ]; then
+           kill -HUP "${pid}"
+        else
+           (exit 1)
+        fi
+
+        evaluate_retval
+        ;;
+
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+
+    status)
+        statusproc /usr/sbin/sshd
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|reload|restart|status}"
+        exit 1
+        ;;
+esac
+
+# End sshd bootscript
+EOF
+
+  chmod +x $P/etc/rc.d/init.d/sshd
+
+  for i in `seq 0 6` ; do
+      mkdir -p $P/etc/rc.d/rc$i.d
+  done
+  ( cd $P/etc/rc.d/rc0.d ; ln -sf  ../init.d/sshd K30sshd )
+  ( cd $P/etc/rc.d/rc1.d ; ln -sf  ../init.d/sshd K30sshd )
+  ( cd $P/etc/rc.d/rc2.d ; ln -sf  ../init.d/sshd K30sshd )
+  ( cd $P/etc/rc.d/rc3.d ; ln -sf  ../init.d/sshd S30sshd )
+  ( cd $P/etc/rc.d/rc4.d ; ln -sf  ../init.d/sshd S30sshd )
+  ( cd $P/etc/rc.d/rc5.d ; ln -sf  ../init.d/sshd S30sshd )
+  ( cd $P/etc/rc.d/rc6.d ; ln -sf  ../init.d/sshd K30sshd )
+  
+  mkdir -p $P/install
+  cat << "EOF" >> $P/install/initpkg
+if [ ! -f /etc/ssh/sshd_config ]; then
+    cd /etc/ssh ; cp sshd_config.dist sshd_config
+fi
+if [ ! -f /etc/ssh/ssh_config ]; then
+    cd /etc/ssh ; cp ssh_config.dist ssh_config
+fi
+
+if [ -x /usr/bin/ssh-keygen ] ; then
+    if [ ! -f /etc/ssh/ssh_host_dsa_key ] ; then
+       echo "/etc/ssh/ssh_host_dsa_key doesn't exist, generating..."
+       ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key -N ""
+    fi
+    if [ ! -f /etc/ssh/ssh_host_rsa_key ] ; then
+       echo "/etc/ssh/ssh_host_rsa doesn't exist, generating..."
+       ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ""
+    fi
+    if [ ! -f /etc/ssh/ssh_host_ecdsa_key ] ; then
+       echo "/etc/ssh/ssh_host_ecdsa doesn't exist, generating..."
+       ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N ""
+    fi
+    if [ ! -f /etc/ssh/ssh_host_ed25519_key ] ; then
+       echo "/etc/ssh/ssh_host_ed25519 doesn't exist, generating..."
+       ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
+    fi
+fi
+
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

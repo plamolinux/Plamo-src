@@ -1,0 +1,139 @@
+--- PlamoBuild-template-20170323	2017-03-23 06:38:12.000000000 +0900
++++ PlamoBuild.hdsetup-6.2	2017-04-09 09:00:00.000000000 +0900
+@@ -1,17 +1,52 @@
+ #!/bin/sh
+ 
+ ######################################################################
+-url=""
++url="https://www.busybox.net/downloads/busybox-1.25.1.tar.bz2
++    ftp://plamo.linet.gr.jp/pub/Plamo-src/plamo/00_base/hdsetup/busybox-1.25.1-config
++    ftp://invisible-island.net/dialog/dialog-1.3-20160828.tgz
++    http://ftp.gnu.org/gnu/coreutils/coreutils-8.25.tar.xz
++    http://ftp.gnu.org/gnu/gzip/gzip-1.8.tar.gz
++    http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
++    http://tukaani.org/xz/xz-5.2.2.tar.xz
++    http://ftp.gnu.org/gnu/tar/tar-1.26.tar.xz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src/plamo/00_base/tar/tar-1.23-tartime.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src/plamo/00_base/tar/tar-1.23-txz.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src/plamo/00_base/tar/tar-1.26-no-gets.patch.gz
++    ftp://plamo.linet.gr.jp/pub/Plamo-src/plamo/00_base/hdsetup/hdsetup-plamoscripts.tar.gz"
+ verify=
+ commitid=
+-pkgbase=
+-vers=
++pkgbase=hdsetup
++vers=6.2
+ arch=`uname -m`
+-build=P1
+-src=$pkgbase-$vers
++build=P2
++src[0]=busybox-1.25.1
++src[1]=dialog-1.3-20160828
++src[2]=coreutils-8.25
++src[3]=gzip-1.8
++src[4]=bzip2-1.0.6
++src[5]=xz-5.2.2
++src[6]=tar-1.26
+ patchfiles=""
++patchfiles[6]="`echo tar-1.2{3-{tartime,txz},6-no-gets}.patch.gz`"
+ OPT_CONFIG=""
+-DOCS="README"
++OPT_CONFIG[1]="--bindir=/bin --enable-nls --with-ncursesw --enable-widec"
++OPT_CONFIG[2]="--bindir=/bin --enable-no-install-program=chroot,hostid,nice"
++OPT_CONFIG[2]+=",who,users,pinky,uptime,stty,df,stdbuf,[,base64,base32"
++OPT_CONFIG[2]+=",basename,cat,chcon,chgrp,chmod,chown,cksum,comm,cp,csplit"
++OPT_CONFIG[2]+=",cut,date,dd,dir,dircolors,dirname,du,echo,env,expand,expr"
++OPT_CONFIG[2]+=",factor,false,fmt,fold,groups,head,id,join,kill,link,ln"
++OPT_CONFIG[2]+=",logname,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nl,nproc,nohup"
++OPT_CONFIG[2]+=",numfmt,od,pathchk,pr,printenv,printf,ptx,pwd,readlink"
++OPT_CONFIG[2]+=",realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum"
++OPT_CONFIG[2]+=",sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,sum"
++OPT_CONFIG[2]+=",sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort"
++OPT_CONFIG[2]+=",tty,uname,unexpand,uniq,unlink,vdir,wc,whoami,yes
++    --without-gmp"
++OPT_CONFIG[3]="--bindir=/bin"
++OPT_CONFIG[5]="--bindir=/bin --disable-xzdec --disable-lzmadec
++    --disable-lzmainfo --disable-lzma-links --disable-scripts"
++OPT_CONFIG[6]="--bindir=/bin"
++DOCS="LICENSE INSTALL TODO AUTHORS README TODO_unicode"
+ template=20170323
+ tmplurl=ftp://plamo.linet.gr.jp/pub/Plamo-src/admin
+ ######################################################################
+@@ -35,6 +70,8 @@
+     if [ -d ${B[$i]} ] ; then rm -rf ${B[$i]} ; fi ; cp -a ${S[$i]} ${B[$i]}
+   done
+   apply_patches
++  cd ${B[0]}
++  cp -p $W/busybox-1.25.1-config .config
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+     if [ -x configure ] ; then
+@@ -47,8 +84,14 @@
+ if [ $opt_build -eq 1 ] ; then
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
+-      make
++    if [ -f [Mm]akefile ] ; then
++      case $i in
++      0) make ;;
++      1) make LIBS="-lncursesw -lm -ldl -static" ;;
++      4) make LDFLAGS="-ldl -static" ;;
++      5) make LIBS="-ldl -all-static" ;;
++      *) make LIBS="-ldl -static" ;;
++      esac
+     fi
+   done
+ fi
+@@ -59,19 +102,47 @@
+   touch $W/i.st ; sleep 1
+   for i in `seq 0 $((${#B[@]} - 1))` ; do
+     cd ${B[$i]}
+-    if [ -f Makefile ] ; then
+-      make install DESTDIR=$P
++    if [ -f [Mm]akefile ] ; then
++      case $i in
++      0) make install CONFIG_PREFIX=$P ;;
++      3) make install DESTDIR=$P bin_SCRIPTS=zcat ;;
++      4) make install PREFIX=$P ;;
++      *) make install DESTDIR=$P ;;
++      esac
+     fi
+   done
++  ln -f $P/bin/xz{,cat}
++  rm $P/bin/{\[\[,ash,cttyhack,{e,f}grep,hush,test,install,bunzip2}
++  rm $P/bin/{bz{ip2recover,{,e,f}grep,more,less,diff,cmp},unxz}
++  install -d $P/sbin
++  mv $P/bin $P/sbin/installer
++  cp -r $W/sbin $P
++  install -d $P/usr/lib/setup
++  touch $P/usr/lib/setup/Plamo-$vers
+   touch $W/i.et
+   cd $W
+   find $P ! -type l -newer i.st ! -newer i.et \
+       -exec touch -t `date '+%m%d0900'` {} \;
+   compress
++  strip_bindir $P/sbin/installer
++  touch -t `date '+%m%d0900'` $P/sbin/installer
+   setup_docdir
++  cp -a $S/docs $docdir/$src
++  for i in busybox.pod BusyBox.txt busybox.{1,net} BusyBox.html ; do
++    cp -a $B/docs/$i $docdir/$src/docs
++    touch -t `date '+%m%d0900'` $docdir/$src/docs/$i
++  done
++  touch -t `date '+%m%d0900'` $docdir/$src/docs/busybox.net/BusyBox.html
++  touch -r $S/docs $docdir/$src/docs
++  chown -R root.root $docdir/$src/docs
++  mv $docdir/$src/{docs,{INSTALL,TODO,AUTHORS,README}.gz} $C
++  mv $docdir/$src/{TODO_unicode,$func,$myname,$spec}.gz $C
++  mv $C/{docs,{INSTALL,TODO,AUTHORS,README}.gz} $docdir/$src
++  mv $C/{TODO_unicode,$func,$myname,$spec}.gz $docdir/$src
++  touch -r $S $docdir/$src
+   convert_links
+-  tar cvpf $pkg.tar -C $P `cd $P ; find usr/bin | tail -n+2`
+-  tar rvpf $pkg.tar -C $P `cd $P ; find usr/share/man/man1 | tail -n+2`
++  tar cvpf $pkg.tar -C $P `cd $P ; find sbin -maxdepth 1 | tail -n+2`
++  tar rvpf $pkg.tar -C $P usr/lib/setup
+   tar rvpf $pkg.tar -C $P usr/share/doc/$src
+   touch -t `date '+%m%d0900'` $pkg.tar ; xz $pkg.tar ; touch $pkg.tar.xz
+   mv $pkg.tar.xz $pkg.txz

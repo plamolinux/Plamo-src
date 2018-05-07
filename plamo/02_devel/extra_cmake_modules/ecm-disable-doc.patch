@@ -1,0 +1,25 @@
+From cca1daef98efd127bb0f1314beb9f4081586eb85 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Tue, 23 Jan 2018 18:34:18 +0900
+Subject: [PATCH] Disable documentation
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b9534e0..e8a53cb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -92,7 +92,7 @@ set(MAN_INSTALL_DIR ${SHARE_INSTALL_DIR}/man
+ # Documentation
+ #
+ 
+-add_subdirectory(docs)
++#add_subdirectory(docs)
+ 
+ 
+ #
+-- 
+2.14.1
+

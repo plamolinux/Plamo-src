@@ -1,0 +1,222 @@
+#!/bin/sh
+##############################################################
+pkgbase='grub'
+vers='2.02'
+url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify=""
+arch=`uname -m`
+build=B11
+src="${pkgbase}-${vers}"
+OPT_CONFIG_COMMON="
+	--sbindir=/sbin
+        --enable-device-mapper
+        --enable-cache-stats
+	--enable-boot-time
+        --enable-grub-mkfont
+        --enable-grub-mount
+        --disable-mm-debug
+        --disable-werror"
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2015 INSTALL NEWS README THANKS TODO'
+debianpatch="http://http.debian.net/debian/pool/main/g/grub2/grub2_2.02-2.debian.tar.xz"
+#patchfiles='0001-os-naming.patch 0002-intel-ucode.patch'
+compress=txz
+## variations for build
+BUILD_VARS="common_bios efi"
+## "1" to enable IA32-EFI build in Arch x86_64, "0" to disable
+_IA32_EFI_IN_ARCH_X64=1
+if [ $arch = "x86_64" -a $_IA32_EFI_IN_ARCH_X64 -ne 0 ]; then
+  BUILD_VARS="$BUILD_VARS efi-i386-in-x86_64"
+fi
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  if [ ! -f ${debianpatch##*/} ]; then
+      wget $debianpatch
+      tar xvf ${debianpatch##*/}
+      rm -vf $W/debian/patches/dpkg_version_comparison.patch
+  fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+
+  for p in $(cat $W/debian/patches/series)
+  do
+      if [ ! -f ."$p" ]; then
+	  patch -Np1 -i $W/debian/patches/$p
+	  touch .${p}
+      fi
+  done
+
+  for var in $BUILD_VARS
+  do
+    echo "Copy the source for building the ${var} part"
+    B=$W/build_${var}
+    if [ -d $B ]; then rm -rf $B; fi ; cp -a $S $B
+    cd $B
+
+    case "$var" in
+      "common_bios")
+        if [ $arch = "x86_64" ]; then
+          OPT_CONFIG="$OPT_CONFIG_COMMON --enable-efiemu"
+        else
+          OPT_CONFIG="$OPT_CONFIG_COMMON --disable-efiemu"
+        fi
+        OPT_CONFIG="$OPT_CONFIG_COMMON --with-platform=pc --target=i386"
+        ;;
+      "efi")
+        OPT_CONFIG="$OPT_CONFIG_COMMON --with-platform=efi --disable-efiemu --target=${arch}"
+        ;;
+      "efi-i386-in-x86_64")
+        OPT_CONFIG="$OPT_CONFIG_COMMON --with-platform=efi --disable-efiemu --target=i386"
+        ;;
+    esac
+
+    unset CFLAGS
+    unset CPPFLAGS
+    unset CXXFLAGS
+    unset LDFLAGS
+    unset MAKEFLAGS
+
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
+    
+    ./configure \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --localstatedir=/var \
+        --mandir='${prefix}'/share/man \
+        ${OPT_CONFIG[$i]}
+
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
+  done
+
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  for var in $BUILD_VARS
+  do
+    echo "Building the ${var} part"
+    B=$W/build_${var}
+    cd $B
+    make
+    if [ $? != 0 ]; then
+      echo "build error. $0 script stop"
+      exit 255
+    fi
+  done
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  for var in $BUILD_VARS
+  do
+    echo "Installing the ${var} part"
+    B=$W/build_${var}
+    cd $B
+    make install DESTDIR=$P
+  done
+
+  # これくらいは書きこんじゃう方が楽な気がする．
+  mkdir -p $P/etc/default
+  cat <<"EOF" > $P/etc/default/grub
+# Default menu entry
+GRUB_DEFAULT=0
+# Time after the menu displayed
+GRUB_TIMEOUT=10
+# Time before displaying the menu
+#GRUB_HIDDEN_TIMEOUT=0
+# Display countdown or not
+#GRUB_HIDDEN_TIMEOUT_QUIET=false
+# Command line arguments for default linux entry
+GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 quiet"
+## default until Plamo 6.x
+## GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
+# Command line arguments for all linux entry
+#GRUB_CMDLINE_LINUX=
+# Distributor
+GRUB_DISTRIBUTOR=Plamo
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+
+EOF
+
+  echo "Remove debug related files"
+  for d in i386-pc i386-efi x86_64-efi
+  do
+      rm -v -f $P/usr/${libdir}/grub/${d}/*.module
+      rm -v -f $P/usr/${libdir}/grub/${d}/*.image
+      rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
+  done
+
+  # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
+  # とりあえずはこのままにしておく．
+  echo "Installing plamo tools for grub"
+  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar.gz -C $P
+  # 為念
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
+  fi
+  install -Dm 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
+  install -Dm 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

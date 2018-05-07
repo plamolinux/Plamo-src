@@ -1,0 +1,157 @@
+#!/bin/sh
+##############################################################
+pkgbase='fonts_migumix'
+vers='20150712'
+url="
+https://ja.osdn.net/projects/mix-mplus-ipa/downloads/63544/migmix-1p-20150712.zip
+https://ja.osdn.net/projects/mix-mplus-ipa/downloads/63544/migmix-2p-20150712.zip
+https://ja.osdn.net/projects/mix-mplus-ipa/downloads/63544/migmix-1m-20150712.zip
+https://ja.osdn.net/projects/mix-mplus-ipa/downloads/63544/migmix-2m-20150712.zip
+"
+arch="noarch"
+build=B1
+src="MiguMix-20150712"
+OPT_CONFIG=''
+DOCS='migmix-README.txt ipag00303/* mplus-TESTFLIGHT-060/*'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+    echo "Unpack downloaded zip files and move them into Migu directory"
+    # mkdir -p $src
+    # cp -a migu-1c-20150712/* $src
+    # cp -a migu-1m-20150712/* $src
+    # cp -a migu-1p-20150712/* $src
+    # cp -a migu-2m-20150712/* $src
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    echo "no need to configure. proceed to build."
+    opt_build=1
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    echo "no need to build. proceed to package."
+    opt_package=1
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  mkdir -p $P/usr/share/fonts/TTF
+  cp $S/*ttf $P/usr/share/fonts/TTF
+  
+
+
+  mkdir -p $P/etc/fonts/conf.avail
+
+# derived from FreeBSD's port collection
+# https://github.com/freebsd/freebsd-ports/blob/master/japanese/font-migmix/files/20-unhint-migmix.conf
+# https://github.com/freebsd/freebsd-ports/blob/master/japanese/font-migmix/files/62-fonts-migmix.conf
+
+  cat <<"EOF" > $P/etc/fonts/conf.avail/20-unhint-migmix.conf 
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+	<match target="font">
+		<test name="family">
+			<string>MigMix 1M</string>
+		</test>
+		<edit name="autohint">
+			<bool>false</bool>
+		</edit>
+	</match>
+	<match target="font">
+		<test name="family">
+			<string>MigMix 1P</string>
+		</test>
+		<edit name="autohint">
+			<bool>false</bool>
+		</edit>
+	</match>
+	<match target="font">
+		<test name="family">
+			<string>MigMix 2M</string>
+		</test>
+		<edit name="autohint">
+			<bool>false</bool>
+		</edit>
+	</match>
+	<match target="font">
+		<test name="family">
+			<string>MigMix 2P</string>
+		</test>
+		<edit name="autohint">
+			<bool>false</bool>
+		</edit>
+	</match>
+</fontconfig>
+EOF
+
+  cat <<"EOF" > $P/etc/fonts/conf.avail/62-fonts-migmix.conf
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+	<alias>
+		<family>sans-serif</family>
+		<prefer>
+			<family>MigMix 1M</family>
+			<family>MigMix 1P</family>
+			<family>MigMix 2M</family>
+			<family>MigMix 2P</family>
+		</prefer>
+	</alias>
+	<alias>
+		<family>monospace</family>
+		<prefer>
+			<family>MigMix 1M</family>
+			<family>MigMix 2M</family>
+		</prefer>
+	</alias>
+</fontconfig>
+EOF
+
+  mkdir -p $P/etc/fonts/conf.d
+  ( cd $P/etc/fonts/conf.d/ ; 
+      ln -sf ../conf.avail/20-unhint-migmix.conf . )
+  ( cd $P/etc/fonts/conf.d/ ; 
+      ln -sf ../conf.avail/62-fonts-migmix.conf . )
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

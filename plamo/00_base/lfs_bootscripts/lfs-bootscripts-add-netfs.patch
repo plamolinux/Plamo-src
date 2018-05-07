@@ -1,0 +1,148 @@
+diff -uprN lfs-bootscripts-20170626.old/Makefile lfs-bootscripts-20170626/Makefile
+--- lfs-bootscripts-20170626.old/Makefile	2018-02-28 23:44:14.856990360 +0900
++++ lfs-bootscripts-20170626/Makefile	2018-02-28 23:46:32.864654931 +0900
+@@ -43,6 +43,7 @@ files: create-dirs
+ 	install -m ${MODE} lfs/init.d/reboot        ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/sendsignals   ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/swap          ${ETCDIR}/rc.d/init.d/
++	install -m ${MODE} lfs/init.d/netfs	    ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/template      ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/sbin/ifup            ${SBIN}
+ 	install -m ${MODE} lfs/sbin/ifdown          ${SBIN}
+@@ -79,6 +80,7 @@ rcS: files
+ 
+ rc0: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc0.d/K80network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc0.d/K75netfs
+ 	ln -sf ../init.d/sendsignals ${ETCDIR}/rc.d/rc0.d/S60sendsignals
+ 	ln -sf ../init.d/swap        ${ETCDIR}/rc.d/rc0.d/S65swap
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc0.d/S70mountfs
+@@ -87,21 +89,27 @@ rc0: files
+ 
+ rc1: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc1.d/K80network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc1.d/K75netfs
+ 
+ rc2: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc2.d/K80network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc2.d/K75netfs
+ 
+ rc3: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc3.d/S20network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc3.d/S25netfs
+ 
+ rc4: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc4.d/S20network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc4.d/S25netfs
+ 
+ rc5: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc5.d/S20network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc5.d/S25netfs
+ 
+ rc6: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc6.d/K80network
++	ln -sf ../init.d/netfs	     ${ETCDIR}/rc.d/rc6.d/K75netfs
+ 	ln -sf ../init.d/sendsignals ${ETCDIR}/rc.d/rc6.d/S60sendsignals
+ 	ln -sf ../init.d/swap        ${ETCDIR}/rc.d/rc6.d/S65swap
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc6.d/S70mountfs
+diff -uprN lfs-bootscripts-20170626.old/lfs/init.d/netfs lfs-bootscripts-20170626/lfs/init.d/netfs
+--- lfs-bootscripts-20170626.old/lfs/init.d/netfs	1970-01-01 09:00:00.000000000 +0900
++++ lfs-bootscripts-20170626/lfs/init.d/netfs	2018-02-28 23:46:59.047545272 +0900
+@@ -0,0 +1,97 @@
++#!/bin/sh
++########################################################################
++# Begin netfs
++#
++# Based on sysklogd script from LFS-3.1 and earlier.
++# Rewritten by Gerard Beekmans  - gerard@linuxfromscratch.org
++# netfs script written by Nathan Coulson - conathan@conet.dyndns.org
++# and by DJ Lucas - dj@lucasit.com
++#
++# Description : Network File System Mount Script
++#
++# Version     : LFS 7.0
++#
++########################################################################
++. /lib/lsb/init-functions
++
++case "$1" in
++	start)
++		# The following line mounts all entries in fstab that
++		# have the _netdev option.  This is required for network
++		# filesystems to be mounted at boot time.
++		echo "Mounting network volumes..."
++		mount -a -t nfs,nfs4,cifs
++		evaluate_retval
++		;;
++
++	stop)
++		echo -n "Unmounting network volumes..."
++
++		# The following line obtains a list from the output of
++		# mount for all netfs types and anything that was
++		# mounted with the _netdev option.
++		NETMOUNTS=`mount | grep '_netdev\|smbfs\|ncpfs|\coda\|nfs' \
++			| cut -d " " -f 3 | sed 's/$/ /g'`
++
++		# Check to see if anything was listed from above
++		# (see if anything is actually needs to be unmounted)
++		if [ x"$NETMOUNTS" != x ]
++		then
++			# There is something mounted
++			# terminate the echo -n above
++			echo " "
++
++			# Try and stop processes the nice way
++			# (probably won't work in most cases)
++			fuser -m -SIGTERM $NETMOUNTS > /dev/null
++
++			# Check and see if it found anything.  If it
++			# did, then give 3 seconds for things to exit
++			# the nice way before killing them off.
++			# This one will work all of the time!
++			if [ $? == 0 ]
++			then
++				sleep 3
++				fuser -km $NETMOUNTS > /dev/null
++			fi
++
++			# We now need to unmount all network filesystems.
++			# We will do this with two umount commands to allow
++			# for broken behavior of smbmount, and also to make
++			# certain that netmounts without the _netdev option
++			# will still get unmounted.
++			umount -a -O _netdev
++			# save the retval
++			if [ $? != 0 ]
++			then
++				NERRVAL=1
++			fi
++
++			# Now catch the rest of the network filesystems
++			# by fstype.  This list can be extended later as
++			# more network filesystems are supported by mount.
++			umount -a -t coda,ncpfs,nfs,smbfs
++			if [ $? == 0 ]
++			then
++				[ -z $NERRVAL ]
++				evaluate_retval
++			else
++				# make certain that we return an error
++				/bin/false              
++				evaluate_retval
++			fi
++		else
++			# There is nothing mounted
++			echo "No network volumes mounted!"
++			# print a nice '[  OK  ]' message
++			evaluate_retval
++		fi
++		;;
++
++*)
++                echo "Usage: $0 {start|stop}"
++                exit 1
++                ;;
++esac
++
++# End $rc_base/init.d/netfs

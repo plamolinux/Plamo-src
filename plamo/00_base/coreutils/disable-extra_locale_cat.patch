@@ -1,0 +1,12 @@
+diff -uNr coreutils-8.25.orig/po/Makevars coreutils-8.25/po/Makevars
+--- coreutils-8.25.orig/po/Makevars	2016-01-20 19:29:32.000000000 +0900
++++ coreutils-8.25/po/Makevars	2016-11-24 15:19:19.104423916 +0900
+@@ -67,7 +67,7 @@
+ 
+ # This is the list of locale categories, beyond LC_MESSAGES, for which the
+ # message catalogs shall be used.  It is usually empty.
+-EXTRA_LOCALE_CATEGORIES = LC_TIME
++#EXTRA_LOCALE_CATEGORIES = LC_TIME
+ 
+ # This tells whether the $(DOMAIN).pot file contains messages with an 'msgctxt'
+ # context.  Possible values are "yes" and "no".  Set this to yes if the

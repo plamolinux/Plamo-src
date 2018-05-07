@@ -1,0 +1,142 @@
+#!/bin/sh
+##############################################################
+pkgbase='Python2'
+vers='2.7.14'
+url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B3
+src="Python-${vers}"
+OPT_CONFIG="--enable-shared --with-system-expat --with-system-ffi
+	--with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4
+	--enable-optimizations --without-ensurepip"
+DOCS='LICENSE README'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
+  # See http://bugs.python.org/issue10835 for upstream report
+  sed -i "/progname =/s/python/python${_pybasever}/" Python/pythonrun.c
+
+  sed -i -e "s|^#.* /usr/local/bin/python|#!/usr/bin/python2|" Lib/cgi.py
+
+  # ensure that we use the system libraries
+  rm -r Modules/expat
+  rm -r Modules/zlib
+  rm -r Modules/_ctypes/{darwin,libffi}*
+
+  find . -name '*.py' | \
+    xargs sed -i "s|#[ ]*![ ]*/usr/bin/env python$|#!/usr/bin/env python2|"
+
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  # Hack to avoid building again
+  sed -i 's/^all:.*$/all: build_all/' Makefile
+  
+  export LDFLAGS='-Wl,--as-needed'
+  make altinstall maninstall DESTDIR=$P
+
+  # ref. https://git.archlinux.org/svntogit/packages.git/tree/trunk/PKGBUILD?h=packages/python2
+  rm $P/usr/share/man/man1/python.1
+  ln -sf python2.7        $P/usr/bin/python2
+  ln -sf python2.7-config $P/usr/bin/python2-config
+  ln -sf python2.7.1      $P/usr/share/man/man1/python2.1
+
+  ln -sf python-2.7.pc $P/usr/${libdir}/pkgconfig/python2.pc
+  ln -sf /usr/$libdir/libpython2.7.so $P/usr/$libdir/python2.7/config/libpython2.7.so
+  mv -v $P/usr/bin/smtpd.py $P/usr/$libdir/python2.7/
+
+  install -dm755 "$P"/usr/lib/python2.7/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python2.7/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python2.7/Tools/scripts/
+
+  mv "$P"/usr/bin/idle{,2}
+  mv "$P"/usr/bin/pydoc{,2}
+  mv "$P"/usr/bin/2to3{,-2.7}
+
+  sed -i "s#${B}/Python-${vers}:##" "$P"/usr/lib/python2.7/config/Makefile
+
+  # ref. BLFS
+  chmod -v 755 $P/usr/$libdir/libpython2.7.so.1.0
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

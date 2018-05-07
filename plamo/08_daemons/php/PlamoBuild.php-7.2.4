@@ -1,0 +1,246 @@
+#!/bin/sh
+##############################################################
+pkgbase='php'
+vers='7.2.4'
+url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG=()
+BUILD_TYPE=(cgi apache)
+DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.md'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# 共通オプション
+OPT_CONFIG=("${OPT_CONFIG[@]}"
+	    --srcdir=$S
+	    --with-libdir=$libdir
+	    --sysconfdir=/etc/php
+	    --with-layout=GNU
+	    --with-config-file-path=/etc/php
+	    --with-config-file-scan-dir=/etc/php/conf.d
+	    --disable-rpath)
+
+# モジュール関係
+## --enable-${module}=shared
+shared_modules=(bcmath calendar dba exif ftp intl mbstring
+		shmop soap sockets sysvmsg sysvsem sysvshm
+		zip)
+for m in ${shared_modules[@]}
+do
+    shared_modules_option=(${shared_modules_option[@]} --enable-"$m"=shared)
+done
+
+## --with-${module}=shared
+with_shared=(bz2 curl gd gettext gmp iconv ldap
+	     pspell xmlrpc)
+for m in ${with_shared[@]}
+do
+    with_shared_option=(${with_shared_option[@]} --with-"$m"=shared)
+done
+
+## --with-${module}=${prefix}
+with_prefix=(gdbm pcre-regex libzip)
+for m in ${with_prefix[@]}
+do
+    with_prefix_option=(${with_prefix_option[@]} --with-"$m"=/usr)
+done
+
+## --with-${module}=shared,${prefix}
+with_shared_prefix=(enchant pdo-sqlite sqlite3)
+for m in ${with_shared_prefix[@]}
+do
+    with_shared_prefix_option=(${with_shared_prefix_option[@]} --with-"$m"=shared,/usr)
+done
+
+# 上のどれにも当てはまらないオプション
+other_modules=(--with-freetype-dir=/usr
+	       --enable-mbregex
+	       --with-imap-ssl
+	       --with-mhash
+	       --with-imap
+	       --with-tidy
+	       --with-mysqli=shared,mysqlnd --with-mysql-sock=/run/mysqld/mysqld.sock
+	       --with-openssl
+	       --with-pdo-mysql=shared,mysqlnd
+	       --with-readline
+	       --with-zlib
+	       --enable-pcntl)
+
+OPT_MODULE=(${shared_modules_option[@]}
+	    ${with_shared_option[@]}
+	    ${with_prefix_option[@]}
+	    ${with_shared_prefix_option[@]}
+	    $other_modules)
+
+OPT_CONFIG_cgi=(--enable-cgi
+		--enable-fpm
+		--with-fpm-acl
+		--with-fpm-user=www
+		--with-fpm-group=apache
+		--enable-embed=shared
+		${OPT_MODULE[@]})
+
+OPT_CONFIG_apache=(--with-apxs2=/usr/bin/apxs ${OPT_MODULE[@]})
+
+EXTENSION_DIR=/usr/${libdir}/php/modules
+export EXTENSION_DIR
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+
+  for t in ${BUILD_TYPE[@]}
+  do
+    if [ -d $B/$t ] ; then rm -rf $B/$t; fi ; mkdir -p $B/$t
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+    pushd $B/$t
+    if [ $t = "cgi" ]; then
+	CONFIG=(${OPT_CONFIG[@]} ${OPT_CONFIG_cgi[@]})
+    elif [ $t = "apache" ]; then
+	CONFIG=(${OPT_CONFIG[@]} ${OPT_CONFIG_apache[@]})
+    fi
+
+    echo "==== Configure $t ===="
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${CONFIG[@]}
+    
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
+    popd
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  for t in ${BUILD_TYPE[@]}
+  do
+    pushd $B/$t
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+      echo "build error. $0 script stop"
+      exit 255
+    fi
+    popd
+  done
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  # install dummy httpd.conf
+  echo "Install dummy apache httpd.conf"
+  install -dm755 -v $P/etc/httpd
+  cp -v /etc/httpd/original/httpd.conf $P/etc/httpd/
+  for t in ${BUILD_TYPE[@]}
+  do
+    echo "==== Installing a part of $t ===="
+    cd $B/$t
+    export LDFLAGS='-Wl,--as-needed'
+    make install INSTALL_ROOT=$P
+  done
+
+  # delete unneeded files
+  rm -fv $P/etc/httpd/httpd.conf*
+  ( cd $P ; rm -rfv .channels .depdb .filemap .lock .registry .depdblock )
+  rm -rfv $P/var
+  
+  ln -sfv phar.phar $P/usr/bin/phar
+
+  # config for php
+  install -Dm644 -v $S/php.ini-production $P/etc/php/php.ini.dist
+
+  # config for apache
+  install -Dm644 -v $W/php7.conf $P/etc/httpd/extra.dist/php7.conf
+  install -Dm644 -v $W/php7.conf $docdir/$src/php7.conf
+
+  # php-fpm init
+  install -Dm644 -v $W/php-fpm.init $P/etc/rc.d/init.d/php-fpm
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+        ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/K28php-fpm
+	;;
+      3|4|5)
+	ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/S32php-fpm
+	;;
+    esac
+  done
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/httpd/extra/php7.conf ]; then
+  ( cd /etc/httpd ; cp extra.dist/php7.conf extra/php7.conf )
+fi
+if [ ! -f /etc/php/php.ini ]; then
+  ( cd /etc/php ; cp php.ini.dist php.ini )
+fi
+if [ ! -f /etc/php/php-fpm.conf ]; then
+  ( cd /etc/php ; cp php-fpm.conf.default php-fpm.conf )
+fi
+if [ ! -f /etc/php/php-fpm.d/www.conf ]; then
+  ( cd /etc/php/php-fpm.d/ ; cp www.conf.default www.conf )
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

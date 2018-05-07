@@ -1,0 +1,104 @@
+#!/bin/sh
+
+# wrapper for installpkg to make meta-pkg like system.
+# if directory name is given, cd to the directory and install everything
+
+package_name() {
+  tmp=`echo $1 | sed -e "s/.t[bgx]z//"`
+  STRING=`basename $tmp`
+  # Check for old style package name with one segment:
+  if [ "`echo $STRING | cut -f 1 -d -`" = "`echo $STRING | cut -f 2 -d -`" ]; then
+    echo $STRING
+  else # has more than one dash delimited segment
+    # Count number of segments:
+    INDEX=1
+    while [ ! "`echo $STRING | cut -f $INDEX -d -`" = "" ]; do
+      INDEX=`expr $INDEX + 1`
+    done
+    INDEX=`expr $INDEX - 1` # don't include the null value
+    # If we don't have four segments, return the old-style (or out of spec) package name:
+    if [ "$INDEX" = "2" -o "$INDEX" = "3" ]; then
+      echo $STRING
+    else # we have four or more segments, so we'll consider this a new-style name:
+      NAME=`expr $INDEX - 3`
+      NAME="`echo $STRING | cut -f 1-$NAME -d -`"
+      echo $NAME
+      # cruft for later ;)
+      #VER=`expr $INDEX - 2`
+      #VER="`echo $STRING | cut -f $VER -d -`"
+      #ARCH=`expr $INDEX - 1`
+      #ARCH="`echo $STRING | cut -f $ARCH -d -`"
+      #BUILD="`echo $STRING | cut -f $INDEX -d -`"
+    fi
+  fi
+}
+
+
+opt=''
+pkgs=''
+TAGFILE=''
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -root)  # -root /mnt
+       opts="`echo $opts $1 $2`"
+       mnt_point=$2
+       shift ; shift
+     ;;
+    -priority) 
+       opts="`echo $opts $1 $2`"
+       shift ; shift
+     ;;
+    -tagfile)
+	opts="`echo $opts $1 $2`"
+	TAGFILE=$2
+	shift ; shift
+	;;
+    -*)
+	opts="`echo $opts $1`"
+	shift
+	;;
+     *)
+	pkgs="`echo $pkgs $1`"
+	shift
+     ;;
+  esac
+done
+
+#echo "opts= $opts"
+#echo "pkgs= $pkgs"
+
+for i in $pkgs ; do
+   if [ -d $i ]; then
+       packagebase="`package_name $i`"
+       # echo "pkgs:$pkgs, packagebase:$packagebase"
+       PRIORITY=''
+       if [ -z $TAGFILE ]; then
+	   PRIORITY="ADD"
+       elif grep "^$packagebase:" "$TAGFILE" | grep ADD > /dev/null 2> /dev/null ; then
+	   PRIORITY="ADD"
+       elif grep "^$packagebase:" "$TAGFILE" | grep REC > /dev/null 2> /dev/null ; then
+	   PRIORITY="REC"
+       elif grep "^$packagebase:" "$TAGFILE" | grep OPT > /dev/null 2> /dev/null ; then
+	   PRIORITY="OPT"
+       elif grep "^$packagebase:" "$TAGFILE" | grep SKP > /dev/null 2> /dev/null ; then
+	   PRIORITY="SKP"
+       fi
+       echo "package:$i priority:$PRIORITY"
+       if [ $PRIORITY = "ADD" -o $PRIORITY = "REC" ]; then
+	   cd $i
+	   for j in *.tgz *.tbz *.txz ; do
+               # echo "installing $j"
+	       /usr/lib/setup/installpkg -priority ADD $opts $j 
+	   done
+	   cd ..
+       fi
+   else
+	/usr/lib/setup/installpkg2 $opts $i
+   fi
+done
+
+# we are on the running system, so need to run initpkg now.
+if [ "$mnt_point.x" = ".x" ]; then
+    ( cd $mnt_point/ ;  ./etc/rc.d/rc.initpkg )
+fi

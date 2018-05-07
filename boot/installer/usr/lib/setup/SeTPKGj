@@ -1,0 +1,126 @@
+#!/bin/sh
+T_PX="`cat /tmp/SeTT_PX`"
+rm -f /tmp/SeTSERIES
+if [ "$T_PX" = "/" ]; then
+ BASE=off
+else
+ BASE=on
+fi
+
+dialog --title "インストールするカテゴリの選択" --checklist \
+"\n\
+スペースキーでインストールするソフトウェアカテゴリを選択して \n\
+ください．各カテゴリは重層的になっていて，xclassicsにはx11が必要 \n\
+x11にはminimumが必要，といった依存関係があります．\n\
+  Xが不要な場合: minimum(約1.3G) \n\
+  Afterstep等の古いWM環境のみの場合: minimum + x11 + xclassics(2.7G) \n\
+  Xfce環境の場合: minimum + x11 + xapps + ext + xfce(5.4G) \n\
+  KDE環境の場合: minimum + x11 + xapps + ext + kde(7.5G) \n\
+となります。依存関係にあるカテゴリは自動的に選択されるので、\n\
+xfceやkdeのみを選んでも必要なカテゴリは自動的に選択されます" 25 74 8 \
+"minimum" "Plamo Linux 基本環境(1.2G)" on \
+"x11" "X11 ウィンドウシステム(0.4G)" on \
+"xclassics" "GTK/Qtを使わない古めのXアプリ(0.1G)" off \
+"xapps" "最近の環境向けのXアプリ(1.0G)" on \
+"ext" "デスクトップ環境用の共通ライブラリ等(2.7G)" on \
+"xfce" "XFce4 デスクトップ環境(0.1G)" on \
+"kde" "KDE4 デスクトップ環境(2.2G)" off \
+"lof" "統合オフィスソフト LibreOffice(0.6G)" "off" \
+"tex" "ptexlib 版組みシステム(2.2G)" off \
+"kernel" "Linux カーネルのソースコード(0.6G)" off \
+2> /tmp/tmpseries
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f /tmp/tmpseries
+ exit
+fi
+SELECTED="`cat /tmp/tmpseries`"
+# rm -f /tmp/tmpseries
+INSTSETS='00_base'
+
+# for minimum
+for cat in minimum x11 xclassics xapps ext xfce kde tex kernel lof; do
+    chk=`echo $SELECTED | grep $cat`
+    if [ $? == 0 ]; then
+       echo "minimum is selected from $cat"
+       INSTSETS="$INSTSETS 01_minimum"
+       break
+    fi
+done
+
+#for x11
+for cat in x11 xclassics xapps ext xfce kde lof ; do
+    chk=`echo $SELECTED | grep $cat`
+    if [ $? == 0 ]; then
+       echo "x11 is selected from $cat"
+       INSTSETS="$INSTSETS 02_x11"
+       break
+    fi
+done
+
+#for xclassics 
+for cat in xclassics ; do
+    chk=`echo $SELECTED | grep $cat`
+    if [ $? == 0 ]; then
+       echo "xclassic is selected"
+       INSTSETS="$INSTSETS 03_xclassics"
+       break
+    fi
+done
+
+#for xapps
+for cat in xapps ext xfce kde lof ; do
+    chk=`echo $SELECTED | grep $cat`
+    if [ $? == 0 ]; then
+       echo "xapps is selected from $cat"
+       INSTSETS="$INSTSETS 04_xapps"
+       break
+    fi
+done
+
+#for ext
+for cat in ext xfce kde lof ; do
+    chk=`echo $SELECTED | grep $cat`
+    if [ $? == 0 ]; then
+       echo "ext is selected from $cat"
+       INSTSETS="$INSTSETS 05_ext"
+       break
+    fi
+done
+
+#for xfce
+chk=`echo $SELECTED | grep xfce`
+if [ $? == 0 ]; then
+    echo "xfce is selected"
+    INSTSETS="$INSTSETS 06_xfce"
+fi
+
+#for kde
+chk=`echo $SELECTED | grep kde`
+if [ $? == 0 ]; then
+    echo "kde is selected"
+    INSTSETS="$INSTSETS 07_kde"
+fi
+
+#for tex
+chk=`echo $SELECTED | grep tex`
+if [ $? == 0 ]; then
+    echo "tex is selected"
+    INSTSETS="$INSTSETS 08_tex"
+fi
+
+#for kernel
+chk=`echo $SELECTED | grep kernel`
+if [ $? == 0 ]; then
+    echo "kernel is selected"
+    INSTSETS="$INSTSETS 09_kernel"
+fi
+
+#for lof
+chk=`echo $SELECTED | grep lof`
+if [ $? == 0 ]; then
+    echo "LibreOffice is selected"
+    INSTSETS="$INSTSETS 10_lof"
+fi
+
+
+echo "$INSTSETS" > /tmp/SeTSERIES

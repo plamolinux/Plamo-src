@@ -1,0 +1,75 @@
+#!/bin/sh
+##############################################################
+pkgbase='plamobuild'
+vers='1.0'
+url="https://github.com/tenforward/PlamoBuild/blob/master/pkgdev/make_PlamoBuild.py 
+        https://github.com/tenforward/PlamoBuild/blob/master/pkgdev/plamobuild_functions.sh"
+arch='noarch'
+build=B1
+src="${pkgbase}-${vers}"
+pkg="${pkgbase}-${vers}-${arch}-${build}"
+OPT_CONFIG=''
+DOCS=''
+patchfiles=''
+compress=txz
+##############################################################
+
+W=`pwd`
+S=`pwd`
+P=$W/work
+
+check_root() {
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+}
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    wget $url[0]
+    wget $url[1]
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    echo "no need to configure, proceed to build"
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+   echo "no need to build, proceed to package"
+fi
+
+if [ $opt_package -eq 1 ] ; then
+    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+    check_root
+    cd $S
+    mkdir -p $P/usr/bin
+    mkdir -p $P/usr/share
+    install make_PlamoBuild.py $P/usr/bin
+    install plamobuild_functions.sh $P/usr/share
+
+    mkdir -p $P/usr/share/doc/$src
+    install $W/$0 $P/usr/share/doc/$src
+    gzip $P/usr/share/doc/$src/$0
+
+    cd $P
+    /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

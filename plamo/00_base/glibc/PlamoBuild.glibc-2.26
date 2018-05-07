@@ -1,0 +1,274 @@
+#!/bin/sh
+##############################################################
+pkgbase='glibc'
+vers='2.26'
+url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
+verify="${url}.sig"
+arch=`uname -m`
+build=B6
+src="glibc-${vers}"
+OPT_CONFIG="--enable-add-ons
+	--enable-kernel=3.2
+	--localedir=/usr/share/locale
+	--enable-tls
+	--enable-obsolete-nsl
+	--enable-obsolete-rpc
+	--enable-stack-protector=strong
+	--disable-profile
+	--disable-werror
+	--build=${arch}-pc-linux
+	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
+DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
+	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
+	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
+	ChangeLog.old-ports ChangeLog.old-ports-aarch64 ChangeLog.old-ports-aix ChangeLog.old-ports-alpha ChangeLog.old-ports-am33
+	ChangeLog.old-ports-arm ChangeLog.old-ports-cris ChangeLog.old-ports-hppa ChangeLog.old-ports-ia64 ChangeLog.old-ports-linux-generic
+	ChangeLog.old-ports-m68k ChangeLog.old-ports-microblaze ChangeLog.old-ports-mips ChangeLog.old-ports-powerpc ChangeLog.old-ports-tile
+	INSTALL LICENSES NEWS PROJECTS README"
+
+# LFS's patch
+# http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
+# glibc-c-utf8-locale.patch
+# https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
+fhs_patchfile="glibc-${vers}-fhs-1.patch"
+patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch glibc-c-utf8-locale.patch"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+    if [ ! -f $fhs_patchfile ]; then
+      wget http://www.linuxfromscratch.org/patches/lfs/development/${fhs_patchfile}
+    fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    cd $B
+    # if [ -f $S/autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    export LDFLAGS='-Wl,--as-needed' 
+
+    rm -f configparms
+    if [ "$arch" = "x86_64" ]; then
+	echo "CFLAGS += -mtune=generic -O3 -pipe" >> configparms
+    else
+	echo "CFLAGS += -march=i486 -mtune=native -O3 -pipe" >> configparms
+    fi
+
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --libexecdir=/usr/${libdir} ${OPT_CONFIG}
+    
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  if [ `id -u` -ne 0 ] ; then
+    read -p "Do you want to package as root? [y/N] " ans
+    if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
+      cd $W ; /bin/su -c "$0 package" ; exit
+    fi
+  fi
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
+  touch $W/i.st ; sleep 1
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install install_root=$P
+
+  # install locale (/usr/lib/locale/locale-archives)
+  cp $W/SUPPORTED.plamo $S/localedata/SUPPORTED
+  make localedata/install-locales install_root=$P
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  #install_tweak
+
+  for i in `find $P/usr/${libdir} -type f -a -name "*.a" `; do
+      echo "stripping static lib $i"
+      strip -g $i
+  done
+  
+  P2="$W/work2"
+  if [ -d $P2 ]; then
+      rm -rf $P2
+  fi
+  echo "moving files into work2 dir"
+  mv -v $P $P2
+
+##### for glibc2
+  mkdir -v -p $P/usr/${libdir}
+
+  mv -v $P2/etc $P
+  rm -v -f $P/etc/{localtime,ld.so.cache}
+
+  mv -v $P2/${libdir} $P
+  strip -g $P/${libdir}/*.so
+
+  mv -v $P2/sbin  $P
+  strip $P/sbin/*
+
+  mv -v $P2/usr/bin $P/usr/
+  strip $P/usr/bin/*
+
+  mv -v $P2/usr/${libdir}/gconv $P/usr/${libdir}
+  strip $P/usr/${libdir}/gconv/*
+  mv -v $P2/usr/${libdir}/audit $P/usr/${libdir}
+  strip $P/usr/${libdir}/audit/*
+
+  mv -v $P2/usr/libexec $P/usr
+  mv -v $P2/usr/sbin $P/usr
+
+  mkdir -p $P/usr/share
+  for i in i18n locale ; do
+      mv -v $P2/usr/share/$i $P/usr/share
+  done
+
+  # lib64 を廃するための移行措置
+  if [ "${arch}" == "x86_64" ]; then
+      rm -rf $P/lib64
+      mkdir -p $P/lib64
+      ( cd $P/lib64 ; ln ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
+
+      cat <<EOF > $P/etc/ld.so.conf.new
+/lib64
+/usr/lib64
+EOF
+
+  fi
+  cat <<EOF >> $P/etc/ld.so.conf.new
+/${libdir}
+/usr/${libdir}
+/usr/local/${libdir}
+EOF
+
+  # locale
+  install -dm755 -v $P/usr/${libdir}/locale
+  mv -v $P2/usr/${libdir}/locale/locale-archive $P/usr/${libdir}/locale/locale-archive
+
+  # nsswitch.conf
+  install -Dm644 -v $W/nsswitch.conf.plamo $P/etc/nsswitch.conf.new
+
+  # docs
+  install -dm755 -v $docdir/$src
+  install  -m644 -v $W/nsswitch.conf.plamo $docdir/$src/nsswitch.conf.plamo
+  for i in $DOCS ; do
+    install -m644 -v $W/$src/$i $docdir/$src/$i
+  done
+  install  -m644 -v $W/PlamoBuild.glibc-$vers $docdir/$src/
+  install  -m644 -v $W/SUPPORTED.plamo $docdir/$src/
+
+  mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+echo "glibc package initializing"
+# /usr/lib{,64}/の移行措置のため，ld.so.conf.new を優先する
+if [ -f /etc/ld.so.conf ]; then
+  mv /etc/ld.so.conf /etc/ld.so.conf.old
+fi
+mv /etc/ld.so.conf.new /etc/ld.so.conf
+ldconfig
+
+# 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
+# あればそのままにしておく
+if [ ! -f /etc/nsswitch.conf ]; then
+  mv /etc/nsswitch.conf.new /etc/nsswitch.conf
+else
+  mv /etc/nsswitch.conf.new /etc/nsswitch.conf_plamo_default
+fi
+echo "glibc timezone configuring"
+# 既存のlocaltimeがあればそのまま，無ければJSTで作る
+if [ ! -e /etc/localtime ]; then
+   TIMEZONE="Japan"
+   ( cd /usr/share/zoneinfo ; ln -sf posix/$TIMEZONE localtime )
+   ( cd /etc ; cp ../usr/share/zoneinfo/localtime localtime )
+fi
+
+# initpkg で locale 生成する場合は以下を有効化
+# make localedata/install-locales でパッケージに含めるようにしたが一応残しておく
+#Echo "glibc Generating locale (en_US.UTF-8, ja_JP.UTF-8, ja_JP.eucJP)"
+#rm -rf /usr/${libdir}/locale/*
+#localedef -i en_US -c -f UTF-8  -A /usr/share/locale/locale.alias en_US.UTF-8
+#localedef -i ja_JP -c -f UTF-8  -A /usr/share/locale/locale.alias ja_JP.UTF-8
+#localedef -i ja_JP -c -f EUC-JP -A /usr/share/locale/locale.alias ja_JP.eucJP
+#localedef -i C -c -f UTF-8  -A /usr/share/locale/locale.alias C.UTF-8
+
+echo "glibc initialize finished"
+
+EOF
+
+# convert symlink to null file and add 'ln -sf ..' commands into
+# install/doinst.sh
+
+  convert_links
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+##### for libc
+  echo "building libc package"
+  pkg="libc"-$vers-$arch-$build
+
+  rm -rf $P
+  mkdir -p $P/usr
+  mv -v $P2/usr/include $P/usr
+  mv -v $P2/usr/${libdir} $P/usr
+  mv -v $P2/usr/share $P/usr
+
+# convert symlink to null file and add 'ln -sf ..' commands into
+# install/doinst.sh
+  convert_links
+  cd $P
+  if [ "$chk_me.x" != ".x" ];then
+      chown -R root.root *
+  fi
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+  
+fi

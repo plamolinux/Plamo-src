@@ -1,0 +1,176 @@
+#!/bin/sh
+##############################################################
+pkgbase='texlive'
+vers='20170524'
+url="ftp://tug.org/texlive/historic/2017/texlive-${vers}-source.tar.xz"
+verify="${url}.sha512"
+arch=`uname -m`
+build=B2
+src="texlive-${vers}-source"
+
+PREFIX=/opt/texlive/2017
+TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
+
+OPT_CONFIG=(--prefix=${PREFIX}
+	    --bindir=${PREFIX}/bin/$TEXARCH
+	    --includedir=${PREFIX}/include
+	    --infodir=${PREFIX}/texmf-dist/doc/info
+	    --libdir=${PREFIX}/lib
+	    --mandir=${PREFIX}/texmf-dist/doc/man
+	    --disable-native-texlive-build
+	    --disable-static --enable-shared
+	    --with-system-cairo
+	    --with-system-fontconfig
+	    --with-system-freetype2
+	    --with-system-gmp
+	    --with-system-graphite2
+	    --with-system-harfbuzz
+	    --with-system-icu
+	    --with-system-libgs
+	    --with-system-libpaper
+	    --with-system-libpng
+	    --with-system-mpfr
+	    --with-system-pixman
+	    --with-system-poppler
+	    --with-system-xpdf
+	    --with-system-zlib
+	    --with-banner-add=' - Plamo')
+DOCS='ChangeLog README README.0overview README.1prerequisites README.2building README.3installing README.4layout README.5configure README.6cross README.7coding'
+blfspatches=(texlive-20170524-source-gcc7-1.patch
+	     texlive-20170524-source-upstream_fixes-2.patch
+	     texlive-20170524-source-poppler059-1.patch)
+patchfiles="${blfspatches[@]}"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  for p in ${blfspatches[@]}
+  do
+    if [ ! -f $p ]; then
+      wget http://www.linuxfromscratch.org/patches/blfs/svn/$p
+    fi
+  done
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure "${OPT_CONFIG[@]}"
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install-strip DESTDIR=$P
+  make texlinks DESTDIR=$P
+
+  install -dm755 -v $P/$PREFIX/tlpkg/TeXLive
+  install -m644  -v $S/texk/tests/TeXLive/* -t $P/$PREFIX/tlpkg/TeXLive/
+
+  # xbb
+  ln -s dvipdfmx $P/$PREFIX/bin/$TEXARCH/xbb
+
+  # updmap.cfg（この処理は不要かも?）
+  #install -Dm644 -v $W/updmap.cfg $P/$PREFIX/texmf-dist/web2c/updmap.cfg
+  #install -Dm644 -v $W/updmap-hdr.cfg $P/$PREFIX/texmf-dist/web2c/updmap-hdr.cfg
+
+  # init script of texlive
+  install -Dm755 -v $W/texinit.sh $P/$PREFIX/texinit.sh
+
+  # PATH
+  install -dm755 -v $P/etc/profile.d
+  cat <<EOF > $P/etc/profile.d/texlive.sh
+# PATH
+PATH=\$PATH:$PREFIX/bin/$TEXARCH
+EOF
+  cat <<EOF > $P/etc/profile.d/texlive.csh
+# path
+set path = ( \$path $PREFIX/bin/$TEXARCH )
+EOF
+
+  # initpkg
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -f /var/log/packages/texlive_texmf1 -a -f /var/log/packages/texlive_texmf2 ]; then
+  sh $PREFIX/texinit.sh
+fi
+EOF
+
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

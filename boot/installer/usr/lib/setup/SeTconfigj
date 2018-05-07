@@ -1,0 +1,151 @@
+#!/bin/sh
+T_PX="`cat /tmp/SeTT_PX`"
+ROOT_DEVICE="`cat /tmp/SeTrootdev`"
+if [ ! -d $T_PX/bin -a ! -d $T_PX/etc ]; then # if there no Linux here, exit
+ exit
+fi
+( cd $T_PX ; chmod 755 ./ )
+( cd $T_PX ; chmod 755 ./var )
+
+if [ -d $T_PX/usr/src/linux ]; then
+ chmod 755 $T_PX/usr/src/linux
+fi
+
+if [ ! -d $T_PX/proc ]; then
+ mkdir $T_PX/proc
+ chown root.root $T_PX/proc
+fi
+
+if [ ! -d $T_PX/sys ]; then
+    mkdir $T_PX/sys
+    chown root.root $T_PX/sys
+fi
+
+if [ ! -d $T_PX/var/spool/uucp ]; then
+ mkdir -p $T_PX/var/spool/uucp
+fi
+chown uucp.uucp $T_PX/var/spool/uucp
+chmod 1777 $T_PX/var/spool/uucp
+
+if [ ! -d $T_PX/var/spool/uucppublic ]; then
+ mkdir -p $T_PX/var/spool/uucppublic
+fi
+chown uucp.uucp $T_PX/var/spool/uucppublic
+chmod 1777 $T_PX/var/spool/uucppublic
+
+chmod 1777 $T_PX/tmp
+
+if [ ! -d $T_PX/var/spool/mail ]; then
+ mkdir -p $T_PX/var/spool/mail
+ chmod 755 $T_PX/var/spool
+ chown root.mail $T_PX/var/spool/mail
+ chmod 775 $T_PX/var/spool/mail
+fi 
+
+mount --bind /dev $T_PX/dev
+mount --bind /proc $T_PX/proc
+mount --bind /sys $T_PX/sys
+mount --bind /tmp $T_PX/tmp
+# chmod a+rw $T_PX/dev/null
+
+# Install the bootdisk's Linux kernel:
+# . /usr/lib/setup/SeTkernelj
+
+dialog --title "システム設定" --yesno \
+"ここでLinuxシステムの各種設定を行います。新しくインストールした \n\
+システムでは、「システム設定」を行なわないと、正常にブートできなく \n\
+なりますのでご注意ください． \n\
+システム設定を行いますか？" 14 74 
+if [ $? = 1 -o $? = 255 ]; then
+ exit
+fi
+
+# もう /dev/modem は obsolete だと思うので「モデムの設定」は
+# 削除 -- kojima 2005/08/08
+#
+#dialog --title "モデムの設定" --yesno \
+#"\n\
+#ここでは発呼デバイス(ttyS0、ttyS1、ttyS2、ttyS3)から/dev/modemへの\n\
+#リンクが張られます。モデムの接続先のポートを変更した場合は、この\n\
+#リンクを後で変更することもできます。複数のモデムを使う場合は、\n\n\
+#/etc/rc.d/rc.serial を修正してください。\n\
+#モデムを設定しますか？\n" 14 73
+#if [ $? = 0 ]; then
+# dialog --title "発呼デバイスの選択" \
+#--menu "モデムを接続する発呼デバイスを指定してください：" 12 60 4 \
+#"ttyS0" "DOSではcom1:" \
+#"ttyS1" "DOSではcom2:" \
+#"ttyS2" "DOSではcom3:" \
+#"ttyS3" "DOSではcom4:" 2> /tmp/callout
+# if [ $? = 1 ]; then
+#  rm -f /tmp/callout
+# else
+#  MODEM_DEVICE="`cat /tmp/callout`"
+#  rm -f /tmp/callout
+#  (cd $T_PX/dev; ln -sf $MODEM_DEVICE modem)
+# fi
+#fi
+
+
+# Post installation and setup scripts added by packages.
+if [ -d $T_PX/var/log/setup ]; then
+ for INSTALL_SCRIPTS in $T_PX/var/log/setup/setup.*
+ do
+  SCRIPT=`basename $INSTALL_SCRIPTS`
+  # Here, we call each script in /var/log/setup. Two arguments are provided:
+  # 1 -- the target prefix (normally /, but /mnt from the bootdisk)
+  # 2 -- the name of the root device.
+  ( cd $T_PX ; sh var/log/setup/$SCRIPT $T_PX $ROOT_DEVICE )
+  if echo $SCRIPT | grep onlyonce 1> /dev/null 2> /dev/null; then # only run after first install
+   if [ ! -d $T_PX/var/log/setup/install ]; then
+    mkdir $T_PX/var/log/setup/install
+   fi
+   mv $INSTALL_SCRIPTS $T_PX/var/log/setup/install
+  fi
+ done
+fi
+
+# Load keyboard map (if any) when booting
+LOADER="/usr/bin/loadkeys"
+KEYDIR="/usr/share/keymaps/i386/qwerty"
+MAP="$T_PX/etc/rc.d/rc.keymap"
+
+if [ -r /tmp/keyset ]; then
+   echo "#!/bin/sh" > $MAP
+
+	if grep 106 /tmp/keyset 1> /dev/null 2>/dev/null ; then
+		if grep cl2c  /tmp/keyset  1> /dev/null 2>/dev/null  ; then
+			echo "$LOADER $KEYDIR/jp106.map.gz $KEYDIR/cl2c-d.map.gz" >> $MAP
+		else
+			echo "$LOADER $KEYDIR/jp106.map.gz" >> $MAP
+		fi
+
+	elif grep cl2c /tmp/keyset 1> /dev/null 2>/dev/null  ; then
+		if grep k2esc  /tmp/keyset 1> /dev/null 2>/dev/null  ; then
+			echo "$LOADER $KEYDIR/defkeymap.map.gz  $KEYDIR/cl2c-d.map.gz  $KEYDIR/k2esc-d.map.gz " >> $MAP
+		else
+			echo "$LOADER $KEYDIR/defkeymap.map.gz  $KEYDIR/cl2c-d.map.gz " >> $MAP
+		fi
+
+	elif grep k2esc  /tmp/keyset  1> /dev/null 2>/dev/null  ; then
+		echo "$LOADER $KEYDIR/defkeymap.map.gz $KEYDIR/k2esc-d.map.gz" >> $MAP
+	fi
+	chmod 755 $MAP
+fi
+
+dialog --title "システムの最終設定" --msgbox \
+"インストールしたシステムの最終調整を行います． \n\
+ボールド体のフォントを作成したりするため，環境によっては \n\
+多少時間を要する場合があります．途中で root パスワードの \n\
+入力を求めますので，適切なパスワードを入力してください．" 8 74 
+
+if [ -f $T_PX/etc/rc.d/rc.once ]; then
+  chroot $T_PX /etc/rc.d/rc.once
+  mv $T_PX/etc/rc.d/rc.once $T_PX/tmp
+fi
+
+if [ -f $T_PX/etc/rc.d/rc.initpkg ]; then
+  chroot $T_PX /etc/rc.d/rc.initpkg
+fi
+
+# . /usr/lib/setup/SeTbootdsk

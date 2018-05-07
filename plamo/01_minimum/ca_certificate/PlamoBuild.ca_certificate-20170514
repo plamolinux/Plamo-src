@@ -1,0 +1,111 @@
+#!/bin/sh
+##############################################################
+pkgbase="ca_certificate"
+vers='20170514'
+url="http://anduin.linuxfromscratch.org/BLFS/other/make-ca.sh-20170514"
+digest="md5sum:a21a04d6ff5c4645c748220dbaa9f221"
+cert_url="https://hg.mozilla.org/projects/nss/raw-file/tip/lib/ckfw/builtins/certdata.txt"
+cacert_url="http://www.cacert.org/certs/root.crt"
+# See http://www.cacert.org/index.php?id=3
+cacert_fp="13:5C:EC:36:F4:9C:B8:E9:3B:1A:B2:70:CD:80:88:46:76:CE:8F:33"
+verify=""
+arch=`uname -m`
+build=B2
+src=""
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS=''
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  if [ ! -f ${cert_url##*/} ]; then
+    wget $cert_url
+  fi
+  
+  # CACert Class 1 PKI
+  if [ ! -f ${cacert_url##*/} ]; then
+    wget $cacert_url
+    fp=$(openssl x509 -in root.crt -fingerprint -noout | sed -e 's/SHA1 Fingerprint=//')
+    if [ "$fp" != "$cacert_fp" ] ; then
+      echo "The certificate fingerprint of CAcert does not match."
+      exit 1
+    fi
+  fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  echo "Nothing to config"  
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "Nothing to build"
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  install -v -d -m755 $P/etc/ssl/local
+  openssl x509 -in $W/${cacert_url##*/} -text -fingerprint -setalias "CAcert Class 1 root" \
+        -addtrust serverAuth -addtrust emailProtection -addtrust codeSigning \
+        > $P/etc/ssl/local/CAcert_Class_1_root.pem
+  install -v -D -m755 $W/${url##*/} $P/usr/sbin/make-ca.sh
+  install -v -d -m755 $P/usr/share/doc/"$pkgbase"-"$vers"/
+  install -v -d -m755 $P/etc/pki
+
+  # docdir
+  install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"
+  install -v -m755 $myname $P/usr/share/doc/"$pkgbase"-"$vers"/
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/sbin/make-ca.sh -C /usr/share/doc/${pkgbase}-${vers}/certdata.txt
+( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-certificates.crt )
+( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-bundle.crt )
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+#  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

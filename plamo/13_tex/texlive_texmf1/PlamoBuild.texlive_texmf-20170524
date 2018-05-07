@@ -1,0 +1,150 @@
+#!/bin/sh
+##############################################################
+pkgbase='texlive_texmf'
+vers='20170524'
+url="ftp://tug.org/texlive/historic/2017/texlive-${vers}-texmf.tar.xz"
+verify=""
+arch=noarch
+build=B1
+src="texlive-${vers}-texmf"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS=''
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/texlive-20170524-texmf-upstream_fixes-1.patch"
+patchfiles="${blfspatch##*/}"
+compress=txz
+PREFIX=/opt/texlive/2017
+##############################################################
+PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
+        dvips hbf2gf makeindex metafont metapost mft omega pbibtex
+	psutils scripts source tex tex4ht texconfig texdoc texdoctk
+	ttf2pk web2c xdvi xindy"
+PKG[2]="fonts"
+PKG[3]="doc/latex"
+PKG[4]="doc/aleph doc/amstex doc/asymptote doc/bibtex doc/bibtex8 doc/bibtexu doc/chktex
+	doc/context doc/cstex doc/dvipdfm doc/dvipdfmx doc/dvipng doc/dvips doc/eplain
+	doc/etex doc/fonts doc/generic doc/info doc/kpathsea doc/lualatex
+	doc/luatex doc/man doc/metapost doc/mex doc/omega doc/otherformats doc/pdftex
+	doc/plain doc/platex doc/pmxchords doc/ptex doc/support doc/tetex doc/texdoc
+	doc/texlive doc/texworks doc/tpic2pdftex doc/ttf2pk doc/uplatex doc/upmendex
+	doc/uptex doc/vlna doc/web2c doc/xelatex doc/xetex doc/xindy"
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  if [ -d $S ]; then
+    rm -rf $S
+  fi
+  download_sources
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
+  fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  echo "There is nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  cd $S/texmf-dist
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  for i in 1 2 3 4
+  do
+      echo "=== Installing files for texmf${i} pacakge ==="
+      install -dm755 -v $P/$i/$PREFIX/texmf-dist
+      for d in ${PKG[i]}
+      do
+	mv -v $d $P/$i/$PREFIX/texmf-dist/
+      done
+  done
+  
+  mkdir -p $P/1/install
+  mkdir -p $P/2/install
+  cat <<EOF >> $P/1/install/initpkg
+if [ -f /var/log/packages/texlive -a -f /var/log/packages/texlive_texmf2 ]; then
+  sh $PREFIX/texinit.sh
+fi
+EOF
+  cat <<EOF >> $P/2/install/initpkg
+if [ -f /var/log/packages/texlive -a -f /var/log/packages/texlive_texmf1 ]; then
+  sh $PREFIX/texinit.sh
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  #install_tweak
+  docdir=$P/1/usr/share/doc
+  if [ -n "$DOCS" ]; then
+      echo "Install docs"
+      for doc in $DOCS
+      do
+	  install -dm755 -v $docdir/$src
+	  install  -m644 -v $docdir/$src/$doc
+	  gzip $docdir/$src/$doc
+      done
+  fi
+  install -Dm644 -v $W/$myname $docdir/$src/$myname
+  gzip $docdir/$src/$myname
+
+  for patch in $patchfiles ; do
+    cp $W/$patch $docdir/$src/$patch
+    gzip $docdir/$src/$patch
+  done
+
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+    chown -R root.root $P/1/usr/share/doc
+  fi
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  for i in 1 2 3 4
+  do
+    cd $P/$i
+    pkg=texlive_texmf${i}-${vers}-${arch}-${build}  
+    /sbin/makepkg ../../$pkg.$compress <<EOF
+y
+1
+EOF
+  done
+
+fi

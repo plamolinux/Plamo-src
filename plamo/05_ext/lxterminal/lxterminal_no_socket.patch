@@ -1,0 +1,18 @@
+# It seems lxterminal_socket_initialize() doesn't work properly,
+# so commented out to check that.
+
+
+diff -uprN lxterminal-0.3.1/src/lxterminal.c lxterminal-0.3.1.patched/src/lxterminal.c
+--- lxterminal-0.3.1/src/lxterminal.c	2017-08-22 13:31:37.000000000 +0900
++++ lxterminal-0.3.1.patched/src/lxterminal.c	2018-02-14 09:06:38.497103635 +0900
+@@ -1735,8 +1735,8 @@ int main(gint argc, gchar * * argv)
+     LXTermWindow * lxtermwin = g_slice_new0(LXTermWindow);
+ 
+     /* Initialize socket.  If we were able to get another LXTerminal to manage the window, exit. */
+-    if (!arguments.no_remote && !lxterminal_socket_initialize(lxtermwin, argc, argv))
+-        return 0;
++    /* if (!arguments.no_remote && !lxterminal_socket_initialize(lxtermwin, argc, argv)) 
++       return 0; */
+ 
+     /* Load user preferences. */
+     load_setting();

@@ -1,0 +1,287 @@
+#!/bin/sh
+##############################################################
+pkgbase='gcc'
+vers='7.2.0'
+url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}/${pkgbase}-${vers}.tar.xz"
+verify=${url}.sig
+islvers="0.18"
+arch=`uname -m`
+build=B2
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--build=${arch}-pc-linux-gnu
+	--host=${arch}-pc-linux-gnu
+	--libexecdir=/usr/lib
+	--enable-languages=c,c++,fortran,go,lto
+	--enable-shared
+	--enable-threads=posix
+	--enable-libmpx
+	--with-system-zlib
+	--with-isl
+	--enable-__cxa_atexit 
+	--disable-libunwind-exceptions
+	--enable-clocale=gnu
+	--disable-libstdcxx-pch
+	--disable-libssp
+	--enable-gnu-unique-object
+	--enable-linker-build-id
+	--enable-lto
+	--enable-plugin
+	--enable-install-libiberty
+	--with-linker-hash-style=gnu
+	--enable-gnu-indirect-function
+	--disable-multilib
+	--disable-werror
+	--enable-checking=release"
+DOCS='ABOUT-NLS COPYING COPYING.LIB COPYING.RUNTIME COPYING3 COPYING3.LIB ChangeLog ChangeLog.jit ChangeLog.tree-ssa INSTALL MAINTAINERS NEWS README'
+patchfiles='disable-lib64-ld.patch'
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+B=$W/build
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  url="http://isl.gforge.inria.fr/isl-${islvers}.tar.xz"
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+
+  # link isl
+  if [ ! -L isl ]; then
+    ln -s $W/isl-${islvers} isl
+  fi
+
+  # Do not run fixincludes
+  sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+  # We install x86_64 libraries /lib
+  [[ $arch == "x86_64" ]] && sed -i '/m64=/s/lib64/lib/' gcc/config/i386/t-linux64
+
+  # hack! - some configure tests for header files using "$CPP $CPPFLAGS"
+  sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" {libiberty,gcc}/configure
+
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+  # strip
+  for i in cc1 cc1plus collect2 f951 lto1 ; do
+    strip $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/$vers/$i
+  done
+  for f in $(find $P/usr/${libdir} -type f -name "*.a")
+  do
+    echo "stripping $f"
+    strip -g $f
+  done
+
+  P2=$P
+
+  # libgcc
+  echo "creating libgcc package"
+  P=$W/work_libgcc
+  rm -rf $P && mkdir $P
+  install -d -v $P/usr/${libdir}
+  # libgcc_s.so libgcc_s.so.1 libstdc++.so* exclude *.py
+  for f in libgcc_s.so libgcc_s.so.1 $(cd $P2/usr/${libdir} && find . -maxdepth 1 -a -name "libstdc++.so*" -not -name "*.py")
+  do
+    mv -v $P2/usr/${libdir}/${f} $P/usr/${libdir}/${f}
+  done
+  convert_links
+  pushd $P
+  pkg=libgcc-$vers-$arch-$build
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # g++
+  echo "creating g++ pacakge"
+  P=$W/work_g++
+  rm -rf $P && mkdir $P
+  install -d -v $P/usr/bin
+  install -d -v $P/usr/$libdir
+  install -d -v $P/usr/include
+  install -d -v $P/usr/share
+  install -d -v $P/usr/share/gdb/auto-load
+  install -d -v $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/
+
+  for f in c++ g++ ${arch}-pc-linux-gnu-c++ ${arch}-pc-linux-gnu-g++
+  do
+    mv $P2/usr/bin/$f $P/usr/bin/$f
+  done
+
+  mv -v $P2/usr/${libdir}/libstdc++.so.*-gdb.py $P/usr/share/gdb/auto-load/
+  mv -v $P2/usr/${libdir}/libsupc++* $P/usr/${libdir}/
+  mv -v $P2/usr/include/c++ $P/usr/include/
+  mv -v $P2/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/cc1plus $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/cc1plus
+  mv -v $P2/usr/share/gcc-${vers} $P/usr/share/
+
+  install -d -v $P/usr/share/man/man1
+  mv -v $P2/usr/share/man/man1/g++.1.gz $P/usr/share/man/man1/
+  
+  convert_links
+  
+  pushd $P
+  pkg=g++-$vers-$arch-$build
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # gcc-fortran
+  echo "creating gfortran package"
+  P=$W/work_gfortran
+  rm -rf $P && mkdir $P
+  install -d -v $P/usr/bin
+  install -d -v $P/usr/$libdir
+  install -d -v $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}
+  install -d -v $P/usr/share/man/man1
+  install -d -v $P/usr/share/info
+  for f in gfortran ${arch}-pc-linux-gnu-gfortran
+  do
+      mv -v $P2/usr/bin/$f $P/usr/bin/$f
+  done
+  for l in f951 finclude
+  do
+    mv -v $P2/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/$l $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/$l
+  done
+  mv -v $P2/usr/${libdir}/libgfortran* $P/usr/${libdir}/
+  mv -v $P2/usr/${libdir}/libgfortran* $P/usr/${libdir}/
+  mv -v $P2/usr/${libdir}/libquadmath* $P/usr/${libdir}/
+  mv -v $P2/usr/share/info/gfortran.info $P/usr/share/info/
+  mv -v $P2/usr/share/info/libquadmath.info $P/usr/share/info/
+  mv -v $P2/usr/share/man/man1/gfortran.1.gz $P/usr/share/man/man1/
+
+  convert_links
+  pushd $P
+  pkg=gfortran-$vers-$arch-$build
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # gcc-go
+  echo "creating gcc_go package"
+  P=$W/work_gccgo
+  rm -rf $P && mkdir $P
+  install -d -v $P/usr/bin
+  install -d -v $P/usr/$libdir
+  install -d -v $P/usr/share/man/man1
+  install -d -v $P/usr/share/info
+  install -d -v $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}
+
+  for f in gccgo ${arch}-pc-linux-gnu-gccgo go gofmt
+  do
+    mv -v $P2/usr/bin/$f $P/usr/bin/$f
+  done
+
+  for l in libgo* libnetgo* go
+  do
+    mv -v $P2/usr/${libdir}/$l $P/usr/${libdir}/$l
+  done
+
+  for l in cgo go1
+  do
+    mv -v $P2/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/$l $P/usr/${libdir}/gcc/${arch}-pc-linux-gnu/${vers}/$l
+  done
+
+  mv -v $P2/usr/share/info/gccgo.info $P/usr/share/info/
+  for m in gccgo go gofmt
+  do
+    mv -v $P2/usr/share/man/man1/$m.1.gz $P/usr/share/man/man1/
+  done
+
+  convert_links
+  pushd $P
+  pkg=gcc_go-$vers-$arch-$build
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+  popd
+
+  # echo gcc (core)
+  P=$P2
+  ln -s /usr/bin/cpp $P/${libdir}/cpp
+  ln -s gcc $P/usr/bin/cc
+  convert_links
+  pushd $P
+  pkg=gcc-$vers-$arch-$build
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

@@ -1,0 +1,147 @@
+#!/bin/sh
+##############################################################
+pkgbase='ntp'
+vers='4.2.8p11'
+url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
+verify="$url.md5"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--enable-linuxcaps --with-lineeditlibs=readline --docdir=/usr/share/doc/${src}"
+DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.pullrequests README.refclocks README.versions TODO readme.y2kfixes'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  sed -e 's/"(\\S+)"/"?([^\\s"]+)"?/' \
+      -i scripts/update-leap/update-leap.in
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -dm755 -v $P/usr/sbin
+  mv -v $P/usr/bin/ntpd $P/usr/sbin/ntpd
+
+  # install init script
+  install -D -m 0755 -v $W/ntp.init $P/etc/rc.d/init.d/ntpd
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6) ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/K46ntpd ;;
+	  3|4|5)   ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/S26ntpd ;;
+      esac
+  done
+
+  # install config file
+  install -D -m 0644 -v $W/ntp.conf $P/etc/ntp.conf.dist
+
+  # install plamo original files to docdir
+  install -D -m 0644 -v $W/ntp.conf $docdir/$src/ntp.conf
+  install -D -m 0644 -v $W/ntp.init $docdir/$src/ntp.init
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/ntp.conf ]; then
+  mv /etc/ntp.conf.dist /etc/ntp.conf
+fi
+EOF
+
+  # make directory that drift file is placed
+  install -d -o 49 -g 49 -m 0755 $P/var/lib/ntp
+
+  cat <<EOF >> $P/install/initpkg
+if ! id ntp >/dev/null 2>&1; then
+  echo "Ntpd requires ntp user and group. Run following command"
+  echo "  sudo groupadd -g 49 ntp"
+  echo "  sudo useradd -u 49 -g ntp -s /bin/false ntp"
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

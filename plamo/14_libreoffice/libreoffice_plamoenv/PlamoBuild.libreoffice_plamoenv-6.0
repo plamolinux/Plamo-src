@@ -1,0 +1,53 @@
+#!/bin/sh
+##############################################################
+url=''
+pkgbase=libreoffice_plamoenv
+vers=6.0
+arch=noarch
+build=B1
+src='libreoffice_plamoenv'
+OPT_CONFIG=''
+DOCS=''
+patchfiles=''
+compress='txz'
+##############################################################
+
+W=`pwd`
+P=$W/work ; rm -rf $P ; mkdir -p $P
+docdir=$P/usr/share/doc
+myname=`basename $0`
+pkg="$pkgbase-$vers-$arch-$build"
+
+mkdir -p $P/etc/profile.d
+cat <<EOF > $P/etc/profile.d/libreoffice.csh
+# Path for libreoffice
+set path = ( \$path /opt/libreoffice$vers/program )
+EOF
+
+cat <<EOF > $P/etc/profile.d/libreoffice.sh
+# Path for libreoffice
+PATH=\$PATH:/opt/libreoffice$vers/program
+EOF
+
+mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+chk=`grep libreoffice6.0 /etc/ld.so.conf`
+if [ "$chk.x" = ".x" ]; then
+    echo "/opt/libreoffice6.0/program" >> /etc/ld.so.conf
+    ldconfig
+fi
+
+EOF
+
+
+
+mkdir -p $docdir/$pkgbase-$vers
+cp $W/$myname $docdir/$pkgbase-$vers
+gzip $docdir/$pkgbase-$vers/$myname
+
+cd $P
+/sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+

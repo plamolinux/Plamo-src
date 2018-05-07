@@ -1,0 +1,465 @@
+diff -uprN lfs-bootscripts-20170626/Makefile lfs-bootscripts-20170626-plamo/Makefile
+--- lfs-bootscripts-20170626/Makefile	2014-07-09 01:36:46.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/Makefile	2017-07-16 16:26:09.801486537 +0900
+@@ -42,13 +42,8 @@ files: create-dirs
+ 	install -m ${MODE} lfs/init.d/rc            ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/reboot        ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/sendsignals   ${ETCDIR}/rc.d/init.d/
+-	install -m ${MODE} lfs/init.d/setclock      ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/swap          ${ETCDIR}/rc.d/init.d/
+-	install -m ${MODE} lfs/init.d/sysctl        ${ETCDIR}/rc.d/init.d/
+-	install -m ${MODE} lfs/init.d/sysklogd      ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/init.d/template      ${ETCDIR}/rc.d/init.d/
+-	install -m ${MODE} lfs/init.d/udev          ${ETCDIR}/rc.d/init.d/
+-	install -m ${MODE} lfs/init.d/udev_retry    ${ETCDIR}/rc.d/init.d/
+ 	install -m ${MODE} lfs/sbin/ifup            ${SBIN}
+ 	install -m ${MODE} lfs/sbin/ifdown          ${SBIN}
+ 	install -m ${CONFMODE} lfs/sbin/ifup.8      ${MAN8}
+@@ -76,18 +71,14 @@ rcS: files
+ 	ln -sf ../init.d/mountvirtfs ${ETCDIR}/rc.d/rcS.d/S00mountvirtfs
+ 	ln -sf ../init.d/modules     ${ETCDIR}/rc.d/rcS.d/S05modules
+ 	ln -sf ../init.d/localnet    ${ETCDIR}/rc.d/rcS.d/S08localnet
+-	ln -sf ../init.d/udev        ${ETCDIR}/rc.d/rcS.d/S10udev
+ 	ln -sf ../init.d/swap        ${ETCDIR}/rc.d/rcS.d/S20swap
+ 	ln -sf ../init.d/checkfs     ${ETCDIR}/rc.d/rcS.d/S30checkfs
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rcS.d/S40mountfs
+ 	ln -sf ../init.d/cleanfs     ${ETCDIR}/rc.d/rcS.d/S45cleanfs
+-	ln -sf ../init.d/udev_retry  ${ETCDIR}/rc.d/rcS.d/S50udev_retry
+ 	ln -sf ../init.d/console     ${ETCDIR}/rc.d/rcS.d/S70console
+-	ln -sf ../init.d/sysctl      ${ETCDIR}/rc.d/rcS.d/S90sysctl
+ 
+ rc0: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc0.d/K80network
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc0.d/K90sysklogd
+ 	ln -sf ../init.d/sendsignals ${ETCDIR}/rc.d/rc0.d/S60sendsignals
+ 	ln -sf ../init.d/swap        ${ETCDIR}/rc.d/rc0.d/S65swap
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc0.d/S70mountfs
+@@ -96,27 +87,21 @@ rc0: files
+ 
+ rc1: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc1.d/K80network
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc1.d/K90sysklogd
+ 
+ rc2: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc2.d/K80network
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc2.d/K90sysklogd
+ 
+ rc3: files
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc3.d/S10sysklogd
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc3.d/S20network
+ 
+ rc4: files
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc4.d/S10sysklogd
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc4.d/S20network
+ 
+ rc5: files
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc5.d/S10sysklogd
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc5.d/S20network
+ 
+ rc6: files
+ 	ln -sf ../init.d/network     ${ETCDIR}/rc.d/rc6.d/K80network
+-	ln -sf ../init.d/sysklogd    ${ETCDIR}/rc.d/rc6.d/K90sysklogd
+ 	ln -sf ../init.d/sendsignals ${ETCDIR}/rc.d/rc6.d/S60sendsignals
+ 	ln -sf ../init.d/swap        ${ETCDIR}/rc.d/rc6.d/S65swap
+ 	ln -sf ../init.d/mountfs     ${ETCDIR}/rc.d/rc6.d/S70mountfs
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/mountfs lfs-bootscripts-20170626-plamo/lfs/init.d/mountfs
+--- lfs-bootscripts-20170626/lfs/init.d/mountfs	2017-06-27 01:28:19.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/mountfs	2017-07-24 17:56:43.276947784 +0900
+@@ -48,6 +48,11 @@ case "${1}" in
+       log_info_msg "Mounting remaining file systems..."
+       mount --all --test-opts no_netdev >/dev/null
+       evaluate_retval
++
++      if [ -x /sbin/link_rootdev.sh ]; then
++	  /sbin/link_rootdev.sh
++      fi
++
+       exit $failed
+       ;;
+ 
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/rc lfs-bootscripts-20170626-plamo/lfs/init.d/rc
+--- lfs-bootscripts-20170626/lfs/init.d/rc	2017-03-25 14:48:04.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/rc	2017-07-14 14:54:15.462194970 +0900
+@@ -83,9 +83,9 @@ run()
+ # Read any local settings/overrides
+ [ -r /etc/sysconfig/rc.site ] && source /etc/sysconfig/rc.site
+ 
+-DISTRO=${DISTRO:-"Linux From Scratch"}
+-DISTRO_CONTACT=${DISTRO_CONTACT:-"lfs-dev@linuxfromscratch.org (Registration required)"}
+-DISTRO_MINI=${DISTRO_MINI:-"LFS"}
++DISTRO=${DISTRO:-"Plamo Linux"}
++DISTRO_CONTACT=${DISTRO_CONTACT:-"plamo@linet.gr.jp"}
++DISTRO_MINI=${DISTRO_MINI:-"plamo"}
+ IPROMPT=${IPROMPT:-"no"}
+ 
+ # These 3 signals will not cause our script to exit
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/setclock lfs-bootscripts-20170626-plamo/lfs/init.d/setclock
+--- lfs-bootscripts-20170626/lfs/init.d/setclock	2012-05-21 10:47:41.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/setclock	1970-01-01 09:00:00.000000000 +0900
+@@ -1,63 +0,0 @@
+-#!/bin/sh
+-########################################################################
+-# Begin setclock
+-#
+-# Description : Setting Linux Clock
+-#
+-# Authors     : Gerard Beekmans - gerard@linuxfromscratch.org
+-#               DJ Lucas - dj@linuxfromscratch.org
+-# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+-#
+-# Version     : LFS 7.0
+-#
+-########################################################################
+-
+-### BEGIN INIT INFO
+-# Provides:            
+-# Required-Start:
+-# Should-Start:        modules
+-# Required-Stop:
+-# Should-Stop:         $syslog
+-# Default-Start:       S
+-# Default-Stop:
+-# Short-Description:   Stores and restores time from the hardware clock
+-# Description:         On boot, system time is obtained from hwclock.  The
+-#                      hardware clock can also be set on shutdown.
+-# X-LFS-Provided-By:   LFS BLFS
+-### END INIT INFO
+-
+-. /lib/lsb/init-functions
+-
+-[ -r /etc/sysconfig/clock ] && . /etc/sysconfig/clock
+-
+-
+-case "${UTC}" in
+-   yes|true|1)
+-      CLOCKPARAMS="${CLOCKPARAMS} --utc"
+-      ;;
+-
+-   no|false|0)
+-      CLOCKPARAMS="${CLOCKPARAMS} --localtime"
+-      ;;
+-
+-esac
+-
+-case ${1} in
+-   start)
+-      hwclock --hctosys ${CLOCKPARAMS} >/dev/null
+-      ;;
+-
+-   stop)
+-      log_info_msg "Setting hardware clock..."
+-      hwclock --systohc ${CLOCKPARAMS} >/dev/null
+-      evaluate_retval
+-      ;;
+-
+-   *)
+-      echo "Usage: ${0} {start|stop}"
+-      exit 1
+-      ;;
+-
+-esac
+-
+-exit 0
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/sysctl lfs-bootscripts-20170626-plamo/lfs/init.d/sysctl
+--- lfs-bootscripts-20170626/lfs/init.d/sysctl	2012-05-06 12:56:30.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/sysctl	1970-01-01 09:00:00.000000000 +0900
+@@ -1,54 +0,0 @@
+-#!/bin/sh
+-########################################################################
+-# Begin sysctl
+-#
+-# Description : File uses /etc/sysctl.conf to set kernel runtime
+-#               parameters
+-#
+-# Authors     : Nathan Coulson (nathan@linuxfromscratch.org)
+-#               Matthew Burgress (matthew@linuxfromscratch.org)
+-#               DJ Lucas - dj@linuxfromscratch.org
+-# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+-#
+-# Version     : LFS 7.0
+-#
+-########################################################################
+-
+-### BEGIN INIT INFO
+-# Provides:            sysctl
+-# Required-Start:      mountvirtfs
+-# Should-Start:
+-# Required-Stop:
+-# Should-Stop:
+-# Default-Start:       S
+-# Default-Stop:
+-# Short-Description:   Makes changes to the proc filesystem
+-# Description:         Makes changes to the proc filesystem as defined in
+-#                      /etc/sysctl.conf.  See 'man sysctl(8)'.
+-# X-LFS-Provided-By:   LFS
+-### END INIT INFO
+-
+-. /lib/lsb/init-functions
+-
+-case "${1}" in
+-   start)
+-      if [ -f "/etc/sysctl.conf" ]; then
+-         log_info_msg "Setting kernel runtime parameters..."
+-         sysctl -q -p
+-         evaluate_retval
+-      fi
+-      ;;
+-
+-   status)
+-      sysctl -a
+-      ;;
+-
+-   *)
+-      echo "Usage: ${0} {start|status}"
+-      exit 1
+-      ;;
+-esac
+-
+-exit 0
+-
+-# End sysctl
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/sysklogd lfs-bootscripts-20170626-plamo/lfs/init.d/sysklogd
+--- lfs-bootscripts-20170626/lfs/init.d/sysklogd	2014-12-25 13:36:44.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/sysklogd	1970-01-01 09:00:00.000000000 +0900
+@@ -1,82 +0,0 @@
+-#!/bin/sh
+-########################################################################
+-# Begin sysklogd
+-#
+-# Description : Sysklogd loader
+-#
+-# Authors     : Gerard Beekmans - gerard@linuxfromscratch.org
+-#               DJ Lucas - dj@linuxfromscratch.org
+-# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+-#
+-# Version     : LFS 7.0
+-#
+-########################################################################
+-
+-### BEGIN INIT INFO
+-# Provides:            $syslog
+-# Required-Start:      localnet
+-# Should-Start:
+-# Required-Stop:       $local_fs sendsignals
+-# Should-Stop:
+-# Default-Start:       3 4 5
+-# Default-Stop:        0 1 2 6
+-# Short-Description:   Starts kernel and system log daemons.
+-# Description:         Starts kernel and system log daemons.
+-#                      /etc/fstab.
+-# X-LFS-Provided-By:   LFS
+-### END INIT INFO
+-
+-# Note: sysklogd is not started in runlevel 2 due to possible
+-# remote logging configurations
+-
+-. /lib/lsb/init-functions
+-
+-case "${1}" in
+-   start)
+-      log_info_msg "Starting system log daemon..."
+-      parms=${SYSKLOGD_PARMS-'-m 0'}
+-      start_daemon /sbin/syslogd $parms
+-      evaluate_retval
+-
+-      log_info_msg "Starting kernel log daemon..."
+-      start_daemon /sbin/klogd
+-      evaluate_retval
+-      ;;
+-
+-   stop)
+-      log_info_msg "Stopping kernel log daemon..."
+-      killproc /sbin/klogd
+-      evaluate_retval
+-
+-      log_info_msg "Stopping system log daemon..."
+-      killproc /sbin/syslogd
+-      evaluate_retval
+-      ;;
+-
+-   reload)
+-      log_info_msg "Reloading system log daemon config file..."
+-      pid=`pidofproc syslogd`
+-      kill -HUP "${pid}"
+-      evaluate_retval
+-      ;;
+-
+-   restart)
+-      ${0} stop
+-      sleep 1
+-      ${0} start
+-      ;;
+-
+-   status)
+-      statusproc /sbin/syslogd
+-      statusproc klogd
+-      ;;
+-
+-   *)
+-      echo "Usage: ${0} {start|stop|reload|restart|status}"
+-      exit 1
+-      ;;
+-esac
+-
+-exit 0
+-
+-# End sysklogd
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/udev lfs-bootscripts-20170626-plamo/lfs/init.d/udev
+--- lfs-bootscripts-20170626/lfs/init.d/udev	2014-08-13 04:59:01.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/udev	1970-01-01 09:00:00.000000000 +0900
+@@ -1,76 +0,0 @@
+-#!/bin/sh
+-########################################################################
+-# Begin udev
+-#
+-# Description : Udev cold-plugging script
+-#
+-# Authors     : Zack Winkles, Alexander E. Patrakov
+-#               DJ Lucas - dj@linuxfromscratch.org
+-# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+-#
+-# Version     : LFS 7.0
+-#
+-########################################################################
+-
+-### BEGIN INIT INFO
+-# Provides:            udev $time
+-# Required-Start:
+-# Should-Start:        modules
+-# Required-Stop:
+-# Should-Stop:
+-# Default-Start:       S
+-# Default-Stop:
+-# Short-Description:   Populates /dev with device nodes.
+-# Description:         Mounts a tempfs on /dev and starts the udevd daemon.
+-#                      Device nodes are created as defined by udev.
+-# X-LFS-Provided-By:   LFS
+-### END INIT INFO
+-
+-. /lib/lsb/init-functions
+-
+-case "${1}" in
+-   start)
+-      log_info_msg "Populating /dev with device nodes... "
+-      if ! grep -q '[[:space:]]sysfs' /proc/mounts; then
+-         log_failure_msg2
+-         msg="FAILURE:\n\nUnable to create "
+-         msg="${msg}devices without a SysFS filesystem\n\n"
+-         msg="${msg}After you press Enter, this system "
+-         msg="${msg}will be halted and powered off.\n\n"
+-         log_info_msg "$msg"
+-         log_info_msg "Press Enter to continue..."
+-         wait_for_user
+-         /etc/rc.d/init.d/halt stop
+-      fi
+-
+-      # Start the udev daemon to continually watch for, and act on,
+-      # uevents
+-      /sbin/udevd --daemon
+-
+-      # Now traverse /sys in order to "coldplug" devices that have
+-      # already been discovered
+-      /sbin/udevadm trigger --action=add    --type=subsystems
+-      /sbin/udevadm trigger --action=add    --type=devices
+-      /sbin/udevadm trigger --action=change --type=devices
+-
+-      # Now wait for udevd to process the uevents we triggered
+-      if ! is_true "$OMIT_UDEV_SETTLE"; then
+-         /sbin/udevadm settle
+-      fi
+-
+-      # If any LVM based partitions are on the system, ensure they
+-      # are activated so they can be used.
+-      if [ -x /sbin/vgchange ]; then /sbin/vgchange -a y >/dev/null; fi 
+-
+-      log_success_msg2 
+-      ;;
+-
+-   *)
+-      echo "Usage ${0} {start}"
+-      exit 1
+-      ;;
+-esac
+-
+-exit 0
+-
+-# End udev
+diff -uprN lfs-bootscripts-20170626/lfs/init.d/udev_retry lfs-bootscripts-20170626-plamo/lfs/init.d/udev_retry
+--- lfs-bootscripts-20170626/lfs/init.d/udev_retry	2014-05-12 00:02:47.000000000 +0900
++++ lfs-bootscripts-20170626-plamo/lfs/init.d/udev_retry	1970-01-01 09:00:00.000000000 +0900
+@@ -1,75 +0,0 @@
+-#!/bin/sh
+-########################################################################
+-# Begin udev_retry
+-#
+-# Description : Udev cold-plugging script (retry)
+-#
+-# Authors     : Alexander E. Patrakov
+-#               DJ Lucas - dj@linuxfromscratch.org
+-# Update      : Bruce Dubbs - bdubbs@linuxfromscratch.org
+-#               Bryan Kadzban - 
+-#
+-# Version     : LFS 7.0
+-#
+-########################################################################
+-
+-### BEGIN INIT INFO
+-# Provides:            udev_retry
+-# Required-Start:      udev
+-# Should-Start:        $local_fs
+-# Required-Stop:
+-# Should-Stop:
+-# Default-Start:       S
+-# Default-Stop:
+-# Short-Description:   Replays failed uevents and creates additional devices.
+-# Description:         Replays any failed uevents that were skipped due to
+-#                      slow hardware initialization, and creates those needed
+-#                      device nodes
+-# X-LFS-Provided-By:   LFS
+-### END INIT INFO
+-
+-. /lib/lsb/init-functions
+-
+-case "${1}" in
+-   start)
+-      log_info_msg "Retrying failed uevents, if any..."
+-
+-      # As of udev-186, the --run option is no longer valid
+-      #rundir=$(/sbin/udevadm info --run)
+-      rundir=/run/udev
+-      # From Debian: "copy the rules generated before / was mounted
+-      # read-write":
+-    
+-      for file in ${rundir}/tmp-rules--*; do
+-         dest=${file##*tmp-rules--}
+-         [ "$dest" = '*' ] && break
+-         cat $file >> /etc/udev/rules.d/$dest
+-         rm -f $file
+-      done
+-
+-      # Re-trigger the uevents that may have failed, 
+-      # in hope they will succeed now
+-      /bin/sed -e 's/#.*$//' /etc/sysconfig/udev_retry | /bin/grep -v '^$' | \
+-      while read line ; do
+-         for subsystem in $line ; do
+-            /sbin/udevadm trigger --subsystem-match=$subsystem --action=add
+-         done
+-      done
+-
+-      # Now wait for udevd to process the uevents we triggered
+-      if ! is_true "$OMIT_UDEV_RETRY_SETTLE"; then
+-         /sbin/udevadm settle
+-      fi
+-
+-      evaluate_retval
+-      ;;
+-
+-   *)
+-      echo "Usage ${0} {start}"
+-      exit 1
+-      ;;
+-esac
+-
+-exit 0
+-
+-# End udev_retry

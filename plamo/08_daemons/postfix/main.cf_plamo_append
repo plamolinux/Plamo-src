@@ -1,0 +1,11 @@
+# plamo original configuration
+alias_database = hash:/etc/postfix/aliases
+alias_maps = hash:/etc/postfix/aliases
+
+## for dovecot SASL
+# smtpd_sasl_auth_enable = yes
+# smtpd_sasl_local_domain =
+# smtpd_sasl_authenticated_header = yes
+# smtpd_recipient_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
+# smtpd_sasl_type = dovecot
+# data_directory = /var/lib/postfix

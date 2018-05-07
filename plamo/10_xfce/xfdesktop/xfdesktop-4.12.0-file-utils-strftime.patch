@@ -1,0 +1,46 @@
+diff -uNr xfdesktop-4.12.0.orig/src/xfdesktop-file-utils.c xfdesktop-4.12.0/src/xfdesktop-file-utils.c
+--- xfdesktop-4.12.0.orig/src/xfdesktop-file-utils.c	2015-02-15 17:13:23.000000000 +0900
++++ xfdesktop-4.12.0/src/xfdesktop-file-utils.c	2015-03-27 16:06:44.271076311 +0900
+@@ -119,7 +119,7 @@
+     time_t ftime;
+     GDate dfile;
+     GDate dnow;
+-    gchar buffer[128];
++    gchar buffer[128], *timebuf;
+     gint diff;
+ 
+     /* check if the file_time is valid */
+@@ -137,12 +137,10 @@
+         diff = g_date_get_julian(&dnow) - g_date_get_julian(&dfile);
+         if(diff == 0) {
+             /* TRANSLATORS: file was modified less than one day ago */
+-            strftime(buffer, 128, _("Today at %X"), tfile);
+-            return g_strdup(buffer);
++            date_format = _("Today at %X");
+         } else if(diff == 1) {
+             /* TRANSLATORS: file was modified less than two days ago */
+-            strftime(buffer, 128, _("Yesterday at %X"), tfile);
+-            return g_strdup(buffer);
++            date_format = _("Yesterday at %X");
+         } else {
+             if (diff > 1 && diff < 7) {
+                 /* Days from last week */
+@@ -151,11 +149,14 @@
+                 /* Any other date */
+                 date_format = _("%x at %X");
+             }
+-
+-            /* format the date string accordingly */
+-            strftime(buffer, 128, date_format, tfile);
+-            return g_strdup(buffer);
+         }
++
++        /* format the date string accordingly */
++        timebuf = g_locale_from_utf8 (date_format, -1, NULL, NULL, NULL);
++        strftime(buffer, 128, timebuf, tfile);
++        g_free(timebuf);
++        timebuf = g_locale_to_utf8 (buffer, -1, NULL, NULL, NULL);
++        return timebuf;
+     }
+ 
+     /* the file_time is invalid */

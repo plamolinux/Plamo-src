@@ -1,0 +1,11 @@
+--- Makefile.org	2017-08-07 21:49:14.816675301 +0900
++++ Makefile	2017-08-07 21:49:28.513342039 +0900
+@@ -151,7 +151,7 @@
+ linux:
+ 	@make REAL_DAEMON_DIR=$(REAL_DAEMON_DIR) STYLE=$(STYLE) \
+ 	LIBS=-lnsl RANLIB=ranlib ARFLAGS=rv AUX_OBJ=weak_symbols.o \
+-	NETGROUP="-DNETGROUP" TLI= VSYSLOG= BUGS= \
++	NETGROUP= TLI= VSYSLOG= BUGS= \
+ 	EXTRA_CFLAGS="-DSYS_ERRLIST_DEFINED -DHAVE_STRERROR -DHAVE_WEAKSYMS -DINET6=1 -Dss_family=__ss_family -Dss_len=__ss_len" all
+ 
+ gnu:

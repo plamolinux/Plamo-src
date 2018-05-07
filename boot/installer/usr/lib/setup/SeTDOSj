@@ -1,0 +1,113 @@
+#!/bin/sh
+
+PROBE="/sbin/fdisk"
+
+# Add DOS partitions.
+rm -f /tmp/SeTDOS
+
+LANG=C $PROBE -l | grep '^/dev' > /tmp/probedlist$$
+
+WINLIST=""
+DOSLIST=`cat /tmp/probedlist$$ | tr -d '*' |grep FAT|awk '{print $1","$6""$7""$8" "$2"-"$3","$4"blocks,Id="$5}'`
+HPFSLIST=`cat /tmp/probedlist$$ | tr -d '*' |grep NTFS|awk '{print $1","$6""$7""$8" "$2"-"$3","$4"blocks,Id="$5}'`
+SFSLIST=`cat /tmp/probedlist$$ | tr -d '*' |grep SFS|awk '{print $1","$6""$7""$8" "$2"-"$3","$4"blocks,Id="$5}'`
+
+rm -f /tmp/probedlist$$
+
+if [ ! "$WINLIST" = "" ]; then
+  DOSLIST="`echo -e "$DOSLIST $WINLIST"`"
+fi
+
+if [ ! "$HPFSLIST" = "" ]; then
+  DOSLIST="`echo -e "$DOSLIST $HPFSLIST"`"
+fi
+
+if [ ! "$SFSLIST" = "" ]; then
+  DOSLIST="`echo -e "$DOSLIST $SFSLIST"`"
+fi
+
+if [ ! "$DOSLIST" = "" ]; then # there are DOS or WinNT partitions:
+
+  cat /dev/null > /tmp/SeTDOS
+  while [ 0 ]; do
+
+    USED_SEDLIST=`cat /tmp/SeTDOS |awk '{print "-e s|"$1"|*DONE*"$1"("$2")| "}'`
+    if [ -z "$USED_SEDLIST" ] ; then
+      DOSLISTOK="$DOSLIST"
+    else
+      DOSLISTOK=`echo $DOSLIST|sed $USED_SEDLIST`
+    fi
+    dialog --title "DOS/Windows/Windows NTパーティションの設定" --menu "\
+これらのパーティションのうち、Linux から見えるようにしたいパーティ\n\
+ションがあれば選択してください。\n\
+先頭に *DONE* とあるパーティションは、すでにブート時にマウントする\n\
+デバイスのリストに含まれています(括弧の中はマウントポイントです)。\n\
+" 22 72 12 \
+$DOSLISTOK \
+"Quit" "この設定を終了する" 2> $TMP/reply$$
+    if [ $? = 1 -o $? = 255 ]; then
+      rm -f $TMP/reply$$
+      exit
+    fi
+    REPLY="`cat $TMP/reply$$`"
+    rm -f $TMP/reply$$
+    if [ "$REPLY" = "Quit" ] ; then
+      exit
+    else
+      ########
+      NEXT_PARTITION="`echo $REPLY|sed -e 's/\*DONE\*//' -e 's/,.*//'`"
+      if echo $REPLY | grep "DONE" 1> /dev/null 2> /dev/null ; then
+      # We have already added this partition.
+        dialog --title "エラー：$NEXT_PARTITIONはすでに使われています" --msgbox "\n\
+恐れ入りますが、$NEXT_PARTITIONはすでにブート時にマウントする\n\
+デバイスのリストに含まれています。まだ指定していないパーティ\n\
+ションを選択するか、Quitを選択してください。\n\
+" 9 70
+        continue;
+      fi
+      NEXT_FS="`echo $REPLY|sed -e 's/.*,//'`"
+      dialog --title "マウントポイントの選択" --inputbox "\
+さて、この新しいパーティションを、ディレクトリツリーのどこか\n\
+にマウントしなければなりません。マウントしたいディレクトリ名\n\
+を入力してください。 例えば、/win_c や /win_d などなんでも構\n\
+いません。\n\
+注：このパーティションは、実際にはリブートし直すまでマウント\n\
+されません。\n\
+\n\
+$NEXT_PARTITION($NEXT_FS)をどこにマウントしますか？\n\
+" 15 66 2> /tmp/newdir$$
+      if [ $? = 1 ]; then
+        rm -f /tmp/newdir$$ /tmp/SeTDOS
+        exit
+      fi
+      NEW_DIR="`cat /tmp/newdir$$`"
+      rm -f /tmp/newdir$$
+      if [ ! "`echo $NEW_DIR | cut -b1`" = "/" ]; then
+        NEW_DIR="/$NEW_DIR"
+      fi
+      mkdir -p /mnt$NEW_DIR
+      chmod 755 /mnt$NEW_DIR
+      echo > /tmp/tmpmsg$$
+      if [ ! -z "`echo $NEXT_FS | grep FAT`" ] ; then
+         echo "Windows または DOSパーティションが /etc/fstab に追加されました：" >> /tmp/tmpmsg$$
+         echo >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        vfat        iocharset=euc-jp,codepage=932  0   0" >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        vfat        iocharset=euc-jp,codepage=932  0   0" >> /tmp/SeTDOS
+      elif [ ! -z "`echo $NEXT_FS | grep NTFS`" ] ; then
+         echo "NTFSパーティション(読み込み専用)が /etc/fstab に追加されました：" >> /tmp/tmpmsg$$
+         echo >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        ntfs         ro   0   0" >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        ntfs         ro   0   0" >> /tmp/SeTDOS
+      elif [ ! -z "`echo $NEXT_FS | grep SFS`" ] ; then
+         echo "SFSパーティション(読み込み専用)が /etc/fstab に追加されました：" >> /tmp/tmpmsg$$
+         echo >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        ntfs         ro   0   0" >> /tmp/tmpmsg$$
+         echo "$NEXT_PARTITION        $NEW_DIR        ntfs         ro   0   0" >> /tmp/SeTDOS
+      fi
+      dialog --title "/etc/fstab に追記される内容の確認" \
+             --msgbox "`cat /tmp/tmpmsg$$`" 9 75
+      rm -f /tmp/tmpmsg$$
+      ########
+    fi
+  done # mounting DOS/HPFS partitions
+fi

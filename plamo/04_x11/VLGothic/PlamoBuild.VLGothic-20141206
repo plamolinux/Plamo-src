@@ -1,0 +1,152 @@
+#!/bin/sh
+##############################################################
+pkgbase='VLGothic'
+vers='20141206'
+url="https://ja.osdn.net/frs/redir.php?m=ymu&f=vlgothic%2F62375%2FVLGothic-20141206.tar.xz"
+arch='noarch'
+build=B1
+src="VLGothic"
+OPT_CONFIG=''
+DOCS='Changelog LICENSE LICENSE.en LICENSE_E.mplus LICENSE_J.mplus README README.sazanami README_E.mplus README_J.mplus'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+# 
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    echo "no need to configure. proceed to build"
+    opt_build=1
+fi
+if [ $opt_build -eq 1 ] ; then
+    echo "no need to build. proceed to package."
+    opt_package=1
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  mkdir -p $P/usr/share/fonts/TTF
+  cd $S
+  for i in *.ttf ; do
+      install $i $P/usr/share/fonts/TTF
+  done
+  mkdir -p $P/etc/fonts/conf.avail
+# derived from 
+# https://github.com/PhantomX/slackbuilds/blob/master/fonts/vlgothic-fonts/vlgothic-fontconfig-gothic.conf
+# vlgothic-fontconfig-{pgothic,gothic}.conf をマージしてみた
+
+  cat <<"EOF" > $P/etc/fonts/conf.avail/63-vlgothic.conf
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+    <!-- Generic names rule -->
+    <alias>
+        <family>VL PGothic</family>
+        <default>
+            <family>sans-serif</family>
+        </default>
+    </alias>
+    <alias>
+        <family>VL Gothic</family>
+        <default>
+            <family>monospace</family>
+        </default>
+    </alias>
+    <!-- Locale-specific overrides rule -->
+    <match>
+        <test name="lang" compare="contains">
+            <string>ja</string>
+        </test>
+        <test name="family">
+            <string>sans-serif</string>
+        </test>
+        <edit name="family" mode="prepend">
+            <string>VL PGothic</string>
+        </edit>
+    </match>
+    <match>
+        <test name="lang" compare="contains">
+            <string>ja</string>
+        </test>
+        <test name="family">
+            <string>monospace</string>
+        </test>
+        <edit name="family" mode="prepend">
+            <string>VL Gothic</string>
+        </edit>
+    </match>
+    <!-- disabling hinting rule -->
+    <match target="font">
+        <test name="family">
+            <string>VL PGothic</string>
+        </test>
+        <edit name="hinting" mode="assign">
+            <bool>false</bool>
+        </edit>
+    </match>
+    <match target="font">
+        <test name="family">
+            <string>VL Gothic</string>
+        </test>
+        <edit name="hinting" mode="assign">
+            <bool>false</bool>
+        </edit>
+    </match>
+</fontconfig>
+EOF
+
+  mkdir -p $P/etc/fonts/conf.d
+  ( cd $P/etc/fonts/conf.d ; ln -sf ../conf.avail/63-vlgothic.conf . )
+
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+  fc-cache -v
+EOF
+  
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

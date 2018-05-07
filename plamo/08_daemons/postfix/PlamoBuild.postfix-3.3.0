@@ -1,0 +1,182 @@
+#!/bin/sh
+##############################################################
+pkgbase='postfix'
+vers='3.3.0'
+url="http://mirror.${pkgbase}.jp/${pkgbase}-release/official/${pkgbase}-${vers}.tar.gz"
+#verify="${url}.sig"
+arch=`uname -m`
+build=B4
+src="${pkgbase}-${vers}"
+CCARGS_OPTS="-DUSE_SASL_AUTH -DHAS_SQLITE -DUSE_TLS -I/usr/include/openssl/"
+AUXLIBS_OPTS="-lsqlite3 -lpthread -lssl -lcrypto"
+DOCS='HISTORY INSTALL IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.10 RELEASE_NOTES-2.11 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-3.0 RELEASE_NOTES-3.1 TLS_LICENSE TLS_TODO pflogsumm_quickfix.txt postfix-install'
+patchfiles=''
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  cat <<-"EOF" >> ./conf/postfix-files
+	$command_directory/smtp-source:f:root:root:-:755
+	$command_directory/smtp-sink:f:root:root:-:755
+	$command_directory/qmqp-source:f:root:root:-:755
+	$command_directory/qmqp-sink:f:root:root:-:755
+	$manpage_directory/man1/smtp-sink.1:f:root:-:644
+	$manpage_directory/man1/smtp-source.1:f:root:-:644
+	$manpage_directory/man1/qmqp-sink.1:f:root:-:644
+	$manpage_directory/man1/qmqp-source.1:f:root:-:644
+	EOF
+    
+  make makefiles CCARGS="$CCARGS_OPTS" AUXLIBS="$AUXLIBS_OPTS"
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  sh postfix-install -non-interactive \
+     install_root=$P \
+     manpage_directory=/usr/share/man \
+     html_directory=/usr/share/doc/${src}/html \
+     readme_directory=/usr/share/doc/${src}/readme
+
+  # init script
+  install -Dm644 -v $W/postfix.init $P/etc/rc.d/init.d/postfix
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/postfix $P/etc/rc.d/rc"$i".d/K25postfix
+	;;
+      3|4|5)
+	ln -sfv ../init.d/postfix $P/etc/rc.d/rc"$i".d/S35postfix
+       ;;
+    esac
+  done
+
+  # まだ必要かな?
+  install -dm755 -v $P/usr/${libdir}
+  ln -sfv /usr/sbin/sendmail $P/usr/lib/sendmail
+
+  # move config files to /etc/postfix/new
+  install -dm755 -v $P/etc/postfix/dist
+  ( cd $P/etc/postfix
+      for file in `find . -type f`
+      do
+          mv -v $P/etc/postfix/$file $P/etc/postfix/dist/$file
+      done
+  )
+  cat $W/main.cf_plamo_append >> $P/etc/postfix/dist/main.cf
+  install -Dm644 $W/main.cf_plamo_append $docdir/$src/main.cf_plamo_append
+
+  # these directory is made at install
+  rm -rfv $P/var/spool/postfix/*
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+# Tweak documentation directory
+if [ -f /etc/postfix/main.cf ]; then
+  sed -e "s@^readme_directory.*@readme_directory=/usr/share/doc/$src/readme@" -e "s@^html_directory.*@html_directory=/usr/share/doc/$src/html@" -i /etc/postfix/main.cf
+fi
+( cd /etc/postfix
+  for conf_file in \$(ls /etc/postfix/dist/)
+  do
+    if [ ! -f \$conf_file ]; then
+      cp -a dist/\$conf_file .
+    fi
+  done
+)
+/usr/sbin/postfix upgrade-configuration
+/usr/sbin/postfix set-permissions
+/usr/bin/newaliases
+EOF
+
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  #install_tweak
+  cd $P
+  strip_all
+
+  for doc in $DOCS
+  do
+      install -Dm644 -v $S/$doc $docdir/$src/$doc
+  done
+  install -m644 -v $W/$myname $docdir/$src
+
+  for patch in $patchfiles
+  do
+      install -Dm644 -v $W/$patch $docdir/$src/$patch
+  done
+
+  # /usr/share/doc 以下のowner.group設定
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+    chown -R root.root $P/usr/share/doc
+  fi
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

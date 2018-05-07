@@ -1,0 +1,148 @@
+#!/bin/sh
+##############################################################
+pkgbase='openjade'
+vers='1.3.2'
+url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:7df692e3186109cc00db6825b777201e"
+arch=`uname -m`
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static --enable-http
+	--enable-default-catalog=/etc/sgml/catalog
+	--enable-default-search-path=/usr/share/sgml
+	--datadir=/usr/share/sgml/openjade-${vers}"
+DOCS='COPYING ChangeLog NEWS README releasenotes.html releasenotes.pdf releasenotes.ps'
+blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/openjade-${vers}-upstream-1.patch"
+patchfiles="${blfs_patch##*/}"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+  download_sources
+  if [ ! -f ${blfs_patch##*/} ]; then
+    wget $blfs_patch
+  fi
+fi
+
+if [ $opt_config -eq 1 ] ; then
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+  # fix for perl 5.16 and later
+  sed -i -e '/getopts/{N;s#&G#g#;s#do .getopts.pl.;##;}' \
+      -e '/use POSIX/ause Getopt::Std;' msggen.pl
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed'
+  export CXXFLAGS="$CXXFLAGS -fno-lifetime-dse"
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+  make install-man DESTDIR=$P
+
+  ln -v -sf openjade $P/usr/bin/jade
+  ln -v -sf libogrove.so $P/usr/${libdir}/libgrove.so
+  ln -v -sf libospgrove.so $P/usr/${libdir}/libspgrove.so
+  ln -v -sf libostyle.so $P/usr/${libdir}/libstyle.so
+
+  install -v -m644 dsssl/catalog $P/usr/share/sgml/openjade-1.3.2/
+  install -v -m644 dsssl/*.{dtd,dsl,sgm} $P/usr/share/sgml/openjade-1.3.2 
+
+  install -v -d $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -x /usr/bin/install-catalog ]; then
+  echo "install-catalog command does not exist. Install sgml_common package."
+  exit 1
+fi
+if [ ! -f /etc/sgml/sgml-docbook.cat ]; then
+  echo "Generating /etc/sgml/sgml-docbook.cat"
+  install-catalog --add /etc/sgml/sgml-ent.cat \
+    /usr/share/sgml/sgml-iso-entities-8879.1986/catalog > /dev/null 2>&1
+  install-catalog --add /etc/sgml/sgml-docbook.cat \
+    /etc/sgml/sgml-ent.cat > /dev/null 2>&1 
+fi
+if [ -f /etc/sgml/openjade-1.3.2.cat ]; then
+  install-catalog --remove /etc/sgml/openjade-1.3.2.cat  \
+    /usr/share/sgml/openjade-1.3.2/catalog
+  install-catalog --remove /etc/sgml/sgml-docbook.cat \
+    /etc/sgml/openjade-1.3.2.cat
+fi
+install-catalog --add /etc/sgml/openjade-1.3.2.cat  \
+  /usr/share/sgml/openjade-1.3.2/catalog
+install-catalog --add /etc/sgml/sgml-docbook.cat \
+  /etc/sgml/openjade-1.3.2.cat
+EOF
+
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and 
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi

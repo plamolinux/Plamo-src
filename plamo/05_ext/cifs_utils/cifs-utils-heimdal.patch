@@ -1,0 +1,48 @@
+--- cifs-utils-5.5/cifs.upcall.c.orig	2012-05-30 12:12:16.000000000 +0200
++++ cifs-utils-5.5/cifs.upcall.c	2012-06-24 20:47:02.372423189 +0200
+@@ -71,7 +71,7 @@ typedef enum _sectype {
+  * @return pointer to the realm
+  *
+  */
+-static char *cifs_krb5_principal_get_realm(krb5_principal principal)
++static const char *cifs_krb5_principal_get_realm(krb5_principal principal)
+ {
+ #ifdef HAVE_KRB5_PRINCIPAL_GET_REALM	/* Heimdal */
+ 	return krb5_principal_get_realm(context, principal);
+@@ -84,7 +84,7 @@
+ #elif defined(krb5_princ_realm)	/* MIT */
+ 	krb5_data *realm;
+ 	realm = krb5_princ_realm(context, principal);
+-	return (char *)realm->data;
++	return (const char *)realm->data;
+ #else
+ 	return NULL;
+ #endif
+@@ -116,7 +116,7 @@
+ 	krb5_creds creds;
+ 	krb5_principal principal;
+ 	time_t credtime = 0;
+-	char *realm = NULL;
++	const char *realm = NULL;
+ 
+ 	if (krb5_init_context(&context)) {
+ 		syslog(LOG_DEBUG, "%s: unable to init krb5 context", __func__);
+@@ -162,7 +162,7 @@
+ 		    && creds.times.endtime > time(NULL))
+ 			credtime = creds.times.endtime;
+ 		krb5_free_cred_contents(context, &creds);
+-		krb5_free_unparsed_name(context, name);
++		krb5_xfree(name);
+ 	}
+ err_endseq:
+ 	krb5_cc_end_seq_get(context, ccache, &cur);
+--- cifs-utils-6.7/cifs.upcall.c~	2017-09-05 09:43:27.000000000 +0200
++++ cifs-utils-6.7/cifs.upcall.c	2017-09-05 09:50:53.113486219 +0200
+@@ -75,6 +75,7 @@ typedef enum _sectype {
+ #define KRB5_KEY_LENGTH(k)      ((k)->keyvalue.length)
+ #define KRB5_KEY_DATA(k)        ((k)->keyvalue.data)
+ #define KRB5_KEY_DATA_CAST      void
++#define krb5_free_string(ctx, string)     krb5_xfree(string)
+ #else /* MIT */
+ #define KRB5_KEY_TYPE(k)        ((k)->enctype)
+ #define KRB5_KEY_LENGTH(k)      ((k)->length)

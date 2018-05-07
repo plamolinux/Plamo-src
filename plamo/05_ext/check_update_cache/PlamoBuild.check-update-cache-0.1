@@ -1,0 +1,112 @@
+#!/bin/sh
+
+P=`pwd`/work
+
+echo "no need to config, proceed to build."
+echo "no need to build, proceed to package."
+
+mkdir -p $P/usr/bin
+cat <<"EOF" > $P/usr/bin/check-update-cache
+#!/bin/bash
+
+function usage() {
+    echo "usage: $0 [icons|desktop|mime|schema]"
+    echo "  update cache file(s) for each items."
+    echo "       icons: /usr/share/icons "
+    echo "        mime: /usr/share/mime "
+    echo "     desktop: /usr/share/applications"
+    echo "      schema: /usr/share/glib-2.0/schemas"
+}
+
+function check_mime_cache() {
+    dir='/usr/share/mime'
+    cache='mime.cache'
+    newer=`find $dir -cnewer "${dir}/${cache}" | sed -e "/mime.cache/d" -e "/version/d" `
+    if [ "$newer" != "$dir" ]; then
+	echo "updating mime database. It takes some minutes, please wait..."
+	/usr/bin/update-mime-database /usr/share/mime
+	echo "update mime database finished."
+    fi
+}
+
+function check_desktop_database() {
+    dir='/usr/share/applications'
+    cache='mimeinfo.cache'
+    newer=`find ${dir} -cnewer "${dir}/${cache}"`
+    if [ "$newer.x" != ".x" ]; then
+	echo "update desktop database"
+	/usr/bin/update-desktop-database /usr/share/applications >/dev/null
+    fi
+}
+
+function check_icons_cache() {
+    dir='/usr/share/icons'
+    cache='icon-theme.cache'
+
+    # gtk-update-icon-cache は自前で cache が最新かチェックする
+    # index.theme ファイルが無いディレクトリは無視した方がいい？
+    for i in `find $dir -type d` ; do
+	gtk-update-icon-cache $i 2>/dev/null
+    done
+
+    dir='/usr/share/icons/hicolor'
+    newer=`find $dir -cnewer "${dir}/${cache}" | grep -v ${cache}`
+    if [ "$newer" != "$dir" ]; then
+	/usr/bin/xdg-icon-resource forceupdate --theme hicolor
+    fi
+
+}
+
+function check_schema_cache() {
+    dir='/usr/share/glib-2.0/schemas'
+    cache='gschemas.compiled'
+    newer=`find ${dir} -cnewer "${dir}/${cache}"`
+    if [ "$newer.x" != ".x" ]; then
+	echo "update schemas database"
+	/usr/bin/glib-compile-schemas $dir
+    fi
+}
+
+if [ "$#" -lt 1 ]; then
+    check_mime_cache
+    check_icons_cache
+    check_desktop_database
+    check_schema_cache
+fi
+
+while [ "$1" ]; do
+    if [ "$1" = "mime" ]; then
+	# echo "mime"
+	check_mime_cache
+	
+    elif [ "$1" = "icons" -o "$1" = "icon" ]; then
+	# echo "icons"
+	check_icons_cache
+
+    elif [ "$1" = "desktop" -o "$1" = "application" -o "$1" = "applications" ] ; then
+	# echo "desktop"
+	check_desktop_database
+    
+    elif [ "$1" = "schema" ]; then
+	# echo "schema"
+	check_schema_cache
+    else
+	usage
+    fi
+    shift
+done
+EOF
+
+chmod +x $P/usr/bin/check-update-cache
+
+mkdir -p $P/usr/share/doc/check-update-cache-0.1
+cp $0 $P/usr/share/doc/check-update-cache-0.1/
+
+cd $P
+chk_me=`whoami | grep root`
+if [ "$chk_me.x" != ".x" ]; then
+    chown -R root.root *
+fi
+
+/sbin/makepkg ../check_update_cache-0.1-noarch-B2.txz
+
