@@ -8,7 +8,7 @@ man_url="https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.xz
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--with-gitconfig=/etc/gitconfig --with-libpcre1 --without-tcltk --without-python'
+OPT_CONFIG='--with-gitconfig=/etc/gitconfig --without-tcltk --without-python'
 DOCS='COPYING INSTALL README.md command-list.txt'
 patchfiles=''
 compress=txz
