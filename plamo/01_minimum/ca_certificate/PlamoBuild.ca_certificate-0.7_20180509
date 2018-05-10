@@ -1,16 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ca_certificate"
-vers='20170514'
-url="http://anduin.linuxfromscratch.org/BLFS/other/make-ca.sh-20170514"
-digest="md5sum:a21a04d6ff5c4645c748220dbaa9f221"
-cert_url="https://hg.mozilla.org/projects/nss/raw-file/tip/lib/ckfw/builtins/certdata.txt"
-cacert_url="http://www.cacert.org/certs/root.crt"
+script_vers="0.7"
+vers="${script_vers}_20180509"
+url="https://github.com/djlucas/make-ca/archive/v${script_vers}/make-ca-${script_vers}.tar.gz"
+digest="md5sum:4f180b9bf3b11f29d6a79e6022aeae23"
+cert_url="https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt"
+cacert_url=("http://www.cacert.org/certs/root.crt"
+	    "http://www.cacert.org/certs/class3.crt")
 # See http://www.cacert.org/index.php?id=3
-cacert_fp="13:5C:EC:36:F4:9C:B8:E9:3B:1A:B2:70:CD:80:88:46:76:CE:8F:33"
+cacert_fp=("13:5C:EC:36:F4:9C:B8:E9:3B:1A:B2:70:CD:80:88:46:76:CE:8F:33"
+	   "AD:7C:3F:64:FC:44:39:FE:F4:E9:0B:E8:F4:7C:6C:FA:8A:AD:FD:CE")
+cacert_class=("1" "3")
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src=""
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
@@ -46,16 +50,20 @@ if [ $opt_download -eq 1 ] ; then
   if [ ! -f ${cert_url##*/} ]; then
     wget $cert_url
   fi
+
+  # CACert Certs (Class 1, Class 3)
+  i=0
+  for ca in ${cacert_url[@]}
+  do
+      wget $ca
+      fp=$(openssl x509 -in ${ca##*/} -fingerprint -noout | sed -e 's/SHA1 Fingerprint=//')
+      if [ "$fp" != "${cacert_fp[$i]}" ] ; then
+	  echo "The certificate fingerprint of CAcert does not match."
+	  exit 1
+      fi
+      let i++
+  done
   
-  # CACert Class 1 PKI
-  if [ ! -f ${cacert_url##*/} ]; then
-    wget $cacert_url
-    fp=$(openssl x509 -in root.crt -fingerprint -noout | sed -e 's/SHA1 Fingerprint=//')
-    if [ "$fp" != "$cacert_fp" ] ; then
-      echo "The certificate fingerprint of CAcert does not match."
-      exit 1
-    fi
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -71,20 +79,33 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
 
   install -v -d -m755 $P/etc/ssl/local
-  openssl x509 -in $W/${cacert_url##*/} -text -fingerprint -setalias "CAcert Class 1 root" \
-        -addtrust serverAuth -addtrust emailProtection -addtrust codeSigning \
-        > $P/etc/ssl/local/CAcert_Class_1_root.pem
-  install -v -D -m755 $W/${url##*/} $P/usr/sbin/make-ca.sh
+
+  i=0
+  for ca in ${cacert_url[@]}
+  do
+      openssl x509 -in $W/${ca##*/} -text -fingerprint -setalias "CAcert Class ${cacert_class[$i]} root" \
+              -addtrust serverAuth -addtrust emailProtection -addtrust codeSigning \
+              > $P/etc/ssl/local/CAcert_Class_${cacert_class[$i]}_root.pem
+      let i++
+  done
+
+  cd $W/$(basename ${url##*/} .tar.gz)
+  make install DESTDIR=$P
+  
   install -v -d -m755 $P/usr/share/doc/"$pkgbase"-"$vers"/
   install -v -d -m755 $P/etc/pki
 
   # docdir
-  install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"
-  install -v -m755 $myname $P/usr/share/doc/"$pkgbase"-"$vers"/
+  install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"/
+  install -v -m755 $W/$myname $P/usr/share/doc/"$pkgbase"-"$vers"/
+  for ca in ${cacert_url[@]}
+  do
+      install -v -m644 $W/${ca##*/} $P/usr/share/doc/"$pkgbase"-"$vers"/
+  done
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-/usr/sbin/make-ca.sh -C /usr/share/doc/${pkgbase}-${vers}/certdata.txt
+/usr/sbin/make-ca -C /usr/share/doc/${pkgbase}-${vers}/certdata.txt
 ( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-certificates.crt )
 ( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-bundle.crt )
 EOF
