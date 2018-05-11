@@ -1,0 +1,477 @@
+#!/bin/sh
+#
+# adduser script for use with shadow passwords and useradd command.
+# by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
+#
+# Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
+# Time-stamp: <2018-05-11 14:14:46 karma>
+# Time-stamp: <2016-01-22 19:55:16 kojima>
+# Time-stamp: <2011-12-07 00:22:20 kojima>
+# Time-stamp: <2011-10-08 13:32:46 tamuki>
+# Time-stamp: <2011-07-25 19:03:24 karma>
+# Time-stamp: <2011-01-05 01:24:06 plamo>
+
+DEFAULT_GROUP=users
+DEFAULT_AGID=audio,dialout,video,cdrom,kvm,pulse,pulse-access,mlocate,libvirt
+DEFAULT_HOME_DIR=/home
+DEFAULT_SHELL=/bin/bash
+DEFAULT_HOME_DIR_MODE=711
+
+######################################################################
+
+backup_oldfile() {
+  DIR=$1
+  FILE=${2##*/}
+  if [ $FILE != $SKELDIR/Default ] ; then
+    if [ -f $DIR/$FILE ] ; then
+      if [ -f $DIR/$FILE.old ] ; then
+        backup_oldfile $DIR $FILE.old
+        FILE=${2##*/}
+      fi
+      mv $DIR/$FILE $DIR/$FILE.old
+    elif [ -d $DIR/$FILE ] ; then
+      if [ -d $DIR/$FILE.org ] ; then
+        backup_oldfile $DIR $FILE.org
+        FILE=${2##*/}
+      fi
+      mv $DIR/$FILE $DIR/$FILE.org
+    fi
+  fi
+}
+
+######################################################################
+
+msg_login_name() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "新しいユーザのログイン名を指定してください(8 文字以内)。 []: "
+  else
+    echo -n "Login name for new user (8 characters or less) []: "
+  fi
+}
+
+msg_err_login_name() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "残念ながらログイン名を指定せずには進めません。。"
+  else
+    echo "Come on, man, you can't leave the login field empty..."
+  fi
+}
+
+msg_user_id() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のユーザ ID は？ [自動登録の場合は 1000 番台になります]: "
+  else
+    echo -n "User ID for $LOGIN [defaults to next available]: "
+  fi
+}
+
+msg_grp_name() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN が属するグループは？ [$DEFAULT_GROUP]: "
+  else
+    echo -n "Initial group for $LOGIN [$DEFAULT_GROUP]: "
+  fi
+}
+
+msg_add_gid() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$LOGIN は他のグループにも属しますか？"
+    echo "  (デフォルト設定に追加する場合 --> add:<group1>,<group2>,..."
+    echo "   他のどのグループにも属さない場合 --> none)"
+    echo -n "  [$DEFAULT_AGID]: "
+  else
+    echo "Additional group for $LOGIN"
+    echo "  (add to the default setting --> add:<group1>,<group2>,..."
+    echo "   no additional group --> none)"
+    echo -n "  [$DEFAULT_AGID]: "
+  fi
+}
+
+msg_home_dir() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のホームディレクトリは？ [$DEFAULT_HOME_DIR/$LOGIN]: "
+  else
+    echo -n "$LOGIN's home directory [$DEFAULT_HOME_DIR/$LOGIN]: "
+  fi
+}
+
+msg_shell() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN が使うシェルは？ [$DEFAULT_SHELL]: "
+  else
+    echo -n "$LOGIN's shell [$DEFAULT_SHELL]: "
+  fi
+}
+
+msg_locale() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "日本語 locale の設定"
+    echo "1 : ja_JP.UTF-8(今風)"
+    echo "2 : ja_JP.eucJP(obsolete)"
+    echo -n "$LOGIN はどちらの locale を使いますか？ [1]: "
+  else
+    echo "Japanese locale setting"
+    echo "1 : ja_JP.UTF-8 (current)"
+    echo "2 : ja_JP.eucJP (obsolete)"
+    echo -n "$LOGIN's locale? [1]: "
+  fi
+}
+
+msg_w_manager() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    n=0 ; echo "ウィンドウマネージャ設定"
+    if [ -x /usr/bin/twm ] ; then
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm(X付属のごくシンプルなWM)" ; WM_NAME[$n]='twm'
+    fi
+    if [ -x /usr/bin/startxfce4 ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop(お勧め)" ; WM_NAME[$n]='xfce'
+    fi
+    if [ -x /usr/bin/startlxde ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop(Gtkベースの軽めの環境)" ; WM_NAME[$n]='lxde'
+    fi
+    if [ -x /usr/bin/startlxqt ] ; then
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXQt Desktop(Qtベースの軽めの環境)" ; WM_NAME[$n]='lxqt'
+    fi
+    if [ -x /usr/bin/mate-session ] ; then
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop(GNOME2 の進化版)" ; WM_NAME[$n]='mate'
+    fi
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
+    DWM=$i ; echo -n "$LOGIN が使う WM は？ [$DWM]: "
+  else
+    n=0 ; echo "Window Manager setting"
+    if [ -x /usr/bin/twm ] ; then
+      n=$((n + 1)) ; IWM[$n]=1 ; echo "$n : Twm (too simple)" ; WM_NAME[$n]='twm'
+    fi
+    if [ -x /usr/bin/startxfce4 ] ; then
+      n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop (recommended)" ; WM_NAME[$n]='xfce'
+    fi
+    if [ -x /usr/bin/startlxde ] ; then
+      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop (Gtk based Lightweight environment)" ; WM_NAME[$n]='lxde'
+    fi
+    if [ -x /usr/bin/startlxqt ] ; then
+      n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXqt Desktop (Qt based Lightweight environment)" ; WM_NAME[$n]='lxqt'
+    fi
+    if [ -x /usr/bin/mate-session ] ; then
+      n=$((n + 1)) ; IWM[$n]=5 ; echo "$n : MATE Desktop (GNOME2 successor)" ; WM_MATE[$n]='mate'
+    fi
+    NWM=$n ; for i in `seq $NWM` ; do if [ "${IWM[$i]}" -eq 2 ] ; then break ; fi ; done
+    DWM=$i ; echo -n "$LOGIN's WM? [$DWM]: "
+  fi
+}
+
+msg_use_newgen_im() {
+  n=0 ; echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "IM の選択"
+    if [ -x /usr/bin/uim-xim ] ; then
+      n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
+    fi
+    if [ -x /usr/bin/fcitx ] ; then
+      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fctix"
+    fi
+    echo -n "$LOGIN が使う IM は？ [1]: "
+  else
+    echo "Which IM do you use?"
+    if [ -x /usr/bin/uim-xim ] ; then
+      n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
+    fi
+    if [ -x /usr/bin/fcitx ] ; then
+      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fctix"
+    fi
+    echo -n "Which IM does $LOGIN use? [1]: "
+  fi
+}
+
+msg_expiry_date() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "$LOGIN のアカウントの有効期限は？ (YYYY-MM-DD) []: "
+  else
+    echo -n "$LOGIN's account expiry date (YYYY-MM-DD) []: "
+  fi
+}
+
+msg_conf() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "さて，実際に必要なエントリを作成します。データはこれでいいですか？"
+  else
+    echo "OK, I'm about to make a new account.  Here's what you entered so far:"
+  fi
+  echo
+}
+
+msg_overwrite() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$HME は存在します。$HME/.tcshrc や $HME/.login は"
+    echo "Plamo のデフォルトの設定に書き換えられますが構いませんか？ [y/N]"
+    echo "以前のファイルは $HME/.tcshrc.old のようにバックアップを作成"
+    echo "して保存します(.*.old がすでにあれば，問答無用で上書きします;-)。"
+  else
+    echo "$HME exists. $HME/.tcshrc or $HME/.login will be"
+    echo "overwritten by Plamo's default configuration files.  OK? [y/N]"
+  fi
+}
+
+msg_conf2() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "登録を中止したい場合は Ctrl-C を押してください。このデータで良い場合は"
+    echo "Enter を押していただければ，アカウントを作成します。"
+  else
+    echo "This is it... if you want to bail out, hit Control-C.  Otherwise, press"
+    echo "ENTER to go ahead and make the account."
+  fi
+}
+
+msg_creating() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "新規アカウント作成中..."
+  else
+    echo "Making new account..."
+  fi
+}
+
+msg_last() {
+  echo
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo "$SKELDIR/Default 以下の各種設定ファイルをホームディレクトリにコピーしました。"
+    echo "登録が完了しました。"
+    echo
+    echo "今，作成した新規ユーザでコンソールからログインし，startx すれば，日本語 X 環境が"
+    echo "利用できます。"
+  else
+    echo "Done..."
+  fi
+}
+
+wait_press_enter() {
+  if [ "$LNG" == "JAPANESE" ] ; then
+    echo -n "[Enterキーを押してください]"
+  else
+    echo -n "[Press Enter]"
+  fi
+  read FOO
+}
+
+######################################################################
+
+SKELDIR=${SKELDIR:-"/etc/template"}
+SOURCE_DIR="$SKELDIR"/Source
+DEFAULT_DIR="$SKELDIR"/Default
+
+rm -rf $DEFAULT_DIR
+cp -a $SOURCE_DIR $DEFAULT_DIR
+
+if [ -n "$1" ] ; then
+  if [ "${1::2}" == "ja" ] ; then ANS="y" ; fi
+else
+  if [ "$TERM" == "linux" ] ; then
+    echo "Can you read Japanese chars on this term? [y/N]"
+    read ANS
+    if [ "$ANS" == "Y" -o "$ANS" == "y" ] ; then ANS="y" ; fi
+  else
+    echo "Can you read Japanese chars on this term? [Y/n]"
+    read ANS
+    if [ "$ANS" != "N" -a "$ANS" != "n" ] ; then ANS="y" ; fi
+  fi
+fi
+
+if [ "$ANS" == "y" ] ; then
+  echo "Japanese mode"
+  LNG="JAPANESE"
+else
+  echo "No Japanese mode"
+  LNG=""
+  export LANG=C
+fi
+
+#新しいユーザのログイン名を指定してください(8 文字以内)。
+msg_login_name
+read LOGIN
+if [ -z "$LOGIN" ] ; then
+  #残念ながらログイン名を指定せずには進めません。。
+  msg_err_login_name
+  exit
+fi
+
+#$LOGIN のユーザ ID は？
+msg_user_id
+read USERID
+if [ -z "$USERID" ] ; then
+  GUID=""
+else
+  GUID="-u $USERID"
+fi
+
+#$LOGIN が属するグループは？
+msg_grp_name
+read GROUPID
+if [ -z "$GROUPID" ] ; then
+  GROUPID="$DEFAULT_GROUP"
+fi
+GGID="-g $GROUPID"
+
+#$LOGIN は他のグループにも属しますか？
+msg_add_gid
+read AGID
+if [ -z "$AGID" ] ; then
+  AGID="$DEFAULT_AGID"
+elif [ "${AGID:0:4}" == "add:" ] ; then
+  AGID="$DEFAULT_AGID,${AGID#*:}"
+fi
+if [ "$AGID" == "none" ] ; then
+  GAGID=""
+else
+  GAGID="-G $AGID"
+fi
+
+#$LOGIN のホームディレクトリは？
+msg_home_dir
+read HME
+if [ -z "$HME" ] ; then
+  HME="$DEFAULT_HOME_DIR/$LOGIN"
+fi
+GHME="-d $HME"
+
+#$LOGIN が使うシェルは？
+msg_shell
+read SHL
+if [ -z "$SHL" ] ; then
+  SHL="$DEFAULT_SHELL"
+fi
+GSHL="-s $SHL"
+
+#日本語 locale の設定
+msg_locale
+read LOC
+if [ -z "$LOC" ] ; then
+  LOC=1
+elif [ "$LOC" -lt 1 ] ; then
+  LOC=1
+elif [ "$LOC" -gt 2 ] ; then
+  LOC=1
+fi
+
+#ウィンドウマネージャ設定
+msg_w_manager
+read WM
+if [ -z "$WM" ] ; then
+  WM=$DWM
+elif [ "$WM" -lt 1 ] ; then
+  WM=$DWM
+elif [ "$WM" -gt "$NWM" ] ; then
+  WM=$DWM
+fi
+
+# Select IM
+msg_use_newgen_im
+read IM_NO
+if [ -z "$IM_NO" ] ; then
+  IM_NO=1
+elif [ "$IM_NO" -lt 0 ] ; then
+  IM_NO=1
+elif [ "$IM_NO" -gt 3 ] ; then
+  IM_NO=1
+fi
+
+#$LOGIN のアカウントの有効期限は？ (YYYY-MM-DD)
+msg_expiry_date
+read EXP
+GEXP="-e $EXP"
+if [ -z "$EXP" ] ; then
+  GEXP=""
+fi
+
+#さて，実際に必要なエントリを作成します。データはこれでいいですか？
+msg_conf
+echo New login name: $LOGIN
+if [ -z "$GUID" ] ; then
+  echo New UID: [Next available]
+else
+  echo New UID: $USERID
+fi
+echo Initial group: $GROUPID
+if [ -z "$GAGID" ] ; then
+  echo Additional groups: [none]
+else
+  echo Additional groups: $AGID
+fi
+echo Home directory: $HME
+echo Shell: $SHL
+if [ -z "$GEXP" ] ; then
+  echo Expiry date: [no expiration]
+else
+  echo Expiry date: $EXP
+fi
+
+if [ -d $HME ] ; then
+  #$HME は存在します。$HME/.tcshrc や $HME/.login は
+  #Plamo のデフォルトの設定に書き換えられますが構いませんか？
+  msg_overwrite
+  read ANS
+  if [ -z $ANS ] ; then
+    ANS="N"
+  fi
+  if [ "$ANS" != "Y" -a "$ANS" != "y" ] ; then
+    exit -1
+  fi
+fi
+
+#登録を中止したい場合は Ctrl-C を押してください。このデータで良い場合は
+#Enter を押していただけば，アカウントを作成します。
+msg_conf2
+read FOO
+
+# Configure Window Manager/IM/Locale
+# WM_NAME=("" "twm" "xfce" "lxde" "lxqt" "mate")
+# IM=("" "uim" "fcitx")
+LOCALE=("" "UTF-8" "EUC-JP")
+sed -e "s/@WM@/${WM_NAME[$WM]}/" \
+    -e "s/@IM@/${IM[$IM_NO]}/" \
+    -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+    $SOURCE_DIR/.xinitrc > $DEFAULT_DIR/.xinitrc
+sed -e "s/@WM@/${WM_NAME[$WM]}/" \
+    -e "s/@IM@/${IM[$IM_NO]}/" \
+    -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+    $SOURCE_DIR/.xprofile > $DEFAULT_DIR/.xprofile
+
+# Configure .Xdefaults
+sed -e "s/@IM@/${IM[$IM_NO]}/" \
+    $SOURCE_DIR/.Xdefaults > $DEFAULT_DIR/.Xdefaults
+
+# Configure config file for shell
+FILELIST=(".bashrc" ".tcshrc" ".zshrc")
+for f in ${FILELIST[@]}
+do
+    sed -e "s/@LOCALE@/${LOCALE[$LOC]}/" \
+	$SOURCE_DIR/"$f" > $DEFAULT_DIR/"$f"
+done
+
+#新規アカウント作成中...
+msg_creating
+
+if [ -d $HME ] ; then # backup old files
+  find $SKELDIR/Default -maxdepth 1 -exec backup_oldfile $HME {} \;
+fi
+
+useradd $GHME -m $GEXP $GGID $GAGID $GSHL $GUID $LOGIN
+chmod $DEFAULT_HOME_DIR_MODE $HME
+
+echo
+chfn $LOGIN
+echo
+passwd $LOGIN
+
+#$SKELDIR/Default 以下の各種設定ファイルをホームディレクトリにコピーしました。
+#登録が完了しました。
+msg_last
+if [ -n "$DISPLAY" ] ; then
+  echo
+  wait_press_enter
+fi

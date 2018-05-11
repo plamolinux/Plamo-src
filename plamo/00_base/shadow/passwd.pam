@@ -1,0 +1,2 @@
+# /etc/pam.d/passwd
+password	include	system-password
