@@ -5,12 +5,9 @@ vers='1.1.0h'
 url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B3
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic no-ssl3-method"
-if [ $arch = "x86_64" ]; then
-  OPT_CONFIG="$OPT_CONFIG enable-ec_nistp_64_gcc_128"
-fi
+OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='.travis-create-release.sh AUTHORS INSTALL LICENSE NEWS README README.ECC README.ENGINE README.FIPS'
 patchfiles="ca-dir.patch c_rehash.patch"
 compress=txz
