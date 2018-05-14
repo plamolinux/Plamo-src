@@ -2,18 +2,20 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='60.0'
-url="https://archive.mozilla.org/pub/firefox/releases/60.0/source/firefox-60.0.source.tar.xz"
+vers='59.0.2'
+commitid="239e434d6d2b8e1e2b697c3416d1e96d48fe98e5"
+url="https://hg.mozilla.org/releases/mozilla-release/archive/${commitid}.tar.bz2"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
-verify="${url}.asc"
+verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="mozilla-release-${commitid}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-patchfiles="firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+#blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-59.0-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/} no-crmf.diff"
 compress=txz
 ##############################################################
 
@@ -41,9 +43,12 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+  if [ ! -f ${pkgbase}-${vers}.tar.bz2 ]; then
+    wget -O ${pkgbase}-${vers}.tar.bz2 $url
+  fi
+  tar xvf ${pkgbase}-${vers}.tar.bz2
   if [ ! -f ${blfspatch##*/} ]; then
-    wget ${blfspatch##*/}
+    wget $blfspatch
   fi
   if [ ! -f ${langpack_ja##*/} ]; then
     wget $langpack_ja
