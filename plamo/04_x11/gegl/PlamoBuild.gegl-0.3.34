@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gegl'
-vers='0.3.28'
+vers='0.3.34'
 url="https://download.gimp.org/pub/${pkgbase}/0.3/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:543c3104152c594c022ab54f06403d53"
+digest="sha1sum:fa4c402fbdf896d7a0559403bbd5abc9e668998a"
 verify=""
 arch=`uname -m`
 build=B1
