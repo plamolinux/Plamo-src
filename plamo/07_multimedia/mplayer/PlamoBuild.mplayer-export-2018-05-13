@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mplayer'
-vers='20180214'
+vers='20180513'
 url="http://www.mplayerhq.hu/MPlayer/releases/mplayer-export-snapshot.tar.bz2"
 arch=`uname -m`
 build=B1
-src="mplayer-export-2018-02-14"
+src="mplayer-export-2018-05-13"
 OPT_CONFIG='--enable-runtime-cpudetection --disable-gui --disable-arts --disable-liblzo --disable-speex --disable-openal --disable-libdv --disable-musepack --disable-esd --disable-mga --disable-ass-internal --disable-cdparanoia --disable-ffmpeg_a  --enable-xvmc --enable-radio --enable-radio-capture --language=ja --confdir=/etc/mplayer'
 DOCS='AUTHORS Changelog LICENSE README'
 patchfiles=''
