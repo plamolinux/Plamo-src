@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libvpx'
-vers='1.6.1'
-url="http://storage.googleapis.com/downloads.webmproject.org/releases/webm/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:a19518c8111fa93bdabdd85259162611"
+vers='1.7.0'
+url="https://github.com/webmproject/libvpx/archive/v${vers}/libvpx-${vers}.tar.gz"
+digest="md5sum:193346f9aec0726145e51db732417cd2"
 verify=""
 arch=`uname -m`
 build=B1
