@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gegl'
-vers='0.3.28'
-url="https://download.gimp.org/pub/${pkgbase}/0.3/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:543c3104152c594c022ab54f06403d53"
-verify=""
+pkgbase='gst_plugins_good'
+vers='1.12.5'
+url="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LESSER ChangeLog INSTALL NEWS README'
-patchfiles=""
+build=B2
+src="gst-plugins-good-${vers}"
+OPT_CONFIG=('--disable-static' '--enable-shared'
+	    "--with-package-name='GStreamer Good Plugins ${vers} Plamo'"
+	    "--with-package-origin='http://plamolinux.org/'"
+	   )
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README RELEASE meson_options.txt'
+patchfiles=''
 compress=txz
 ##############################################################
 
