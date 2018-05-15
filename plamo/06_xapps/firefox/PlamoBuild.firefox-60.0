@@ -90,7 +90,7 @@ if [ $opt_config -eq 1 ] ; then
   fi
 
   if [ -f ~/.cargo/bin/rustc ]; then
-    export PATH="$PATH:~/.cargo/bin"
+    export PATH="$PATH:$HOME/.cargo/bin"
     if [ x"$rustver" = "x" ]; then
       rustup update
     else
@@ -107,7 +107,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$S/path:~/.cargo/bin:$PATH"
+  export PATH="$S/path:$HOME/.cargo/bin:$PATH"
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
