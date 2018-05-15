@@ -83,6 +83,9 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$S/path:$PATH"
+  if [ -d $W/build ]; then
+    rm -rf $W/build
+  fi
   ./mach build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
