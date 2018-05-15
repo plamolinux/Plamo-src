@@ -13,7 +13,7 @@ src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
 blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-patchfiles="firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+patchfiles="firefox-${vers}-system_graphite2_harfbuzz-1.patch no-crmf.diff"
 compress=txz
 ##############################################################
 
