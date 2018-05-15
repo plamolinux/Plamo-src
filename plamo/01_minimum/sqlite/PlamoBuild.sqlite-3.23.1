@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.22.0'
-url="http://sqlite.org/2018/sqlite-autoconf-3220000.tar.gz"
-digest="sha1sum:2fb24ec12001926d5209d2da90d252b9825366ac"
+vers='3.23.1'
+srcver="3230100"
+url="http://sqlite.org/2018/sqlite-autoconf-3230100.tar.gz"
+digest="sha1sum:0edbfd75ececb95e8e6448d6ff33df82774c9646"
 verify=""
 arch=`uname -m`
 build=B1
-src="sqlite-autoconf-3220000"
+src="sqlite-autoconf-${srcver}"
 OPT_CONFIG='--disable-static --enable-fts5'
 DOCS='INSTALL README.txt'
 patchfiles=''
