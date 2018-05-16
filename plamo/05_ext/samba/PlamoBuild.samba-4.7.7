@@ -1,13 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase='samba'
-vers='4.7.5'
+vers='4.7.7'
 url="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.gz"
 verify="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-piddir=/run/samba --with-pammodulesdir=/lib/security --enable-fhs --without-ad-dc --without-systemd --enable-selftest"
+OPT_CONFIG="--with-piddir=/run/samba
+	--with-pammodulesdir=/lib/security
+	--enable-fhs
+	--without-ad-dc
+	--without-systemd
+	--disable-cups
+	--enable-selftest"
 DOCS='BUILD_SYSTEMS.txt COPYING PFIF.txt README README.Coding README.cifs-utils README.contributing WHATSNEW.txt install_with_python.sh prog_guide4.txt release-scripts'
 patchfiles=''
 compress=txz
@@ -67,7 +73,7 @@ $(find ${B}/source4/scripting -type f)"
   IFS=${SAVEIFS}
 
   export PYTHON=/usr/bin/python2
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -101,6 +107,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # config
   install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
+  sed -i -e '/log file/s|/usr/local/samba/var|/var/log/samba|' /etc/samba/smb.conf.dist
 
   # for openldap
   mkdir -p -v $P/etc/openldap/schema
