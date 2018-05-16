@@ -127,7 +127,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # plugin
   install -dm755 -v $P/usr/${libdir}/mozilla/plugins
-  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox-${vers}/browser
+  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox/browser
 
   # config to docdir
   install -Dm644 -v $W/mozconfig $docdir/$src/mozconfig
