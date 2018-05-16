@@ -2,21 +2,21 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='59.0.2'
-commitid="239e434d6d2b8e1e2b697c3416d1e96d48fe98e5"
-url="https://hg.mozilla.org/releases/mozilla-release/archive/${commitid}.tar.bz2"
+vers='60.0'
+url="https://archive.mozilla.org/pub/firefox/releases/60.0/source/firefox-60.0.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
-verify=""
+verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
-src="mozilla-release-${commitid}"
+src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-#blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-59.0-system_graphite2_harfbuzz-1.patch"
-patchfiles="${blfspatch##*/} no-crmf.diff"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+patchfiles="firefox-${vers}-system_graphite2_harfbuzz-1.patch no-crmf.diff"
 compress=txz
+
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -43,12 +43,9 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  if [ ! -f ${pkgbase}-${vers}.tar.bz2 ]; then
-    wget -O ${pkgbase}-${vers}.tar.bz2 $url
-  fi
-  tar xvf ${pkgbase}-${vers}.tar.bz2
+  download_sources
   if [ ! -f ${blfspatch##*/} ]; then
-    wget $blfspatch
+    wget ${blfspatch##*/}
   fi
   if [ ! -f ${langpack_ja##*/} ]; then
     wget $langpack_ja
@@ -75,7 +72,7 @@ if [ $opt_config -eq 1 ] ; then
   fi
 
   # branding
-  # 
+  #
   sed -i \
       -e "s|Mozilla|Plamo Linux Project|g" \
       -e "s|Nightly|Plamo Browser|g" \
@@ -83,11 +80,37 @@ if [ $opt_config -eq 1 ] ; then
       browser/branding/unofficial/locales/en-US/*
 
   cp -v browser/branding/unofficial/locales/en-US/brand.* browser/branding/nightly/locales/en-US/
+
+  # setup rust
+  cd $W
+  echo "We need rust toolchain. Now, setup rust"
+  if [ -f /var/log/packages/rustc ]; then
+      echo "Rustc pacakge is installed. We don't use it, so remove."
+      sudo removepkg rustc
+  fi
+
+  if [ -f ~/.cargo/bin/rustc ]; then
+    export PATH="$PATH:$HOME/.cargo/bin"
+    if [ x"$rustver" = "x" ]; then
+      rustup update
+    else
+      rustup default $rustver
+    fi
+  else
+      wget -O rustup-init.sh https://sh.rustup.rs
+      sh rustup-init.sh -y
+      if [ x"$rustver" != "x" ]; then
+        rustup default $rustver
+      fi
+  fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$S/path:$PATH"
+  export PATH="$S/path:$HOME/.cargo/bin:$PATH"
+  if [ -d $W/build ]; then
+    rm -rf $W/build
+  fi
   ./mach build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -104,7 +127,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # plugin
   install -dm755 -v $P/usr/${libdir}/mozilla/plugins
-  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox-${vers}/browser
+  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox/browser
 
   # config to docdir
   install -Dm644 -v $W/mozconfig $docdir/$src/mozconfig
@@ -133,8 +156,6 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-
-  mv -v $docdir/$src $docdir/$pkgbase-$vers
 
 #############################
 #   convert symlink to null file and 

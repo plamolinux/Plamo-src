@@ -37,5 +37,5 @@ ac_add_options --disable-official-branding
 ac_add_options --with-branding=browser/branding/unofficial
 ac_add_options --with-distribution-id=org.plamolinux
 
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox-build-dir
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
 #mk_add_options MOZ_MAKE_FLAGS="-j3"
