@@ -157,8 +157,6 @@ if [ $opt_package -eq 1 ] ; then
 ################################
   install_tweak
 
-  mv -v $docdir/$src $docdir/$pkgbase-$vers
-
 #############################
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
