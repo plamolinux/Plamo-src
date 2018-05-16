@@ -107,7 +107,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # config
   install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
-  sed -i -e '/log file/s|/usr/local/samba/var|/var/log/samba|' /etc/samba/smb.conf.dist
+  sed -i -e '/log file/s|/usr/local/samba/var|/var/log/samba|' $P/etc/samba/smb.conf.dist
 
   # for openldap
   mkdir -p -v $P/etc/openldap/schema
