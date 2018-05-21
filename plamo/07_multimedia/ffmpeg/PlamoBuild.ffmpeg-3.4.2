@@ -5,16 +5,19 @@ vers='3.4.2'
 url="http://ffmpeg.org/releases/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
+# 高品質のAACコーデックライブラリを使いたい場合は
+# --enable-libfdk-aac
+# をつけてビルドしてください。バイナリ配布は不可なので含めてません
+# ffmpeg 付属の AAC コーデックは含まれているはず
+# See. https://trac.ffmpeg.org/wiki/Encode/AAC
 OPT_CONFIG="--enable-gpl
             --enable-version3
-            --enable-nonfree
             --disable-static
             --enable-shared
             --disable-debug
             --enable-libass
-            --enable-libfdk-aac
             --enable-libfreetype
             --enable-libmp3lame
             --enable-libopus
@@ -23,6 +26,11 @@ OPT_CONFIG="--enable-gpl
             --enable-libvpx
             --enable-libx264
             --enable-libx265
+	    --enable-libwebp
+	    --enable-libpulse
+	    --enable-libspeex
+	    --enable-libv4l2
+	    --enable-libxvid
             --docdir=/usr/share/doc/ffmpeg-${vers}"
 DOCS='COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 COPYING.LGPLv3 Changelog INSTALL.md LICENSE.md MAINTAINERS README.md RELEASE RELEASE_NOTES'
 patchfiles=''
