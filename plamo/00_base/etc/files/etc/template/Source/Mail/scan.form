@@ -1,0 +1,9 @@
+﻿%4(msg)%<(cur)+%| %>\
+%(void(trim{content-type}))\
+%<(amatch multipart/signed)S\
+%?(amatch multipart/encrypted)E\
+%?(amatch multipart)M%| %>\
+%02(mon{date})/%02(mday{date})%<{date} %|*%>\
+%<(mymbox{from})%<{to}To:%14(hdecode(friendly{to}))%>%>\
+%<(zero)%17(hdecode(friendly{from}))%> %{}\
+%(hdecode{subject})%<{body}<<%{body}%>

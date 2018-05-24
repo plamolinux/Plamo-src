@@ -1,0 +1,59 @@
+; これは JIS か EUC で記述して下さい。SJIS(MS漢字)や UNICODE は使わないで
+; 下さい。
+
+; skkserv の起きているホスト名を指定します．
+skk-server-host:			"localhost"
+; skkserv と TCP/IP で通信する際に用いるサービス名(ポート番号)．
+skk-service:				"1178"
+;; skkserv と IPv4 で通信する
+; skk-server-protocol-family: "inet4"
+;; skkserv と IPv6 で通信する
+; skk-server-protocol-family: "inet6"
+; skkinput ユーザ辞書のパスを指定します．
+skkinput-jisyo:				"~/.skkinput-jisyo"
+; skkinput ユーザ辞書のバックアップのパスを指定します．
+skkinput-backup-jisyo:			"~/.skkinput-jisyo.BAK"
+; skk ユーザ辞書のパスを指定します．
+skk-jisyo:				"~/.skk-jisyo"
+; skkinput-record のパスを指定します．
+skkinput-record:			"~/.skkinput-record"
+; newline に確定のみの動作を認めるかどうか．
+skkinput-egg-like-newline:		nil
+; dabbrev like な completion を許可するかどうか。t にすると、一回 completion
+; をかけた後の j-try-completion の挙動が j-insert-period/j-abbrev-period と
+; 同様になる。
+skkinput-dabbrev-like-completion:	nil
+; 空行の newline 以外にも改行コードを含めるか否か．
+skkinput-chat-adapter-mode:		nil
+; skkinput-record を作成するか否か．
+skkinput-keep-record:			t
+; skk ユーザ辞書を変換の際に参照するか否か．
+skkinput-search-skk-jisyo:		t
+; j-today によって表示される日付を年号で出すか西暦で出すか．
+skkinput-date-ad:			nil
+; j-today によって表示される数値を漢字で出すとか…．
+skkinput-number-style:			0
+; 変換中の backward-delete-char に確定動作を含めるか否か．
+; nil にした場合，一つ前の候補を表示することになる．
+skkinput-delete-implies-kakutei:	t
+; 数をパラメータに持つ変換を有効にするか否か．
+skkinput-use-numeric-conversion:	t
+; 指定された数値のコードが入力された時に表示する文字列を指定．
+;skkinput-zenkaku-vector:		( 33 . "！" )
+;skkinput-input-vector:			( 44 . "，" )
+;skkinput-input-vector:			( 46 . "．" )
+; ( "状態@入力" "次状態" "平仮名出力" "片仮名出力" )
+; @ はここでは連接を意味していると思って下さい．
+;skkinput-rom-kana-rule-list:		( "nn" "n" "ん" "ン" )
+; 最初の文字列で指定されるキー入力に対して、次の文字列
+; で指定される関数を割当てます。
+;define-key-skkmap:			( "@" . "j-self-insert" )
+;define-key-skkmap:			( "\177" . "delete-char" )
+;define-key-skkmap:			( "\Henkan_Mode" . "j-start-henkan" )
+; Root Style Window で、デフォルトでその場変換型の挙動をして欲しい時に
+; は t にします。 
+;skkinput-rjj-like-input:		nil
+; skkinput-lisp で始まる行は、skkinput-lisp 命令だと解釈します。
+; 例えば、次の行は (times) を定義しています。/7x3 とすると 21 と戻ってくる
+; 筈です。
+skkinput-lisp:				(defun times() (int-to-string (* (string-to-int (car j-num-list)) (string-to-int (car (cdr j-num-list))))))

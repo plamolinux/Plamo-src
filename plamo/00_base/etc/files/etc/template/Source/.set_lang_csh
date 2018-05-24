@@ -1,0 +1,18 @@
+switch ($argv[1])
+case *[uU][tT][fF]*:
+  setenv LANG ja_JP.UTF-8
+  breaksw
+default:
+  setenv LANG=ja_JP.eucJP
+  breaksw
+endsw
+
+#if ($LANG == ja_JP.UTF-8) then
+#  setenv JLESSCHARSET japanese-utf8
+#  setenv OUTPUT_CHARSET UTF-8
+#  set dspmbyte=utf-8
+#else
+#  setenv JLESSCHARSET japanese-euc
+#  setenv OUTPUT_CHARSET EUC-JP
+#  set dspmbyte=euc
+#endif
