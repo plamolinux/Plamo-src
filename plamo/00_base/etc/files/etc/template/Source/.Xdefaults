@@ -10,4 +10,4 @@
 !! Emacs
 !!
 ! XIM を利用するには，この値をtrueにします
-Emacs*useXim:		false
+Emacs*useXIM:		false

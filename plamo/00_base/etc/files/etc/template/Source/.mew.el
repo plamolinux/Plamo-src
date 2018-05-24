@@ -1,64 +1,64 @@
-;;; -*- Mode: Emacs-Lisp ; Coding: euc-japan -*-
+;;; -*- Mode: Emacs-Lisp ; Coding: utf-8 -*-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Plamo Linux ¥æ¡¼¥¶ÀßÄê¥Õ¥¡¥¤¥ë¥µ¥ó¥×¥ë for Mew
-;;                            Time-stamp: <2002-08-20 03:36:30 cyamauch>
+;;  Plamo Linux ãƒ¦ãƒ¼ã‚¶è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚µãƒ³ãƒ—ãƒ« for Mew
+;;                            Time-stamp: <2018-05-24 15:59:17 karma>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Plamo Linux ¤Î Mew ¤òÍøÍÑ¤¹¤ë¤¿¤á¤ËÉ¬Í×¤ÊÀßÄê¤Ç¤¹¡¥
+;; Plamo Linux ã® Mew ã‚’åˆ©ç”¨ã™ã‚‹ãŸã‚ã«å¿…è¦ãªè¨­å®šã§ã™ï¼
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq mew-smtp-helo-domain (getenv "HOSTNAME"))
 
-;;; POP¤Ê¤É¤òÍøÍÑ¤¹¤ë¾ì¹ç¤Ï¡¤
-;;; °Ê²¼¤ÎÀßÄê¤òÌµ¸ú¤Ë¤·¡¤
+;;; POPãªã©ã‚’åˆ©ç”¨ã™ã‚‹å ´åˆã¯ï¼Œ
+;;; ä»¥ä¸‹ã®è¨­å®šã‚’ç„¡åŠ¹ã«ã—ï¼Œ
 (setq mew-mail-domain (getenv "HOSTNAME"))
 (setq mew-mailbox-type 'mbox)
 (setq mew-mbox-command "incm")
-;;; ¥É¥á¥¤¥óÅù¤ò°Ê²¼¤ÇÀßÄê¤·¤Æ¤¯¤À¤µ¤¤¡¥
+;;; ãƒ‰ãƒ¡ã‚¤ãƒ³ç­‰ã‚’ä»¥ä¸‹ã§è¨­å®šã—ã¦ãã ã•ã„ï¼
 
-;;; ¥á¡¼¥ë¥¢¥É¥ì¥¹¤Î @ ¤è¤êÁ°¡Ê¥æ¡¼¥¶Ì¾¡Ë¤ò»ØÄê¤¹¤ë¡¥
+;;; ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã® @ ã‚ˆã‚Šå‰ï¼ˆãƒ¦ãƒ¼ã‚¶åï¼‰ã‚’æŒ‡å®šã™ã‚‹ï¼
 ;(setq mew-user "hogeman")
 
-;;; ¥á¡¼¥ë¥¢¥É¥ì¥¹¤Î @ °Ê¹ß¤ò»ØÄê¤¹¤ë¡¥
+;;; ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã® @ ä»¥é™ã‚’æŒ‡å®šã™ã‚‹ï¼
 ;(setq mew-mail-domain "hoge.fuga.or.jp")
 
-;;; POP¤òÍøÍÑ¤¹¤ë¾ì¹ç¡¥APOP ¤Î¾ì¹ç¤ÏÀßÄê¤¹¤ëÉ¬Í×¤Ï¤Ê¤¤¡¥
+;;; POPã‚’åˆ©ç”¨ã™ã‚‹å ´åˆï¼APOP ã®å ´åˆã¯è¨­å®šã™ã‚‹å¿…è¦ã¯ãªã„ï¼
 ;(setq mew-pop-auth 'pass)
 
-;;; POP¥µ¡¼¥Ğ¤Î¥¢¥«¥¦¥ó¥È¤ò»ØÄê¤¹¤ë¡¥
+;;; POPã‚µãƒ¼ãƒã®ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’æŒ‡å®šã™ã‚‹ï¼
 ;(setq mew-pop-user "hogeman")
 
-;;; ÍøÍÑ¤¹¤ëPOP¥µ¡¼¥Ğ¤ò»ØÄê¤¹¤ë¡¥
+;;; åˆ©ç”¨ã™ã‚‹POPã‚µãƒ¼ãƒã‚’æŒ‡å®šã™ã‚‹ï¼
 ;(setq mew-pop-server "pop.hoge.fuga.or.jp")
 
-;;; ÍøÍÑ¤¹¤ëSMTP¥µ¡¼¥Ğ¡Ê¥á¡¼¥ë¥µ¡¼¥Ğ¡Ë¤ò»ØÄê¤¹¤ë¡¥
+;;; åˆ©ç”¨ã™ã‚‹SMTPã‚µãƒ¼ãƒï¼ˆãƒ¡ãƒ¼ãƒ«ã‚µãƒ¼ãƒï¼‰ã‚’æŒ‡å®šã™ã‚‹ï¼
 ;(setq mew-smtp-server "smtp.hoge.fuga.or.jp")
-;;; SMTP Ç§¾Ú¤Î¾ì¹ç¡¤¥æ¡¼¥¶Ì¾¤ò»ØÄê
+;;; SMTP èªè¨¼ã®å ´åˆï¼Œãƒ¦ãƒ¼ã‚¶åã‚’æŒ‡å®š
 ;(setq mew-smtp-user "XXXX")
 
-;;; ¤³¤³¤ÏÀßÄê¤¹¤ëÉ¬Í×¤Ï¤¢¤ê¤Ş¤»¤ó¤¬¡¢From: ¤ËÆüËÜ¸ì¤ò
-;;; Æş¤ì¤¿¤¤¾ì¹ç¤Ê¤É¤Ë»ØÄê¤·¤Ş¤¹¡¥
-;;(setq mew-from "Hogeman [¤Û¤²¤Ş¤ó] <hogeman@hoge.fuga.or.jp>")
+;;; ã“ã“ã¯è¨­å®šã™ã‚‹å¿…è¦ã¯ã‚ã‚Šã¾ã›ã‚“ãŒã€From: ã«æ—¥æœ¬èªã‚’
+;;; å…¥ã‚ŒãŸã„å ´åˆãªã©ã«æŒ‡å®šã—ã¾ã™ï¼
+;;(setq mew-from "Hogeman [ã»ã’ã¾ã‚“] <hogeman@hoge.fuga.or.jp>")
 
-;;;¥á¥¤¥ë¤ò¥á¥¤¥ë¥µ¡¼¥Ğ¤Ë»Ä¤·¤¿¤Ş¤Ş¤Ë¤¹¤ë
+;;;ãƒ¡ã‚¤ãƒ«ã‚’ãƒ¡ã‚¤ãƒ«ã‚µãƒ¼ãƒã«æ®‹ã—ãŸã¾ã¾ã«ã™ã‚‹
 ;(setq mew-pop-delete nil)
 
-;;; ML ¤È From: ¤ÎÁĞÊı¤Ë¥á¡¼¥ë¤ò¤À¤µ¤Ê¤¤¤è¤¦¤Ë
+;;; ML ã¨ From: ã®åŒæ–¹ã«ãƒ¡ãƒ¼ãƒ«ã‚’ã ã•ãªã„ã‚ˆã†ã«
 (setq mew-replyto-to-list '("Mail-Followup-To:" "Reply-To:"))
 (setq mew-replyto-cc-list nil)
 
-;;; POP ¤Ç¼èÆÀ¤¹¤ë¥á¡¼¥ë¤Î¥µ¥¤¥º(54kB)¤ò¤Ï¤º¤¹
+;;; POP ã§å–å¾—ã™ã‚‹ãƒ¡ãƒ¼ãƒ«ã®ã‚µã‚¤ã‚º(54kB)ã‚’ã¯ãšã™
 ;(setq mew-pop-size 0)
 
-;;; ¥Ñ¥¹¥ï¡¼¥É(POP¡¢PGP ¤Ê¤É)¤¬°ì»şÅª¤ËÊİÂ¸¤¹¤ë
+;;; ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰(POPã€PGP ãªã©)ãŒä¸€æ™‚çš„ã«ä¿å­˜ã™ã‚‹
 (setq mew-use-cached-passwd t)
 
-;;; µ¯Æ°»ş¤Ë POP ¥µ¡¼¥Ğ¤ò¥á¡¼¥ë¤ò¼è¤ê¤Ë¹Ô¤«¤Ê¤¤¤è¤¦¤Ë¤¹¤ë
+;;; èµ·å‹•æ™‚ã« POP ã‚µãƒ¼ãƒã‚’ãƒ¡ãƒ¼ãƒ«ã‚’å–ã‚Šã«è¡Œã‹ãªã„ã‚ˆã†ã«ã™ã‚‹
 ; (setq mew-auto-get nil)
 
-;;; Summary Buffer ¤Ç i ¤·¤¿¤È¤­¤Ë +queue ¤Ë¤¢¤ë¥á¥Ã¥»¡¼¥¸¤òÁ÷¿®
+;;; Summary Buffer ã§ i ã—ãŸã¨ãã« +queue ã«ã‚ã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ä¿¡
 ; (setq mew-auto-flush-queue t)
 
-;;; ¥¹¥ì¥Ã¥É¤ò¸«°×¤¯¤¹¤ë(t¢ªt ¤Ç¥¹¥ì¥Ã¥ÉÉ½¼¨)
+;;; ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’è¦‹æ˜“ãã™ã‚‹(tâ†’t ã§ã‚¹ãƒ¬ãƒƒãƒ‰è¡¨ç¤º)
 (setq mew-use-fancy-thread t)
 (setq mew-use-thread-separator t)
 
@@ -74,7 +74,7 @@
 ;(defvar mew-cite-prefix-function nil)
 ;;(setq mew-cite-prefix-function 'mew-cite-prefix-username)
 
-;;; ¥×¥ê¥ó¥¿½ĞÎÏ¤ÎÀßÄê
+;;; ãƒ—ãƒªãƒ³ã‚¿å‡ºåŠ›ã®è¨­å®š
 (setq mew-print-command-format "a2ps | lpr")
 (defun mew-print-region (begin end)
   (interactive "r")
@@ -84,7 +84,7 @@
   (mew-print-region (point-min) (point-max)))
 (setq mew-print-function (function mew-print-buffer))
 
-;;; mouse ¤ÎÃæ¥Ü¥¿¥ó¤Ç¡¤URL ¤ò Netscape ¤ÇÉ½¼¨
+;;; mouse ã®ä¸­ãƒœã‚¿ãƒ³ã§ï¼ŒURL ã‚’ Netscape ã§è¡¨ç¤º
 (setq browse-url-browser-function 'browse-url-netscape)
 (setq browse-url-netscape-program "mozilla")
 (add-hook 'mew-message-mode-hook

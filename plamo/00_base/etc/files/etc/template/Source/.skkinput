@@ -1,59 +1,59 @@
-; ¤³¤ì¤Ï JIS ¤« EUC ¤Çµ­½Ò¤·¤Æ²¼¤µ¤¤¡£SJIS(MS´Á»ú)¤ä UNICODE ¤Ï»È¤ï¤Ê¤¤¤Ç
-; ²¼¤µ¤¤¡£
+; ã“ã‚Œã¯ JIS ã‹ EUC ã§è¨˜è¿°ã—ã¦ä¸‹ã•ã„ã€‚SJIS(MSæ¼¢å­—)ã‚„ UNICODE ã¯ä½¿ã‚ãªã„ã§
+; ä¸‹ã•ã„ã€‚
 
-; skkserv ¤Îµ¯¤­¤Æ¤¤¤ë¥Û¥¹¥ÈÌ¾¤ò»ØÄê¤·¤Ş¤¹¡¥
+; skkserv ã®èµ·ãã¦ã„ã‚‹ãƒ›ã‚¹ãƒˆåã‚’æŒ‡å®šã—ã¾ã™ï¼
 skk-server-host:			"localhost"
-; skkserv ¤È TCP/IP ¤ÇÄÌ¿®¤¹¤ëºİ¤ËÍÑ¤¤¤ë¥µ¡¼¥Ó¥¹Ì¾(¥İ¡¼¥ÈÈÖ¹æ)¡¥
+; skkserv ã¨ TCP/IP ã§é€šä¿¡ã™ã‚‹éš›ã«ç”¨ã„ã‚‹ã‚µãƒ¼ãƒ“ã‚¹å(ãƒãƒ¼ãƒˆç•ªå·)ï¼
 skk-service:				"1178"
-;; skkserv ¤È IPv4 ¤ÇÄÌ¿®¤¹¤ë
+;; skkserv ã¨ IPv4 ã§é€šä¿¡ã™ã‚‹
 ; skk-server-protocol-family: "inet4"
-;; skkserv ¤È IPv6 ¤ÇÄÌ¿®¤¹¤ë
+;; skkserv ã¨ IPv6 ã§é€šä¿¡ã™ã‚‹
 ; skk-server-protocol-family: "inet6"
-; skkinput ¥æ¡¼¥¶¼­½ñ¤Î¥Ñ¥¹¤ò»ØÄê¤·¤Ş¤¹¡¥
+; skkinput ãƒ¦ãƒ¼ã‚¶è¾æ›¸ã®ãƒ‘ã‚¹ã‚’æŒ‡å®šã—ã¾ã™ï¼
 skkinput-jisyo:				"~/.skkinput-jisyo"
-; skkinput ¥æ¡¼¥¶¼­½ñ¤Î¥Ğ¥Ã¥¯¥¢¥Ã¥×¤Î¥Ñ¥¹¤ò»ØÄê¤·¤Ş¤¹¡¥
+; skkinput ãƒ¦ãƒ¼ã‚¶è¾æ›¸ã®ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã®ãƒ‘ã‚¹ã‚’æŒ‡å®šã—ã¾ã™ï¼
 skkinput-backup-jisyo:			"~/.skkinput-jisyo.BAK"
-; skk ¥æ¡¼¥¶¼­½ñ¤Î¥Ñ¥¹¤ò»ØÄê¤·¤Ş¤¹¡¥
+; skk ãƒ¦ãƒ¼ã‚¶è¾æ›¸ã®ãƒ‘ã‚¹ã‚’æŒ‡å®šã—ã¾ã™ï¼
 skk-jisyo:				"~/.skk-jisyo"
-; skkinput-record ¤Î¥Ñ¥¹¤ò»ØÄê¤·¤Ş¤¹¡¥
+; skkinput-record ã®ãƒ‘ã‚¹ã‚’æŒ‡å®šã—ã¾ã™ï¼
 skkinput-record:			"~/.skkinput-record"
-; newline ¤Ë³ÎÄê¤Î¤ß¤ÎÆ°ºî¤òÇ§¤á¤ë¤«¤É¤¦¤«¡¥
+; newline ã«ç¢ºå®šã®ã¿ã®å‹•ä½œã‚’èªã‚ã‚‹ã‹ã©ã†ã‹ï¼
 skkinput-egg-like-newline:		nil
-; dabbrev like ¤Ê completion ¤òµö²Ä¤¹¤ë¤«¤É¤¦¤«¡£t ¤Ë¤¹¤ë¤È¡¢°ì²ó completion
-; ¤ò¤«¤±¤¿¸å¤Î j-try-completion ¤ÎµóÆ°¤¬ j-insert-period/j-abbrev-period ¤È
-; Æ±ÍÍ¤Ë¤Ê¤ë¡£
+; dabbrev like ãª completion ã‚’è¨±å¯ã™ã‚‹ã‹ã©ã†ã‹ã€‚t ã«ã™ã‚‹ã¨ã€ä¸€å› completion
+; ã‚’ã‹ã‘ãŸå¾Œã® j-try-completion ã®æŒ™å‹•ãŒ j-insert-period/j-abbrev-period ã¨
+; åŒæ§˜ã«ãªã‚‹ã€‚
 skkinput-dabbrev-like-completion:	nil
-; ¶õ¹Ô¤Î newline °Ê³°¤Ë¤â²ş¹Ô¥³¡¼¥É¤ò´Ş¤á¤ë¤«Èİ¤«¡¥
+; ç©ºè¡Œã® newline ä»¥å¤–ã«ã‚‚æ”¹è¡Œã‚³ãƒ¼ãƒ‰ã‚’å«ã‚ã‚‹ã‹å¦ã‹ï¼
 skkinput-chat-adapter-mode:		nil
-; skkinput-record ¤òºîÀ®¤¹¤ë¤«Èİ¤«¡¥
+; skkinput-record ã‚’ä½œæˆã™ã‚‹ã‹å¦ã‹ï¼
 skkinput-keep-record:			t
-; skk ¥æ¡¼¥¶¼­½ñ¤òÊÑ´¹¤Îºİ¤Ë»²¾È¤¹¤ë¤«Èİ¤«¡¥
+; skk ãƒ¦ãƒ¼ã‚¶è¾æ›¸ã‚’å¤‰æ›ã®éš›ã«å‚ç…§ã™ã‚‹ã‹å¦ã‹ï¼
 skkinput-search-skk-jisyo:		t
-; j-today ¤Ë¤è¤Ã¤ÆÉ½¼¨¤µ¤ì¤ëÆüÉÕ¤òÇ¯¹æ¤Ç½Ğ¤¹¤«À¾Îñ¤Ç½Ğ¤¹¤«¡¥
+; j-today ã«ã‚ˆã£ã¦è¡¨ç¤ºã•ã‚Œã‚‹æ—¥ä»˜ã‚’å¹´å·ã§å‡ºã™ã‹è¥¿æš¦ã§å‡ºã™ã‹ï¼
 skkinput-date-ad:			nil
-; j-today ¤Ë¤è¤Ã¤ÆÉ½¼¨¤µ¤ì¤ë¿ôÃÍ¤ò´Á»ú¤Ç½Ğ¤¹¤È¤«¡Ä¡¥
+; j-today ã«ã‚ˆã£ã¦è¡¨ç¤ºã•ã‚Œã‚‹æ•°å€¤ã‚’æ¼¢å­—ã§å‡ºã™ã¨ã‹â€¦ï¼
 skkinput-number-style:			0
-; ÊÑ´¹Ãæ¤Î backward-delete-char ¤Ë³ÎÄêÆ°ºî¤ò´Ş¤á¤ë¤«Èİ¤«¡¥
-; nil ¤Ë¤·¤¿¾ì¹ç¡¤°ì¤ÄÁ°¤Î¸õÊä¤òÉ½¼¨¤¹¤ë¤³¤È¤Ë¤Ê¤ë¡¥
+; å¤‰æ›ä¸­ã® backward-delete-char ã«ç¢ºå®šå‹•ä½œã‚’å«ã‚ã‚‹ã‹å¦ã‹ï¼
+; nil ã«ã—ãŸå ´åˆï¼Œä¸€ã¤å‰ã®å€™è£œã‚’è¡¨ç¤ºã™ã‚‹ã“ã¨ã«ãªã‚‹ï¼
 skkinput-delete-implies-kakutei:	t
-; ¿ô¤ò¥Ñ¥é¥á¡¼¥¿¤Ë»ı¤ÄÊÑ´¹¤òÍ­¸ú¤Ë¤¹¤ë¤«Èİ¤«¡¥
+; æ•°ã‚’ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«æŒã¤å¤‰æ›ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã‹å¦ã‹ï¼
 skkinput-use-numeric-conversion:	t
-; »ØÄê¤µ¤ì¤¿¿ôÃÍ¤Î¥³¡¼¥É¤¬ÆşÎÏ¤µ¤ì¤¿»ş¤ËÉ½¼¨¤¹¤ëÊ¸»úÎó¤ò»ØÄê¡¥
-;skkinput-zenkaku-vector:		( 33 . "¡ª" )
-;skkinput-input-vector:			( 44 . "¡¤" )
-;skkinput-input-vector:			( 46 . "¡¥" )
-; ( "¾õÂÖ@ÆşÎÏ" "¼¡¾õÂÖ" "Ê¿²¾Ì¾½ĞÎÏ" "ÊÒ²¾Ì¾½ĞÎÏ" )
-; @ ¤Ï¤³¤³¤Ç¤ÏÏ¢ÀÜ¤ò°ÕÌ£¤·¤Æ¤¤¤ë¤È»×¤Ã¤Æ²¼¤µ¤¤¡¥
-;skkinput-rom-kana-rule-list:		( "nn" "n" "¤ó" "¥ó" )
-; ºÇ½é¤ÎÊ¸»úÎó¤Ç»ØÄê¤µ¤ì¤ë¥­¡¼ÆşÎÏ¤ËÂĞ¤·¤Æ¡¢¼¡¤ÎÊ¸»úÎó
-; ¤Ç»ØÄê¤µ¤ì¤ë´Ø¿ô¤ò³äÅö¤Æ¤Ş¤¹¡£
+; æŒ‡å®šã•ã‚ŒãŸæ•°å€¤ã®ã‚³ãƒ¼ãƒ‰ãŒå…¥åŠ›ã•ã‚ŒãŸæ™‚ã«è¡¨ç¤ºã™ã‚‹æ–‡å­—åˆ—ã‚’æŒ‡å®šï¼
+;skkinput-zenkaku-vector:		( 33 . "ï¼" )
+;skkinput-input-vector:			( 44 . "ï¼Œ" )
+;skkinput-input-vector:			( 46 . "ï¼" )
+; ( "çŠ¶æ…‹@å…¥åŠ›" "æ¬¡çŠ¶æ…‹" "å¹³ä»®åå‡ºåŠ›" "ç‰‡ä»®åå‡ºåŠ›" )
+; @ ã¯ã“ã“ã§ã¯é€£æ¥ã‚’æ„å‘³ã—ã¦ã„ã‚‹ã¨æ€ã£ã¦ä¸‹ã•ã„ï¼
+;skkinput-rom-kana-rule-list:		( "nn" "n" "ã‚“" "ãƒ³" )
+; æœ€åˆã®æ–‡å­—åˆ—ã§æŒ‡å®šã•ã‚Œã‚‹ã‚­ãƒ¼å…¥åŠ›ã«å¯¾ã—ã¦ã€æ¬¡ã®æ–‡å­—åˆ—
+; ã§æŒ‡å®šã•ã‚Œã‚‹é–¢æ•°ã‚’å‰²å½“ã¦ã¾ã™ã€‚
 ;define-key-skkmap:			( "@" . "j-self-insert" )
 ;define-key-skkmap:			( "\177" . "delete-char" )
 ;define-key-skkmap:			( "\Henkan_Mode" . "j-start-henkan" )
-; Root Style Window ¤Ç¡¢¥Ç¥Õ¥©¥ë¥È¤Ç¤½¤Î¾ìÊÑ´¹·¿¤ÎµóÆ°¤ò¤·¤ÆÍß¤·¤¤»ş¤Ë
-; ¤Ï t ¤Ë¤·¤Ş¤¹¡£ 
+; Root Style Window ã§ã€ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§ãã®å ´å¤‰æ›å‹ã®æŒ™å‹•ã‚’ã—ã¦æ¬²ã—ã„æ™‚ã«
+; ã¯ t ã«ã—ã¾ã™ã€‚ 
 ;skkinput-rjj-like-input:		nil
-; skkinput-lisp ¤Ç»Ï¤Ş¤ë¹Ô¤Ï¡¢skkinput-lisp Ì¿Îá¤À¤È²ò¼á¤·¤Ş¤¹¡£
-; Îã¤¨¤Ğ¡¢¼¡¤Î¹Ô¤Ï (times) ¤òÄêµÁ¤·¤Æ¤¤¤Ş¤¹¡£/7x3 ¤È¤¹¤ë¤È 21 ¤ÈÌá¤Ã¤Æ¤¯¤ë
-; È¦¤Ç¤¹¡£
+; skkinput-lisp ã§å§‹ã¾ã‚‹è¡Œã¯ã€skkinput-lisp å‘½ä»¤ã ã¨è§£é‡ˆã—ã¾ã™ã€‚
+; ä¾‹ãˆã°ã€æ¬¡ã®è¡Œã¯ (times) ã‚’å®šç¾©ã—ã¦ã„ã¾ã™ã€‚/7x3 ã¨ã™ã‚‹ã¨ 21 ã¨æˆ»ã£ã¦ãã‚‹
+; ç­ˆã§ã™ã€‚
 skkinput-lisp:				(defun times() (int-to-string (* (string-to-int (car j-num-list)) (string-to-int (car (cdr j-num-list))))))
