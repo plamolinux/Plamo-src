@@ -1,0 +1,26 @@
+set convert-meta off
+set meta-flag on
+set output-meta on
+#set bell-style visible
+#set bell-style none
+"\033[5~": history-search-backward
+"\033[6~": history-search-forward
+"\033[3~": delete-char
+"\033[A": history-search-backward
+"\033[B": history-search-forward
+#"\033[A": backward-word
+#"\033[B": forward-word
+"\033[C": forward-char
+"\033[D": backward-char
+"\033[1~": beginning-of-line
+"\033[4~": end-of-line
+#"\033[1~": beginning-of-history
+#"\033[4~": end-of-history
+"\033[7~": beginning-of-history
+"\033[8~": end-of-history
+$if term=kterm
+"\C-?": delete-char
+$endif
+$if term=sun
+"\C-?": delete-char
+$endif

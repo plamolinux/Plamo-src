@@ -1,0 +1,12 @@
+######################################################################
+# Plamo Linux ユーザ設定ファイルサンプル .logout
+#                             Time-stamp: <2009-07-09 12:25:38 tamuki>
+
+# pulseaudio: サウンドサーバを終了します。
+if ( $SHLVL == 1 ) then
+  if ( `w -h $USER | wc -l` == 1 ) then
+    if ( -x /usr/bin/pulseaudio && -x /usr/bin/dbus-daemon ) then
+      killall pulseaudio dbus-daemon >& /dev/null
+    endif
+  endif
+endif

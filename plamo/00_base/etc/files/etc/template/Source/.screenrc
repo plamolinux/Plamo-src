@@ -1,0 +1,42 @@
+###################################################################
+#  PJE-0.1 ユーザ設定ファイルサンプル for screen 3.07.02
+#                       MATSUMOTO Shoji (shom@i.h.kyoto-u.ac.jp)
+#                            Time-stamp: <2018-02-16 20:42:54 karma>
+
+####
+# kterm/rxvt 上で screen (ver. 3.07.02) を動かして、
+# EUC および色を扱うためのサンプルです
+# 注意：screen は PJE には含まれていません。
+#       ベースディストリビューションからインストールするか、
+#       個別にコンパイル・インストールしてください
+
+escape ^ll
+vbell off
+startup_message off
+autodetach on
+
+defutf8 on
+defencoding utf8
+encoding utf8 utf8
+
+defhstatus screen@$HOSTNAME
+#hardstatus off
+msgminwait 0
+
+defhstatus screen@$HOSTNAME
+hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %Y %m/%d %C:%s%a"
+hardstatus off
+msgminwait 0
+
+# hardstatus をタイトルバー/アイコンに表示
+termcapinfo xterm 'hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007'
+termcapinfo kterm 'hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007'
+
+termcapinfo  xterm* LP:hs
+termcapinfo  kterm* LP:G0:hs
+
+########################################## 色を使うための設定 (ansi-pc-color)
+termcap  xterm 'AF=\E[3%dm:AB=\E[4%dm'
+terminfo xterm 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
+termcap  kterm 'AF=\E[3%dm:AB=\E[4%dm'
+terminfo kterm 'AF=\E[3%p1%dm:AB=\E[4%p1%dm'
