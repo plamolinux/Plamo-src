@@ -30,7 +30,7 @@ urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
       https://raw.githubusercontent.com/iRi-E/mozc-el-extensions/master/mozc-isearch.el)
 
 arch=`uname -m`
-build=B3
+build=B4
 src="mozc"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md'
@@ -158,7 +158,6 @@ if [ $opt_package -eq 1 ] ; then
   install -v -Dm755 out_linux/Release/mozc_emacs_helper $P/usr/bin/mozc_emacs_helper
   install -v -Dm644 unix/emacs/mozc.el $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.el
   install -v -Dm644 unix/emacs/mozc.elc $P/usr/share/emacs/site-lisp/emacs-mozc/mozc.elc
-  install -v -Dm644 $W/mozc-el_el $P/etc/template/Source/.emacs.d/site-start.d/mozc-el_el
   install -v -Dm644 $W/mozc-isearch.el $P/usr/share/emacs/site-lisp/emacs-mozc/mozc-isearch.el
   install -v -Dm644 $W/mozc-isearch.elc $P/usr/share/emacs/site-lisp/emacs-mozc/mozc-isearch.elc
 
