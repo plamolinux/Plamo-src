@@ -4,7 +4,7 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
-# Time-stamp: <2018-05-11 14:14:46 karma>
+# Time-stamp: <2018-05-29 15:03:06 karma>
 # Time-stamp: <2016-01-22 19:55:16 kojima>
 # Time-stamp: <2011-12-07 00:22:20 kojima>
 # Time-stamp: <2011-10-08 13:32:46 tamuki>
@@ -170,7 +170,7 @@ msg_use_newgen_im() {
       n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
     fi
     if [ -x /usr/bin/fcitx ] ; then
-      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fctix"
+      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fcitx"
     fi
     echo -n "$LOGIN が使う IM は？ [1]: "
   else
@@ -179,7 +179,7 @@ msg_use_newgen_im() {
       n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
     fi
     if [ -x /usr/bin/fcitx ] ; then
-      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fctix"
+      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fcitx"
     fi
     echo -n "Which IM does $LOGIN use? [1]: "
   fi
