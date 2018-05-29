@@ -1,4 +1,6 @@
+;; emacs から mozc を使う際の設定
 (require 'mozc)
+;; isearch 中に mozc を使用する
 ;(require 'mozc-isearch)
 
 (setq default-input-method "japanese-mozc")
