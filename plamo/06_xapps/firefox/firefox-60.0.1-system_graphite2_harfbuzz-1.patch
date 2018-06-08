@@ -1,37 +1,42 @@
 Submitted By: Ken Moffat <ken at linuxfromscratch dot org>
-Date: 2018-05-08
-Initial Package Version: 60.0
+Date: 2018-05-18
+Initial Package Version: 60.0.1
 Upstream Status: Waiting for review (mozilla bug 847568)
-Origin: OpenBSD (via gentoo), plain text version at
-https://svnweb.freebsd.org/ports/head/www/firefox/files/patch-bug847568?revision=447501&view=co
-Description: Allow use of system versions of graphite2 and harfbuzz.
-Add the options --with-system-graphite2 and --with-system-harfbuzz to use this.
-Originally taken from gentoo,
-https://dev.gentoo.org/~anarchy/mozilla/patchsets/ and
-https://dev.gentoo.org/~axs/mozilla/patchsets/.
-For 60.0, required graphite2 and harfbuzz versions increased.
+Origin: Jan Beich at FreeBSD
+Description: Refreshed from
+https://svnweb.freebsd.org/ports/head/www/firefox/files/patch-bug847568
+and versions of graphite2 and harfbuzz updated to match what is in
+firefox-60.0 (my own attempt to forward-port the old patch for ff58 was
+adequate but overlooked one of the items).  This also corrects the
+attribution to FreeBSD.
 
-diff -Naur a/config/system-headers.mozbuild b/config/system-headers.mozbuild
---- a/config/system-headers.mozbuild	2018-04-02 20:25:04.000000000 +0100
-+++ b/config/system-headers.mozbuild	2018-04-06 01:25:51.700875352 +0100
-@@ -1234,6 +1234,13 @@
-         'vr/gvr/capi/include/gvr.h',
+diff -Naur firefox-61.0/config/system-headers.mozbuild firefox-61.0-freebsd/config/system-headers.mozbuild
+--- firefox-61.0/config/system-headers.mozbuild	2018-05-14 17:55:54.000000000 +0100
++++ firefox-61.0-freebsd/config/system-headers.mozbuild	2018-05-15 19:31:48.299484650 +0100
+@@ -1311,6 +1311,19 @@
+         'pixman.h',
      ]
  
-+if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++if CONFIG['MOZ_SYSTEM_GRAPHITE2']:
 +    system_headers += [
-+	'harfbuzz/hb-glib.h',
-+	'harfbuzz/hb-ot.h',
-+	'harfbuzz/hb.h',
++        'graphite2/Font.h',
++        'graphite2/Segment.h',
 +    ]
 +
- if CONFIG['MOZ_JACK']:
++if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++    system_headers += [
++        'harfbuzz/hb-glib.h',
++        'harfbuzz/hb-ot.h',
++        'harfbuzz/hb.h',
++    ]
++
+ if CONFIG['MOZ_SYSTEM_LIBVPX']:
      system_headers += [
-         'jack/jack.h',
-diff -Naur a/dom/base/moz.build b/dom/base/moz.build
---- a/dom/base/moz.build	2018-04-02 20:25:04.000000000 +0100
-+++ b/dom/base/moz.build	2018-04-06 01:25:51.700875352 +0100
-@@ -474,6 +474,9 @@
+         'vpx_mem/vpx_mem.h',
+diff -Naur firefox-61.0/dom/base/moz.build firefox-61.0-freebsd/dom/base/moz.build
+--- firefox-61.0/dom/base/moz.build	2018-05-14 17:55:54.000000000 +0100
++++ firefox-61.0-freebsd/dom/base/moz.build	2018-05-15 19:31:48.299484650 +0100
+@@ -479,6 +479,9 @@
  if CONFIG['MOZ_X11']:
      CXXFLAGS += CONFIG['TK_CFLAGS']
  
@@ -41,9 +46,9 @@ diff -Naur a/dom/base/moz.build b/dom/base/moz.build
  GENERATED_FILES += [
      'PropertyUseCounterMap.inc',
      'UseCounterList.h',
-diff -Naur a/gfx/graphite2/moz-gr-update.sh b/gfx/graphite2/moz-gr-update.sh
---- a/gfx/graphite2/moz-gr-update.sh	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/graphite2/moz-gr-update.sh	2018-04-06 01:25:51.700875352 +0100
+diff -Naur firefox-61.0/gfx/graphite2/moz-gr-update.sh firefox-61.0-freebsd/gfx/graphite2/moz-gr-update.sh
+--- firefox-61.0/gfx/graphite2/moz-gr-update.sh	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/graphite2/moz-gr-update.sh	2018-05-15 19:31:48.299484650 +0100
 @@ -1,6 +1,7 @@
  #!/bin/bash
  
@@ -70,9 +75,9 @@ diff -Naur a/gfx/graphite2/moz-gr-update.sh b/gfx/graphite2/moz-gr-update.sh
  
  echo
  echo If gfx/graphite2/src/files.mk has changed, please make corresponding
-diff -Naur a/gfx/harfbuzz/README-mozilla b/gfx/harfbuzz/README-mozilla
---- a/gfx/harfbuzz/README-mozilla	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/harfbuzz/README-mozilla	2018-04-06 01:25:51.700875352 +0100
+diff -Naur firefox-61.0/gfx/harfbuzz/README-mozilla firefox-61.0-freebsd/gfx/harfbuzz/README-mozilla
+--- firefox-61.0/gfx/harfbuzz/README-mozilla	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/harfbuzz/README-mozilla	2018-05-15 19:31:48.299484650 +0100
 @@ -19,3 +19,8 @@
  
  If the collection of source files changes, manual updates to moz.build may be
@@ -82,9 +87,9 @@ diff -Naur a/gfx/harfbuzz/README-mozilla b/gfx/harfbuzz/README-mozilla
 +Make sure to keep pkg-config version check within toolkit/moz.configure in sync
 +with checkout version or increment latest tag by one if it's not based
 +on upstream release.
-diff -Naur a/gfx/moz.build b/gfx/moz.build
---- a/gfx/moz.build	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/moz.build	2018-04-06 01:25:51.700875352 +0100
+diff -Naur firefox-61.0/gfx/moz.build firefox-61.0-freebsd/gfx/moz.build
+--- firefox-61.0/gfx/moz.build	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/moz.build	2018-05-15 19:31:48.299484650 +0100
 @@ -10,6 +10,12 @@
  if CONFIG['MOZ_TREE_CAIRO']:
      DIRS += ['cairo']
@@ -107,9 +112,9 @@ diff -Naur a/gfx/moz.build b/gfx/moz.build
      'ots/src',
      'thebes',
      'ipc',
-diff -Naur a/gfx/skia/generate_mozbuild.py b/gfx/skia/generate_mozbuild.py
---- a/gfx/skia/generate_mozbuild.py	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/skia/generate_mozbuild.py	2018-04-06 01:25:51.701875352 +0100
+diff -Naur firefox-61.0/gfx/skia/generate_mozbuild.py firefox-61.0-freebsd/gfx/skia/generate_mozbuild.py
+--- firefox-61.0/gfx/skia/generate_mozbuild.py	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/skia/generate_mozbuild.py	2018-05-15 19:31:48.299484650 +0100
 @@ -148,6 +148,9 @@
          '-Wno-unused-private-field',
      ]
@@ -120,10 +125,10 @@ diff -Naur a/gfx/skia/generate_mozbuild.py b/gfx/skia/generate_mozbuild.py
  if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk3', 'android'):
      CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
      CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
-diff -Naur a/gfx/skia/moz.build b/gfx/skia/moz.build
---- a/gfx/skia/moz.build	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/skia/moz.build	2018-04-06 01:25:51.701875352 +0100
-@@ -823,6 +823,9 @@
+diff -Naur firefox-61.0/gfx/skia/moz.build firefox-61.0-freebsd/gfx/skia/moz.build
+--- firefox-61.0/gfx/skia/moz.build	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/skia/moz.build	2018-05-15 19:31:48.299484650 +0100
+@@ -822,6 +822,9 @@
          '-Wno-unused-private-field',
      ]
  
@@ -133,10 +138,10 @@ diff -Naur a/gfx/skia/moz.build b/gfx/skia/moz.build
  if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk3', 'android'):
      CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
      CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
-diff -Naur a/gfx/thebes/moz.build b/gfx/thebes/moz.build
---- a/gfx/thebes/moz.build	2018-04-02 20:25:11.000000000 +0100
-+++ b/gfx/thebes/moz.build	2018-04-06 01:25:51.701875352 +0100
-@@ -272,7 +272,13 @@
+diff -Naur firefox-61.0/gfx/thebes/moz.build firefox-61.0-freebsd/gfx/thebes/moz.build
+--- firefox-61.0/gfx/thebes/moz.build	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/gfx/thebes/moz.build	2018-05-15 19:31:48.299484650 +0100
+@@ -274,7 +274,13 @@
  
  LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
  
@@ -151,9 +156,9 @@ diff -Naur a/gfx/thebes/moz.build b/gfx/thebes/moz.build
  
  if CONFIG['CC_TYPE'] == 'clang':
      # Suppress warnings from Skia header files.
-diff -Naur a/intl/unicharutil/util/moz.build b/intl/unicharutil/util/moz.build
---- a/intl/unicharutil/util/moz.build	2018-04-02 20:25:12.000000000 +0100
-+++ b/intl/unicharutil/util/moz.build	2018-04-06 01:25:51.701875352 +0100
+diff -Naur firefox-61.0/intl/unicharutil/util/moz.build firefox-61.0-freebsd/intl/unicharutil/util/moz.build
+--- firefox-61.0/intl/unicharutil/util/moz.build	2018-05-14 17:55:56.000000000 +0100
++++ firefox-61.0-freebsd/intl/unicharutil/util/moz.build	2018-05-15 19:31:48.299484650 +0100
 @@ -25,4 +25,7 @@
      'nsUnicodeProperties.cpp',
  ]
@@ -162,23 +167,20 @@ diff -Naur a/intl/unicharutil/util/moz.build b/intl/unicharutil/util/moz.build
 +    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
 +
  FINAL_LIBRARY = 'xul'
-diff -Naur a/netwerk/dns/moz.build b/netwerk/dns/moz.build
---- a/netwerk/dns/moz.build	2018-04-02 20:25:27.000000000 +0100
-+++ b/netwerk/dns/moz.build	2018-04-06 01:25:51.701875352 +0100
-@@ -72,6 +72,9 @@
-     '/netwerk/base',
- ]
- 
-+if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
-+    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
-+
- USE_LIBS += ['icu']
+diff -Naur firefox-61.0/netwerk/dns/moz.build firefox-61.0-freebsd/netwerk/dns/moz.build
+--- firefox-61.0/netwerk/dns/moz.build	2018-05-14 17:56:01.000000000 +0100
++++ firefox-61.0-freebsd/netwerk/dns/moz.build	2018-05-15 19:31:48.299484650 +0100
+@@ -76,3 +76,6 @@
  
  if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-diff -Naur a/old-configure.in b/old-configure.in
---- a/old-configure.in	2018-04-02 20:25:32.000000000 +0100
-+++ b/old-configure.in	2018-04-06 01:26:52.001877758 +0100
-@@ -3980,6 +3980,27 @@
+     CXXFLAGS += ['-Wno-error=shadow']
++
++if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
+diff -Naur firefox-61.0/old-configure.in firefox-61.0-freebsd/old-configure.in
+--- firefox-61.0/old-configure.in	2018-05-14 17:56:01.000000000 +0100
++++ firefox-61.0-freebsd/old-configure.in	2018-05-15 19:53:08.513745343 +0100
+@@ -3956,6 +3956,27 @@
  AC_SUBST(MOZ_LINUX_32_SSE2_STARTUP_ERROR)
  
  dnl ========================================================
@@ -206,9 +208,9 @@ diff -Naur a/old-configure.in b/old-configure.in
  dnl Check for pixman and cairo
  dnl ========================================================
  
-diff -Naur a/toolkit/library/moz.build b/toolkit/library/moz.build
---- a/toolkit/library/moz.build	2018-04-02 20:26:09.000000000 +0100
-+++ b/toolkit/library/moz.build	2018-04-06 01:25:51.702875352 +0100
+diff -Naur firefox-61.0/toolkit/library/moz.build firefox-61.0-freebsd/toolkit/library/moz.build
+--- firefox-61.0/toolkit/library/moz.build	2018-05-14 17:56:07.000000000 +0100
++++ firefox-61.0-freebsd/toolkit/library/moz.build	2018-05-15 19:31:48.300484645 +0100
 @@ -235,6 +235,12 @@
  if CONFIG['MOZ_SYSTEM_PNG']:
      OS_LIBS += CONFIG['MOZ_PNG_LIBS']
@@ -222,24 +224,20 @@ diff -Naur a/toolkit/library/moz.build b/toolkit/library/moz.build
  if CONFIG['MOZ_SYSTEM_HUNSPELL']:
      OS_LIBS += CONFIG['MOZ_HUNSPELL_LIBS']
  
-diff -Naur a/toolkit/moz.configure b/toolkit/moz.configure
---- a/toolkit/moz.configure	2018-04-02 20:26:22.000000000 +0100
-+++ b/toolkit/moz.configure	2018-04-06 01:27:31.954879349 +0100
-@@ -315,6 +315,34 @@
- add_old_configure_assignment('_HAVE_FREETYPE2',
-                              depends_if(freetype2_info)(lambda _: True))
+diff -Naur firefox-61.0/toolkit/moz.configure firefox-61.0-freebsd/toolkit/moz.configure
+--- firefox-61.0/toolkit/moz.configure	2018-05-14 17:56:07.000000000 +0100
++++ firefox-61.0-freebsd/toolkit/moz.configure	2018-05-15 19:53:55.055487329 +0100
+@@ -1030,6 +1030,26 @@
+ add_old_configure_assignment('FT2_CFLAGS',
+                              ft2_info.cflags)
  
 +# Graphite2
 +# ==============================================================
 +option('--with-system-graphite2',
 +       help="Use system graphite2 (located with pkgconfig)")
 +
-+@depends('--with-system-graphite2')
-+def check_for_graphite2(value):
-+    return bool(value)
-+
 +system_graphite2 = pkg_check_modules('MOZ_GRAPHITE2', 'graphite2',
-+                                     when=check_for_graphite2)
++                                     when='--with-system-graphite2')
 +
 +set_config('MOZ_SYSTEM_GRAPHITE2', depends_if(system_graphite2)(lambda _: True))
 +
@@ -248,15 +246,11 @@ diff -Naur a/toolkit/moz.configure b/toolkit/moz.configure
 +option('--with-system-harfbuzz',
 +       help="Use system harfbuzz (located with pkgconfig)")
 +
-+@depends('--with-system-harfbuzz')
-+def check_for_harfbuzz(value):
-+    return bool(value)
-+
 +system_harfbuzz = pkg_check_modules('MOZ_HARFBUZZ', 'harfbuzz >= 1.7.6',
-+                                    when=check_for_harfbuzz)
++                                    when='--with-system-harfbuzz')
 +
 +set_config('MOZ_SYSTEM_HARFBUZZ', depends_if(system_harfbuzz)(lambda _: True))
 +
- # Apple platform decoder support
+ # Mortar
  # ==============================================================
- @depends(toolkit)
+ option('--enable-mortar', help='Enable mortar extension')
