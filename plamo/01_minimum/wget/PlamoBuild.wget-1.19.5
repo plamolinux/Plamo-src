@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wget'
-vers='1.19.2'
+vers='1.19.5'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -9,7 +9,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared --with-ssl=openssl'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles='CVE-2017-6508.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
