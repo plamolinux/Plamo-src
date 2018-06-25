@@ -1,0 +1,3 @@
+#!/bin/sh
+renice +19 -p $$ > /dev/null 2>&1
+updatedb
