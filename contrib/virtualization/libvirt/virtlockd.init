@@ -1,0 +1,56 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides: virtlockd
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Required-Start:
+# Required-Stop:
+# Should-Start: $network $remote_fs
+# Should-Stop: $network $remote_fs
+# Short-Description: virtual machine lock manager
+# Description: This is a daemon for managing locks
+#              on virtual machine disk images
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+PIDFILE=/run/virtlockd.pid
+SERVICE=/usr/sbin/virtlockd
+
+VIRTLOCKD_ARGS=
+
+test -f /etc/sysconfig/virtlockd && . /etc/sysconfig/virtlockd
+
+case "${1}" in
+    start)
+	log_info_msg "Starting virtlockd..."
+	start_daemon -p $PIDFILE $SERVICE --daemon $VIRTLOCKD_ARGS
+	evaluate_retval
+	;;
+
+    stop)
+	log_info_msg "Stopping virtlockd..."
+	killproc $SERVICE
+	evaluate_retval
+	;;
+
+    restart)
+	${0} stop
+	sleep 1
+	${0} start
+	;;
+
+    status)
+	statusproc /usr/sbin/virtlockd
+	;;
+    
+    *)
+	echo "Usage: ${0} {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+exit 0
+
+# End scriptname
