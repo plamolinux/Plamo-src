@@ -145,9 +145,8 @@ if [ $opt_package -eq 1 ] ; then
      $P/usr/share/pixmaps/firefox.png
 
   # lang pack
-  #sh $W/langpack.sh $W
-  #install -Dm644 -v $W/ja.xpi.plamo \
-  install -Dm644 -v $W/ja.xpi \
+  sh $W/langpack.sh $W
+  install -Dm644 -v $W/ja.xpi.plamo \
 	  $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
   install -Dm644 -v $W/vendor.js \
           $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor.js
