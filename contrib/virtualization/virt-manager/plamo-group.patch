@@ -1,0 +1,11 @@
+diff -uNr virt-manager-1.5.0.orig/virtManager/create.py virt-manager-1.5.0/virtManager/create.py
+--- virt-manager-1.5.0.orig/virtManager/create.py	2018-01-31 01:19:54.000000000 +0900
++++ virt-manager-1.5.0/virtManager/create.py	2018-02-21 17:52:44.726532953 +0900
+@@ -1067,6 +1067,7 @@
+             "sled": _("SUSE Linux Enterprise Desktop"),
+             "sles": _("SUSE Linux Enterprise Server"),
+             "ubuntu": _("Ubuntu"),
++            "plamo" : _("Plamo"),
+         }
+ 
+         if self._show_all_os_was_selected:

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<libosinfo version="0.0.1">
+  <os id="http://plamolinux.org/plamo/6.2">
+    <short-id>plamo6.2</short-id>
+    <name>Plamo 6.2</name>
+    <version>6.2</version>
+    <vendor>Plamo Linux Project</vendor>
+    <vendor xml:lang="ca">Plamo Linux Project</vendor>
+    <vendor xml:lang="de">Plamo Linux Project</vendor>
+    <vendor xml:lang="es">Plamo Linux Project</vendor>
+    <vendor xml:lang="fr">Plamo Linux Project</vendor>
+    <vendor xml:lang="ja">Plamo Linux Project</vendor>
+    <vendor xml:lang="pl">Plamo Linux Project</vendor>
+    <vendor xml:lang="pt_BR">Plamo Linux Project</vendor>
+    <vendor xml:lang="uk">Plamo Linux Project</vendor>
+    <family>linux</family>
+    <distro>plamo</distro>
+
+    <release-date>2017-03-04</release-date>
+
+    <devices>
+      <device id="http://pcisig.com/pci/1af4/1004"/> 
+    </devices>
+
+    <resources arch="all">
+      <minimum>
+        <cpu>1000000000</cpu>
+        <n-cpus>1</n-cpus>
+        <ram>1073741824</ram>
+        <storage>5368709120</storage>
+      </minimum>
+      <recommended>
+        <cpu>1000000000</cpu>
+        <ram>1073741824</ram>
+        <storage>16106127360</storage>
+      </recommended>
+    </resources>
+
+    <media arch="i686">
+      <url>https://repository.plamolinux.org/isos/plamo-6.2_x86_dvd.iso</url>
+      <iso>
+        <volume-id>Plamo 6.2</volume-id>
+      </iso>
+      <kernel>isolinux/vmlinuz</kernel>
+      <initrd>isolinux/initrd.gz</initrd>
+    </media>
+    <media arch="x86_64">
+      <url>https://repository.plamolinux.org/isos/plamo-6.2_x86_64_dvd.iso</url>
+      <iso>
+        <volume-id>Plamo 6.2</volume-id>
+      </iso>
+      <kernel>isolinux/vmlinuz</kernel>
+      <initrd>isolinux/initrd.gz</initrd>
+    </media>
+  </os>
+</libosinfo>

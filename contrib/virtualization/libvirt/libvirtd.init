@@ -1,0 +1,73 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: libvirtd
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Required-Start: $network messagebus virtlogd
+# Required-Stop: $network messagebus
+# Should-Start: $named xend avahi-daemon virtlockd
+# Should-Stop: $named
+# Short-Description: daemon for libvirt virtualization API
+# Description: This is a daemon for managing guest instances
+#              and libvirt virtual networks
+#              See https://libvirt.org
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+PIDFILE=/run/libvirtd.pid
+SERVICE=/usr/sbin/libvirtd
+
+LIBVIRTD_CONFIG=
+LIBVIRTD_ARGS=
+KRB5_KTNAME=/etc/libvirt/krb5.tab
+
+test -f /etc/sysconfig/libvirtd && . /etc/sysconfig/libvirtd
+
+LIBVIRTD_CONFIG_ARGS=
+if [ -n "$LIBVIRTD_CONFIG" ]
+then
+    LIBVIRTD_CONFIG_ARGS="--config $LIBVIRTD_CONFIG"
+fi
+
+case "${1}" in
+    start)
+	log_info_msg "Starting libvirtd..."
+	mkdir -p /var/cache/libvirt
+	rm -rf   /var/cache/libvirt/*
+
+	if [ -n "$LIBVIRTD_NOFILES_LIMIT" ]; then
+            ulimit -n "$LIBVIRTD_NOFILES_LIMIT"
+	fi
+
+	KRB5_KTNAME=$KRB5_KTNAME \
+		   start_daemon -p $PIDFILE \
+		   $SERVICE --daemon $LIBVIRTD_CONFIG_ARGS $LIBVIRTD_ARGS
+	evaluate_retval
+	;;
+
+    stop)
+	log_info_msg "Stopping libvirtd..."
+	killproc $SERVICE
+	evaluate_retval
+	;;
+
+    restart)
+	${0} stop
+	sleep 1
+	${0} start
+	;;
+
+    status)
+	statusproc $SERVICE
+	;;
+
+    *)
+	echo "Usage: ${0} {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+exit 0
+
+# End scriptname
