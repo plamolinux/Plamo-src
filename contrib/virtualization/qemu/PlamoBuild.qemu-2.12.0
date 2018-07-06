@@ -1,17 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libvirt'
-vers='4.2.0'
-url="https://${pkgbase}.org/sources/${pkgbase}-${vers}.tar.xz"
-verify=""
+pkgbase='qemu'
+vers='2.12.0'
+url="http://download.qemu-project.org/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared
-            --with-storage-lvm --without-xen --with-udev --without-hal
-	    --with-qemu-user=libvirt-qemu --with-qemu-group=kvm
-	    --with-init-script=redhat --with-macvtap --with-interface"
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-old INSTALL NEWS README README.md'
+
+OPT_CONFIG="--audio-drv-list=alsa
+	    --with-sdlabi=2.0
+	    --with-gtkabi=3.0
+	    --python=/usr/bin/python2
+	    --docdir=/usr/share/doc/${src}"
+DOCS='COPYING COPYING.LIB COPYING.PYTHON Changelog HACKING LICENSE MAINTAINERS README qdict-test-data.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -55,25 +57,28 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-
-  for file in $(find . -name '*.py' -print); do
-    sed -i 's_#!.*/usr/bin/python_#!/usr/bin/python2_' "${file}"
-    sed -i 's_#!.*/usr/bin/env.*python_#!/usr/bin/env python2_' "${file}"
-  done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
+  if [ $arch = "i686" ]; then
+    QEMU_ARCH=i386-softmmu
+  else
+    QEMU_ARCH=x86_64-softmmu
+  fi
+  OPT_CONFIG="$OPT_CONFIG --target-list=$QEMU_ARCH"
+
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed -lX11'
-  export PYTHON=/usr/bin/python2
+  export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
+
+  unset QEMU_ARCH
 fi
     
 if [ $opt_build -eq 1 ] ; then
@@ -93,36 +98,13 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  # init scripts, but default to stop on system start
-  install -Dm644 -v $W/libvirtd.init $P/etc/rc.d/init.d/libvirtd
-  install -Dm644 -v $W/virtlockd.init $P/etc/rc.d/init.d/virtlockd
-  install -Dm644 -v $W/virtlogd.init $P/etc/rc.d/init.d/virtlogd
-  install -Dm644 -v $W/libvirtd.conf $P/etc/libvirt/libvirtd.conf
+  install -Dm644 -v $W/65-kvm.rules $P/${libdir}/udev/rules.d/65-kvm.rules
+  install -Dm644 -v $W/65-kvm.rules $docdir/$src/65-kvm.rules
 
-  for i in $(seq 0 6)
-  do
-    install -dm755 -v $P/etc/rc.d/rc${i}.d
-    case $i in
-      0|1|2|6)
-        ln -sfv ../init.d/libvirtd  $P/etc/rc.d/rc${i}.d/K03libvirtd
-	ln -sfv ../init.d/virtlockd $P/etc/rc.d/rc${i}.d/K04virtlockd
-	ln -sfv ../init.d/virtlogd  $P/etc/rc.d/rc${i}.d/K04virtlogd
-	ln -sfv ../init.d/libvirt-guests $P/etc/rc.d/rc${i}.d/K01libvirt-guests
-	;;
-      3|4|5)
-	ln -sfv ../init.d/libvirtd $P/etc/rc.d/rc${i}.d/S97libvirtd
-	ln -sfv ../init.d/virtlockd $P/etc/rc.d/rc${i}.d/S96virtlockd
-	ln -sfv ../init.d/virtlogd  $P/etc/rc.d/rc${i}.d/S96virtlogd
-	ln -sfv ../init.d/libvirt-guests $P/etc/rc.d/rc${i}.d/S99libvirt-guests
-	;;
-    esac
-  done
+  chgrp kvm $P/usr/libexec/qemu-bridge-helper
+  chmod 4750 $P/usr/libexec/qemu-bridge-helper
 
-  # initscript to docdir
-  install -Dm644 -v $W/libvirtd.init $docdir/$src/libvirtd.init
-  install -Dm644 -v $W/virtlogd.init $docdir/$src/virtlogd.init
-  install -Dm644 -v $W/virtlockd.init $docdir/$src/virtlockd.init
-  install -Dm644 -v $W/libvirtd.conf $docdir/$src/libvirtd.conf
+  ln -sv qemu-system-"$(uname -m)" $P/usr/bin/qemu
 
 ################################
 #      install tweaks
