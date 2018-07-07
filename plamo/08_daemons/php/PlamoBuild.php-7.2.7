@@ -6,7 +6,7 @@ url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
 #verify="${url}.asc"
 digest="sha256sum:eb01c0153b3baf1f64b8b044013ce414b52fede222df3f509e8ff209478f31f0"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
 BUILD_TYPE=(cgi apache)
@@ -62,13 +62,11 @@ done
 # 上のどれにも当てはまらないオプション
 other_modules=(--with-freetype-dir=/usr
 	       --enable-mbregex
-	       --with-imap-ssl
 	       --with-mhash
-	       --with-imap
-	       --with-tidy
-	       --with-mysqli=shared,mysqlnd --with-mysql-sock=/run/mysqld/mysqld.sock
-	       --with-openssl
 	       --with-pdo-mysql=shared,mysqlnd
+	       --with-mysqli=shared,mysqlnd
+	       --with-mysql-sock=/run/mysqld/mysqld.sock
+	       --with-openssl
 	       --with-readline
 	       --with-zlib
 	       --enable-pcntl)
@@ -77,7 +75,7 @@ OPT_MODULE=(${shared_modules_option[@]}
 	    ${with_shared_option[@]}
 	    ${with_prefix_option[@]}
 	    ${with_shared_prefix_option[@]}
-	    $other_modules)
+	    ${other_modules[@]})
 
 OPT_CONFIG_cgi=(--enable-cgi
 		--enable-fpm
