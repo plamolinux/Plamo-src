@@ -9,7 +9,7 @@ arch=`uname -m`
 build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
-BUILD_TYPE=(cgi apache)
+BUILD_TYPE=(apache cgi)
 DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.md'
 patchfiles=''
 compress=txz
@@ -28,55 +28,38 @@ OPT_CONFIG=("${OPT_CONFIG[@]}"
 	    --disable-rpath)
 
 # モジュール関係
-## --enable-${module}=shared
-shared_modules=(bcmath calendar dba exif ftp intl mbstring
-		shmop soap sockets sysvmsg sysvsem sysvshm
+## --enable-${module}
+enable_modules=(bcmath calendar dba exif ftp intl mbstring mysqlnd
+		mbregex pcntl shmop soap sockets sysvmsg sysvsem sysvshm
 		zip)
-for m in ${shared_modules[@]}
+for m in ${enable_modules[@]}
 do
-    shared_modules_option=(${shared_modules_option[@]} --enable-"$m"=shared)
+    enable_modules_option=(${enable_modules_option[@]} --enable-"$m")
 done
 
-## --with-${module}=shared
-with_shared=(bz2 curl gd gettext gmp iconv ldap
-	     pspell xmlrpc)
-for m in ${with_shared[@]}
+## --with-${module}
+with_modules=(bz2 curl gd gettext gmp iconv ldap
+	     pspell xmlrpc mhash openssl readline zlib)
+for m in ${with_modules[@]}
 do
-    with_shared_option=(${with_shared_option[@]} --with-"$m"=shared)
+    with_modules_option=(${with_modules_option[@]} --with-"$m")
 done
 
 ## --with-${module}=${prefix}
-with_prefix=(gdbm pcre-regex libzip)
+with_prefix=(gdbm pcre-regex libzip enchant pdo-sqlite sqlite3 freetype)
 for m in ${with_prefix[@]}
 do
     with_prefix_option=(${with_prefix_option[@]} --with-"$m"=/usr)
 done
 
-## --with-${module}=shared,${prefix}
-with_shared_prefix=(enchant pdo-sqlite sqlite3)
-for m in ${with_shared_prefix[@]}
-do
-    with_shared_prefix_option=(${with_shared_prefix_option[@]} --with-"$m"=shared,/usr)
-done
-
 # 上のどれにも当てはまらないオプション
-other_modules=(--with-freetype-dir=/usr
-	       --enable-mysqlnd
-	       --with-pdo-mysql=shared
-	       --with-mysqli=shared
-	       --with-mysql-sock=/run/mysqld/mysqld.sock
-	       --enable-mbregex
-	       --with-mhash
-	       --with-openssl
-	       --with-pdo-mysql=mysqlnd
-	       --with-readline
-	       --with-zlib
-	       --enable-pcntl)
+other_modules=(--with-pdo-mysql=mysqlnd
+	       --with-mysqli=mysqlnd
+	       --with-mysql-sock=/run/mysqld/mysqld.sock)
 
-OPT_MODULE=(${shared_modules_option[@]}
-	    ${with_shared_option[@]}
+OPT_MODULE=(${enable_modules_option[@]}
+	    ${with_modules_option[@]}
 	    ${with_prefix_option[@]}
-	    ${with_shared_prefix_option[@]}
 	    ${other_modules[@]})
 
 OPT_CONFIG_cgi=(--enable-cgi
@@ -172,19 +155,20 @@ if [ $opt_package -eq 1 ] ; then
   echo "Install dummy apache httpd.conf"
   install -dm755 -v $P/etc/httpd
   cp -v /etc/httpd/original/httpd.conf $P/etc/httpd/
+
   for t in ${BUILD_TYPE[@]}
   do
-    echo "==== Installing a part of $t ===="
-    cd $B/$t
-    export LDFLAGS='-Wl,--as-needed'
-    make install INSTALL_ROOT=$P
+      echo "==== Installing a part of $t ===="
+      cd $B/$t
+      export LDFLAGS='-Wl,--as-needed'
+      make install INSTALL_ROOT=$P
   done
 
   # delete unneeded files
   rm -fv $P/etc/httpd/httpd.conf*
   ( cd $P ; rm -rfv .channels .depdb .filemap .lock .registry .depdblock )
   rm -rfv $P/var
-  
+
   ln -sfv phar.phar $P/usr/bin/phar
 
   # config for php
