@@ -1,0 +1,58 @@
+#!/bin/sh
+########################################################################
+# Begin ebtables
+#
+# Description : Restore and store ebtables settings
+#
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            ebtables
+# Required-Start:      network
+# Should-Start:
+# Required-Stop:
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:
+# Short-Description:
+# Description:         Restore and store ebtables settings
+# X-LFS-Provided-By:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+config="/etc/sysconfig/ebtables-config"
+store_file="/etc/sysconfig/ebtables"
+
+[ -f $config ] && . "$config"
+
+case "${1}" in
+   start)
+      log_info_msg "Restoring ebtables policy... "
+      if [ -f $store_file ]; then
+        /usr/sbin/ebtables-restore < "$store_file"
+      fi
+      evaluate_retval
+      ;;
+
+   stop)
+      log_info_msg "Saving ebtables policy..."
+      /usr/sbin/ebtables-save > "$store_file"
+      evaluate_retval
+      ;;
+
+   restart)
+      ${0} stop
+      sleep 1
+      ${0} start
+      ;;
+
+   *)
+      echo "Usage: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac
+
+exit 0
+
+# End scriptname
