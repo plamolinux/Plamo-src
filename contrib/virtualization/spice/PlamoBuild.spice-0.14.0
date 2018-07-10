@@ -1,19 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='qemu'
-vers='2.12.0'
-url="http://download.qemu-project.org/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.sig"
+pkgbase='spice'
+vers='0.14.0'
+url="https://www.${pkgbase}-space.org/download/releases/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sign"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-
-OPT_CONFIG="--audio-drv-list=alsa
-	    --with-sdlabi=2.0
-	    --with-gtkabi=3.0
-	    --python=/usr/bin/python2
-	    --docdir=/usr/share/doc/${src}"
-DOCS='COPYING COPYING.LIB COPYING.PYTHON Changelog HACKING LICENSE MAINTAINERS README qdict-test-data.txt'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -61,30 +56,21 @@ if [ $opt_config -eq 1 ] ; then
   #   sh ./autogen.sh
   # fi
 
-  if [ $arch = "i686" ]; then
-    QEMU_ARCH=i386-softmmu
-  else
-    QEMU_ARCH=x86_64-softmmu
-  fi
-  OPT_CONFIG="$OPT_CONFIG --target-list=$QEMU_ARCH"
-
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  PYTHON=python2 $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
-
-  unset QEMU_ARCH
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  PYTHON=python2 make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -97,14 +83,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  install -Dm644 -v $W/65-kvm.rules $P/${libdir}/udev/rules.d/65-kvm.rules
-  install -Dm644 -v $W/65-kvm.rules $docdir/$src/65-kvm.rules
-
-  chgrp kvm $P/usr/libexec/qemu-bridge-helper
-  chmod 4750 $P/usr/libexec/qemu-bridge-helper
-
-  ln -sv qemu-system-"$(uname -m)" $P/usr/bin/qemu
 
 ################################
 #      install tweaks

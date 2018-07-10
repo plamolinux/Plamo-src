@@ -1,19 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='qemu'
-vers='2.12.0'
-url="http://download.qemu-project.org/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.sig"
+pkgbase='ebtables'
+vers='2.0.10_4'
+url="http://ftp.netfilter.org/pub/ebtables/ebtables-v${vers/_/-}.tar.gz"
+verify=""
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
-
-OPT_CONFIG="--audio-drv-list=alsa
-	    --with-sdlabi=2.0
-	    --with-gtkabi=3.0
-	    --python=/usr/bin/python2
-	    --docdir=/usr/share/doc/${src}"
-DOCS='COPYING COPYING.LIB COPYING.PYTHON Changelog HACKING LICENSE MAINTAINERS README qdict-test-data.txt'
+build=B1
+src="ebtables-v${vers/_/-}"
+OPT_CONFIG=
+DOCS='COPYING ChangeLog INSTALL THANKS'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -46,45 +41,20 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
-  if [ $arch = "i686" ]; then
-    QEMU_ARCH=i386-softmmu
-  else
-    QEMU_ARCH=x86_64-softmmu
-  fi
-  OPT_CONFIG="$OPT_CONFIG --target-list=$QEMU_ARCH"
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
-
-  unset QEMU_ARCH
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  export LDFLAGS='-Wl,--no-as-needed'
+  make -j3 CFLAGS='-Wunused -Wall -Werror -Wno-error=unused-but-set-variable'
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -95,16 +65,20 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  export LDFLAGS='-Wl,--no-as-needed'
+  make install DESTDIR=$P \
+       LIBDIR=/usr/${libdir} \
+       BINDIR=/sbin \
+       MANDIR=/usr/share/man \
+       INITDIR=/etc/rc.d/init.d \
+       SYSCONFIGDIR=/etc
 
-  install -Dm644 -v $W/65-kvm.rules $P/${libdir}/udev/rules.d/65-kvm.rules
-  install -Dm644 -v $W/65-kvm.rules $docdir/$src/65-kvm.rules
-
-  chgrp kvm $P/usr/libexec/qemu-bridge-helper
-  chmod 4750 $P/usr/libexec/qemu-bridge-helper
-
-  ln -sv qemu-system-"$(uname -m)" $P/usr/bin/qemu
+  rm -fv $P/etc/ethertypes
+  rm -fv $P/etc/rc.d/init.d/ebtables
+  install -Dm644 -v $W/ebtables.init $P/etc/rc.d/init.d/ebtables
+  install -Dm644 -v $W/ebtables.init $docdir/$src/ebtables.init
+  install -dm755 -v $P/etc/sysconfig
+  mv -v $P/etc/ebtables-config $P/etc/sysconfig/ebtables-config
 
 ################################
 #      install tweaks
