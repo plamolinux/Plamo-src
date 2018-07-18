@@ -6,7 +6,7 @@ url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
 #verify="${url}.asc"
 digest="sha256sum:eb01c0153b3baf1f64b8b044013ce414b52fede222df3f509e8ff209478f31f0"
 arch=`uname -m`
-build=B3
+build=B4
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
 BUILD_TYPE=(apache cgi)
@@ -46,7 +46,8 @@ do
 done
 
 ## --with-${module}=${prefix}
-with_prefix=(gdbm pcre-regex libzip enchant pdo-sqlite sqlite3 freetype)
+with_prefix=(gdbm pcre-regex libzip enchant pdo-sqlite sqlite3
+	     freetype-dir jpeg-dir png-dir webp-dir)
 for m in ${with_prefix[@]}
 do
     with_prefix_option=(${with_prefix_option[@]} --with-"$m"=/usr)
@@ -55,7 +56,8 @@ done
 # 上のどれにも当てはまらないオプション
 other_modules=(--with-pdo-mysql=mysqlnd
 	       --with-mysqli=mysqlnd
-	       --with-mysql-sock=/run/mysqld/mysqld.sock)
+	       --with-mysql-sock=/run/mysqld/mysqld.sock
+	       --enable-gd-jis-conv)
 
 OPT_MODULE=(${enable_modules_option[@]}
 	    ${with_modules_option[@]}
