@@ -381,7 +381,7 @@ def main():
     with open(script_name, 'w') as file:
         file.write(script)
 
-    os.chmod(script_name, 0755)
+    os.chmod(script_name, 0o755)
 
 
 if __name__ == "__main__":
