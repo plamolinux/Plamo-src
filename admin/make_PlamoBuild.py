@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import argparse, sys, os
@@ -34,10 +34,10 @@ def get_readmes(srcdir):
             if i.find(j) >= 0:
                 match = True
                 break
-                
+
         if match == False:
             newlist.append(i)
-                
+
     return newlist
 
 def get_patchfiles(srcdir):
@@ -69,7 +69,7 @@ def get_config_type(srcdir):
         elif file == 'Makefile.PL' :
             type = 'perl'
             break
-        
+
     if type == 'none' :
         print("cannot find proper configure methods.")
         print("PlamoBuild script is setup for configure, but you should adjust build script manually")
@@ -162,7 +162,7 @@ fi
         if source == True :  # with source build
             body_02 = '''
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
@@ -350,7 +350,7 @@ def main():
         method = 'perl'
     else :
         method = get_config_type(params.srcdir)
-        
+
     # print method
     (basename, version) = get_basename_and_version(params.srcdir)
     # print basename, version
@@ -367,23 +367,23 @@ def main():
     build = make_build(method)
 
     script = header + config + build
-    script_name = "PlamoBuild." + basename + '-' + version
+    script_name = "PlamoBuild." + params.srcdir
 
     if params.verbose :
         print(script)
 
     if os.path.isfile(script_name) :
         print("same named Build script already exists. ")
-        ans = raw_input("OverWrite? [y/N]: ")
+        ans = input('OverWrite? [y/N]: ')
         if ans != 'y' and ans != 'Y' :
             sys.exit("not overwrited. exits")
-            
+
     with open(script_name, 'w') as file:
         file.write(script)
 
-    os.chmod(script_name, 0755)
+    os.chmod(script_name, 0o755)
 
-    
+
 if __name__ == "__main__":
     main()
 
