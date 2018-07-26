@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gimp'
-vers='2.8.22'
-url="https://download.${pkgbase}.org/pub/${pkgbase}/v2.8/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.md5"
+vers='2.10.4'
+url="https://download.${pkgbase}.org/pub/${pkgbase}/v${vers%.*}/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:9e0a3703a920da8b3e51e845fa3bff7d"
+verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --disable-gvfs'
-DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl'
+OPT_CONFIG="--disable-static --enable-shared --with-bug-report-url=http://plamo.linet.gr.jp/"
+DOCS="AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl po-windows-installer"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -52,8 +53,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i '/gegl/s/2/3/' configure
-  sed -i '70,75 d' app/core/gimpparamspecs-duplicate.c
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
@@ -82,6 +81,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  sed -i -e "s/# (help-browser gimp)/(help-browser web-browser)/" $P/etc/gimp/2.0/gimprc
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
