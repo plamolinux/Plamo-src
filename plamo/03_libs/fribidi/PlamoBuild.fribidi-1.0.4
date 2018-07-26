@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fribidi'
-vers='0.19.7'
-url="https://github.com/${pkgbase}/${pkgbase}/archive/${vers}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:dbe2f2bf3ba0307d75885b21d6cceb2c"
+vers='1.0.4'
+url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:00d058ac76e6c0f46a6671a63d31cf67"
 verify=""
 arch=`uname -m`
 build=B1
@@ -50,7 +50,6 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-  ./bootstrap
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
