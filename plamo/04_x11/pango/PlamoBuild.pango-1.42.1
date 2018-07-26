@@ -72,7 +72,9 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  DESTDIR=$P ninja install 
+  DESTDIR=$P ninja install
+
+  install -Dm644 -v pango-view/pango-view.1 $P/usr/share/man/man1/pango-view.1
 
 ################################
 #      install tweaks
