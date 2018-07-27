@@ -6,7 +6,7 @@ url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
 #verify="${url}.asc"
 digest="sha256sum:53ba0708be8a7db44256e3ae9fcecc91b811e5b5119e6080c951ffe7910ffb0f"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
 BUILD_TYPE=(apache cgi)
@@ -27,42 +27,51 @@ OPT_CONFIG=("${OPT_CONFIG[@]}"
 	    --with-config-file-scan-dir=/etc/php/conf.d
 	    --disable-rpath)
 
-# モジュール関係
-## --enable-${module}
-enable_modules=(bcmath calendar dba exif ftp intl mbstring mysqlnd
-		mbregex pcntl shmop soap sockets sysvmsg sysvsem sysvshm
-		zip)
-for m in ${enable_modules[@]}
-do
-    enable_modules_option=(${enable_modules_option[@]} --enable-"$m")
-done
-
-## --with-${module}
-with_modules=(bz2 curl gd gettext gmp iconv ldap
-	     pspell xmlrpc mhash openssl readline zlib)
-for m in ${with_modules[@]}
-do
-    with_modules_option=(${with_modules_option[@]} --with-"$m")
-done
-
-## --with-${module}=${prefix}
-with_prefix=(gdbm pcre-regex libzip enchant pdo-sqlite sqlite3
-	     freetype-dir jpeg-dir png-dir webp-dir)
-for m in ${with_prefix[@]}
-do
-    with_prefix_option=(${with_prefix_option[@]} --with-"$m"=/usr)
-done
-
-# 上のどれにも当てはまらないオプション
-other_modules=(--with-pdo-mysql=mysqlnd
-	       --with-mysqli=mysqlnd
-	       --with-mysql-sock=/run/mysqld/mysqld.sock
-	       --enable-gd-jis-conv)
-
-OPT_MODULE=(${enable_modules_option[@]}
-	    ${with_modules_option[@]}
-	    ${with_prefix_option[@]}
-	    ${other_modules[@]})
+OPT_MODULE=(--enable-bcmath=shared
+	    --enable-calendar=shared
+	    --enable-dba=shared
+	    --enable-exif=shared
+	    --enable-ftp=shared
+	    --enable-intl=shared
+	    --enable-mysqlnd
+	    --enable-mbstring=shared
+	    --enable-pcntl
+	    --enable-shmop=shared
+	    --enable-soap=shared
+	    --enable-sockets=shared
+	    --enable-sysvmsg=shared
+	    --enable-sysvsem=shared
+	    --enable-sysvshm=shared
+	    --enable-zip=shared
+	    --with-bz2=shared
+	    --with-curl=shared
+	    --with-gd=shared
+	    --with-jpeg-dir=/usr
+	    --with-png-dir=/usr
+	    --with-zlib-dir=/usr
+	    --with-webp-dir=/usr
+	    --with-gettext=shared
+	    --enable-gd-jis-conv
+	    --with-gmp=shared
+	    --with-iconv=shared
+	    --with-ldap=shared
+	    --with-pspell=shared
+	    --with-xmlrpc=shared
+	    --with-mhash
+	    --with-openssl
+	    --with-readline
+	    --with-zlib
+	    --with-gdbm
+	    --with-pcre-regex=/usr
+	    --with-libzip=/usr
+	    --with-enchant=shared,/usr
+	    --with-pdo-sqlite=shared,/usr
+	    --with-sqlite3=shared,/usr
+	    --with-freetype-dir=/usr
+	    --with-pdo-mysql=shared,mysqlnd
+	    --with-mysqli=shared,mysqlnd
+	    --with-mysql-sock=/run/mysqld/mysqld.sock
+	   )
 
 OPT_CONFIG_cgi=(--enable-cgi
 		--enable-fpm
