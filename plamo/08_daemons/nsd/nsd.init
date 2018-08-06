@@ -34,7 +34,7 @@ case "$1" in
    start)
       if [ ! -d /run/nsd ]; then
         mkdir -p /run/nsd
-	chown nsd /run/nsd
+        chown nsd /run/nsd
       fi
       log_info_msg "Starting nsd..."
       start_daemon $DAEMON $ARGS
@@ -43,7 +43,7 @@ case "$1" in
 
    stop)
       log_info_msg "Stopping nsd..."
-      killproc $DAEMON
+      kill -TERM $(cat $PIDFILE)
       evaluate_retval
       ;;
 
@@ -57,9 +57,6 @@ case "$1" in
       log_info_msg "Reloading nsd..."
       kill -HUP $(cat $PIDFILE)
       evaluate_retval
-      if [ -f $PIDFILE ]; then
-	rm -f $PIDFILE
-      fi
       ;;
 
    status)
@@ -67,7 +64,7 @@ case "$1" in
       ;;
 
    *)
-      echo "Usage: $0 {start|stop|restart|status}"
+      echo "Usage: $0 {start|stop|restart|reload|status}"
       exit 1
       ;;
 esac
