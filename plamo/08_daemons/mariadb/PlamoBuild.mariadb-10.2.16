@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mariadb'
-vers='10.2.13'
+vers='10.2.16'
 url="https://downloads.${pkgbase}.org/interstitial/${pkgbase}-${vers}/source/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:20c61bd4059ba287e54cfb2862bae81d"
+digest="md5sum:234156a94f8ea6cff92c4751880b8316"
 verify=""
 arch=`uname -m`
 build=B1
