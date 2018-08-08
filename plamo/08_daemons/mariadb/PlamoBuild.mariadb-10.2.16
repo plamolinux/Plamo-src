@@ -6,7 +6,7 @@ url="https://downloads.${pkgbase}.org/interstitial/${pkgbase}-${vers}/source/${p
 digest="md5sum:234156a94f8ea6cff92c4751880b8316"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 # なぜか GSSAPI のリンクでエラーになるので AUTH_GSSAPI は無効化している
 OPT_CONFIG=(-DCMAKE_BUILD_TYPE=Release
@@ -115,8 +115,18 @@ if [ $opt_package -eq 1 ] ; then
     esac
   done
 
-  install -Dm644 $W/my.cnf $P/etc/my.cnf
-  install -Dm644 $W/my.cnf $docdir/$src/my.cnf
+  install -Dm644 -v $W/my.cnf $P/etc/mysql/my.cnf.dist
+  install -Dm644 -v $W/my.cnf $docdir/$src/my.cnf
+  install -Dm644 -v $W/mysql-log-rotate $P/etc/logrotate.d/mariadb
+  install -Dm644 -v $W/mysql-log-rotate $docdir/$src/mysql-log-rotate
+  install -dm755 -o mysql -g mysql -v $P/var/log/mysql
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/mysql/my.cnf ]; then
+   ( cd /etc/mysql && cp my.cnf.dist my.cnf )
+fi
+EOF
 
 ################################
 #      install tweaks
