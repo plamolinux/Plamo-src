@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='man_pages'
-vers='4.10'
+vers='4.16'
 url="https://www.kernel.org/pub/linux/docs/man-pages/man-pages-${vers}.tar.xz"
-verify="https://www.kernel.org/pub/linux/docs/man-pages/man-pages-4.10.tar.sign"
+verify="https://www.kernel.org/pub/linux/docs/man-pages/man-pages-${vers}.tar.sign"
 arch=noarch
 build=B1
 src="man-pages-${vers}"
 OPT_CONFIG=''
-DOCS='README man-pages-4.10.lsm'
+DOCS="README man-pages-${vers}.lsm man-pages-${vers}.Announce"
 patchfiles=''
 compress=txz
 ##############################################################
