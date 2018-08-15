@@ -5,10 +5,10 @@ fscheck() {
   mv pangram pangram~ ; mkdir pangram ; touch -r pangram~ pangram
   tar cpf pangram.tar pangram ; rmdir pangram ; mv pangram~ pangram
   for i in $PANGRAM ; do tar rpf pangram.tar pangram/$i ; done
-  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  TZ=UTC touch -t `date -u '+%m%d0000'` pangram.tar ; gzip pangram.tar
   touch pangram.tar.gz ; mv pangram.tar.gz pangram1.tgz
   tar cpf pangram.tar pangram
-  touch -t `date '+%m%d0900'` pangram.tar ; gzip pangram.tar
+  TZ=UTC touch -t `date -u '+%m%d0000'` pangram.tar ; gzip pangram.tar
   touch pangram.tar.gz ; mv pangram.tar.gz pangram2.tgz
   if cmp -s pangram1.tgz pangram2.tgz ; then
     echo "OK"
@@ -264,12 +264,12 @@ setup_docdir() {
       func=${myname%%.*}_functions
       if [ -f functions ] ; then
         install -m 644 functions $docdir/$src/$func
-        touch -t `date '+%m%d0900'` $docdir/$src/$func
+        TZ=UTC touch -t `date -u '+%m%d0000'` $docdir/$src/$func
       else
         cp -p /usr/share/plamo/functions $docdir/$src/$func
       fi
       install $myname $docdir/$src
-      touch -t `date '+%m%d0900'` $docdir/$src/$myname
+      TZ=UTC touch -t `date -u '+%m%d0000'` $docdir/$src/$myname
       tmpl=${myname%%.*}-template-$template
       if [ -f ../admin/$tmpl ] ; then
         cp -p ../admin/$tmpl $docdir/$src
@@ -279,7 +279,7 @@ setup_docdir() {
       fi
       spec=$myname-spec
       ( cd $docdir/$src ; diff -u $tmpl $myname > $spec )
-      touch -t `date '+%m%d0900'` $docdir/$src/$spec
+      TZ=UTC touch -t `date -u '+%m%d0000'` $docdir/$src/$spec
       rm $docdir/$src/$tmpl
       gzip $docdir/$src/{$func,$myname,$spec}
       mv $docdir/$src/{$func,$myname,$spec}.gz $C
@@ -315,7 +315,8 @@ prune_symlink() {
 	( cd $LINKGOESIN ; rm -rf $LINKNAMEIS )
 	( cd $LINKGOESIN ; ln -sf $LINKPOINTSTO $LINKNAMEIS )
 	EOF
-      rm -rf $LINE ; touch -t `date '+%m%d0900'` install/doinst.sh $LINE
+      rm -rf $LINE
+      TZ=UTC touch -t `date -u '+%m%d0000'` install/doinst.sh $LINE
       COUNT=$(($COUNT + 1))
       LINE=`sed -n "${COUNT}p" /tmp/iNsT-a.$$`
     done
