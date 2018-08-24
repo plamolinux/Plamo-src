@@ -5,11 +5,11 @@ vers='1.1.0i'
 url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='.travis-create-release.sh AUTHORS INSTALL LICENSE NEWS README README.ECC README.ENGINE README.FIPS'
-patchfiles="ca-dir.patch c_rehash.patch"
+patchfiles="ca-dir.patch"
 compress=txz
 ##############################################################
 
