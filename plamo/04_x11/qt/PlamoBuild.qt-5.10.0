@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qt'
-vers='5.10.1'
+vers='5.10.0'
 url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
-digest="md5sum:7e167b9617e7bd64012daaacb85477af"
+digest="md5sum:c5e275ab0ed7ee61d0f4b82cd471770d"
 verify=""
 arch=`uname -m`
 build=B1
