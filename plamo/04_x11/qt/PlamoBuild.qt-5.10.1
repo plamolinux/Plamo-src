@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qt'
-vers='5.10.0'
+vers='5.10.1'
 url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
-digest="md5sum:c5e275ab0ed7ee61d0f4b82cd471770d"
+digest="md5sum:7e167b9617e7bd64012daaacb85477af"
 verify=""
 arch=`uname -m`
 build=B1
@@ -102,7 +102,13 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install INSTALL_ROOT=$P
 
-  find $P/usr -name \*.prl -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
+  # Drop QMAKE_PRL_BUILD_DIR because reference the build dir
+  find $P/usr -name '*.prl' -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
+
+  # Symlinks for backwards compatibility
+  for b in "${P}"/usr/bin/*; do
+    ln -s /usr/bin/$(basename $b) "${P}"/usr/bin/$(basename $b)-qt5
+  done
 
   # /usr/share/pixmap
   install -v -Dm644 qttools/src/assistant/assistant/images/assistant-128.png \
@@ -119,6 +125,14 @@ if [ $opt_package -eq 1 ] ; then
   install -v -Dm644 $W/designer-qt5.desktop	$P/usr/share/applications/designer-qt5.desktop
   install -v -Dm644 $W/linguist-qt5.desktop	$P/usr/share/applications/linguist-qt5.desktop
   install -v -Dm644 $W/qdbusviewer-qt5.desktop	$P/usr/share/applications/qdbusviewer-qt5.desktop
+  install -v -Dm644 $W/assistant-qt5.desktop	$docdir/$src/assistant-qt5.desktop
+  install -v -Dm644 $W/designer-qt5.desktop	$docdir/$src/designer-qt5.desktop
+  install -v -Dm644 $W/linguist-qt5.desktop	$docdir/$src/linguist-qt5.desktop
+  install -v -Dm644 $W/qdbusviewer-qt5.desktop	$docdir/$src/qdbusviewer-qt5.desktop
+
+  # for environment variables
+  install -v -Dm644 $W/qt5.sh $P/etc/profile.d/qt5.sh
+  install -v -Dm644 $W/qt5.sh $docdir/$src/qt5.sh
 
 ################################
 #      install tweaks
