@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nettle'
-vers='3.3'
+vers='3.4'
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING.LESSERv3 COPYINGv2 COPYINGv3 ChangeLog INSTALL NEWS README TODO descore.README'
