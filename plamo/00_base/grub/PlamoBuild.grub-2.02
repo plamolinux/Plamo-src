@@ -3,9 +3,11 @@
 pkgbase='grub'
 vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+unifont_vers="11.0.02"
+unifont_url="https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz"
 verify=""
 arch=`uname -m`
-build=B11
+build=B12
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
 	--sbindir=/sbin
@@ -19,6 +21,7 @@ OPT_CONFIG_COMMON="
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2015 INSTALL NEWS README THANKS TODO'
 debianpatch="http://http.debian.net/debian/pool/main/g/grub2/grub2_2.02-2.debian.tar.xz"
 #patchfiles='0001-os-naming.patch 0002-intel-ucode.patch'
+patchfiles="0008-Fix-packed-not-aligned-error-on-GCC-8.patch"
 compress=txz
 ## variations for build
 BUILD_VARS="common_bios efi"
@@ -59,6 +62,10 @@ if [ $opt_download -eq 1 ] ; then
       tar xvf ${debianpatch##*/}
       rm -vf $W/debian/patches/dpkg_version_comparison.patch
   fi
+  if [ ! -f $( basename ${unifont_url##*/} .gz ) ]; then
+      wget $unifont_url
+      gzip -d ${unifont_url##*/}
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -80,6 +87,10 @@ if [ $opt_config -eq 1 ] ; then
 	  touch .${p}
       fi
   done
+
+  cp $W/$(basename ${unifont_url##*/} .gz) $S/unifont.bdf
+
+  sed -i -e 's|/usr/share/fonts/truetype|/usr/share/fonts/TTF|g' configure.ac
 
   for var in $BUILD_VARS
   do
@@ -175,6 +186,10 @@ GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 quiet"
 # Distributor
 GRUB_DISTRIBUTOR=Plamo
 
+# if gfx mode is enabled, lets config
+# GRUB_GFXMODE=auto
+# GRUB_GFXPAYLOAD_LINUX=keep
+
 # Preload both GPT and MBR modules so that they are not missed
 GRUB_PRELOAD_MODULES="part_gpt part_msdos"
 
@@ -191,13 +206,13 @@ EOF
   # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
   # とりあえずはこのままにしておく．
   echo "Installing plamo tools for grub"
-  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar.gz -C $P
+  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar -C $P
   # 為念
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
       chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
   fi
-  install -Dm 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
+  install -Dm 644 -v $W/plamo_grubconfig.tar $docdir/$src/plamo_grubconfig.tar
   install -Dm 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
 
 ################################
