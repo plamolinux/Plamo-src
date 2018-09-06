@@ -14,7 +14,7 @@ DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     PROTOCOL PROTOCOL.certkeys PROTOCOL.key PROTOCOL.mux
     PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
     TODO"
-openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-7.7p1-openssl-1.1.0-1.patch"
+openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-${vers}-openssl-1.1.0-1.patch"
 patchfiles="${openssl_patch_url##*/}"
 compress=txz
 ##############################################################
