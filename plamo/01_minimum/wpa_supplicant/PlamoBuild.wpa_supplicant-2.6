@@ -5,11 +5,11 @@ vers='2.6'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/wpa_supplicant-${vers}-upstream_fixes-1.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/wpa_supplicant-${vers}-upstream_fixes-2.patch"
 patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
