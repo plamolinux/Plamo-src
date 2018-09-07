@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nspr'
-vers='4.19'
+vers='4.20'
 url="https://ftp.mozilla.org/pub/nspr/releases/v${vers}/src/${pkgbase}-${vers}.tar.gz"
 verify=""
 digest="md5sum:e1d27282ad6286b69d6b9fd07201d3dd"
