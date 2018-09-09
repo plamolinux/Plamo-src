@@ -5,9 +5,9 @@ vers='6.1.2'
 url="https://gmplib.org/download/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-cxx'
+OPT_CONFIG="--disable-static --enable-shared --enable-cxx --build=${arch}-pc-linux-gnu"
 DOCS='AUTHORS COPYING COPYING.LESSERv3 COPYINGv2 COPYINGv3 ChangeLog INSTALL INSTALL.autoconf NEWS README'
 patchfiles=''
 compress=txz
