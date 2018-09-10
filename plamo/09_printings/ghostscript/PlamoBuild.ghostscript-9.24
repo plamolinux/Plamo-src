@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers='9.22'
+vers='9.24'
 url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:eff6bc41b1d7e26e988d2a5c813889d1"
-fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
+digest="md5sum:c5c3fa8eb737a6540814314a9d9e4995"
+fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
+	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 verify=""
 arch=`uname -m`
-build=B0
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
 	--with-ijs
@@ -24,7 +25,13 @@ fontpath="/usr/share/ghostscript/fonts
 	/usr/share/fonts
 	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
-patchfiles=''
+# patch from archlinux
+patchfiles="0001_ICC_profile_validation.patch
+	0002_retain_LockSafetyParams_through_failed_installpagedevice.patch
+	0003_Fix_SEGV_seen_in_all-devices_test.patch
+	0004_Add_the_ICCProfilesDir_to_the_PermitReading_list.patch
+	0005_add_wildcards_to_the_permissions_paths.patch
+	0006_stack_size_space_fix.patch"
 compress=txz
 ##############################################################
 
@@ -53,9 +60,12 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${fonturl##*/} ]; then
-    wget $fonturl
-  fi
+  for f in $fonturl
+  do
+    if [ ! -f ${f##*/} ]; then
+      wget $f
+    fi
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -69,7 +79,9 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   # force to use system libraries
-  rm -r cups/libs freetype ijs jpeg lcms2 libpng openjpeg tiff zlib
+  # rm -r cups/libs freetype ijs jpeg lcms2 libpng openjpeg tiff zlib
+  # use in-tree freetype because bug
+  rm -r cups/libs ijs jpeg lcms2mt libpng openjpeg tiff zlib
   autoreconf -vi
 
   # fontpath
@@ -121,7 +133,10 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
 
   # install std_font
-  tar xvf $W/${fonturl##*/} --no-same-owner -C $P/usr/share/ghostscript/
+  for f in $fonturl
+  do
+    tar xvf $W/${f##*/} --no-same-owner -C $P/usr/share/ghostscript/
+  done
 
   # link to /usr/share/fonts
   mkdir -p $P/usr/share/fonts
