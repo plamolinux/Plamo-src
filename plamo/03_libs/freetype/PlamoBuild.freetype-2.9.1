@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='freetype'
-vers='2.9'
+vers='2.9.1'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 digest=""
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --enable-freetype-config'
 DOCS='ChangeLog ChangeLog.20 ChangeLog.21 ChangeLog.22 ChangeLog.23 ChangeLog.24 ChangeLog.25 ChangeLog.26 README README.git'
 patchfiles=''
 compress=txz
