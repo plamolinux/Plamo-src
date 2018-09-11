@@ -1,8 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libpng'
-vers='1.6.34'
+vers='1.6.35'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:678b7e696a62a193ed3503b04bf449d6"
 verify=""
 arch=`uname -m`
 build=B1
