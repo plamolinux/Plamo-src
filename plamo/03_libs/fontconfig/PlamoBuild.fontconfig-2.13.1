@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fontconfig'
-vers='2.13.0'
+vers='2.13.1'
 url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:60d2394a79d3b2e5db2daea55193fa47"
+digest="md5sum:36cdea1058ef13cbbfdabe6cb019dc1c"
 verify=""
 arch=`uname -m`
 build=B1
@@ -94,9 +94,9 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m644 doc/*.3          $P/usr/share/man/man3
   install -v -m644 doc/fonts-conf.5 $P/usr/share/man/man5
   install -v -m644 doc/fontconfig-devel/* \
-          $P/usr/share/doc/fontconfig-2.12.6/fontconfig-devel
+          $P/usr/share/doc/fontconfig-${vers}/fontconfig-devel
   install -v -m644 doc/*.{pdf,sgml,txt,html} \
-          $P/usr/share/doc/fontconfig-2.12.6
+          $P/usr/share/doc/fontconfig-${vers}
 
   install -v -dm755 $P/etc/template/Source/.config/fontconfig
   install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
