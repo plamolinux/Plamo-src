@@ -1,14 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iptables'
-vers='1.6.2'
+vers='1.8.0'
 url="http://www.netfilter.org/projects/iptables/files/iptables-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-libipq --enable-nftables
+OPT_CONFIG="--enable-shared
+	    --enable-libipq
             --with-xtlibdir=/lib/xtables
+	    --enable-bpf-compiler
 	    --sbindir=/sbin"
 DOCS='COPYING INSTALL release.sh'
 patchfiles=''
