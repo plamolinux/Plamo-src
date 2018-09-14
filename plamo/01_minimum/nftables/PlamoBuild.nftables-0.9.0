@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='emacs'
-vers='25.3'
-url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+pkgbase='nftables'
+vers='0.9.0'
+url="https://netfilter.org/projects/${pkgbase}/files/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-m17n-flt'
-DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
-patchfiles='emacs-25.3-support-txz.patch'
+OPT_CONFIG="--disable-static --enable-shared --sysconfdir=/usr/share/doc/nftables-${vers}/examples"
+DOCS='COPYING INSTALL'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -84,18 +84,8 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  mkdir -p $P/install
-
-  chown -v -R root:root $P/usr/share/emacs/${vers}
-
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  /usr/bin/gtk-update-icon-cache -t -f --include-image-data /usr/share/icons/hicolor
-fi
-if [ -x /usr/bin/update-desktop-database ]; then
-  /usr/bin/update-desktop-database
-fi
-EOF
+  ( cd $docdir/nftables-${vers}/examples/nftables && mv -v *.nft .. )
+  rmdir -v $docdir/nftables-${vers}/examples/nftables
 
 ################################
 #      install tweaks
