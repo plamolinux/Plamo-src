@@ -2,7 +2,7 @@
 
 ######################################################################
 pkgbase=openssh
-vers=7.6p1
+vers=7.8p1
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${vers}.tar.gz"
 arch=`uname -m`
 build=P1
