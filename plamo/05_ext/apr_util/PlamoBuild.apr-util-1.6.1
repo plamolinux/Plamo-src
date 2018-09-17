@@ -1,22 +1,13 @@
 #!/bin/sh
 ##############################################################
-pkgbase=apr
-vers=1.6.3
-url="http://archive.apache.org/dist/apr/apr-${vers}.tar.bz2"
-verify=${url}.asc
-arch=`uname -m`
-if [ $arch = "x86_64" ]; then
-    target="-m64"
-    libdir="lib64"
-    usearch="64"
-else
-    target="-m32"
-    libdir="lib"
-    usearch="32"
-fi
+pkgbase=apr_util
+vers=1.6.1
+url="http://archive.apache.org/dist/apr/apr-util-${vers}.tar.bz2"
+verify=$url.asc
+arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P1
-src=${pkgbase}-${vers}
-OPT_CONFIG="--with-installbuilddir=/usr/${libdir}/apr-1"
+src=apr-util-${vers}
+OPT_CONFIG='--with-apr=/usr --with-berkeley-db'
 DOCS='LICENSE README'
 patchfiles=''
 compress=txz
@@ -176,6 +167,13 @@ docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
 
+if [ $arch = "x86_64" ]; then
+    target="-m64"
+    libdir="lib64"
+else
+    target="-m32"
+    libdir="lib"
+fi
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -239,9 +237,11 @@ if [ $opt_config -eq 1 ] ; then
     fi
 
     if [ -x configure ] ; then
+       sed -i -e "/expat_\(ldflags\|libtool\)/s:/lib:&64:" \
+       -e 's:$\(withval\|found\)/lib:&64:g' configure
        export PKG_CONFIG_PATH=/usr/X11R7/${libdir}/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
        export LDFLAGS='-Wl,--as-needed' 
-        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " USE_ARCH=${usearch}\
+        CC="gcc -isystem /usr/include $target" CXX="g++ -isystem /usr/include $target " \
           ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
       if [ $? != 0 ]; then
 	  echo "configure error. $0 script stop"
