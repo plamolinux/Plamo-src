@@ -7,7 +7,7 @@ verify=$url.asc
 arch=`uname -m | sed -e 's/i.86/i686/'`
 build=P1
 src=apr-util-${vers}
-OPT_CONFIG='--with-apr=/usr/bin/apr-1-config --with-berkeley-db'
+OPT_CONFIG='--with-apr=/usr --with-berkeley-db'
 DOCS='LICENSE README'
 patchfiles=''
 compress=txz
