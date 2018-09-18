@@ -1,11 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers='9.24'
+vers='9.25'
 url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:c5c3fa8eb737a6540814314a9d9e4995"
-fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
-	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
+digest="md5sum:eebd0fadbfa8e800094422ce65e94d5d"
+#fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
+#	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
+fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
@@ -25,13 +26,7 @@ fontpath="/usr/share/ghostscript/fonts
 	/usr/share/fonts
 	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
-# patch from archlinux
-patchfiles="0001_ICC_profile_validation.patch
-	0002_retain_LockSafetyParams_through_failed_installpagedevice.patch
-	0003_Fix_SEGV_seen_in_all-devices_test.patch
-	0004_Add_the_ICCProfilesDir_to_the_PermitReading_list.patch
-	0005_add_wildcards_to_the_permissions_paths.patch
-	0006_stack_size_space_fix.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
