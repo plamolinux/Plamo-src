@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ca_certificate"
-script_vers="0.7"
-vers="${script_vers}_20180509"
+script_vers="0.9"
+vers="${script_vers}_20180918"
 url="https://github.com/djlucas/make-ca/archive/v${script_vers}/make-ca-${script_vers}.tar.gz"
-digest="md5sum:4f180b9bf3b11f29d6a79e6022aeae23"
+digest="md5sum:0eeaf712eedeae4fa55d8bfa37f4ca32"
 cert_url="https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt"
 cacert_url=("http://www.cacert.org/certs/root.crt"
 	    "http://www.cacert.org/certs/class3.crt")
