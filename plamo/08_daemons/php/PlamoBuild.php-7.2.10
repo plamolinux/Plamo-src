@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='php'
-vers='7.2.8'
+vers='7.2.10'
 url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
 #verify="${url}.asc"
-digest="sha256sum:53ba0708be8a7db44256e3ae9fcecc91b811e5b5119e6080c951ffe7910ffb0f"
+digest="sha256sum:01c2154a3a8e3c0818acbdbc1a956832c828a0380ce6d1d14fea495ea21804f0"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
