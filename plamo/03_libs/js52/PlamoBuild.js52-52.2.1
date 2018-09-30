@@ -11,6 +11,10 @@ arch=`uname -m`
 build=B1
 src="${_srcname}-${_srcvers}"
 OPT_CONFIG="
+	--disable-debug
+	--disable-debug-symbols
+	--enable-optimize='-O2'
+	--enable-release
 	--with-intl-api
 	--with-system-zlib
 	--with-system-nspr
