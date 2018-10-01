@@ -1,0 +1,33 @@
+From 8638ec5cd534dcc616b68e5b0744c493c0c71dc9 Mon Sep 17 00:00:00 2001
+From: Jan Rybar <jrybar@redhat.com>
+Date: Wed, 15 Aug 2018 16:11:22 +0200
+Subject: [PATCH 2/2] Leaking zombie child processes Resolves: bz#106021
+
+Subject: [PATCH] polkitd: fix zombie not reaped when js spawned process timed
+ out
+
+The child watch source attached to thread context didn't work due
+to the release of it's main loop and context outside. So we attach
+the source to the global default main context to make it work and
+avoid zombies.
+---
+ src/polkitbackend/polkitbackendjsauthority.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/polkitbackend/polkitbackendjsauthority.cpp b/src/polkitbackend/polkitbackendjsauthority.cpp
+index 517f3c6..7602714 100644
+--- a/src/polkitbackend/polkitbackendjsauthority.cpp
++++ b/src/polkitbackend/polkitbackendjsauthority.cpp
+@@ -1595,7 +1595,8 @@ utils_spawn_data_free (UtilsSpawnData *data)
+                              (GSourceFunc) utils_child_watch_from_release_cb,
+                              source,
+                              (GDestroyNotify) g_source_destroy);
+-      g_source_attach (source, data->main_context);
++      /* attach source to the global default main context */
++      g_source_attach (source, NULL);
+       g_source_unref (source);
+       data->child_pid = 0;
+     }
+-- 
+2.17.1
+
