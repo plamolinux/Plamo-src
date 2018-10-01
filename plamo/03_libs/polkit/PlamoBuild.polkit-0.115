@@ -1,15 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='polkit'
-vers='0.113+git_2919920+js38'
-url="http://anduin.linuxfromscratch.org/BLFS/polkit/polkit-${vers}.tar.xz"
-digest="md5sum:11ec10c04899651e40ef66766932254d"
+vers="0.115"
+url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
+verify="${url}.sign"
+digest=""
 arch=`uname -m`
-build=B4
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no'
+OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --disable-libelogind'
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
-patchfiles=''
+patchfiles="
+	0001-Possible-resource-leak-found-by-static-analyzer.patch
+	0002-Leaking-zombie-child-processes.patch"
 compress=txz
 ##############################################################
 
@@ -56,7 +59,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
