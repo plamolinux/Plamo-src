@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='apr'
-vers='1.6.3'
+vers='1.6.5'
 url="https://archive.apache.org/dist/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
