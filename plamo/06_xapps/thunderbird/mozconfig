@@ -1,8 +1,12 @@
-ac_add_options --enable-application=mail
+ac_add_options --enable-application=comm/mail
+ac_add_options --host=x86_64-pc-linux-gnu
+ac_add_options --target=x86_64-pc-linux-gnu
 
 ac_add_options --prefix=/usr
-ac_add_options --enable-optimize="-O2"
+ac_add_options --enable-optimize
 ac_add_options --with-pthreads
+ac_add_options --enable-strip
+ac_add_options --enable-install-strip
 
 # System Libraries
 ac_add_options --enable-system-sqlite
@@ -19,23 +23,20 @@ ac_add_options --with-system-png
 ac_add_options --with-system-zlib
 
 # Features
-ac_add_options --disable-dbus
-ac_add_options --disable-necko-wifi
+#ac_add_options --disable-dbus
+#ac_add_options --disable-necko-wifi
 #ac_add_options --enable-system-hunspell
 ac_add_options --enable-startup-notification
 ac_add_options --disable-pulseaudio
-ac_add_options --disable-gconf
+#ac_add_options --disable-gconf
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-debug
 ac_add_options --disable-tests
-ac_add_options --enable-gio
-ac_add_options --enable-safe-browsing
-ac_add_options --enable-url-classifier
 
 # Branding
 ac_add_options --disable-official-branding
-ac_add_options --with-branding=mail/branding/aurora
+ac_add_options --with-branding=comm/mail/branding/nightly
 ac_add_options --with-distribution-id=org.plamolinux
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
