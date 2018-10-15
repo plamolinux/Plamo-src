@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers='52.9.1'
+vers="60.2.1"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
@@ -10,9 +10,11 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS mailnews other-licenses sourcestamp.txt'
-patchfiles='thunderbird-install-dir.patch'
+DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
+patchfiles='configure.patch'
 compress=txz
+
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -54,21 +56,45 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
   mkdir -p path
   ln -sf /usr/bin/python2 path/python
+
+  # setup rust
+  cd $W
+  echo "We need rust toolchain. Now, setup rust"
+  if [ -f /var/log/packages/rustc ]; then
+      echo "Rustc pacakge is installed. We don't use it, so remove."
+      sudo removepkg rustc
+  fi
+
+  if [ -f ~/.cargo/bin/rustc ]; then
+    export PATH="$PATH:$HOME/.cargo/bin"
+    if [ x"$rustver" = "x" ]; then
+      rustup update
+    else
+      rustup default $rustver
+    fi
+  else
+      wget -O rustup-init.sh https://sh.rustup.rs
+      sh rustup-init.sh -y
+      if [ x"$rustver" != "x" ]; then
+        rustup default $rustver
+      fi
+  fi
+
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$W/path:$PATH"
-  make -f client.mk -j3 build
+  export PATH="$W/path:$HOME/.cargo/bin:$PATH"
+  if [ -d $W/build ]; then
+    rm -rf $W/build
+  fi
+  ./mach build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -80,7 +106,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
   export LDFLAGS='-Wl,--as-needed'
-  make -f client.mk install DESTDIR=$P INSTALL_SDK=
+  DESTDIR=$P ./mach install
 
   # Install langpack
   sh $W/langpack.sh $W
@@ -104,7 +130,7 @@ if [ $opt_package -eq 1 ] ; then
      $P/usr/share/pixmaps/thunderbird.png
   for i in 16 22 24 32 48 256
   do
-    install -Dm644 other-licenses/branding/thunderbird/mailicon$i.png \
+    install -Dm644 comm/mail/branding/nightly/default${i}.png \
 	    $P/usr/share/icons/hicolor/${i}x${i}/apps/thunderbird.png
   done
   
