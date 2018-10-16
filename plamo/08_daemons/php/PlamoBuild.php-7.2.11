@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='php'
-vers='7.2.10'
+vers='7.2.11'
 url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
 #verify="${url}.asc"
-digest="sha256sum:01c2154a3a8e3c0818acbdbc1a956832c828a0380ce6d1d14fea495ea21804f0"
+digest="sha256sum:da1a705c0bc46410e330fc6baa967666c8cd2985378fb9707c01a8e33b01d985"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
 BUILD_TYPE=(apache cgi)
