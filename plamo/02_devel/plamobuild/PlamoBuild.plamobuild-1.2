@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='plamobuild'
-vers='1.1'
-url="https://github.com/tenforward/PlamoBuild/blob/master/pkgdev/make_PlamoBuild.py 
-        https://github.com/tenforward/PlamoBuild/blob/master/pkgdev/plamobuild_functions.sh"
+vers='1.2'
+url=("https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/plamobuild_functions.sh"
+     "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/make_PlamoBuild.py")
 arch='noarch'
 build=B1
 src="${pkgbase}-${vers}"
@@ -41,8 +41,10 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    wget $url[0]
-    wget $url[1]
+  for f in ${url[@]}
+  do
+    wget $f
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
