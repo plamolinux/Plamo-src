@@ -220,13 +220,60 @@ verify_checksum() {
   exit 0
 }
 
-
 check_root() {
   if [ `id -u` -ne 0 ] ; then
     read -p "Do you want to package as root? [y/N] " ans
     if [ "x$ans" == "xY" -o "x$ans" == "xy" ] ; then
       cd $W ; /bin/su -c "$0 package" ; exit
     fi
+  fi
+}
+
+check_icons() {
+  if [ -d $P/usr/share/icons ] ; then
+    echo "icon files installed. execute check-update-cache icons at install time"
+    if [ ! -d $P/install ]; then
+      mkdir -p $P/install
+    fi
+    cat <<"EOF" >> $P/install/initpkg
+check-update-cache icons
+EOF
+  fi
+}
+
+check_schemas() {
+  if [ -d $P/usr/share/glib-2.0/schemas ]; then
+    echo "schema files installed. execute check-update-cache schema at install time"
+    if [ ! -d $P/install ]; then
+      mkdir -p $P/install
+    fi
+    cat <<"EOF" >> $P/install/initpkg
+check-update-cache schema
+EOF
+  fi
+}
+
+check_mime() {
+  if [ -d $P/usr/share/mime ]; then
+    echo "mime files installed. execute check-update-cache mime at install time"
+    if [ ! -d $P/install ]; then
+      mkdir -p $P/install
+    fi
+    cat <<"EOF" >> $P/install/initpkg
+check-update-cache mime
+EOF
+  fi
+}
+
+check_applications(){
+  if [ -d $P/usr/share/applications ]; then
+    echo "desktop data installed. execute check-update-cache desktop at install time"
+    if [ ! -d $P/install ]; then
+      mkdir -p $P/install
+    fi
+    cat <<"EOF" >> $P/install/initpkg
+check-update-cache desktop
+EOF
   fi
 }
 
@@ -278,9 +325,20 @@ install_tweak() {
   if [ -n "$DOCS" ]; then
     echo "Install docs"
     for doc in $DOCS ; do
-      install2 $S/$doc $docdir/$src/$doc
-      touch -r $S/$doc $docdir/$src/$doc
-      gzip_one $docdir/$src/$doc
+      chk_wc=`echo $doc | grep \*`
+      if [ "$chk_wc.x" != ".x" ]; then  # wildcard(*)があれば展開
+        # echo "in wildcard :chk_wc=${chk_wc}"
+        for doc2 in `(cd $src ; ls $doc)` ; do
+          echo "doc2: $doc2"
+          install2 $S/$doc2 $docdir/$src/$doc2
+          touch -r $S/$doc2 $docdir/$src/$doc2
+          gzip_one $docdir/$src/$doc2
+        done
+      else
+        install2 $S/$doc $docdir/$src/$doc
+        touch -r $S/$doc $docdir/$src/$doc
+        gzip_one $docdir/$src/$doc
+      fi
     done
   else
     echo "No docs"
@@ -300,6 +358,21 @@ install_tweak() {
   if [ "$chk_me.x" != ".x" ]; then
     chown -R root.root $P/usr/share/doc
   fi
+
+  # /usr/lib/*.la ファイルの移動
+  la_files=`find $P -name "*.la"`
+  if [ "${la_files}.x" != ".x" ]; then
+    mkdir -p $P/var/local/la-files
+    for i in ${la_files} ; do
+      mv -v $i $P/var/local/la-files/`basename $i`
+    done
+  fi
+
+  # check-update-cache で各キャッシュを更新する必要があるか
+  check_icons
+  check_schemas
+  check_mime
+  check_applications
 
 }
 
