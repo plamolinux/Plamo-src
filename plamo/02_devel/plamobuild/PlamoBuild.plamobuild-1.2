@@ -3,7 +3,8 @@
 pkgbase='plamobuild'
 vers='1.2'
 url=("https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/plamobuild_functions.sh"
-     "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/make_PlamoBuild.py")
+     "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/make_PlamoBuild.py"
+     "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/remove-la-files.sh")
 arch='noarch'
 build=B1
 src="${pkgbase}-${vers}"
@@ -43,14 +44,16 @@ fi
 if [ $opt_download -eq 1 ] ; then
   for f in ${url[@]}
   do
-    wget $f
+    if [ ! -f $W/${f##*/} ]; then
+      wget $f
+    fi
   done
 fi
 
 if [ $opt_config -eq 1 ] ; then
     echo "no need to configure, proceed to build"
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
    echo "no need to build, proceed to package"
 fi
@@ -61,8 +64,9 @@ if [ $opt_package -eq 1 ] ; then
     cd $S
     mkdir -p $P/usr/bin
     mkdir -p $P/usr/share
-    install make_PlamoBuild.py $P/usr/bin
-    install plamobuild_functions.sh $P/usr/share
+    install -v -m755 make_PlamoBuild.py $P/usr/bin
+    install -v -m755 remove-la-files.sh $P/usr/bin
+    install -v -m644 plamobuild_functions.sh $P/usr/share
 
     mkdir -p $P/usr/share/doc/$src
     install $W/$0 $P/usr/share/doc/$src
