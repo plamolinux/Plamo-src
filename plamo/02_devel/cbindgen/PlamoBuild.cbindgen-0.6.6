@@ -76,6 +76,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B
+    export PATH="$HOME/.cargo/bin:$PATH"
     cargo build --release
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
