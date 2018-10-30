@@ -9,7 +9,7 @@ digest="md5sum:eebd0fadbfa8e800094422ce65e94d5d"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
 	--with-ijs
@@ -26,7 +26,7 @@ fontpath="/usr/share/ghostscript/fonts
 	/usr/share/fonts
 	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
-patchfiles=""
+patchfiles="ghostscript-9.25-security_fixes-2.patch"
 compress=txz
 ##############################################################
 
