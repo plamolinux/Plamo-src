@@ -186,12 +186,12 @@ if [ $opt_config -eq 1 ] ; then
         elif self.method == 'python' :
             self.copy_source()
             self.config += '''
-    python setup.py config    '''
+    python setup.py config    '''  # setup.py はinstall時にprefixを指定する
 
         elif self.method == 'perl' :
             self.copy_source()
             self.config += '''
-    perl Makefile.PL'''
+    perl Makefile.PL INSTALL_BASE={}'''.format(self.prefix)
 
         self.config += '''
     if [ $? != 0 ]; then
@@ -236,7 +236,7 @@ if [ $opt_package -eq 1 ] ; then
 '''
         if self.method == 'python':
             self.package += '''
-  python setup.py install --root $P'''
+  python setup.py install --root $P --prefix={}'''.format(self.prefix)
 
         elif self.method == 'meson':
             self.package += '''
