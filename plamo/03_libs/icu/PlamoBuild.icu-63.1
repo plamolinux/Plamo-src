@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='icu'
-vers='59.1'
+vers='63.1'
 url="http://download.icu-project.org/files/icu4c/${vers}/icu4c-${vers/./_}-src.tgz"
-digest="md5sum:54923fa9fab5b2b83f235fb72523de37"
+digest="md5sum:9e40f6055294284df958200e308bce50"
 arch=`uname -m`
-build=B2
+build=B1
 src="icu"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='LICENSE license.html readme.html'
@@ -38,6 +38,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
