@@ -16,7 +16,7 @@ blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-syst
 patchfiles="firefox-${vers}-system_graphite2_harfbuzz-1.patch"
 compress=txz
 
-rustver=""
+rustver="1.29.2"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
