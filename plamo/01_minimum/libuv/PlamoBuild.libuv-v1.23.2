@@ -1,0 +1,105 @@
+#!/bin/sh
+##############################################################
+pkgbase="libuv"
+vers="1.23.2"
+url="https://dist.libuv.org/dist/v${vers}/libuv-v${vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="libuv-v${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="AUTHORS ChangeLog LICENSE LICENSE-docs MAINTAINERS.md README.md"
+patchfiles=""
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
