@@ -9,4 +9,4 @@ pref("extensions.autoDisableScopes", 11);
 pref("extensions.shownSelectionUI", true);
 
 // for using Plamo original langpack
-user_pref("extensions.langpacks.signatures.required", false);
+pref("extensions.langpacks.signatures.required", false);
