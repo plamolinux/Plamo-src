@@ -5,7 +5,7 @@ vers='20170524'
 url="ftp://tug.org/texlive/historic/2017/texlive-${vers}-source.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
-build=B3
+build=B4
 src="texlive-${vers}-source"
 
 PREFIX=/opt/texlive/2017
@@ -139,10 +139,14 @@ if [ $opt_package -eq 1 ] ; then
   cat <<EOF > $P/etc/profile.d/texlive.sh
 # PATH
 PATH=\$PATH:$PREFIX/bin/$TEXARCH
+export MANPATH=\$MANPATH:$PREFIX/texmf-dist/man
+export INFOPATH=\$MANPATH:$PREFIX/texmf-dist/info
 EOF
   cat <<EOF > $P/etc/profile.d/texlive.csh
 # path
 set path = ( \$path $PREFIX/bin/$TEXARCH )
+setenv MANPATH \$MANPATH:$PREFIX/texmf-dist/man
+setenv INFOPATH \$MANPATH:$PREFIX/texmf-dist/info
 EOF
 
   # initpkg
