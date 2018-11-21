@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='glibmm'
-vers='2.54.1'
+vers='2.56.1'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:dee5ebe309f5976c3dacfcf5c43a062b"
+digest="sha256sum:dac6872058adde263b7eb0bef07263ba65abb5abc7fd4ca337e81cc5d5f9ca87"
 verify=""
 arch=`uname -m`
 build=B1
@@ -54,7 +54,7 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
   if [ ! -f .doc_patch ]; then
-      sed -e '/^libdocdir =/ s/$(book_name)/glibmm-2.52.1/' \
+      sed -e "/^libdocdir =/ s/\$(book_name)/glibmm-$vers/" \
 	  -i docs/Makefile.in
       touch .doc_patch
   fi
