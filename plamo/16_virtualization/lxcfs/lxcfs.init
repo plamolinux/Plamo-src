@@ -1,0 +1,68 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:            template
+# Required-Start:
+# Should-Start:
+# Required-Stop:
+# Should-Stop:
+# Default-Start:
+# Default-Stop:
+# Short-Description:
+# Description:
+# X-LFS-Provided-By:
+### END INIT INFO
+
+DAEMON=/usr/bin/lxcfs
+NAME=lxcfs
+PIDFILE=/run/lxcfs.pid
+LXCFSDIR="/var/lib/lxcfs"
+ARGS="-s -f -o allow_user"
+
+. /lib/lsb/init-functions
+
+case "${1}" in
+    start)
+
+	if [ ! -d $LXCFSDIR ]; then
+	    mkdir -p $LXCFSDIR
+	fi
+	     
+	# Don't start if bind-mounted from host
+	[ ! -d /var/lib/lxcfs/proc ] || exit 0
+
+	# Cleanup in case of crash
+        fusermount -u /var/lib/lxcfs 2> /dev/null || true
+        [ -L /etc/mtab ] || \
+            sed -i "/^lxcfs \/var\/lib\/lxcfs fuse.lxcfs/d" /etc/mtab
+
+	log_info_msg "Starting... LXCFS"
+	start_daemon -p $PIDFILE /usr/bin/lxcfs $LXCFSDIR > /dev/null 2>&1 &
+	evaluate_retval
+	;;
+
+    stop)
+	log_info_msg "Stopping... LXCFS"
+	killproc /usr/bin/lxcfs
+	evaluate_retval
+	;;
+
+    restart)
+	${0} stop
+	sleep 1
+	${0} start
+	;;
+
+    status)
+	statusproc /usr/bin/lxcfs
+	;;
+
+    *)
+	echo "Usage: ${0} {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+exit 0
+
+# End scriptname
