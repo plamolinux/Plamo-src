@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers='3.0.0'
-template_vers="3.0.0"
+vers='3.0.3'
+template_vers="3.0.3"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_vers}.tar.gz"
 verify="${url}.asc"
@@ -11,10 +11,11 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 template_src="lxc-templates-${template_vers}"
-OPT_CONFIG="--disable-static --enable-shared
+OPT_CONFIG="--enable-static --enable-shared
             --with-runtime-path=/run
-	    --without-systemdsystemunitdir
-	    --enable-deprecated"
+	    --enable-pam
+	    --disable-bash
+	    --without-systemdsystemunitdir"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=''
 compress=txz
@@ -145,6 +146,9 @@ if [ $opt_package -eq 1 ] ; then
 	;;
     esac
   done
+
+  # We need not Korean man pages
+  rm -rfv $P/usr/share/man/ko
 
   cd $W/template_build
   make install DESTDIR=$P
