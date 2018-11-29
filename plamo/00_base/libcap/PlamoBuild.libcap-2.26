@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libcap'
-vers='2.25'
+vers='2.26'
 url="https://kernel.org/pub/linux/libs/security/linux-privs/${pkgbase}2/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CHANGELOG License README pam_cap/capability.conf'
 # libcap-2.25-gperf.patch: see https://bugs.gentoo.org/show_bug.cgi?id=604802#c8
-patchfiles='libcap-2.25-gperf.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
