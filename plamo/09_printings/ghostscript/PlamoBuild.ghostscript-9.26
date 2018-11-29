@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers='9.25'
+vers='9.26'
 url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:eebd0fadbfa8e800094422ce65e94d5d"
+digest="md5sum:806bc2dedbc7f69b003f536658e08d4a"
 #fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
 #	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
 	--with-ijs
