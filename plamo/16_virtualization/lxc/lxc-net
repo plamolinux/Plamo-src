@@ -1,0 +1,2 @@
+# If you use the bridge for lxc, set true
+USE_LXC_BRIDGE="true"
