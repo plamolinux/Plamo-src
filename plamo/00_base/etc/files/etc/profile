@@ -8,7 +8,7 @@ LESS="-M"
 LANG=ja_JP.UTF-8
 PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
 export HOSTNAME LESSOPEN
-export LESS JSERVER LANG PKG_CONFIG_PATH
+export LESS LANG PKG_CONFIG_PATH
 
 
 # Set the default system $PATH:
