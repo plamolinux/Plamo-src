@@ -12,8 +12,6 @@ if ($?prompt) then
 	setenv LESS "-M"
 	setenv LESSOPEN "|lesspipe.sh %s"
 	setenv LANG ja_JP.UTF-8
-        setenv JSERVER localhost
-        setenv TZ /etc/localtime
         setenv PKG_CONFIG_PATH "/usr/lib/pkgconfig:/usr/share/pkgconfig"
 	if( $SHLVL == 1 ) then
 	  set path = ( /usr/local/bin /bin /usr/bin )
