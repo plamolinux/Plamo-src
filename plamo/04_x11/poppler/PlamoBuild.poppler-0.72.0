@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='poppler'
-vers='0.71.0'
+vers='0.72.0'
 url="https://${pkgbase}.freedesktop.org/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:b505011e49e922c83f3ffb57ab40bc28"
+digest="md5sum:5a18b02019daf33559eceb30e5ee2b6b"
 verify=""
 arch=`uname -m`
 build=B1
