@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='harfbuzz'
-vers='1.9.0'
+vers='2.2.0'
 url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:263a3f1cb014e3ad2e4123c238a9bfc5"
+digest="md5sum:d9b8b2bc4d0cdf7f0824f4f0631d264b"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--with-gobject --with-graphite2'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.python THANKS TODO'
