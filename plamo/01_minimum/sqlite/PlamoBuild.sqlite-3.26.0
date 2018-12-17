@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.25.2'
-srcver="3250200"
-url="http://sqlite.org/2018/sqlite-autoconf-3250200.tar.gz"
+vers='3.26.0'
+srcver="3260000"
+url="http://sqlite.org/2018/sqlite-autoconf-${srcver}.tar.gz"
 digest="sha1sum:aedfbdc14eb700099434d6a743135743cff47393"
 verify=""
 arch=`uname -m`
