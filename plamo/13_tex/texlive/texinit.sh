@@ -2,7 +2,7 @@
 
 SAVEPATH=$PATH
 
-PREFIX=/opt/texlive/2017
+PREFIX=/opt/texlive/2018
 TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
 
 PATH=$PREFIX/bin/$TEXARCH:$PATH
