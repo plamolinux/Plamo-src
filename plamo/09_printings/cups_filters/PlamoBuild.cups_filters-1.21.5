@@ -1,15 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase='qpdf'
-vers='7.0.0'
-url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:c3ff408f69b3a6b2b3b4c8b373b2600c"
+pkgbase='cups_filters'
+vers='1.21.5'
+url="https://www.openprinting.org/download/cups-filters/cups-filters-${vers}.tar.xz"
+digest="md5sum:cdf101d2c0ad6b9fe499395cda3e99c6"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
-DOCS='ChangeLog INSTALL LICENSE.txt README-hardening.md README-maintainer.md README-what-to-download.md README-windows-install.txt README-windows.md README.md TODO make_windows_releases make_windows_releases-finish'
+src="cups-filters-${vers}"
+OPT_CONFIG="
+	--disable-static
+	--enable-shared
+	--enable-ijs
+	--with-cups-rundir=/run/cups
+	--without-rcdir
+	--docdir=/usr/share/doc/${src}
+	--runstatedir=/run"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -50,6 +57,9 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
