@@ -1,18 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive_texmf'
-vers='20170524'
-url="ftp://tug.org/texlive/historic/2017/texlive-${vers}-texmf.tar.xz"
+vers='20180414'
+url="ftp://tug.org/texlive/historic/2018/texlive-${vers}-texmf.tar.xz"
 verify=""
 arch=noarch
 build=B1
 src="texlive-${vers}-texmf"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/texlive-20170524-texmf-upstream_fixes-1.patch"
-patchfiles="${blfspatch##*/}"
+blfspatch=""
+patchfiles=""
 compress=txz
-PREFIX=/opt/texlive/2017
+PREFIX=/opt/texlive/2018
 ##############################################################
 PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
         dvips hbf2gf makeindex metafont metapost mft omega pbibtex

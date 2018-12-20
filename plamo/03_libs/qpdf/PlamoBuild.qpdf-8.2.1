@@ -1,17 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='poppler'
-vers='0.63.0'
-url="https://${pkgbase}.freedesktop.org/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:66a54da4896b1408611699feda5c1821"
+pkgbase='qpdf'
+vers='8.2.1'
+url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:a11c1f99753934be7d60c0ab43821bbc"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release
-	--DTESTDATADIR=$W/testfiles
-	-DENABLE_XPDF_HEADERS=ON"
-DOCS='AUTHORS COPYING COPYING3 ChangeLog INSTALL NEWS README README-XPDF README.contributors'
+OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
+DOCS='ChangeLog INSTALL LICENSE.txt README-hardening.md README-maintainer.md README-what-to-download.md README-windows-install.txt README-windows.md README.md TODO make_windows_releases make_windows_releases-finish'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -44,22 +42,19 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#   patch apply to source tree but make at out of source tree
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
   cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S
-  
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
