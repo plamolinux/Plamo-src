@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wpa_supplicant'
-vers='2.6'
+vers='2.7'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/wpa_supplicant-${vers}-upstream_fixes-2.patch"
-patchfiles="${blfspatch##*/}"
+blfspatch=""
+patchfiles=""
 compress=txz
 ##############################################################
 
