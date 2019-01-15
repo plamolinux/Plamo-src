@@ -1,22 +1,23 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libtirpc'
-vers='1.0.2'
-url="https://jaist.dl.sourceforge.net/project/${pkgbase}/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:d5a37f1dccec484f9cabe2b97e54e9a6"
+pkgbase='libxml2'
+vers='2.9.9'
+url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --disable-gssapi"
-DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
-patchfiles=''
+OPT_CONFIG='--disable-static --with-history --with-threads'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
+blfspatch=""
+patchfiles=""
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -37,60 +38,68 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi
+  for i in 2 3
+  do
+    OPT_CONFIG="$OPT_CONFIG --with-python=/usr/bin/python${i}"
+    mkdir -p $B/$i
+    cp -a $S/* $B/$i
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $B
+    cd $B/$i
     for patch in $patchfiles ; do
       patch -p1 < $W/$patch
     done
+    sed -i '/_PyVerify_fd/,+1d' python/types.c
 
-    # if [ -f $S/autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-
-    # fix issue with glibc 2.26
-    sed '/stdlib.h/a#include <stdint.h>' -i src/xdr_sizeof.c
-
-    # for NIS(?)
-    sed '/key_secret_is/s/secret/secretkey/' -i src/libtirpc.map
-    
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man --with-python=/usr/bin/python${i} ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+      echo "configure error. $0 script stop"
+      exit 255
     fi
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
-    cd $B
+  for i in 2 3
+  do
+    cd $B/$i
     export LDFLAGS='-Wl,--as-needed'
+    if [ $i -eq 3 ]; then
+      export PYTHONHASHSEED=0
+    fi
     make -j3
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+      echo "build error. $0 script stop"
+      exit 255
     fi
+  done
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
-
-  install -d $P/$libdir
-  mv -v $P/usr/$libdir/libtirpc.so.* $P/$libdir/
-  ln -sfv ../../$libdir/$(readlink $P/usr/$libdir/libtirpc.so) \
-     $P/usr/$libdir/libtirpc.so
+  for i in 2 3
+  do
+    echo "Install with python${i}"
+    cd $B/$i
+    export LDFLAGS='-Wl,--as-needed'
+    if [ $i -eq 3 ]; then
+      export PYTHONHASHSEED=0
+    fi
+    make install DESTDIR=$P
+  done
 
 ################################
 #      install tweaks

@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libxml2'
-vers='2.9.8'
-url="ftp://xmlsoft.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="${url}.asc"
+pkgbase='gc'
+vers='8.0.2'
+url="http://www.hboehm.info/${pkgbase}/${pkgbase}_source/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:0c3e5a2de567a4f199dc07740bbf21d1"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --with-history --with-threads'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/libxml2-${vers}-python3_hack-1.patch"
-patchfiles="${blfspatch##*/}"
+OPT_CONFIG="--disable-static --enable-cplusplus --docdir=/usr/share/doc/${src}"
+DOCS='AUTHORS ChangeLog README.QUICK README.md'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -39,67 +38,59 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${blfspatch##*/} ]; then
-    wget $blfspatch
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi
-  for i in 2 3
-  do
-    OPT_CONFIG="$OPT_CONFIG --with-python=/usr/bin/python${i}"
-    mkdir -p $B/$i
-    cp -a $S/* $B/$i
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $B/$i
-    for patch in $patchfiles ; do
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
-    done
-    sed -i '/_PyVerify_fd/,+1d' python/types.c
-
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man --with-python=/usr/bin/python${i} ${OPT_CONFIG}
-    
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
+      touch .${patch}
     fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  for i in 2 3
-  do
-    cd $B/$i
-    export LDFLAGS='-Wl,--as-needed'
-    if [ $i -eq 3 ]; then
-      export PYTHONHASHSEED=0
-    fi
-    make -j3
-    if [ $? != 0 ]; then
-      echo "build error. $0 script stop"
-      exit 255
-    fi
-  done
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  for i in 2 3
-  do
-    echo "Install with python${i}"
-    cd $B/$i
-    export LDFLAGS='-Wl,--as-needed'
-    if [ $i -eq 3 ]; then
-      export PYTHONHASHSEED=0
-    fi
-    make install DESTDIR=$P
-  done
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -D -v -m644 $S/doc/gc.man $P/usr/share/man/man3/gc_malloc.3
+  ln -sfv gc_malloc.3 $P/usr/share/man/man3/gc.3
+
+  # all files in /usr/share/gc is documents, so these are moved to docdir
+  #install -d $P/usr/share/doc/$src
+  #mv -v $P/usr/share/gc/* $P/usr/share/doc/$src/
+  #rmdir -v $P/usr/share/gc/
 
 ################################
 #      install tweaks
