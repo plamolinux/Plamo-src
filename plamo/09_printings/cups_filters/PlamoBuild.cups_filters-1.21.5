@@ -1,14 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libnl'
-vers='3.3.0'
-url="https://github.com/thom311/${pkgbase}/releases/download/libnl${vers//./_}/${pkgbase}-${vers}.tar.gz"
-verify="https://github.com/thom311/libnl/releases/download/libnl${vers//./_}/libnl-${vers}.tar.gz.sig"
+pkgbase='cups_filters'
+vers='1.21.5'
+url="https://www.openprinting.org/download/cups-filters/cups-filters-${vers}.tar.xz"
+digest="md5sum:cdf101d2c0ad6b9fe499395cda3e99c6"
+verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='COPYING ChangeLog'
+src="cups-filters-${vers}"
+OPT_CONFIG="
+	--disable-static
+	--enable-shared
+	--enable-ijs
+	--with-cups-rundir=/run/cups
+	--without-rcdir
+	--docdir=/usr/share/doc/${src}
+	--runstatedir=/run"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -41,25 +49,21 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
