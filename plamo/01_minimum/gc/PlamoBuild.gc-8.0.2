@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gc'
-vers='7.6.0'
+vers='8.0.2'
 url="http://www.hboehm.info/${pkgbase}/${pkgbase}_source/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:bf46ccbdaccfa3186c2ab87191c8855a"
+digest="md5sum:0c3e5a2de567a4f199dc07740bbf21d1"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-cplusplus'
+OPT_CONFIG="--disable-static --enable-cplusplus --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS ChangeLog README.QUICK README.md'
 patchfiles=''
 compress=txz
@@ -88,9 +88,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -sfv gc_malloc.3 $P/usr/share/man/man3/gc.3
 
   # all files in /usr/share/gc is documents, so these are moved to docdir
-  install -d $P/usr/share/doc/$src
-  mv -v $P/usr/share/gc/* $P/usr/share/doc/$src/
-  rmdir -v $P/usr/share/gc/
+  #install -d $P/usr/share/doc/$src
+  #mv -v $P/usr/share/gc/* $P/usr/share/doc/$src/
+  #rmdir -v $P/usr/share/gc/
 
 ################################
 #      install tweaks
