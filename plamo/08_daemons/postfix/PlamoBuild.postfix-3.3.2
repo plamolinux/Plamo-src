@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='postfix'
-vers='3.3.0'
+vers='3.3.2'
 url="http://mirror.${pkgbase}.jp/${pkgbase}-release/official/${pkgbase}-${vers}.tar.gz"
 #verify="${url}.sig"
 arch=`uname -m`
-build=B5
+build=B1
 src="${pkgbase}-${vers}"
 CCARGS_OPTS="-DUSE_SASL_AUTH -DHAS_SQLITE -DUSE_TLS -I/usr/include/openssl/"
 AUXLIBS_OPTS="-lsqlite3 -lpthread -lssl -lcrypto"
