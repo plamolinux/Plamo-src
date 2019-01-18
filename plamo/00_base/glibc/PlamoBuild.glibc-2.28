@@ -183,22 +183,17 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   # lib64 を廃するための移行措置
-#  if [ "${arch}" == "x86_64" ]; then
-#      rm -rf $P/lib64
-#      mkdir -p $P/lib64
-#      ( cd $P/lib64 ; ln ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
-#
-#      cat <<EOF > $P/etc/ld.so.conf.new
-#/lib64
-#/usr/lib64
-#EOF
-#
-#  fi
-  cat <<EOF >> $P/etc/ld.so.conf.dist
-/${libdir}
-/usr/${libdir}
-/usr/local/${libdir}
-EOF
+  if [ "${arch}" == "x86_64" ]; then
+    mkdir -pv $P/lib64
+    ( cd $P/lib64 ; ln -v ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
+  fi
+  cat <<-EOF > $P/etc/ld.so.conf.new
+	/usr/local/lib
+	
+	include /etc/ld.so.conf.d/*.conf
+	
+	EOF
+  mkdir -pv $P/etc/ld.so.conf.d
 
   # locale
   install -dm755 -v $P/usr/${libdir}/locale
@@ -222,10 +217,12 @@ EOF
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 echo "glibc package initializing"
-# 既存の ld.so.conf があればそのまま
-if [ ! -f /etc/ld.so.conf ]; then
-  cp /etc/ld.so.conf.dist /etc/ld.so.conf
+# ld.so.conf は置き換え
+echo "Replace /etc/ld.so.conf, and backup it to /etc/ld.so.conf.old"
+if [ -f /etc/ld.so.conf ]; then
+  mv -v /etc/ld.so.conf /etc/ld.so.conf.old
 fi
+mv /etc/ld.so.conf.new /etc/ld.so.conf
 ldconfig
 
 # 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
@@ -234,6 +231,7 @@ if [ ! -f /etc/nsswitch.conf ]; then
   cp /etc/nsswitch.conf.dist /etc/nsswitch.conf
 fi
 
+# nscd.conf
 if [ ! -f /etc/nscd.conf ]; then
   cp /etc/nscd.conf.dist /etc/nscd.conf
 fi
