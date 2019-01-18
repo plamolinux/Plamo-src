@@ -1,23 +1,36 @@
 #!/bin/sh
 ##############################################################
 pkgbase='glibc'
-vers='2.26'
+vers='2.28'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B6
 src="glibc-${vers}"
-OPT_CONFIG="--enable-add-ons
-	--enable-kernel=3.2
-	--localedir=/usr/share/locale
-	--enable-tls
-	--enable-obsolete-nsl
-	--enable-obsolete-rpc
+OPT_CONFIG="
+	--with-headers=/usr/include
+	--enable-add-ons
+	--enable-bind-now
+	--enable-lock-elision
 	--enable-stack-protector=strong
+	--enable-stackguard-randomization
+	--enable-static-pie
 	--disable-profile
 	--disable-werror
-	--build=${arch}-pc-linux
-	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
+	--enable-kernel=3.2
+	libc_cv_slibdir=/lib"
+# for 2.26
+#OPT_CONFIG="--enable-add-ons
+#	--enable-kernel=3.2
+#	--localedir=/usr/share/locale
+#	--enable-tls
+#	--enable-obsolete-nsl
+#	--enable-obsolete-rpc
+#	--enable-stack-protector=strong
+#	--disable-profile
+#	--disable-werror
+#	--build=${arch}-pc-linux
+#	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
 	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
@@ -31,7 +44,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 # glibc-c-utf8-locale.patch
 # https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch glibc-c-utf8-locale.patch"
+patchfiles="$fhs_patchfile glibc-c-utf8-locale.patch"
 compress=txz
 ##############################################################
 
@@ -79,8 +92,10 @@ if [ $opt_config -eq 1 ] ; then
     rm -f configparms
     if [ "$arch" = "x86_64" ]; then
 	echo "CFLAGS += -mtune=generic -O3 -pipe" >> configparms
+	export CC="gcc -isystem /usr/lib/gcc/x86_64-pc-linux-gnu/8.2.0/include -isystem /usr/include"
     else
 	echo "CFLAGS += -march=i486 -mtune=native -O3 -pipe" >> configparms
+	export CC="gcc -isystem /usr/lib/gcc/$(uname -m)-pc-linux-gnu/8.2.0/include -isystem /usr/include"
     fi
 
     $S/configure --prefix=/usr --libdir=/usr/${libdir} --libexecdir=/usr/${libdir} ${OPT_CONFIG}
