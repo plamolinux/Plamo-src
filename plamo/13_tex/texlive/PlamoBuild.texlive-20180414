@@ -128,7 +128,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install-strip DESTDIR=$P
-  make texlinks DESTDIR=$P
+  PATH="$P/$PREFIX/bin/$TEXARCH:$PATH" \
+      LD_LIBRARY_PATH="$P/$PREFIX/lib" \
+      make texlinks DESTDIR=$P
 
   install -dm755 -v $P/$PREFIX/tlpkg/TeXLive
   install -m644  -v $S/texk/tests/TeXLive/* -t $P/$PREFIX/tlpkg/TeXLive/
