@@ -1,18 +1,16 @@
 Submitted By: Ken Moffat <ken at linuxfromscratch dot org>
-Date: 2018-10-22
-Initial Package Version: 63.0
+Date: 2019-01-07
+Initial Package Version: 65.0b8
 Upstream Status: Waiting for review (mozilla bug 847568)
 Origin: Jan Beich at FreeBSD
 Description: Allows system versions of graphite2 and harfbuzz to be used.
 
-Changes since 62.0 : addition to gfx/harfbuzz/README-mozilla manually fixed up,
-versions of graphite2 and harfbuzz updated to 1.3.12 and 1.8.8 to match shipped
-versions.
+Changes since 64.0 : Fixed up manually for changes in toolkit/moz.configure.
 
 diff -Naur a/config/system-headers.mozbuild b/config/system-headers.mozbuild
---- a/config/system-headers.mozbuild	2018-09-13 18:31:09.000000000 +0100
-+++ b/config/system-headers.mozbuild	2018-09-18 02:05:59.465054059 +0100
-@@ -1296,6 +1296,19 @@
+--- a/config/system-headers.mozbuild	2019-01-03 17:57:48.000000000 +0000
++++ b/config/system-headers.mozbuild	2019-01-07 00:39:55.864100555 +0000
+@@ -1304,6 +1304,19 @@
          'SelectSingleContentItemPage.h',
      ]
  
@@ -33,9 +31,9 @@ diff -Naur a/config/system-headers.mozbuild b/config/system-headers.mozbuild
      system_headers += [
          'vpx_mem/vpx_mem.h',
 diff -Naur a/dom/base/moz.build b/dom/base/moz.build
---- a/dom/base/moz.build	2018-09-13 18:31:09.000000000 +0100
-+++ b/dom/base/moz.build	2018-09-18 02:05:59.466054053 +0100
-@@ -502,6 +502,9 @@
+--- a/dom/base/moz.build	2019-01-03 17:57:49.000000000 +0000
++++ b/dom/base/moz.build	2019-01-07 00:39:55.864100555 +0000
+@@ -506,6 +506,9 @@
  if CONFIG['MOZ_X11']:
      CXXFLAGS += CONFIG['TK_CFLAGS']
  
@@ -46,8 +44,8 @@ diff -Naur a/dom/base/moz.build b/dom/base/moz.build
      'PropertyUseCounterMap.inc',
      'UseCounterList.h',
 diff -Naur a/gfx/graphite2/moz-gr-update.sh b/gfx/graphite2/moz-gr-update.sh
---- a/gfx/graphite2/moz-gr-update.sh	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/graphite2/moz-gr-update.sh	2018-09-18 02:05:59.467054048 +0100
+--- a/gfx/graphite2/moz-gr-update.sh	2019-01-03 17:57:49.000000000 +0000
++++ b/gfx/graphite2/moz-gr-update.sh	2019-01-07 00:39:55.864100555 +0000
 @@ -1,6 +1,7 @@
  #!/bin/bash
  
@@ -75,8 +73,8 @@ diff -Naur a/gfx/graphite2/moz-gr-update.sh b/gfx/graphite2/moz-gr-update.sh
  echo
  echo If gfx/graphite2/src/files.mk has changed, please make corresponding
 diff -Naur a/gfx/harfbuzz/README-mozilla b/gfx/harfbuzz/README-mozilla
---- a/gfx/harfbuzz/README-mozilla	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/harfbuzz/README-mozilla	2018-09-18 02:07:27.937590749 +0100
+--- a/gfx/harfbuzz/README-mozilla	2019-01-03 17:57:50.000000000 +0000
++++ b/gfx/harfbuzz/README-mozilla	2019-01-07 00:39:55.864100555 +0000
 @@ -15,3 +15,8 @@
  
  If the collection of source files changes, manual updates to moz.build may be
@@ -87,8 +85,8 @@ diff -Naur a/gfx/harfbuzz/README-mozilla b/gfx/harfbuzz/README-mozilla
 +with checkout version or increment latest tag by one if it's not based
 +on upstream release.
 diff -Naur a/gfx/moz.build b/gfx/moz.build
---- a/gfx/moz.build	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/moz.build	2018-09-18 02:05:59.470054033 +0100
+--- a/gfx/moz.build	2019-01-03 17:57:50.000000000 +0000
++++ b/gfx/moz.build	2019-01-07 00:39:55.864100555 +0000
 @@ -10,6 +10,12 @@
  if CONFIG['MOZ_TREE_CAIRO']:
      DIRS += ['cairo']
@@ -112,9 +110,9 @@ diff -Naur a/gfx/moz.build b/gfx/moz.build
      'thebes',
      'ipc',
 diff -Naur a/gfx/skia/generate_mozbuild.py b/gfx/skia/generate_mozbuild.py
---- a/gfx/skia/generate_mozbuild.py	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/skia/generate_mozbuild.py	2018-09-18 02:05:59.471054027 +0100
-@@ -148,6 +148,9 @@
+--- a/gfx/skia/generate_mozbuild.py	2019-01-03 17:57:50.000000000 +0000
++++ b/gfx/skia/generate_mozbuild.py	2019-01-07 00:39:55.865100547 +0000
+@@ -138,6 +138,9 @@
          '-Wno-unused-private-field',
      ]
  
@@ -125,9 +123,9 @@ diff -Naur a/gfx/skia/generate_mozbuild.py b/gfx/skia/generate_mozbuild.py
      CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
      CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 diff -Naur a/gfx/skia/moz.build b/gfx/skia/moz.build
---- a/gfx/skia/moz.build	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/skia/moz.build	2018-09-18 02:05:59.471054027 +0100
-@@ -822,6 +822,9 @@
+--- a/gfx/skia/moz.build	2019-01-03 17:57:50.000000000 +0000
++++ b/gfx/skia/moz.build	2019-01-07 00:39:55.865100547 +0000
+@@ -818,6 +818,9 @@
          '-Wno-unused-private-field',
      ]
  
@@ -138,9 +136,9 @@ diff -Naur a/gfx/skia/moz.build b/gfx/skia/moz.build
      CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
      CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 diff -Naur a/gfx/thebes/moz.build b/gfx/thebes/moz.build
---- a/gfx/thebes/moz.build	2018-09-13 18:31:11.000000000 +0100
-+++ b/gfx/thebes/moz.build	2018-09-18 02:05:59.471054027 +0100
-@@ -288,7 +288,13 @@
+--- a/gfx/thebes/moz.build	2019-01-03 17:57:50.000000000 +0000
++++ b/gfx/thebes/moz.build	2019-01-07 00:39:55.865100547 +0000
+@@ -276,7 +276,13 @@
  
  LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
  
@@ -156,8 +154,8 @@ diff -Naur a/gfx/thebes/moz.build b/gfx/thebes/moz.build
  if CONFIG['CC_TYPE'] == 'clang':
      # Suppress warnings from Skia header files.
 diff -Naur a/intl/unicharutil/util/moz.build b/intl/unicharutil/util/moz.build
---- a/intl/unicharutil/util/moz.build	2018-09-13 18:31:12.000000000 +0100
-+++ b/intl/unicharutil/util/moz.build	2018-09-18 02:05:59.473054017 +0100
+--- a/intl/unicharutil/util/moz.build	2019-01-03 17:57:50.000000000 +0000
++++ b/intl/unicharutil/util/moz.build	2019-01-07 00:39:55.865100547 +0000
 @@ -25,4 +25,7 @@
      'nsUnicodeProperties.cpp',
  ]
@@ -167,9 +165,9 @@ diff -Naur a/intl/unicharutil/util/moz.build b/intl/unicharutil/util/moz.build
 +
  FINAL_LIBRARY = 'xul'
 diff -Naur a/netwerk/dns/moz.build b/netwerk/dns/moz.build
---- a/netwerk/dns/moz.build	2018-09-13 18:31:18.000000000 +0100
-+++ b/netwerk/dns/moz.build	2018-09-18 02:05:59.474054012 +0100
-@@ -76,3 +76,6 @@
+--- a/netwerk/dns/moz.build	2019-01-03 17:57:53.000000000 +0000
++++ b/netwerk/dns/moz.build	2019-01-07 00:39:55.865100547 +0000
+@@ -79,3 +79,6 @@
  
  if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
      CXXFLAGS += ['-Wno-error=shadow']
@@ -177,9 +175,9 @@ diff -Naur a/netwerk/dns/moz.build b/netwerk/dns/moz.build
 +if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
 +    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
 diff -Naur a/old-configure.in b/old-configure.in
---- a/old-configure.in	2018-09-13 18:31:17.000000000 +0100
-+++ b/old-configure.in	2018-09-18 02:05:59.475054006 +0100
-@@ -3902,6 +3902,27 @@
+--- a/old-configure.in	2019-01-03 17:57:53.000000000 +0000
++++ b/old-configure.in	2019-01-07 00:39:55.865100547 +0000
+@@ -3652,6 +3652,27 @@
  AC_SUBST(MOZ_LINUX_32_SSE2_STARTUP_ERROR)
  
  dnl ========================================================
@@ -208,11 +206,11 @@ diff -Naur a/old-configure.in b/old-configure.in
  dnl ========================================================
  
 diff -Naur a/toolkit/library/moz.build b/toolkit/library/moz.build
---- a/toolkit/library/moz.build	2018-09-13 18:31:26.000000000 +0100
-+++ b/toolkit/library/moz.build	2018-09-18 02:05:59.475054006 +0100
-@@ -223,6 +223,12 @@
- if CONFIG['MOZ_SYSTEM_PNG']:
-     OS_LIBS += CONFIG['MOZ_PNG_LIBS']
+--- a/toolkit/library/moz.build	2019-01-03 17:57:57.000000000 +0000
++++ b/toolkit/library/moz.build	2019-01-07 00:39:55.866100539 +0000
+@@ -226,6 +226,12 @@
+ if CONFIG['MOZ_SYSTEM_WEBP']:
+     OS_LIBS += CONFIG['MOZ_WEBP_LIBS']
  
 +if CONFIG['MOZ_SYSTEM_GRAPHITE2']:
 +    OS_LIBS += CONFIG['MOZ_GRAPHITE2_LIBS']
@@ -224,9 +222,9 @@ diff -Naur a/toolkit/library/moz.build b/toolkit/library/moz.build
      OS_LIBS += CONFIG['MOZ_LIBEVENT_LIBS']
  
 diff -Naur a/toolkit/moz.configure b/toolkit/moz.configure
---- a/toolkit/moz.configure	2018-09-13 18:31:26.000000000 +0100
-+++ b/toolkit/moz.configure	2018-09-18 02:05:59.477053996 +0100
-@@ -859,6 +859,26 @@
+--- a/toolkit/moz.configure	2019-01-03 17:57:56.000000000 +0000
++++ b/toolkit/moz.configure	2019-01-07 00:43:31.927383664 +0000
+@@ -870,6 +870,26 @@
  add_old_configure_assignment('FT2_CFLAGS',
                               ft2_info.cflags)
  
@@ -245,11 +243,11 @@ diff -Naur a/toolkit/moz.configure b/toolkit/moz.configure
 +option('--with-system-harfbuzz',
 +       help="Use system harfbuzz (located with pkgconfig)")
 +
-+system_harfbuzz = pkg_check_modules('MOZ_HARFBUZZ', 'harfbuzz >= 1.8.8',
++system_harfbuzz = pkg_check_modules('MOZ_HARFBUZZ', 'harfbuzz >= 1.9.0',
 +                                    when='--with-system-harfbuzz')
 +
 +set_config('MOZ_SYSTEM_HARFBUZZ', depends_if(system_harfbuzz)(lambda _: True))
 +
- # Mortar
+ # Marionette remote protocol
  # ==============================================================
- option('--enable-mortar', help='Enable mortar extension')
+ #
