@@ -75,6 +75,9 @@ if [ $opt_config -eq 1 ] ; then
     ln -s /usr/bin/python2 path/python
   fi
 
+  # for current ICU
+  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
+
   # branding
   #
   sed -i \
