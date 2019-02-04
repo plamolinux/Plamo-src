@@ -6,7 +6,7 @@ url="https://downloads.sourceforge.net/acpid2/${pkgbase}-${vers}.tar.xz"
 digest="md5sum:599dd38681b5917eeeafb58176793952"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/$src --runstatedir=/run"
 DOCS='COPYING Changelog README TODO'
@@ -92,6 +92,18 @@ if [ $opt_package -eq 1 ] ; then
   install -v -Dm644 $W/lid.sh $docdir/$src/lid.sh
 
   install -v -m755 -D $W/acpid.init $P/etc/rc.d/init.d/acpid
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+        ln -sfv ../init.d/acpid $P/etc/rc.d/rc"$i".d/K32acpid
+	;;
+      3|4|5)
+        ln -sfv ../init.d/acpid $P/etc/rc.d/rc"$i".d/S18acpid
+	;;
+    esac
+  done
 
 ################################
 #      install tweaks
