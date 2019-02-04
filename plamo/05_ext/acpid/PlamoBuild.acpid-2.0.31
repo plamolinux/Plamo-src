@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='acpid'
-vers='2.0.28'
+vers='2.0.31'
 url="https://downloads.sourceforge.net/acpid2/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:0432407b5ff75ae8e08afb43052fde2b"
+digest="md5sum:599dd38681b5917eeeafb58176793952"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/$src --runstatedir=/run"
 DOCS='COPYING Changelog README TODO'
 patchfiles=''
 compress=txz
@@ -57,7 +57,7 @@ if [ $opt_config -eq 1 ] ; then
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -87,6 +87,9 @@ if [ $opt_package -eq 1 ] ; then
 
   install -v -m644 $W/lid $P/etc/acpi/events/lid
   install -v -m755 $W/lid.sh $P/etc/acpi/lid.sh
+
+  install -v -Dm644 $W/lid $docdir/$src/lid
+  install -v -Dm644 $W/lid.sh $docdir/$src/lid.sh
 
   install -v -m755 -D $W/acpid.init $P/etc/rc.d/init.d/acpid
 
