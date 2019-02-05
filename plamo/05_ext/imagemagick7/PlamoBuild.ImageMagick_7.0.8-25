@@ -92,6 +92,8 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P DOCUMENTATION_PATH=/usr/share/doc/${src}
 
+  rm -fv $P/usr/lib/perl5/perllocal.pod
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
