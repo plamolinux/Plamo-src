@@ -1,15 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="imagemagick7"
-vers='7.0.7_22'
+vers="7.0.8_25"
 url="https://www.imagemagick.org/download/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="ImageMagick-${vers/_/-}"
 OPT_CONFIG="--disable-static --enable-shared
-            --enable-hdri --with-modules --with-perl
-	    --with-rsvg --with-wmf
+            --enable-hdri
+	    --with-modules
+	    --with-rsvg
+	    --enable-hdri
+	    --with-gvc
+	    --with-perl
 	    --with-perl-options=INSTALLDIRS=vendor
 	    --with-dejavu-font-dir=/usr/share/fonts/TTF"
 DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
@@ -87,6 +91,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P DOCUMENTATION_PATH=/usr/share/doc/${src}
+
+  rm -fv $P/usr/lib/perl5/perllocal.pod
 
 ################################
 #      install tweaks
