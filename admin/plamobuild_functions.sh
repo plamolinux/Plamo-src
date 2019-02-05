@@ -359,8 +359,8 @@ install_tweak() {
     chown -R root.root $P/usr/share/doc
   fi
 
-  # /usr/lib/*.la ファイルの移動
-  la_files=`find $P -name "*.la"`
+  # /usr/lib/*.la ファイルの移動（ImageMagick は .la ファイルを使うので例外）
+  la_files=$(find $P -name "*.la" ! -path "$P/usr/lib/ImageMagick*")
   if [ "${la_files}.x" != ".x" ]; then
     mkdir -p $P/var/local/la-files
     for i in ${la_files} ; do
