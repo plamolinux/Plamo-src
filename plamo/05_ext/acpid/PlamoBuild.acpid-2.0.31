@@ -6,7 +6,7 @@ url="https://downloads.sourceforge.net/acpid2/${pkgbase}-${vers}.tar.xz"
 digest="md5sum:599dd38681b5917eeeafb58176793952"
 verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/$src --runstatedir=/run"
 DOCS='COPYING Changelog README TODO'
@@ -85,11 +85,11 @@ if [ $opt_package -eq 1 ] ; then
 
   cp -r samples $docdir/$src/
 
-  install -v -m644 $W/lid $P/etc/acpi/events/lid
-  install -v -m755 $W/lid.sh $P/etc/acpi/lid.sh
+  install -v -m644 $W/allevents $P/etc/acpi/events/allevents
+  install -v -m755 $W/handler.sh $P/etc/acpi/handler.sh
 
-  install -v -Dm644 $W/lid $docdir/$src/lid
-  install -v -Dm644 $W/lid.sh $docdir/$src/lid.sh
+  install -v -Dm644 $W/allevents $docdir/$src/allevents
+  install -v -Dm644 $W/handler.sh $docdir/$src/handler.sh
 
   install -v -m755 -D $W/acpid.init $P/etc/rc.d/init.d/acpid
   for i in $(seq 0 6)
