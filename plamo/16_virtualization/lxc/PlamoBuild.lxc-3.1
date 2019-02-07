@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers='3.0.3'
+vers='3.1.0'
 template_vers="3.0.3"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_vers}.tar.gz"
 verify="${url}.asc"
 template_verify="${template}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 template_src="lxc-templates-${template_vers}"
 OPT_CONFIG="--enable-static --enable-shared

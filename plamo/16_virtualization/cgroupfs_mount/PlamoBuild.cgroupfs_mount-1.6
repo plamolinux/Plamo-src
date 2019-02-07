@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='cgroupfs_mount'
-vers='1.4'
-url="https://github.com/tianon/cgroupfs-mount/archive/${vers}.tar.gz"
+vers='1.6'
+url="https://github.com/tenforward/cgroupfs-mount/archive/${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
@@ -68,7 +68,8 @@ if [ $opt_package -eq 1 ] ; then
   install -Dm755 -v $S/cgroupfs-mount  $P/usr/bin/cgroupfs-mount
   install -Dm755 -v $S/cgroupfs-umount  $P/usr/bin/cgroupfs-umount
   install -Dm644 -v $S/cgroupfs-mount.8 $P/usr/share/man/man8/cgroupfs-mount.8
-  install -Dm755 -v $S/debian/cgroupfs-mount.init $P/etc/rc.d/init.d/cgroupfs-mount
+  install -Dm755 -v $S/plamo/cgroupfs-mount.init $P/etc/rc.d/init.d/cgroupfs-mount
+  install -Dm644 -v $S/plamo/sysconfig $P/etc/sysconfig/cgroupfs-mount
 
   for i in $(seq 0 6)
   do
