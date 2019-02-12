@@ -1,13 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='pulseaudio'
-vers='11.1'
+vers='12.2'
 url="https://www.freedesktop.org/software/${pkgbase}/releases/${pkgbase}-${vers}.tar.xz"
-verify="${url}.sha1"
+verify="${url}.sha256"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-bluez4 --disable-bluez5 --disable-rpath --disable-orc"
+OPT_CONFIG="
+	--disable-bluez4
+	--disable-rpath
+	--disable-orc
+	--disable-tcpwrap"
 DOCS='ABOUT-NLS LICENSE NEWS README todo'
 patchfiles=''
 compress=txz
