@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mpg123'
-vers='1.25.6'
+vers='1.25.10'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:43336bef78f67c2e66c4f6c288ca1eb3"
+digest="md5sum:ea32caa61d41d8be797f0b04a1b43ad9"
 verify=""
 arch=`uname -m`
 build=B1
