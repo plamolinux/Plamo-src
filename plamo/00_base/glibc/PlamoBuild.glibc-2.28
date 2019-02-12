@@ -5,7 +5,7 @@ vers='2.28'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="glibc-${vers}"
 OPT_CONFIG="
 	--with-headers=/usr/include
@@ -188,6 +188,8 @@ if [ $opt_package -eq 1 ] ; then
     ( cd $P/lib64 ; ln -v ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
   fi
   cat <<-EOF > $P/etc/ld.so.conf.new
+	/lib64
+	/usr/lib64
 	/usr/local/lib
 	
 	include /etc/ld.so.conf.d/*.conf
