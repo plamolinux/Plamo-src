@@ -6,7 +6,7 @@ url="http://0pointer.de/lennart/projects/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 digest="md5sum:34cb7e4430afaf6f447c4ebdb9b42072"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared --disable-oss'
 DOCS='README'
@@ -83,9 +83,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
-
-  rm -v -rf $P/usr/share/doc/libcanberra
+  make install DESTDIR=$P docdir=/usr/share/doc/$src
 
 ################################
 #      install tweaks
