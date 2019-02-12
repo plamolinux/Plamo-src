@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='unbound'
-vers='1.8.1'
-url="http://www.unbound.net/downloads/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='bluez'
+vers='5.50'
+url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --with-pidfile=/run/unbound.pid"
-DOCS='LICENSE README'
-patchfiles=''
+OPT_CONFIG="--enable-library --disable-systemd"
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
+blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.50-obexd_without_systemd-1.patch"
+patchfiles="${blfs_patch##*/}"
 compress=txz
 ##############################################################
 
@@ -38,28 +39,27 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${blfs_patch##*/} ]; then
+    wget $blfs_patch
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -84,41 +84,52 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -v -d $P/usr/bin
-  mv -v $P/usr/sbin/unbound-host $P/usr/bin/unbound-host
+  install -dm755 -v $P/usr/sbin
+  ln -svf ../libexec/bluetooth/bluetoothd $P/usr/sbin/bluetoothd
 
-  # copy config file for plamo to /etc/unbound
-  install -v -m 644 $W/unbound.conf $P/etc/unbound/unbound.conf.dist
+  install -Dm644 -v $S/src/main.conf $P/etc/bluetooth/main.conf
 
-  # copy init.file
-  install -v -D -m 644 $W/unbound.init $P/etc/rc.d/init.d/unbound
-  install -v -D -m 644 $W/unbound.init $docdir/$src/unbound.init
+  install -dm755 -v $docdir/$src
+  install -m644  -v $S/doc/*.txt $docdir/$src/
 
-  # copy default config file to docdir
-  mv -v $P/etc/unbound/unbound.conf $docdir/"$src"/example.conf
-
+  # init script
+  install -Dm644 -v $W/bluetooth.init $P/etc/rc.d/init.d/bluetooth
+  install -Dm644 -v $W/bluetooth.init $docdir/$src/bluetooth.init
   for i in $(seq 0 6)
   do
-    install -dm755 $P/etc/rc.d/rc"$i".d
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
     case $i in
       0|1|2|6)
-	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/K79unbound
+	ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/K27bluetooth
 	;;
       3|4|5)
-	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/S21unbound
+        ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/S35bluetooth
 	;;
     esac
   done
 
-  install -d $P/install
-  cat <<EOF >> $P/install/initpkg
-if ! id unbound >/dev/null 2>&1 ; then
-  groupadd -g 88 unbound
-  useradd -c "Unbound DNS resolver" -d /var/lib/unbound -u 88 -g unbound -s /bin/false unbound
-fi
-if [ ! -f /etc/unbound/unbound.conf ]; then
-  ( cd /etc/unbound && cp unbound.conf.dist unbound.conf )
-fi
+  # sysconfig file
+  install -Dm755 -v $W/bluetooth.config $P/etc/sysconfig/bluetooth
+  install -Dm755 -v $W/bluetooth.config $docdir/$src/bluetooth.config
+
+  # create empty files
+  cat > $P/etc/bluetooth/rfcomm.conf <<"EOF"
+# Start rfcomm.conf
+# Set up the RFCOMM configuration of the Bluetooth subsystem in the Linux kernel.
+# Use one line per command
+# See the rfcomm man page for options
+
+
+# End of rfcomm.conf
+EOF
+
+  cat > $P/etc/bluetooth/uart.conf <<"EOF"
+# Start uart.conf
+# Attach serial devices via UART HCI to BlueZ stack
+# Use one line per device
+# See the hciattach man page for options
+
+# End of uart.conf
 EOF
 
 ################################

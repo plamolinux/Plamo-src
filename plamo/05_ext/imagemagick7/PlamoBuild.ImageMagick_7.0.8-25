@@ -1,14 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase='cgroupfs_mount'
-vers='1.4'
-url="https://github.com/tianon/cgroupfs-mount/archive/${vers}.tar.gz"
-verify=""
+pkgbase="imagemagick7"
+vers="7.0.8_25"
+url="https://www.imagemagick.org/download/ImageMagick-${vers/_/-}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="cgroupfs-mount-${vers}"
-OPT_CONFIG=''
-DOCS='README.md'
+src="ImageMagick-${vers/_/-}"
+OPT_CONFIG="--disable-static --enable-shared
+            --enable-hdri
+	    --with-modules
+	    --with-rsvg
+	    --enable-hdri
+	    --with-gvc
+	    --with-perl
+	    --with-perl-options=INSTALLDIRS=vendor
+	    --with-dejavu-font-dir=/usr/share/fonts/TTF"
+DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -52,36 +60,39 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
-  sed -i -e 's/log_begin_msg/log_info_msg/g' \
-         -e 's/log_end_msg/evaluate_retval/g' $S/debian/cgroupfs-mount.init
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  echo "There is nothing to do."
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
-  install -Dm755 -v $S/cgroupfs-mount  $P/usr/bin/cgroupfs-mount
-  install -Dm755 -v $S/cgroupfs-umount  $P/usr/bin/cgroupfs-umount
-  install -Dm644 -v $S/cgroupfs-mount.8 $P/usr/share/man/man8/cgroupfs-mount.8
-  install -Dm755 -v $S/debian/cgroupfs-mount.init $P/etc/rc.d/init.d/cgroupfs-mount
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P DOCUMENTATION_PATH=/usr/share/doc/${src}
 
-  for i in $(seq 0 6)
-  do
-    install -dm755 -v $P/etc/rc.d/rc"$i".d
-    case $i in
-      0|1|6)
-        ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/K02cgroupfs-mount
-	;;
-      2|3|4|5)
-	ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/S98cgroupfs-mount
-	;;
-    esac
-  done
+  rm -fv $P/usr/lib/perl5/perllocal.pod
 
 ################################
 #      install tweaks
