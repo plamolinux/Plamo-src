@@ -4,7 +4,7 @@ pkgbase='iputils'
 vers='s20161105'
 url="https://github.com/iputils/iputils/archive/${vers}.tar.gz"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='INSTALL README.md'
@@ -53,7 +53,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    CC="gcc" make USE_NETTLE=no
+    CC="gcc" make USE_NETTLE=no USE_IDN=no
     if [ $? != 0 ]; then
       echo "build error. $0 script stop"
       exit 255
