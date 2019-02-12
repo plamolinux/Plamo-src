@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='imagemagick6'
-vers='6.9.9_34'
-url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
-verify="${url}.asc"
+pkgbase='sbc'
+vers='1.4'
+url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/linux/bluetooth/sbc-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
-src="ImageMagick-${vers/_/-}"
-OPT_CONFIG='--disable-static --enable-shared --enable-hdri --with-modules --disable-docs --with-rsvg --with-dejavu-font-dir=/usr/share/fonts/TTF'
-DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/ImageMagick-6.9.9-23-libs_only-1.patch"
-patchfiles="${blfspatch##*/}"
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --disable-tester'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -39,9 +38,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${blfspatch##*/} ]; then
-    wget $blfspatch
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then

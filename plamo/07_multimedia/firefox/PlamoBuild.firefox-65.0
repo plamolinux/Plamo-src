@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='64.0'
+vers='65.0'
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -13,10 +13,10 @@ src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
 blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-patchfiles="firefox-64.0-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 
-rustver="1.29.2"
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -75,6 +75,9 @@ if [ $opt_config -eq 1 ] ; then
     ln -s /usr/bin/python2 path/python
   fi
 
+  # for current ICU
+  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
+
   # branding
   #
   sed -i \
@@ -97,6 +100,7 @@ if [ $opt_config -eq 1 ] ; then
     export PATH="$PATH:$HOME/.cargo/bin"
     if [ x"$rustver" = "x" ]; then
       rustup update
+      rustup default stable
     else
       rustup default $rustver
     fi
@@ -109,7 +113,7 @@ if [ $opt_config -eq 1 ] ; then
   fi
 
   # Fix a problem with certain versions of ICU
-  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
+  # sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
 fi
 
 if [ $opt_build -eq 1 ] ; then

@@ -1,22 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='lxc'
-vers='3.0.3'
-template_vers="3.0.3"
-url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_vers}.tar.gz"
-verify="${url}.asc"
-template_verify="${template}.asc"
+pkgbase='acpid'
+vers='2.0.31'
+url="https://downloads.sourceforge.net/acpid2/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:599dd38681b5917eeeafb58176793952"
+verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
-template_src="lxc-templates-${template_vers}"
-OPT_CONFIG="--enable-static --enable-shared
-            --with-runtime-path=/run
-	    --enable-pam
-	    --disable-bash
-	    --without-systemdsystemunitdir"
-DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
+OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/$src --runstatedir=/run"
+DOCS='COPYING Changelog README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -29,6 +22,7 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -45,60 +39,25 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${template##*/} ]; then
-    wget $template
-  fi
-  if [ ! -f ${template_verify##*/} ]; then
-    wget $template_verify
-  fi
-  gpg --verify ${template_verify##*/}
-  if [ $? -eq 0 ]; then
-      rm -rf $template_src
-      tar xvf ${template##*/}
-  else
-      exit 255
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  if [ ! -f .init_script_patched ]; then
-      sed -i -e 's/log_daemon_msg/log_info_msg/g' \
-          -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-net.in
-      sed -i -e 's/log_daemon_msg/log_info_msg/g' \
-          -e '/@LIBEXECDIR@/a \ \ \ \ evaluate_retval' config/init/sysvinit/lxc-containers.in
-      touch .init_script_patched
-  fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export CFLAGS="$CFLAGS"  
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
-
-  cd $W
-  cp -a $template_src template_build
-  cd $W/template_build
-  ./autogen.sh
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -107,15 +66,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export CFLAGS="$CFLAGS"  
-  export LDFLAGS="$LDFLAGS -Wl,--as-needed"
+  export LDFLAGS='-Wl,--as-needed'
   make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
-  cd $W/template_build
-  make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -126,32 +78,32 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export CFLAGS="$CFLAGS"  
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -Dm644 -v $W/lxc-net $P/etc/sysconfig/lxc-net
+  install -v -m755 -d $P/etc/acpi/events
 
+  cp -r samples $docdir/$src/
+
+  install -v -m644 $W/allevents $P/etc/acpi/events/allevents
+  install -v -m755 $W/handler.sh $P/etc/acpi/handler.sh
+
+  install -v -Dm644 $W/allevents $docdir/$src/allevents
+  install -v -Dm644 $W/handler.sh $docdir/$src/handler.sh
+
+  install -v -m755 -D $W/acpid.init $P/etc/rc.d/init.d/acpid
   for i in $(seq 0 6)
   do
     install -dm755 -v $P/etc/rc.d/rc"$i".d
     case $i in
-      0|1|6)
-	ln -sfv ../init.d/lxc-net $P/etc/rc.d/rc"$i".d/K01lxc-net
-	ln -sfv ../init.d/lxc $P/etc/rc.d/rc"$i".d/K01lxc
+      0|1|2|6)
+        ln -sfv ../init.d/acpid $P/etc/rc.d/rc"$i".d/K32acpid
 	;;
-      2|3|4|5)
-	ln -sfv ../init.d/lxc-net $P/etc/rc.d/rc"$i".d/S98lxc-net
-	ln -sfv ../init.d/lxc $P/etc/rc.d/rc"$i".d/S99lxc
+      3|4|5)
+        ln -sfv ../init.d/acpid $P/etc/rc.d/rc"$i".d/S18acpid
 	;;
     esac
   done
-
-  # We need not Korean man pages
-  rm -rfv $P/usr/share/man/ko
-
-  cd $W/template_build
-  make install DESTDIR=$P
 
 ################################
 #      install tweaks

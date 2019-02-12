@@ -1,15 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pulseaudio'
-vers='11.1'
-url="https://www.freedesktop.org/software/${pkgbase}/releases/${pkgbase}-${vers}.tar.xz"
-verify="${url}.sha1"
+pkgbase='nss'
+vers='3.42.1'
+url="https://ftp.mozilla.org/pub/security/${pkgbase}/releases/NSS_${vers//./_}_RTM/src/${pkgbase}-${vers}.tar.gz"
+verify=""
+digest="sha1sum:770c6ccfe1cd4d08c0eaa198f73b791b9629a5aa"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-bluez4 --disable-bluez5 --disable-rpath --disable-orc"
-DOCS='ABOUT-NLS LICENSE NEWS README todo'
-patchfiles=''
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS=''
+blfs_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/nss-${vers}-standalone-1.patch"
+patchfiles="${blfs_patch_url##*/}"
 compress=txz
 ##############################################################
 
@@ -38,39 +40,34 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${blfs_patch_url##*/} ]; then
+    wget $blfs_patch_url
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources into build directory, patch and make in the build dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
+  cd $B/nss
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j1 \
+       BUILD_OPT=1 \
+       NSPR_INCLUDE_DIR=/usr/include/nspr \
+       USE_SYSTEM_ZLIB=1 \
+       ZLIB_LIBS=-lz \
+       NSS_ENABLE_WERROR=0 \
+       $([ $(uname -m) = x86_64 ] && echo USE_64=1) \
+       $([ -f /usr/include/sqlite3.h ] && echo NSS_USE_SYSTEM_SQLITE=1)
+
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -80,11 +77,27 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  cd $B/dist
 
-  rm -rf -v $P/etc/dbus-1/
+  # libs
+  install -v -m755 -d $P/usr/${libdir}
+  install -v -m755 Linux*/lib/*.so $P/usr/${libdir}/
+  install -v -m644 Linux*/lib/{*.chk,libcrmf.a} $P/usr/${libdir}/
+
+  # includes
+  install -v -m755 -d $P/usr/include/nss
+  cp -v -RL {public,private}/nss/* $P/usr/include/nss
+  chmod -v 644 $P/usr/include/nss/*
+
+  # binaries
+  install -v -m755 -d $P/usr/bin
+  for file in certutil cmsutil crlutil modutil pk12util shlibsign signtool signver ssltap nss-config; do
+    install -v -m755 Linux*/bin/${file} $P/usr/bin
+  done
+
+  # pkgconfig
+  install -v -m755 -d $P/usr/${libdir}/pkgconfig
+  install -v -m644 Linux*/lib/pkgconfig/nss.pc $P/usr/${libdir}/pkgconfig
 
 ################################
 #      install tweaks

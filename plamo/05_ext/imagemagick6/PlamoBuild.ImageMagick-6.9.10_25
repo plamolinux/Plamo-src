@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='bluez'
-vers='5.49'
-url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
-verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
+pkgbase='imagemagick6'
+vers='6.9.10_25'
+url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-library --disable-systemd"
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
-blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.48-obexd_without_systemd-1.patch"
-patchfiles="${blfs_patch##*/}"
+src="ImageMagick-${vers/_/-}"
+OPT_CONFIG='--disable-static --enable-shared --enable-hdri --with-modules --disable-docs --with-rsvg --with-dejavu-font-dir=/usr/share/fonts/TTF'
+DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/ImageMagick-6.9.10-10-libs_only-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
 
@@ -39,27 +39,31 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${blfs_patch##*/} ]; then
-    wget $blfs_patch
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget $blfspatch
   fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -83,54 +87,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  install -dm755 -v $P/usr/sbin
-  ln -svf ../libexec/bluetooth/bluetoothd $P/usr/sbin/bluetoothd
-
-  install -Dm644 -v $S/src/main.conf $P/etc/bluetooth/main.conf
-
-  install -dm755 -v $docdir/$src
-  install -m644  -v $S/doc/*.txt $docdir/$src/
-
-  # init script
-  install -Dm644 -v $W/bluetooth.init $P/etc/rc.d/init.d/bluetooth
-  install -Dm644 -v $W/bluetooth.init $docdir/$src/bluetooth.init
-  for i in $(seq 0 6)
-  do
-    install -dm755 -v $P/etc/rc.d/rc"$i".d
-    case $i in
-      0|1|2|6)
-	ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/K27bluetooth
-	;;
-      3|4|5)
-        ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/S35bluetooth
-	;;
-    esac
-  done
-
-  # sysconfig file
-  install -Dm755 -v $W/bluetooth.config $P/etc/sysconfig/bluetooth
-  install -Dm755 -v $W/bluetooth.config $docdir/$src/bluetooth.config
-
-  # create empty files
-  cat > $P/etc/bluetooth/rfcomm.conf <<"EOF"
-# Start rfcomm.conf
-# Set up the RFCOMM configuration of the Bluetooth subsystem in the Linux kernel.
-# Use one line per command
-# See the rfcomm man page for options
-
-
-# End of rfcomm.conf
-EOF
-
-  cat > $P/etc/bluetooth/uart.conf <<"EOF"
-# Start uart.conf
-# Attach serial devices via UART HCI to BlueZ stack
-# Use one line per device
-# See the hciattach man page for options
-
-# End of uart.conf
-EOF
 
 ################################
 #      install tweaks
