@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.49'
+vers='5.50'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
@@ -9,7 +9,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-library --disable-systemd"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
-blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.48-obexd_without_systemd-1.patch"
+blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.50-obexd_without_systemd-1.patch"
 patchfiles="${blfs_patch##*/}"
 compress=txz
 ##############################################################
