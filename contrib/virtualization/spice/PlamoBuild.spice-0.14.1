@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_vnc'
-vers='0.7.1'
-url="https://download.gnome.org/sources/gtk-vnc/0.7/gtk-vnc-${vers}.tar.xz"
-digest=""
-verify=""
+pkgbase='spice'
+vers='0.14.1'
+url="https://www.${pkgbase}-space.org/download/releases/spice-server/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sign"
 arch=`uname -m`
-build=B1
-src="gtk-vnc-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-examples --disable-werror --without-sasl'
-DOCS='AUTHORS COPYING.LIB ChangeLog ChangeLog-old INSTALL NEWS README'
+build=B2
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -60,18 +59,18 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  PYTHON=python2 $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  PYTHON=python2 make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255

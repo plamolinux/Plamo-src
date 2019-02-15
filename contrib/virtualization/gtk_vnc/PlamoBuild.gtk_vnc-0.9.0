@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='spice_gtk'
-vers='0.34'
-url="https://www.spice-space.org/download/gtk/spice-gtk-${vers}.tar.bz2"
+pkgbase='gtk_vnc'
+vers='0.9.0'
+url="https://download.gnome.org/sources/gtk-vnc/0.9/gtk-vnc-${vers}.tar.xz"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
-src="spice-gtk-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-vala --with-coroutine=gthread'
-DOCS='AUTHORS COPYING ChangeLog NEWS README THANKS TODO'
+src="gtk-vnc-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --with-examples --disable-werror --without-sasl'
+DOCS='AUTHORS COPYING.LIB ChangeLog ChangeLog-old INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
