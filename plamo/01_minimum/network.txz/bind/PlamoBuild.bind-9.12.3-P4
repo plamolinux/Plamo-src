@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase=bind
-vers=9.9.13_P1
+vers=9.12.3_P4
 url="ftp://ftp.isc.org/isc/bind/${vers/_/-}/bind-${vers/_/-}.tar.gz"
 verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers/_/-}
-OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no'
+OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no --enable-threads'
 DOCS='HISTORY README'
 mainconf="named.conf"
 configs='localhost.rev master.localhost'
