@@ -1,0 +1,34 @@
+From 0731ed7302797d0b6bfa412444f1e3e24fb0083f Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 4 Mar 2019 16:41:02 +0900
+Subject: [PATCH] tar time patch for 1.32
+
+---
+ src/list.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/list.c b/src/list.c
+index a985bcc..0959be7 100644
+--- a/src/list.c
++++ b/src/list.c
+@@ -1054,7 +1054,7 @@ tartime (struct timespec t, bool full_time)
+ 	  code_ns_fraction (ns, buffer + strlen (buffer));
+ 	}
+       else
+-	strftime (buffer, sizeof buffer, "%Y-%m-%d %H:%M", tm);
++	strftime (buffer, sizeof buffer, "%Y-%m-%d %H:%M:%S", tm);
+       return buffer;
+     }
+ 
+@@ -1095,7 +1095,7 @@ static int ugswidth = 19;
+ /* Width of printed time stamps.  It grows if longer time stamps are
+    found (typically, those with nanosecond resolution).  Like
+    USGWIDTH, some stairstepping may occur.  */
+-static int datewidth = sizeof "YYYY-MM-DD HH:MM" - 1;
++static int datewidth = sizeof "YYYY-MM-DD HH:MM:SS" - 1;
+ 
+ static bool volume_label_printed = false;
+ 
+-- 
+2.17.1
+
