@@ -84,8 +84,6 @@
     ;(menu-bar-mode 0)
     ;;; 色付け
     (global-font-lock-mode 1)
-    ;;; スクロールバーの表示
-    ; (scroll-bar-mode 0)
     ))
 
 ;;; ステータスラインに時間を表示する
