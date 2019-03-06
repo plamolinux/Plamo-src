@@ -54,6 +54,9 @@
 			   ;'(width . 110)
 			   ;'(height . 40)
 			   )))
+	    ;; 上記 initial-frame-alist ではなぜかウィンドウサイズ（width,height）
+	    ;; の設定がうまくいかないことがあった。こちらも試すと良い
+	    ;(set-frame-size (selected-frame) 110 40)
 	    )) ; Emacs21 以上の設定
 
       ;;; Emacs23 以上の設定 (TrueType/OpenType フォントの使用)
