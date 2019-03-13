@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Python2'
-vers='2.7.15'
+vers='2.7.16'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
