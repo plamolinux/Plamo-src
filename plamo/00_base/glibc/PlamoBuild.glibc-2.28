@@ -1,23 +1,36 @@
 #!/bin/sh
 ##############################################################
 pkgbase='glibc'
-vers='2.26'
+vers='2.28'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B6
+build=B3
 src="glibc-${vers}"
-OPT_CONFIG="--enable-add-ons
-	--enable-kernel=3.2
-	--localedir=/usr/share/locale
-	--enable-tls
-	--enable-obsolete-nsl
-	--enable-obsolete-rpc
+OPT_CONFIG="
+	--with-headers=/usr/include
+	--enable-add-ons
+	--enable-bind-now
+	--enable-lock-elision
 	--enable-stack-protector=strong
+	--enable-stackguard-randomization
+	--enable-static-pie
 	--disable-profile
 	--disable-werror
-	--build=${arch}-pc-linux
-	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
+	--enable-kernel=3.2
+	libc_cv_slibdir=/lib"
+# for 2.26
+#OPT_CONFIG="--enable-add-ons
+#	--enable-kernel=3.2
+#	--localedir=/usr/share/locale
+#	--enable-tls
+#	--enable-obsolete-nsl
+#	--enable-obsolete-rpc
+#	--enable-stack-protector=strong
+#	--disable-profile
+#	--disable-werror
+#	--build=${arch}-pc-linux
+#	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
 	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
@@ -31,7 +44,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 # glibc-c-utf8-locale.patch
 # https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile glibc-2.26-local_glob_exploits-2.patch glibc-c-utf8-locale.patch"
+patchfiles="$fhs_patchfile glibc-c-utf8-locale.patch"
 compress=txz
 ##############################################################
 
@@ -82,6 +95,9 @@ if [ $opt_config -eq 1 ] ; then
     else
 	echo "CFLAGS += -march=i486 -mtune=native -O3 -pipe" >> configparms
     fi
+    # デバッグシンボルに正しいパスを入れたいのなら以下を追加する必要がありそう
+    # export CC="gcc -isystem /usr/lib/gcc/x86_64-pc-linux-gnu/8.2.0/include -isystem /usr/include"
+    # ただし、これをやると make 中に /usr/include/limits.h を置き換えようとする
 
     $S/configure --prefix=/usr --libdir=/usr/${libdir} --libexecdir=/usr/${libdir} ${OPT_CONFIG}
     
@@ -94,7 +110,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    make
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -168,28 +184,30 @@ if [ $opt_package -eq 1 ] ; then
 
   # lib64 を廃するための移行措置
   if [ "${arch}" == "x86_64" ]; then
-      rm -rf $P/lib64
-      mkdir -p $P/lib64
-      ( cd $P/lib64 ; ln ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
-
-      cat <<EOF > $P/etc/ld.so.conf.new
-/lib64
-/usr/lib64
-EOF
-
+    mkdir -pv $P/lib64
+    ( cd $P/lib64 ; ln -v ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
   fi
-  cat <<EOF >> $P/etc/ld.so.conf.new
-/${libdir}
-/usr/${libdir}
-/usr/local/${libdir}
-EOF
+  cat <<-EOF > $P/etc/ld.so.conf.new
+	/lib64
+	/usr/lib64
+	/lib
+	/usr/lib
+	/usr/local/lib
+	
+	include /etc/ld.so.conf.d/*.conf
+	
+	EOF
+  mkdir -pv $P/etc/ld.so.conf.d
 
   # locale
   install -dm755 -v $P/usr/${libdir}/locale
   mv -v $P2/usr/${libdir}/locale/locale-archive $P/usr/${libdir}/locale/locale-archive
 
   # nsswitch.conf
-  install -Dm644 -v $W/nsswitch.conf.plamo $P/etc/nsswitch.conf.new
+  install -Dm644 -v $W/nsswitch.conf.plamo $P/etc/nsswitch.conf.dist
+
+  # nscd.conf
+  install -Dm644 -v $S/nscd/nscd.conf $P/etc/nscd.conf.dist
 
   # docs
   install -dm755 -v $docdir/$src
@@ -203,9 +221,10 @@ EOF
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 echo "glibc package initializing"
-# /usr/lib{,64}/の移行措置のため，ld.so.conf.new を優先する
+# ld.so.conf は置き換え
+echo "Replace /etc/ld.so.conf, and backup it to /etc/ld.so.conf.old"
 if [ -f /etc/ld.so.conf ]; then
-  mv /etc/ld.so.conf /etc/ld.so.conf.old
+  mv -v /etc/ld.so.conf /etc/ld.so.conf.old
 fi
 mv /etc/ld.so.conf.new /etc/ld.so.conf
 ldconfig
@@ -213,10 +232,14 @@ ldconfig
 # 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
 # あればそのままにしておく
 if [ ! -f /etc/nsswitch.conf ]; then
-  mv /etc/nsswitch.conf.new /etc/nsswitch.conf
-else
-  mv /etc/nsswitch.conf.new /etc/nsswitch.conf_plamo_default
+  cp /etc/nsswitch.conf.dist /etc/nsswitch.conf
 fi
+
+# nscd.conf
+if [ ! -f /etc/nscd.conf ]; then
+  cp /etc/nscd.conf.dist /etc/nscd.conf
+fi
+
 echo "glibc timezone configuring"
 # 既存のlocaltimeがあればそのまま，無ければJSTで作る
 if [ ! -e /etc/localtime ]; then
@@ -252,8 +275,10 @@ EOF
   echo "building libc package"
   pkg="libc"-$vers-$arch-$build
 
-  rm -rf $P
-  mkdir -p $P/usr
+  # デバッグのために glibc パッケージ作成用の work を残しておく
+  rm -rfv $W/work_glibc
+  mv -v $P $W/work_glibc
+  mkdir -v -p $P/usr
   mv -v $P2/usr/include $P/usr
   mv -v $P2/usr/${libdir} $P/usr
   mv -v $P2/usr/share $P/usr
