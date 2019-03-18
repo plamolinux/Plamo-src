@@ -7,21 +7,20 @@ unifont_vers="11.0.02"
 unifont_url="https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz"
 verify=""
 arch=`uname -m`
-build=B12
+build=B15
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
-	--sbindir=/sbin
+        --sbindir=/sbin
         --enable-device-mapper
         --enable-cache-stats
-	--enable-boot-time
+        --enable-boot-time
         --enable-grub-mkfont
         --enable-grub-mount
         --disable-mm-debug
         --disable-werror"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2015 INSTALL NEWS README THANKS TODO'
 debianpatch="http://http.debian.net/debian/pool/main/g/grub2/grub2_2.02-2.debian.tar.xz"
-#patchfiles='0001-os-naming.patch 0002-intel-ucode.patch'
-patchfiles="0008-Fix-packed-not-aligned-error-on-GCC-8.patch"
+patchfiles="grub-2.02-GCC8-alignment.patch grub-2.02-XFS-sparse-inode.patch"
 compress=txz
 ## variations for build
 BUILD_VARS="common_bios efi"
@@ -89,7 +88,6 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   cp $W/$(basename ${unifont_url##*/} .gz) $S/unifont.bdf
-
   sed -i -e 's|/usr/share/fonts/truetype|/usr/share/fonts/TTF|g' configure.ac
 
   for var in $BUILD_VARS
@@ -125,7 +123,7 @@ if [ $opt_config -eq 1 ] ; then
     if [ -f autogen.sh ] ; then
       sh ./autogen.sh
     fi
-    
+
     ./configure \
         --prefix=/usr \
         --sysconfdir=/etc \
@@ -140,7 +138,7 @@ if [ $opt_config -eq 1 ] ; then
   done
 
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   for var in $BUILD_VARS
   do
@@ -168,7 +166,7 @@ if [ $opt_package -eq 1 ] ; then
 
   # これくらいは書きこんじゃう方が楽な気がする．
   mkdir -p $P/etc/default
-  cat <<"EOF" > $P/etc/default/grub
+  cat <<"EOF" > $P/etc/default/grub.dist
 # Default menu entry
 GRUB_DEFAULT=0
 # Time after the menu displayed
@@ -195,6 +193,13 @@ GRUB_PRELOAD_MODULES="part_gpt part_msdos"
 
 EOF
 
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/default/grub ]; then
+   cp -v /etc/default/grub.dist /etc/default/grub
+fi
+EOF
+
   echo "Remove debug related files"
   for d in i386-pc i386-efi x86_64-efi
   do
@@ -212,8 +217,8 @@ EOF
   if [ "$chk_me.x" != ".x" ]; then
       chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
   fi
-  install -Dm 644 -v $W/plamo_grubconfig.tar $docdir/$src/plamo_grubconfig.tar
-  install -Dm 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
+  install -D -m 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
+  install -D -m 644 -v $W/plamo_grubconfig.tar $docdir/$src/plamo_grubconfig.tar
 
 ################################
 #      install tweaks
