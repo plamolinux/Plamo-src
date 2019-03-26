@@ -2,7 +2,7 @@ ac_add_options --enable-application=browser
 
 ac_add_options --prefix=/usr
 ac_add_options --enable-optimize="-O2"
-ac_add_options --enable-rust-simd
+#ac_add_options --enable-rust-simd
 
 # System libraries
 ac_add_options --with-system-zlib
@@ -10,7 +10,8 @@ ac_add_options --with-system-bz2
 ac_add_options --with-system-icu
 ac_add_options --with-system-jpeg
 ac_add_options --with-system-png
-ac_add_options --with-system-libvpx
+# current firefox fails to build against libvpx-1.8.0
+# ac_add_options --with-system-libvpx
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
 ac_add_options --with-system-libevent
