@@ -1,8 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='util_linux'
-vers='2.32'
+vers='2.33.1'
 url="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
+verify="https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="util-linux-${vers}"
