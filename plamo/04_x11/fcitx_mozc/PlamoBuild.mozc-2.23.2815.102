@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fcitx_mozc'
-vers="2.20.2673.102"
+vers="2.23.2815.102"
 
 _mozc_url=https://github.com/google/mozc.git
 _japanese_usage_dictionary_url=https://github.com/hiroyuki-komatsu/japanese-usage-dictionary.git
 _gyp_url=https://chromium.googlesource.com/external/gyp
 _protobuf_url=https://github.com/google/protobuf.git
 
-_mozc_rev=280e38fe3d9db4df52f0713acf2ca65898cd697a
-_japanese_usage_dictionary_rev=e5b3425575734c323e1d947009dd74709437b684
-_gyp_rev=920ee58c3d3109dea3cd37d88054014891a93db7
-_protobuf_rev=a428e42072765993ff674fda72863c9f1aa2d268
-_zipcode_rel=201703
-_fcitx_patchver=2.18.2612.102.1
+_mozc_rev=afb03ddfe72dde4cf2409863a3bfea160f7a66d8
+_japanese_usage_dictionary_rev=a4a66772e33746b91e99caceecced9a28507e925
+_gyp_rev=4ec6c4e3a94bd04a6da2858163d40b2429b8aad1
+_protobuf_rev=92a7e778e7394386f413cec28d67a07630f784b1
+_zipcode_rel=201810
+_fcitx_patchver=${vers}.1
 
 git_url=($_mozc_url
 	 $_japanese_usage_dictionary_url
@@ -25,12 +25,13 @@ commit_ids=($_mozc_rev
 	    $_protobuf_rev)
 urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
       https://downloads.sourceforge.net/pnsft-aur/jigyosyo-${_zipcode_rel}.zip
+      https://github.com/google/mozc/pull/444/commits/82d38f929882a9c62289b179c6fe41efed249987.patch
       https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-${_fcitx_patchver}.patch
       https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz
       https://raw.githubusercontent.com/iRi-E/mozc-el-extensions/master/mozc-isearch.el)
 
 arch=`uname -m`
-build=B4
+build=B1
 src="mozc"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md'
@@ -103,12 +104,14 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+  patch -Np1 -i $W/82d38f929882a9c62289b179c6fe41efed249987.patch
 
   cd $B/src
 
   # fcitx patch
   rm -rf unix/fcitx
   patch -Np2 -i $W/fcitx-mozc-${_fcitx_patchver}.patch
+  rm -rf unix/fcitx5
 
   find . -name  \*.py        -type f -exec sed -i -e "1s|python.*$|python2|"  {} +
   find . -regex '.*\.gypi?$' -type f -exec sed -i -e "s|'python'|'python2'|g" {} +
