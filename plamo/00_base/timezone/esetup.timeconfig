@@ -1,0 +1,535 @@
+#!/bin/sh
+if [ -r /tmp/SeTT_PX ]; then
+ T_PX="`cat /tmp/SeTT_PX`"
+elif [ ! "$1" = "" ]; then
+ T_PX=$1
+else
+ T_PX=/
+fi
+if [ "$COLOR" = "on" -o -r /tmp/SeTcolor -o "$T_PX" = "/" ]; then # use color menus
+    dialog --title "Timezone Config" --yesno "Your timezone is Japan(JST) ?" 6 60
+    if [ $? = 1 -o $? = 255 ]; then
+
+ dialog --title "timezone configuration" --menu "Select your time zone(If you live in Japan, select Japan )" \
+21 60 13 \
+"Japan" "" \
+"Africa/Abidjan" "" \
+"Africa/Accra" "" \
+"Africa/Addis_Ababa" "" \
+"Africa/Algiers" "" \
+"Africa/Asmera" "" \
+"Africa/Bamako" "" \
+"Africa/Bangui" "" \
+"Africa/Banjul" "" \
+"Africa/Bissau" "" \
+"Africa/Blantyre" "" \
+"Africa/Brazzaville" "" \
+"Africa/Bujumbura" "" \
+"Africa/Cairo" "" \
+"Africa/Casablanca" "" \
+"Africa/Conakry" "" \
+"Africa/Dakar" "" \
+"Africa/Dar_es_Salaam" "" \
+"Africa/Djibouti" "" \
+"Africa/Douala" "" \
+"Africa/Freetown" "" \
+"Africa/Gaborone" "" \
+"Africa/Harare" "" \
+"Africa/Johannesburg" "" \
+"Africa/Kampala" "" \
+"Africa/Khartoum" "" \
+"Africa/Kigali" "" \
+"Africa/Kinshasa" "" \
+"Africa/Lagos" "" \
+"Africa/Libreville" "" \
+"Africa/Lome" "" \
+"Africa/Luanda" "" \
+"Africa/Lumumbashi" "" \
+"Africa/Lusaka" "" \
+"Africa/Malabo" "" \
+"Africa/Maputo" "" \
+"Africa/Maseru" "" \
+"Africa/Mbabane" "" \
+"Africa/Mogadishu" "" \
+"Africa/Monrovia" "" \
+"Africa/Nairobi" "" \
+"Africa/Ndjamena" "" \
+"Africa/Niamey" "" \
+"Africa/Nouakchott" "" \
+"Africa/Ouagadougou" "" \
+"Africa/Porto-Novo" "" \
+"Africa/Sao_Tome" "" \
+"Africa/Timbuktu" "" \
+"Africa/Tripoli" "" \
+"Africa/Tunis" "" \
+"Africa/Windhoek" "" \
+"America/Anchorage" "" \
+"America/Anguilla" "" \
+"America/Antigua" "" \
+"America/Aruba" "" \
+"America/Asuncion" "" \
+"America/Atka" "" \
+"America/Barbados" "" \
+"America/Belize" "" \
+"America/Bogota" "" \
+"America/Buenos_Aires" "" \
+"America/Caracas" "" \
+"America/Cayenne" "" \
+"America/Cayman" "" \
+"America/Chicago" "" \
+"America/Costa_Rica" "" \
+"America/Curacao" "" \
+"America/Denver" "" \
+"America/Detroit" "" \
+"America/Dominica" "" \
+"America/Edmonton" "" \
+"America/El_Salvador" "" \
+"America/Ensenada" "" \
+"America/Fort_Wayne" "" \
+"America/Godthab" "" \
+"America/Grand_Turk" "" \
+"America/Grenada" "" \
+"America/Guadeloupe" "" \
+"America/Guatemala" "" \
+"America/Guayaquil" "" \
+"America/Guyana" "" \
+"America/Halifax" "" \
+"America/Havana" "" \
+"America/Jamaica" "" \
+"America/Knox_IN" "" \
+"America/La_Paz" "" \
+"America/Lima" "" \
+"America/Los_Angeles" "" \
+"America/Managua" "" \
+"America/Manaus" "" \
+"America/Martinique" "" \
+"America/Mazatlan" "" \
+"America/Mexico_City" "" \
+"America/Miquelon" "" \
+"America/Montevideo" "" \
+"America/Montreal" "" \
+"America/Montserrat" "" \
+"America/Nassau" "" \
+"America/New_York" "" \
+"America/Noronha" "" \
+"America/Panama" "" \
+"America/Paramaribo" "" \
+"America/Phoenix" "" \
+"America/Port-au-Prince" "" \
+"America/Port_of_Spain" "" \
+"America/Porto_Acre" "" \
+"America/Puerto_Rico" "" \
+"America/Regina" "" \
+"America/Santiago" "" \
+"America/Santo_Domingo" "" \
+"America/Sao_Paulo" "" \
+"America/Scoresbysund" "" \
+"America/Shiprock" "" \
+"America/St_Johns" "" \
+"America/St_Kitts" "" \
+"America/St_Lucia" "" \
+"America/St_Thomas" "" \
+"America/St_Vincent" "" \
+"America/Tegucigalpa" "" \
+"America/Thule" "" \
+"America/Tijuana" "" \
+"America/Tortola" "" \
+"America/Vancouver" "" \
+"America/Virgin" "" \
+"America/Whitehorse" "" \
+"America/Winnipeg" "" \
+"Asia/Aden" "" \
+"Asia/Alma-Ata" "" \
+"Asia/Amman" "" \
+"Asia/Anadyr" "" \
+"Asia/Ashkhabad" "" \
+"Asia/Baghdad" "" \
+"Asia/Bahrain" "" \
+"Asia/Baku" "" \
+"Asia/Bangkok" "" \
+"Asia/Beirut" "" \
+"Asia/Bishkek" "" \
+"Asia/Brunei" "" \
+"Asia/Calcutta" "" \
+"Asia/Colombo" "" \
+"Asia/Dacca" "" \
+"Asia/Damascus" "" \
+"Asia/Dubai" "" \
+"Asia/Dushanbe" "" \
+"Asia/Gaza" "" \
+"Asia/Hong_Kong" "" \
+"Asia/Irkutsk" "" \
+"Asia/Istanbul" "" \
+"Asia/Jakarta" "" \
+"Asia/Jayapura" "" \
+"Asia/Kabul" "" \
+"Asia/Kamchatka" "" \
+"Asia/Karachi" "" \
+"Asia/Katmandu" "" \
+"Asia/Kuala_Lumpur" "" \
+"Asia/Kuwait" "" \
+"Asia/Macao" "" \
+"Asia/Magadan" "" \
+"Asia/Manila" "" \
+"Asia/Muscat" "" \
+"Asia/Nicosia" "" \
+"Asia/Novosibirsk" "" \
+"Asia/Omsk" "" \
+"Asia/Phnom_Penh" "" \
+"Asia/Pyongyang" "" \
+"Asia/Qatar" "" \
+"Asia/Rangoon" "" \
+"Asia/Riyadh" "" \
+"Asia/Riyadh87" "" \
+"Asia/Riyadh88" "" \
+"Asia/Riyadh89" "" \
+"Asia/Saigon" "" \
+"Asia/Seoul" "" \
+"Asia/Shanghai" "" \
+"Asia/Singapore" "" \
+"Asia/Taipei" "" \
+"Asia/Tashkent" "" \
+"Asia/Tbilisi" "" \
+"Asia/Tehran" "" \
+"Asia/Tel_Aviv" "" \
+"Asia/Thimbu" "" \
+"Asia/Tokyo" "" \
+"Asia/Tomsk" "" \
+"Asia/Ujung_Pandang" "" \
+"Asia/Ulan_Bator" "" \
+"Asia/Vientiane" "" \
+"Asia/Vladivostok" "" \
+"Asia/Yakutsk" "" \
+"Asia/Yekaterinburg" "" \
+"Asia/Yerevan" "" \
+"Atlantic/Azores" "" \
+"Atlantic/Bermuda" "" \
+"Atlantic/Canary" "" \
+"Atlantic/Cape_Verde" "" \
+"Atlantic/Faeroe" "" \
+"Atlantic/Jan_Mayen" "" \
+"Atlantic/Madeira" "" \
+"Atlantic/Reykjavik" "" \
+"Atlantic/South_Georgia" "" \
+"Atlantic/St_Helena" "" \
+"Atlantic/Stanley" "" \
+"Australia/ACT" "" \
+"Australia/Adelaide" "" \
+"Australia/Brisbane" "" \
+"Australia/Broken_Hill" "" \
+"Australia/Canberra" "" \
+"Australia/Darwin" "" \
+"Australia/Hobart" "" \
+"Australia/LHI" "" \
+"Australia/Lord_Howe" "" \
+"Australia/Melbourne" "" \
+"Australia/NSW" "" \
+"Australia/North" "" \
+"Australia/Perth" "" \
+"Australia/Queensland" "" \
+"Australia/South" "" \
+"Australia/Sydney" "" \
+"Australia/Tasmania" "" \
+"Australia/Victoria" "" \
+"Australia/West" "" \
+"Australia/Yancowinna" "" \
+"Brazil/Acre" "" \
+"Brazil/DeNoronha" "" \
+"Brazil/East" "" \
+"Brazil/West" "" \
+"CET" "" \
+"CST6CDT" "" \
+"Canada/Atlantic" "" \
+"Canada/Central" "" \
+"Canada/East-Saskatchewan" "" \
+"Canada/Eastern" "" \
+"Canada/Mountain" "" \
+"Canada/Newfoundland" "" \
+"Canada/Pacific" "" \
+"Canada/Saskatchewan" "" \
+"Canada/Yukon" "" \
+"Chile/Continental" "" \
+"Chile/EasterIsland" "" \
+"Cuba" "" \
+"EET" "" \
+"EST" "" \
+"EST5EDT" "" \
+"Egypt" "" \
+"Eire" "" \
+"Etc/GMT" "" \
+"Etc/GMT+0" "" \
+"Etc/GMT+1" "" \
+"Etc/GMT+10" "" \
+"Etc/GMT+11" "" \
+"Etc/GMT+12" "" \
+"Etc/GMT+2" "" \
+"Etc/GMT+3" "" \
+"Etc/GMT+4" "" \
+"Etc/GMT+5" "" \
+"Etc/GMT+6" "" \
+"Etc/GMT+7" "" \
+"Etc/GMT+8" "" \
+"Etc/GMT+9" "" \
+"Etc/GMT-0" "" \
+"Etc/GMT-1" "" \
+"Etc/GMT-10" "" \
+"Etc/GMT-11" "" \
+"Etc/GMT-12" "" \
+"Etc/GMT-13" "" \
+"Etc/GMT-2" "" \
+"Etc/GMT-3" "" \
+"Etc/GMT-4" "" \
+"Etc/GMT-5" "" \
+"Etc/GMT-6" "" \
+"Etc/GMT-7" "" \
+"Etc/GMT-8" "" \
+"Etc/GMT-9" "" \
+"Etc/GMT0" "" \
+"Etc/Greenwich" "" \
+"Etc/UCT" "" \
+"Etc/UTC" "" \
+"Etc/Universal" "" \
+"Etc/Zulu" "" \
+"Europe/Amsterdam" "" \
+"Europe/Andorra" "" \
+"Europe/Athens" "" \
+"Europe/Belfast" "" \
+"Europe/Belgrade" "" \
+"Europe/Berlin" "" \
+"Europe/Bratislava" "" \
+"Europe/Brussels" "" \
+"Europe/Bucharest" "" \
+"Europe/Budapest" "" \
+"Europe/Chisinau" "" \
+"Europe/Copenhagen" "" \
+"Europe/Dublin" "" \
+"Europe/Gibraltar" "" \
+"Europe/Helsinki" "" \
+"Europe/Istanbul" "" \
+"Europe/Kiev" "" \
+"Europe/Kuybyshev" "" \
+"Europe/Lisbon" "" \
+"Europe/Ljubljana" "" \
+"Europe/London" "" \
+"Europe/Luxembourg" "" \
+"Europe/Madrid" "" \
+"Europe/Malta" "" \
+"Europe/Minsk" "" \
+"Europe/Monaco" "" \
+"Europe/Moscow" "" \
+"Europe/Oslo" "" \
+"Europe/Paris" "" \
+"Europe/Prague" "" \
+"Europe/Riga" "" \
+"Europe/Rome" "" \
+"Europe/San_Marino" "" \
+"Europe/Sarajevo" "" \
+"Europe/Simferopol" "" \
+"Europe/Skopje" "" \
+"Europe/Sofia" "" \
+"Europe/Stockholm" "" \
+"Europe/Tallinn" "" \
+"Europe/Tirane" "" \
+"Europe/Vaduz" "" \
+"Europe/Vatican" "" \
+"Europe/Vienna" "" \
+"Europe/Vilnius" "" \
+"Europe/Warsaw" "" \
+"Europe/Zagreb" "" \
+"Europe/Zurich" "" \
+"Factory" "" \
+"GB" "" \
+"GMT" "" \
+"GMT+0" "" \
+"GMT-0" "" \
+"GMT0" "" \
+"Greenwich" "" \
+"HST" "" \
+"Hongkong" "" \
+"Iceland" "" \
+"Indian/Antananarivo" "" \
+"Indian/Chagos" "" \
+"Indian/Christmas" "" \
+"Indian/Cocos" "" \
+"Indian/Comoro" "" \
+"Indian/Mahe" "" \
+"Indian/Maldives" "" \
+"Indian/Mauritius" "" \
+"Indian/Mayotte" "" \
+"Indian/Reunion" "" \
+"Iran" "" \
+"Israel" "" \
+"Jamaica" "" \
+"Kwajalein" "" \
+"Libya" "" \
+"MET" "" \
+"MST" "" \
+"MST7MDT" "" \
+"Mexico/BajaNorte" "" \
+"Mexico/BajaSur" "" \
+"Mexico/General" "" \
+"Mideast/Riyadh87" "" \
+"Mideast/Riyadh88" "" \
+"NZ" "" \
+"NZ-CHAT" "" \
+"Navajo" "" \
+"PRC" "" \
+"PST8PDT" "" \
+"Pacific/Apia" "" \
+"Pacific/Auckland" "" \
+"Pacific/Chatham" "" \
+"Pacific/Easter" "" \
+"Pacific/Efate" "" \
+"Pacific/Enderbury" "" \
+"Pacific/Fakaofo" "" \
+"Pacific/Fiji" "" \
+"Pacific/Funafuti" "" \
+"Pacific/Galapagos" "" \
+"Pacific/Gambier" "" \
+"Pacific/Guadalcanal" "" \
+"Pacific/Guam" "" \
+"Pacific/Honolulu" "" \
+"Pacific/Kiritimati" "" \
+"Pacific/Kosrae" "" \
+"Pacific/Kwajalein" "" \
+"Pacific/Majuro" "" \
+"Pacific/Marquesas" "" \
+"Pacific/Midway" "" \
+"Pacific/Nauru" "" \
+"Pacific/Niue" "" \
+"Pacific/Norfolk" "" \
+"Pacific/Noumea" "" \
+"Pacific/Pago_Pago" "" \
+"Pacific/Palau" "" \
+"Pacific/Pitcairn" "" \
+"Pacific/Ponape" "" \
+"Pacific/Port_Moresby" "" \
+"Pacific/Rarotonga" "" \
+"Pacific/Saipan" "" \
+"Pacific/Samoa" "" \
+"Pacific/Tahiti" "" \
+"Pacific/Tarawa" "" \
+"Pacific/Tongatapu" "" \
+"Pacific/Truk" "" \
+"Pacific/Wake" "" \
+"Pacific/Wallis" "" \
+"Pacific/Yap" "" \
+"Poland" "" \
+"Portugal" "" \
+"ROC" "" \
+"ROK" "" \
+"Singapore" "" \
+"SystemV/AST4" "" \
+"SystemV/AST4ADT" "" \
+"SystemV/CST6" "" \
+"SystemV/CST6CDT" "" \
+"SystemV/EST5" "" \
+"SystemV/EST5EDT" "" \
+"SystemV/HST10" "" \
+"SystemV/MST7" "" \
+"SystemV/MST7MDT" "" \
+"SystemV/PST8" "" \
+"SystemV/PST8PDT" "" \
+"SystemV/YST9" "" \
+"SystemV/YST9YDT" "" \
+"Turkey" "" \
+"UCT" "" \
+"US/Alaska" "" \
+"US/Aleutian" "" \
+"US/Arizona" "" \
+"US/Central" "" \
+"US/East-Indiana" "" \
+"US/Eastern" "" \
+"US/Hawaii" "" \
+"US/Indiana-Starke" "" \
+"US/Michigan" "" \
+"US/Mountain" "" \
+"US/Pacific" "" \
+"US/Pacific-New" "" \
+"US/Samoa" "" \
+"UTC" "" \
+"Universal" "" \
+"W-SU" "" \
+"WET" "" \
+"Zulu" "" \
+2> /tmp/tz
+ if [ $? = 1 -o $? = 255 ]; then
+  rm -f /tmp/tz
+  exit
+ fi
+ TIMEZONE="`cat /tmp/tz`"
+ rm -f /tmp/tz
+ else
+ TIMEZONE="Japan"
+fi
+
+# cd $T_PX/var/lib/zoneinfo
+ if [ -r $T_PX/usr/share/zoneinfo/$TIMEZONE -o \
+      -r /var/adm/mount/usr/share/zoneinfo/$TIMEZONE -o \
+      -L $T_PX/usr/share/zoneinfo/$TIMEZONE -o \
+      -L /var/adm/mount/usr/share/zoneinfo/$TIMEZONE ]; then
+  ( cd $T_PX/usr/share/zoneinfo ; ln -sf $TIMEZONE localtime )
+  ( cd $T_PX/etc ; rm -rf localtime )
+  ( cd $T_PX/etc ; ln -sf ../usr/share/zoneinfo/localtime localtime )
+ fi
+else # no color!
+ while [ 0 ]; do
+  echo -n "configure timezone ?([y]es, [n]o)? "
+  read TIMECONF;
+  echo
+  if [ "$TIMECONF" = "n" ]; then
+   break;
+  fi
+  cat << EOF
+select your timezone from bellow list:
+
+Australia/LHI Australia/NSW Australia/North Australia/Queensland
+Australia/South Australia/Tasmania Australia/Victoria Australia/West
+Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West
+Canada/Atlantic Canada/Central Canada/East-Saskatche Canada/Eastern 
+Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Yukon 
+Chile/Continental Chile/EasterIsland CET Cuba EET Egypt Factory GB-Eire GMT
+GMT+0 GMT+1 GMT+10 GMT+11 GMT+12 GMT+13 GMT+2 GMT+3 GMT+4 GMT+5 GMT+6 GMT+7
+GMT+8 GMT+9 GMT-0 GMT-1 GMT-10 GMT-11 GMT-12 GMT-2 GMT-3 GMT-4 GMT-5 GMT-6 GMT-7
+GMT-8 GMT-9 GMT0 GMT1 GMT10 GMT11 GMT12 GMT13 GMT2 GMT3 GMT4 GMT5 GMT6 GMT7
+GMT8 GMT9 Greenwich Hongkong Iceland Iran Israel Jamaica Japan Libya 
+Mexico/BajaNorte Mexico/BajaSur Mexico/General MET NZ Navajo PRC Poland ROC ROK
+Singapore SystemV/AST4 SystemV/AST4ADT SystemV/CST6 SystemV/CST6CDT 
+SystemV/EST5 SystemV/EST5EDT SystemV/HST10 SystemV/MST7 SystemV/MST7MDT 
+SystemV/PST8 SystemV/PST8PDT SystemV/YST9 SystemV/YST9YDT Turkey UCT UTC 
+Universal US/Alaska US/Aleutian US/Arizona US/Central US/East-Indiana 
+US/Eastern US/Hawaii US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa
+W-SU WET Zulu
+
+Input your timezone to this prompt from upper list
+If you can't find your time zone, do timeconfig after you reboot
+
+EOF
+  echo -n "Timezone? "
+  read TIMEZONE;
+  echo
+#  cd $T_PX/var/lib/zoneinfo
+  if [ -r $T_PX/usr/share/zoneinfo/$TIMEZONE -o \
+       -r /var/adm/mount/usr/share/zoneinfo/$TIMEZONE -o \
+       -L $T_PX/usr/share/zoneinfo/$TIMEZONE -o \
+       -L /var/adm/mount/usr/share/zoneinfo/$TIMEZONE ]; then
+   echo "Creating link from $TIMEZONE to localtime in /var/lib/zoneinfo..."
+   echo
+  ( cd $T_PX/usr/share/zoneinfo/; ln -sf $TIMEZONE localtime )
+  ( cd $T_PX/etc ; rm -rf localtime )
+  ( cd $T_PX/etc ; cp ../usr/share/zoneinfo/localtime localtime )
+   break;
+  else
+   cat << EOF
+
+I cannot find $TIMEZONE . If you need timezone, please try again.
+Double check your spelling, as this script discriminate upper and
+lower case.
+
+Press [enter] to continue.
+
+EOF
+   read JUNK;
+  fi
+ done
+fi
