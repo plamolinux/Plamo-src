@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssh'
-vers='7.9p1'
+vers='8.0p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
     --with-privsep-path=/var/lib/sshd --with-md5-passwords --with-pid-dir=/run"
@@ -15,7 +15,7 @@ DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     PROTOCOL.agent PROTOCOL.chacha20poly1305 PROTOCOL.krl
     TODO"
 #openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-${vers}-openssl-1.1.0-1.patch"
-patchfiles="CVE-2018-20685.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
