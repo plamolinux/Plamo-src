@@ -7,7 +7,7 @@ verify=$url.asc
 arch=`uname -m`
 build=P1
 src=${pkgbase}-${vers/_/-}
-OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no --enable-threads'
+OPT_CONFIG='--with-libtool --enable-shared --with-libxml2=no --enable-threads --without-python'
 DOCS='HISTORY README'
 mainconf="named.conf"
 configs='localhost.rev master.localhost'
