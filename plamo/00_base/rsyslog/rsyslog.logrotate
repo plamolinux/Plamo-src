@@ -1,0 +1,23 @@
+/var/log/auth.log /var/log/daemon.log /var/log/debug /var/log/kern.log /var/log/messages /var/log/syslog /var/log/user.log {
+    compress
+    weekly
+    rotate 8
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /bin/killall -HUP rsyslogd 2>/dev/null || true
+    endscript
+}
+
+/var/log/mail.log {
+    compress
+    weekly
+    rotate 8
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /etc/rc.d/init.d/postfix reload 2> /dev/null || true
+    endscript
+}
