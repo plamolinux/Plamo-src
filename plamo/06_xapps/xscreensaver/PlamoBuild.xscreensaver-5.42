@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xscreensaver'
-vers='5.38'
+vers='5.42'
 url="http://www.jwz.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:c2c1f09a31b10939858b67dd3cdec8ab"
+digest="md5sum:881a9218ef9f95d0d9ba76303def5568"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='INSTALL README README.VMS README.hacking'
-patchfiles=''
+patchfiles='remove-comments.patch'
 compress=txz
 ##############################################################
 
