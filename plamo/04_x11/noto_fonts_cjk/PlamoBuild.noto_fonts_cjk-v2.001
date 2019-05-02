@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='noto_fonts_cjk'
-vers='2017_06_01'
-url="https://github.com/googlei18n/noto-cjk/archive/v${vers//_/-}-serif-cjk-1-1.tar.gz"
+vers='2.001'
+url="https://github.com/googlefonts/noto-cjk/archive/NotoSansV${vers}.tar.gz"
 verify=""
 arch=noarch
 build=B1
-src="noto-cjk-${vers//_/-}-serif-cjk-1-1"
+src="noto-cjk-NotoSansV${vers}"
 OPT_CONFIG=''
 DOCS='HISTORY LICENSE NEWS README.formats README.third_party'
 patchfiles=''
