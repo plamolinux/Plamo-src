@@ -54,6 +54,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $S
 
   install -Dm644 -v *.ttc -t $P/usr/share/fonts/noto-cjk/
+  install -Dm644 -v $W/70-noto-cjk.conf $P/etc/fonts/conf.avail/70-noto-cjk.conf
+  install -dm755 -v $P/etc/fonts/conf.d/
+  ln -vsf ../conf.avail/70-noto-cjk.conf $P/etc/fonts/conf.d/70-noto-cjk.conf
 
 ################################
 #      install tweaks
