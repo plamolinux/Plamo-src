@@ -208,10 +208,13 @@ EOF
       rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
   done
 
-  # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
-  # とりあえずはこのままにしておく．
   echo "Installing plamo tools for grub"
-  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar -C $P
+  if [ -d $W/plamo_grubconfig ]; then
+      cp -av $W/plamo_grubconfig/* $P/
+      ( cd $W && tar cvf plamo_grubconfig.tar plamo_grubconfig/ )
+  elif [ -f $W/plamo_grubconfig.tar ]; then
+      tar --strip-components=1 -xvf $W/plamo_grubconfig.tar -C $P
+  fi
   # 為念
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then

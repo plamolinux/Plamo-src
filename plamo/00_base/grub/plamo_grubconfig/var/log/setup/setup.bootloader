@@ -1,0 +1,14 @@
+#!/bin/sh
+ROOT=/mnt
+
+
+if [ -f $ROOT/sbin/grub-install ]; then
+    sh $ROOT/sbin/grubconfig
+else
+    if [ "$LANG" = "ja_JP.UTF-8" ]; then
+	dialog --title "no bootloader found" --msgbox "ブートローダ(grub)が見付かりませんでした. ブートローダは\n\
+インストールされないので，カーネルは手動でブートする必要があります．" 8 74
+    else
+	dialog --title "no bootloader found" --msgbox "No bootloader(grub) was found. You should boot this system manually." 8 74
+    fi
+fi

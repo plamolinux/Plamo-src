@@ -1,0 +1,119 @@
+#!/bin/sh
+
+# $MTPT に chroot してから実行される部分
+
+expand_mes () {
+    source /sbin/grubconfig.mes
+}
+
+PROBE=/sbin/fdisk
+crunch () { # remove extra whitespace
+    read STRING;
+    echo $STRING
+}
+
+ROOT_DEVICE=`cat /tmp/grub_ROOT_DEVICE`
+ROOT_DISK=`cat /tmp/grub_ROOT_DISK`
+EFI_PART=`LANG=C ; fdisk -l $ROOT_DISK | grep EFI | cut -f1 -d' '`
+
+if [ "$EFI_PART.x" = ".x" ]; then
+    if [ -f /tmp/ESP_partition ]; then
+	EFI_PART=`cat /tmp/ESP_partition`
+    fi
+    expand_mes
+    if [ "$EFI_PART.x" = ".x" ]; then
+	/bin/dialog --title "cannot find EFI system partition" --msgbox "$efi_esp_mes" 8 70
+	exit 1
+    else
+	/bin/dialog --title "use other HDDs EFI system partition" --yesno "$other_esp_mes" 8 70
+	if [ $? -ne 0 ]; then
+	    /bin/dialog --title "grub install abondoned" --msgbox "$abandon_mes" 8 70
+	    exit 1
+	fi
+    fi
+fi
+
+if [ ! -d /boot/efi ]; then
+    mkdir -p /boot/efi
+fi
+
+mount $EFI_PART /boot/efi
+if [ $? -ne 0 ]; then
+    expand_mes
+    /bin/dialog --title "format ESP ?" --yesno "$esp_format" 20 70
+    if [ $? -eq 0 ]; then
+	mkfs.vfat -s2 -F32 $EFI_PART
+	mount $EFI_PART /boot/efi
+	sleep 3
+    else    
+	/bin/dialog --title "cannot mount EFI system partition" --msgbox "$esp_err_mes2" 6 70
+	exit 1
+    fi
+fi
+
+
+if [ ! -d /boot/efi/EFI ]; then
+    mkdir -p /boot/efi/EFI
+fi
+
+expand_mes
+/bin/dialog --title "installing grub(1)" --infobox \
+    "$efi_install_mes1" 6 70
+
+arch=`uname -m`
+if [ "$arch" = "x86_64" ]; then
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub --boot-directory=/boot/efi --recheck
+else
+    grub-install --target=i386-efi --efi-directory=/boot/efi --bootloader-id=grub --boot-directory=/boot/efi --recheck
+fi
+sleep 3
+
+if [ $? -ne 0 ]; then
+    /bin/dialog --title "grub install error" --msgbox "$efi_error_mes1" 6 70
+    exit 1
+fi
+
+/bin/dialog --title "installing grub(2)" --infobox "$efi_install_mes2" 6 70
+
+LANG=C
+grub-mkconfig -o /boot/efi/grub/grub.cfg
+sleep 3
+LANG=ja_JP.UTF-8
+if [ $? -ne 0 ]; then
+    /bin/dialog --title "grub.cfg install error" --msgbox "$efi_error_mes2" 6 70
+    exit 1
+fi
+
+# BIOSによっては /EFI/BOOT/bootx64.efi 決め打ちになってるのもある
+# (ex: VirtualBox)
+
+if [ "$arch" = "x86_64" ]; then
+    if [ ! -d /boot/efi/EFI/BOOT ]; then
+        mkdir /boot/efi/EFI/BOOT
+    fi
+    cp /boot/efi/EFI/grub/grubx64.efi /boot/efi/EFI/BOOT/bootx64.efi
+else
+    if [ ! -d /boot/efi/EFI/BOOT ]; then
+        mkdir /boot/efi/EFI/BOOT
+    fi
+    cp /boot/efi/EFI/grub/grub.efi /boot/efi/EFI/BOOT/boot.efi
+fi
+
+
+if [ $? != 0 ]; then
+    expand_mes
+    dialog --title "install failed" --msgbox "$efi_error_mes3" 10 70
+    exit 1
+fi
+
+if [ -x /sbin/grub_partuuid.sh ]; then
+    expand_mes
+    dialog --title "convert root device name?" --yesno "$uuid_mes1" 10 70
+    if [ $? -eq 0 ]; then
+	/sbin/grub_partuuid.sh
+	if [ $? -eq 0 ]; then
+	    dialog --title "grub.conf converted" --msgbox \
+		   "$uuid_mes2" 10 70
+	fi
+    fi
+fi
