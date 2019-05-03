@@ -1,0 +1,103 @@
+
+if [ "$LANG" = "ja_JP.UTF-8" ]; then
+    dir_mes_1="grub2は指定したディスクパーティションの/boot/grub/以下に必要なファイルをインストールします。\
+現在のルートパーティション($CURRENT_ROOT_DEVICE)にgrubをインストールしますか？"
+    dir_mes_2="grub2を現在のルートパーティション以外にインストールする場合， インストールしたいパーティションを事前に適切なディレクトリ(例えば/mnt) にマウントしておく必要があります．\n\
+/bootを別パーティションにしている場合はそのパーティションも適切な位置(例えば/mnt/boot)にマウントしておいてください． \n\n\
+準備ができていない場合は，いったん終了して，環境を整えてから再実行してください．\n\n\
+grubのインストールを続けますか？"
+
+    dir_mes_3="grub2をインストールしたいパーティションをマウントしている位置を指定してください．"
+
+    no_mpt_mes="マウントポイントが指定されませんでしたので終了します"
+    no_boot_mes="$MTPT/bootディレクトリが見つかりませんでしたので終了します"
+    no_vmlinuz_mes="$MTPT/boot/vmlinuz ファイルが見つかりませんでしたので終了します"
+    exec_mes="$MTPTにchrootして，grub2を$ROOT_DEVICEにインストールします． インストールの際には接続されているデバイスをチェックするので，環境によっては 多少時間がかかるかも知れません．また，起動用の設定ファイルも生成しますが この段階ではMBR等は変更されません．処理を続けますか？"
+
+    exit_mes="処理を中断しました"
+
+    install_mes_1="grub2を$ROOT_DEVICEの/boot/grubにインストールしています．"
+    cfg_err_mes="/boot/grub/grub.cfgの生成に失敗しました．何か問題があるようなので処理を中断します"
+    continue_mes="この内容でgrub2をインストールしますか？"
+
+    tgt_mes="現在のgrub2では，パーティションの先頭部分にインストールする ことができず,HDDの先頭にインストールする必要があります． grub.cfgが正しく生成できていればWindows環境とdual bootする ことが可能なので，最初のHDDの先頭部分(MBR)に書き込んでも大丈夫でしょう． \n\
+BIOSからブートデバイスを選択できる場合， (Windowsをブートするための最初のHDDのMBRは変更せず)2番目以降のHDDの MBRにインストールしておいて，Linuxを起動する際にはそのHDDを選択する， ということも可能です． \n\
+grub2をインストールするHDDを選択してください"
+
+    mbr_mes="$grub_HDDが選択されました．このディスクの先頭部分(MBR)にgrubをインストールして大丈夫ですか？"
+    install_mes1="grub2を$grub_HDDのMBRにインストールしています"
+    install_mes2="grub2を$grub_HDDのMBRにインストールしました"
+    install_mes3="grub2を$grub_HDDのMBRにインストールできませんでした"
+
+    quit_mes="grub2をMBRにインストールせずに終了しました． 他のブートローダがインストールされていないと，HDDから起動できなく なりますので，rescueCD等で適宜修正してください．"
+    uuid_mes1="grub.confのroot device名をパーティションのUUIDに変換しますか？ パーティションのUUIDはHDDの認識順に影響されないので， USBメモリを挿したまま起動したりHDDを増設しても大丈夫です． なお，この処理は再起動後に /sbin/grub_partuuid.sh を起動しても実行できます．"
+    uuid_mes2="パーティションのUUIDを使うよう，grub.cfgを修正しました．"
+
+    esp_err_mes="${ROOT_DISK}にはEFIシステムパーティションが見つかりませんでした．正しくEFIシステムパーティションを作っているかチェックしてください。"
+    other_esp_mes="${ROOT_DISK}ではなく，${EFI_PART}をEFI System Partitionとして利用します．大丈夫ですか？"
+    abandon_mes="GRUB2のインストールを中止しました．このままではシステムを起動できないので，Plamoのインストーラで再起動し，設定等を修正してください"
+
+    esp_format="EFIシステム用パーティション($EFI_PART)がマウントできませんでした。恐らく、このパーティションがフォーマットされていないためと思われます。このパーティション($EFI_PART)をフォーマットしましょうか？"
+
+    esp_err_mes2="EFIシステム用パーティション($EFI_PART)がマウントできませんでした．このままではシステムを起動できないので，Plamoのインストーラで再起動し，設定等を修正してください"
+
+    efi_install_mes1="grub2を${EFI_PART}にインストールしています．"
+    efi_error_mes1="${EFI_PART}にgrub2をinstallできませんでした． 何か問題があるようなので処理を中断します．このままではシステムを起動できないので，Plamoのインストーラで再起動し，設定等を修正してください"
+
+    efi_install_mes2="grub.cfgを${EFI_PART}/grubに作成しています．"
+    efi_error_mes2="/boot/efi/grub/grub.cfg を生成できませんでした． \
+         何か問題があるようなので処理を中断します．このままではシステムを起動できないので，Plamoのインストーラで再起動し，設定等を修正してください"
+
+    efi_error_mes3="grub2を${EFI_PART}にインストールできませんでした． このままではシステムを起動できないので，Plamoのインストーラで再起動し，設定等を確認，修正してください．"
+else
+    dir_mes_1="grub2 installs necessary files into /boot/grub on the selected disk partition. Install this directory to current root partition(${CURRENT_ROOT_DEVICE})?"
+
+    dir_mes_2="If you want to install grub2 into some other HDD parition, that partition should be mounted on proper directory(such as /mnt). If you separate /boot on different parition, that partion also be mounted on proper directory(such as /mnt/boot).\n\n\
+If these partitions are not mounted, mount them in different console or quit this configuration now and retry after mount.\n\n\
+Continue grub2 install ?"
+
+    dir_mes_3="select mount point where you want to install grub2 into."
+
+    no_mpt_mes="no mount point selected and quit."
+    no_boot_mes="cannot find $MTPT/boot directory and quit."
+    no_vmlinuz_mes="cannot find $MTPT/boot/vmlinuz finle and quit."
+    exec_mes="chroot to ${MTPT} and install grub2 on ${ROOT_DEVICE}. It will take some time to install grub on some environment as grub-install checks connected devices. Configuration file for boot is also generated but in this step MBR is not changed. Continue ?"
+
+    exit_mes="Quit grub-install"
+
+    install_mes_1="Installing grub2 on ${ROOT_DEVICE} /boot/grub"
+    cfg_err_mes="failed to generate /boot/grub/grub.cfg. It seems to be some problems so quit install"
+    continue_mes="Install grub2 with this configuration?"
+
+    tgt_mes="As grub2 only be installed into begining of HDD(not patition), so you must select HDD to install grub2. If grub.cfg generated properly, Windows system could be boot from grub, so you can install grub2 into begining of first HDD. \n\
+If you can select boot HDD from BIOS menu, you can keep 1st HDD MBR for Windows and install grub2 into 2nd HDD MBR and select 2nd HDD to boot Plamo Linux.\n\
+Which HDD for grub2 install ?"
+
+    mbr_mes="${grub_HDD} is selected. Is it ok to write grub2 into MBR of this HDD ?"
+    install_mes1="installing grub2 into ${grub_HDD}'s MBR"
+    install_mes2="grub2 installation succeeded on ${grub_HDD}'s MBR"
+    install_mes3="grub2 installation failed  n ${grub_HDD}'s MBR"
+
+    quit_mes="Quit install grub2 into MBR. If no other bootloader installed, you cannot boot from HDD. In that case, boot from installer media(DVD/USB) and correct configurations"
+
+    uuid_mes1="convert root device name in grub.conf to partition's UUID ? UUIDs are independent of HDD's found order, so you can safely add new HDDs or boot with USB memory. You can use /sbin/grub_partuuid.sh to convert after reboot."
+
+    uuid_mes2="modified grub.cfg to use partition's UUID."
+
+    esp_err_mes="Cannot find EFI system parition on ${ROOT_DISK}. Do you really create EFI system partition on this HDD ?"
+    other_esp_mes="Use other HDD's ${EFI_PART} in stead of ${ROOT_DISK}. Are you ok ?"
+    abandon_mes="Quit GRUB2 installation. As is, this system cannot boot so use Plamo Linux installation media(DVD/USB) to correct configurations."
+
+    esp_format="Cannot mount EFI system partition($EFI_PART). Is this parition formatted for ESP ? If you want to format now, select 'yes' or stop installation"
+
+    esp_err_mes2="Cannot mount EFI system partition($EFI_PART) and faild install grub2. As is, this system cannot boot so use Plamo Linux installation media(DVD/USB) to correct configurations."
+
+    efi_install_mes1="installing grub2 on ${EFI_PART}"
+    efi_error_mes1="Failed to install grub2 on ${EFI_PART}. As is, this system cannot boot so use Plamo Linux installation media(DVD/USB) to correct configurations."
+    efi_install_mes2="making grub.cfg on ${EFI_PART}/grub."
+    efi_error_mes2="Failed to generate /boot/efi/grub/grub.cfg. \
+As is, this system cannot boot so use Plamo Linux installation media(DVD/USB) to correct configurations."
+
+    efi_error_mes3="Failed to install grub on ${EFI_PART}. As is, this system cannot boot so use Plamo Linux installation media(DVD/USB) to correct configurations."
+
+fi
