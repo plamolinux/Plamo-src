@@ -5,9 +5,11 @@ vers='2.02'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 unifont_vers="11.0.02"
 unifont_url="https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz"
+grubconfig_vers="7.1"
+grubconfig_url="https://github.com/plamolinux/grubconfig/archive/${grubconfig_vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B15
+build=B16
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
         --sbindir=/sbin
@@ -64,6 +66,10 @@ if [ $opt_download -eq 1 ] ; then
   if [ ! -f $( basename ${unifont_url##*/} .gz ) ]; then
       wget $unifont_url
       gzip -d ${unifont_url##*/}
+  fi
+  if [ ! -f ${grubconfig_url##*/} ]; then
+      wget $grubconfig_url
+      tar xvf ${grubconfig_url##*/}
   fi
 fi
 
@@ -208,17 +214,16 @@ EOF
       rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
   done
 
-  # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
-  # とりあえずはこのままにしておく．
   echo "Installing plamo tools for grub"
-  tar --strip-components=1 -xvf $W/plamo_grubconfig.tar -C $P
+  cp -av $W/grubconfig-${grubconfig_vers}/{sbin,var} $P/
+  ( cd $W && tar cvf plamo_grubconfig-${grubconfig_vers}.tar grubconfig-${grubconfig_vers}/ )
   # 為念
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
       chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
   fi
   install -D -m 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
-  install -D -m 644 -v $W/plamo_grubconfig.tar $docdir/$src/plamo_grubconfig.tar
+  install -D -m 644 -v $W/plamo_grubconfig-${grubconfig_vers}.tar $docdir/$src/plamo_grubconfig-${grubconfig_vers}.tar
 
 ################################
 #      install tweaks

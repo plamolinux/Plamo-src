@@ -5,7 +5,7 @@ vers='2.28'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B3
+build=B4
 src="glibc-${vers}"
 OPT_CONFIG="
 	--with-headers=/usr/include
@@ -44,7 +44,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 # glibc-c-utf8-locale.patch
 # https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile glibc-c-utf8-locale.patch"
+patchfiles="$fhs_patchfile glibc-c-utf8-locale.patch reiwa.patch"
 compress=txz
 ##############################################################
 

@@ -1,0 +1,36 @@
+From de9d4aa3534282645fde9d3a4a1113a947a057db Mon Sep 17 00:00:00 2001
+From: TAMUKI Shoichi <tamuki@linet.gr.jp>
+Date: Tue, 2 Apr 2019 16:46:55 +0900
+Subject: [PATCH] ja_JP locale: Add entry for the new Japanese era [BZ #22964]
+
+The Japanese era name will be changed on May 1, 2019.  The Japanese
+government made a preliminary announcement on April 1, 2019.
+
+The glibc ja_JP locale must be updated to include the new era name for
+strftime's alternative year format support.
+
+This is a minimal cherry pick of just the required locale changes.
+
+(cherry picked from commit 466afec30896585b60c2106df7a722a86247c9f3)
+---
+ localedata/locales/ja_JP | 4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/localedata/locales/ja_JP b/localedata/locales/ja_JP
+index 1fd2fee..30190b6 100644
+--- a/localedata/locales/ja_JP
++++ b/localedata/locales/ja_JP
+@@ -14946,7 +14946,9 @@ am_pm	"<U5348><U524D>";"<U5348><U5F8C>"
+ 
+ t_fmt_ampm "%p%I<U6642>%M<U5206>%S<U79D2>"
+ 
+-era	"+:2:1990//01//01:+*:<U5E73><U6210>:%EC%Ey<U5E74>";/
++era	"+:2:2020//01//01:+*:<U4EE4><U548C>:%EC%Ey<U5E74>";/
++	"+:1:2019//05//01:2019//12//31:<U4EE4><U548C>:%EC<U5143><U5E74>";/
++	"+:2:1990//01//01:2019//04//30:<U5E73><U6210>:%EC%Ey<U5E74>";/
+ 	"+:1:1989//01//08:1989//12//31:<U5E73><U6210>:%EC<U5143><U5E74>";/
+ 	"+:2:1927//01//01:1989//01//07:<U662D><U548C>:%EC%Ey<U5E74>";/
+ 	"+:1:1926//12//25:1926//12//31:<U662D><U548C>:%EC<U5143><U5E74>";/
+-- 
+2.9.3
+
