@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mesa'
-vers='17.3.3'
+vers='18.3.6'
 url="ftp://ftp.freedesktop.org/pub/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=''
 DOCS="docs/* docs/relnote/* docs/specs/*"
-patchfiles=''
+patchfiles='mesa-18.1.1-add_xdemos-1.patch'
 compress=txz
 ##############################################################
 
@@ -38,13 +38,14 @@ fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
+B=`pwd`/build
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B  ; cp -a $S/* $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B  
 ######################################################################
-#  copy sources, so need patch in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $B
+    cd $S
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
@@ -52,12 +53,12 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
     export GLL_DRV="i915,r600,r300,nouveau,radeonsi,svga,swrast"
-    sed -i "/pthread_stubs_possible=/s/yes/no/" configure.ac
 
-    ./autogen.sh CFLAGS='-O2' CXXFLAGS='-O2'    \
+    cd $B
+    $S/configure CFLAGS='-O2' CXXFLAGS='-O2'    \
             --prefix=/usr           \
             --sysconfdir=/etc               \
             --enable-texture-float          \
@@ -67,13 +68,12 @@ if [ $opt_config -eq 1 ] ; then
             --with-platforms="drm,x11,wayland"  \
             --with-gallium-drivers=$GLL_DRV
 
-
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
 	exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
@@ -82,6 +82,7 @@ if [ $opt_build -eq 1 ] ; then
 	echo "build error. $0 script stop"
 	exit 255
     fi
+    make -C $S/xdemos DEMOS_PREFIX=/usr
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -90,7 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
+  make -C $S/xdemos DEMOS_PREFIX=/usr DESTDIR=$P install
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
