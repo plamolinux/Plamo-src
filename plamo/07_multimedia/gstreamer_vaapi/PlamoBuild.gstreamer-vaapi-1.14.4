@@ -1,26 +1,27 @@
 #!/bin/sh
 ##############################################################
-pkgbase='netconfig7'
-vers='1.1'
-url=""
+pkgbase="gstreamer_vaapi"
+vers="1.14.4"
+url="https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-1.14.4.tar.xz"
+verify=""
+digest=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG=''
-DOCS=''
-patchfiles=''
+src="gstreamer-vaapi-1.14.4"
+OPT_CONFIG=""
+DOCS="AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README meson_options.txt"
+patchfiles=""
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -40,37 +41,55 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    echo "no need to configure. proceed to build."
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-    echo "no need to build. proceed to package."
+    cd $B 
+    ninja
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  mkdir -p $P/usr/sbin
-  install -m755 $W/${src}/netconfig7 $P/usr/sbin
-  install -m755 $W/${src}/netconfig7.mes $P/usr/sbin
+  cd $B
 
-  mkdir -p $P/install
-  cat <<EOF > $P/install/initpkg
-/usr/sbin/netconfig7
-EOF
+  DESTDIR=$P ninja install
 
-  mkdir -p $P/usr/share/doc/${pkgbase}-${vers}
-  cp $W/PlamoBuild.${pkgbase}-${vers} $P/usr/share/doc/${pkgbase}-${vers}
-  
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links

@@ -1,23 +1,21 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gimp'
-vers='2.10.4'
-url="https://download.${pkgbase}.org/pub/${pkgbase}/v${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:9e0a3703a920da8b3e51e845fa3bff7d"
-verify=""
+pkgbase='mesa'
+vers='18.3.6'
+url="ftp://ftp.freedesktop.org/pub/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --with-bug-report-url=http://plamo.linet.gr.jp/"
-DOCS="AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl po-windows-installer"
-patchfiles=''
+OPT_CONFIG=''
+DOCS="docs/* docs/relnote/* docs/specs/*"
+patchfiles='mesa-18.1.1-add_xdemos-1.patch'
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-#
+# 
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -38,41 +36,53 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
 fi
+B=`pwd`/build
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B  
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
 
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed'
+    export GLL_DRV="i915,r600,r300,nouveau,radeonsi,svga,swrast"
+
+    cd $B
+    $S/configure CFLAGS='-O2' CXXFLAGS='-O2'    \
+            --prefix=/usr           \
+            --sysconfdir=/etc               \
+            --enable-texture-float          \
+            --enable-osmesa                 \
+            --enable-xa                     \
+            --enable-glx-tls                \
+            --with-platforms="drm,x11,wayland"  \
+            --with-gallium-drivers=$GLL_DRV
+
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
+    make -C $S/xdemos DEMOS_PREFIX=/usr
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -81,19 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  sed -i -e "s/# (help-browser gimp)/(help-browser web-browser)/" $P/etc/gimp/2.0/gimprc
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  /usr/bin/gtk-update-icon-cache
-fi
-if [ -x /usr/bin/update-desktop-database ]; then
-  /usr/bin/update-desktop-database
-fi
-EOF
-
+  make -C $S/xdemos DEMOS_PREFIX=/usr DESTDIR=$P install
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 

@@ -1,0 +1,272 @@
+#!/bin/bash 
+
+expand_mes () {
+    source /usr/sbin/netconfig7.mes
+}
+
+# http://program.station.ez-net.jp/special/linux-sh/network/get_network.asp からいただいたコード
+function get_network()
+{
+	local NETWORK=""
+	local BROADCAST=""
+	local NETMASK=""
+
+	local IPADDR="$1"
+	local MASKBIT="$2"
+
+	local ip_array=(`echo "$IPADDR" | sed -e "s/\./ /g"`)
+	local ip_index=0
+
+	while [ $ip_index -lt 4 ]
+	do
+		if [ "$MASKBIT" -lt 8 ]
+		then
+			MASK=$((256-2**$((8-MASKBIT))))
+			MASK_REV=$((~MASK%256+256))
+			MASKBIT=0
+		else
+			MASK=255
+			MASK_REV=0
+			MASKBIT=$((MASKBIT - 8))
+		fi
+		NETWORK="${NETWORK}.$((ip_array[ip_index] & MASK))"
+		BROADCAST="${BROADCAST}.$((ip_array[ip_index] | MASK_REV))"
+		NETMASK="${NETMASK}.$MASK"
+		ip_index=$((ip_index + 1))
+	done
+
+	NETWORK=`echo $NETWORK | sed -e "s/^\.//"`
+	BROADCAST=`echo $BROADCAST | sed -e "s/^\.//"`
+	NETMASK=`echo $NETMASK | sed -e "s/^\.//"`
+	echo "$BROADCAST"
+}
+
+# This checks IP address syntax.
+# usage: syntax_check ADDRESS #-OF-EXPECTED-SEGMENTS (up to 4)
+# example: syntax_check 123.22.43.1 4
+# returns: 0=found correct  1=too many fields  2=non numeric field found
+syntax_check() {
+    RET_CODE=0
+    ADDR=$1
+    NUM=$2
+    SCRATCH=$1
+    SCRATCH=`echo $ADDR | tr "." "/"`
+    INDEX=$2
+    while [ ! "$INDEX" = "0" ]; do
+	# OK, so I'm a LISP-head :^)
+	FIELD=`basename $SCRATCH`
+	SCRATCH=`dirname $SCRATCH`
+	if expr $FIELD + 1 1> /dev/null 2> /dev/null; then
+	    GOOD=y
+	else
+	    RET_CODE=2; # non-numeric field
+	fi
+	INDEX=`expr $INDEX - 1`
+    done
+    if [ ! "$SCRATCH" = "." ]; then
+	RET_CODE=1; # too many arguments
+    fi
+    if [ "$3" = "WARN" -a ! "$RET_CODE" = "0" ]; then
+	expand_mes
+	dialog --title "WARNING" --msgbox "$addr_err"  9 72
+    else
+	if [ "$3" = "ECHO" ]; then
+	    echo $RET_CODE;
+	fi
+    fi
+    return $RET_CODE;
+}
+
+# 汎用的(？)なIPアドレス入力用ルーチン
+# $1 : 表示すべきテキスト
+# $2 : デフォルト値
+# 標準出力経由で戻り値を返せないので，結果は /tmp/TMP_addr に書き込んで返す
+
+input_address() {
+    while [ 0 ] ; do
+	dialog --title "input address " --inputbox \
+	       "$1 " 12 72 "$2" 2> /tmp/SeT_IP
+	addr=`cat /tmp/SeT_IP`
+	syntax_check $addr 4 WARN
+	if [ $? = 0 ] ; then break ; fi
+    done
+    echo "$addr" > /tmp/TMP_addr
+}
+
+write_dhcp () {
+    echo "set dhcp $1"
+    cat <<EOF > /etc/sysconfig/ifconfig.$1
+ONBOOT="yes"
+IFACE="$1"
+SERVICE="dhclient"
+DHCP_START=""
+DHCP_STOP=""
+
+# Set PRINTIP="yes" to have the script print
+# the DHCP assigned IP address
+PRINTIP="no"
+
+# Set PRINTALL="yes" to print the DHCP assigned values for
+# IP, SM, DG, and 1st NS. This requires PRINTIP="yes".
+PRINTALL="no"
+EOF
+}
+
+write_addr() {
+    eth=$1
+    IP=$2
+    NETMASK=$3
+    BCAST=$4
+    GW=$5
+    DNS=$6
+
+cat <<EOF > /etc/sysconfig/ifconfig.${eth}
+ONBOOT="yes"
+IFACE="${eth}"
+SERVICE="ipv4-static"
+IP="${IP}"
+GATEWAY="${GW}"
+PREFIX="${NETMASK}"
+BROADCAST="${BCAST}"
+EOF
+}    
+    
+input_addr() {
+    eth=$1
+    while [ 0 ]; do
+	expand_mes
+	input_address "${input_IP}"  "192.168.1.10"
+	IP=`cat /tmp/TMP_addr`
+	rm -f /tmp/TMP_addr
+
+	expand_mes
+	dialog --title "input netmask" --inputbox \
+	       "${config_netmask}"  12 72 "24" 2> /tmp/SeT_mask
+	NETMASK=`cat /tmp/SeT_mask`
+	rm -f /tmp/SeT_mask
+
+	expand_mes
+	input_address "${config_gw}" "192.168.1.1"
+	GW=`cat /tmp/TMP_addr`
+	rm -f /tmp/TMP_addr
+
+	expand_mes
+	dialog --title "Are you sure?" --yesno \
+	       "${are_you_sure}" 12 72
+
+	if [ $? = 0 ]; then
+	    break
+	fi
+    done
+
+    BCAST=`get_network $IP $NETMASK`
+
+    write_addr $eth $IP $NETMASK $BCAST $GW
+}
+
+if [ -f /etc/hostname ]; then
+    HOSTNAME=`cat /etc/hostname | cut -f1 -d"." `
+else
+    HOSTNAME=""
+fi
+
+while [ 0 ]; do
+    expand_mes
+    dialog --title "configure your hostname" --inputbox \
+	   "${input_hostname}" 15 70 ${HOSTNAME} 2> /tmp/SeThost
+    if [ $? = 1 -o $? = 255 ]; then
+	rm -f /tmp/SeThost
+	exit
+    fi
+    HOSTNAME="`cat /tmp/SeThost`"
+    if [ ! -z ${HOSTNAME} ];  then
+       rm -f /tmp/SeThost
+       break
+    fi
+done
+
+if [ -f /etc/hostname -a `grep "\." /etc/hostname` ]; then
+    DOMAINNAME=`cat /etc/hostname | cut -f2- -d"."`
+else
+    DOMAINNAME=""
+fi
+
+expand_mes
+dialog --title "configure your domain name" --inputbox \
+    "${input_domainname}"  15 70 ${DOMAINNAME} 2> /tmp/SeTdom
+if [ $? = 1 -o $? = 255 ]; then
+    rm -f /tmp/SeTdom 
+    exit
+fi
+DOMAINNAME="`cat /tmp/SeTdom`"
+
+if [ "$DOMAINNAME.x" = ".x" ]; then
+    echo $HOSTNAME > /etc/hostname
+    cat <<EOF > /etc/hosts
+# For Loopbacking.
+127.0.0.1	localhost
+# my name
+127.0.0.1 $HOSTNAME
+EOF
+else
+    echo $HOSTNAME.$DOMAINNAME > /etc/hostname
+    cat <<EOF > /etc/hosts
+# For Loopbacking.
+127.0.0.1	localhost
+# my name
+127.0.0.1 $HOSTNAME.$DOMAINNAME $HOSTNAME
+EOF
+fi
+
+eth_count=`/sbin/ip link show | grep " eth" | wc -l`
+echo "eth_count:$eth_count"
+if [ $eth_count -eq 0 ]; then
+    dialog --title "no ethXX found" --msgbox \
+	   "${no_eth_found}" 12 70
+    exit
+fi
+
+eth_devs=`/sbin/ip link show | grep " eth" | cut -f2 -d":" | sed "s/[ ]*//g"`
+count=1
+NEED_DNS=""
+for i in $eth_devs ; do
+    expand_mes
+    dialog --title "configuration for $i" --menu \
+	   "${config_eth}" 15 72 10 \
+	   "DHCP" "${config_eth_list01}" \
+	   "FIXED" "${config_eth_list02}" \
+	   "NO" "${config_eth_list03}" 2> /tmp/set_$i
+
+    chk=`cat /tmp/set_$i`
+    if [ "$chk" = "NO" ]; then
+	if [ -f /etc/sysconfig/ifconfig.${i} ]; then
+	    rm -f /etc/sysconfig/ifconfig.${i}
+	fi
+	if [ -f /etc/resolv.conf ]; then
+	    rm -f /etc/resolv.conf
+        fi
+	continue
+    elif [ "$chk" = "DHCP" ]; then
+	write_dhcp $i
+	if [ -f /etc/resolv.conf ]; then
+	    rm -f /etc/resolv.conf
+        fi
+    else
+	input_addr $i
+	NEED_DNS="True"
+    fi
+    count=`expr $count + 1`
+done
+
+if [ "${NEED_DNS}" = "True" ]; then
+    expand_mes
+    input_address "${config_DNS}" "${GW}"
+    DNS=`cat /tmp/TMP_addr`
+    
+    cat <<EOF > /etc/resolv.conf
+# Begin /etc/resolv.conf
+domain ${DOMAIN}
+nameserver ${DNS}
+# End /etc/resolv.conf
+EOF
+fi
