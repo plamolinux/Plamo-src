@@ -1,17 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gst_plugins_bad'
-vers='1.12.4'
-url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
-verify="${url}.asc"
+pkgbase='wayland'
+vers='1.17.0'
+url="https://${pkgbase}.freedesktop.org/releases/${pkgbase}-${vers}.tar.xz"
+verify=""
 arch=`uname -m`
-build=B2
-src="gst-plugins-bad-${vers}"
-OPT_CONFIG=('--disable-static' '--enable-shared' '--with-wayland' '--disable-opencv'
-	    "--with-package-name='GStreamer Bad Plugins ${vers} Plamo'"
-	    "--with-package-origin='http://plamolinux.org'")
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README RELEASE meson_options.txt'
-patchfiles='xvid_add_pthread.patch'
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --disable-documentation'
+DOCS='COPYING README TODO'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -54,12 +52,14 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/openjpeg-2.2/openjpeg-2.3/'
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man "${OPT_CONFIG[@]}"
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"

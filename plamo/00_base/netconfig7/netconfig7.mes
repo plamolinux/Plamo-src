@@ -1,0 +1,94 @@
+if [ $LANG = "ja_JP.UTF-8" ]; then
+
+addr_err="入力されたアドレス ${ADDR} は、IP アドレスのようには見えません。
+ここで期待しているのは、127.0.0.1 のようにドットでくぎられた
+${NUM} 個の数字です。もう一度、入力し直してください。"
+
+input_IP="このマシンの${eth}に割りあてるIPアドレスを指定してください．\nIPアドレスは 192.168.1.10 のような '.' で結ばれた4つの数字です．"
+
+input_hostname="このマシンに名前(ホスト名)を付けましょう．
+ホスト名はこのマシンを他と区別する際に用いられます．
+ドメイン名は別に設定しますので，ここではホスト名のみを指定してください．
+(plamo.linet.gr.jpの場合，'plamo'がホスト名です)
+なお，使える文字はアルファベットと数字，一部の記号のみです．" 
+
+input_domainname="次にドメイン名を設定してください．
+ドメイン名は，このマシンが属するネットワークの名前です．
+(plamo.linet.gr.jpの場合，"linet.gr.jp"がドメイン名です)
+なお，使える文字はアルファベットと数字，一部の記号のみです．
+DHCPによる接続等で，ドメイン名を指定しない場合は単に[Enter]を押してください．"
+
+no_eth_found="ネットワークデバイス(ethXX)が見つかりません．
+このスクリプトは無線LAN(wlanXX)の設定には対応していないので，
+無線LAN環境の場合はこのまま終了してください．
+有線LANの場合，カーネルに適切なドライバモジュールが
+組み込まれていない可能性があるので，設定等を確認してください．" 
+
+config_eth="$count 番目のイーサネットデバイスをどうしますか？ 
+固定アドレスの場合は，次にIPアドレスやネットマスクを尋ねます．
+DHCPで使用する場合はこれで設定を終了します．"
+config_eth_list01="DHCPで使用"
+config_eth_list02="固定アドレスで使用"
+config_eth_list03="このデバイスは設定しない"
+
+config_netmask="${eth}が使用するサブネットマスクを指定してください．
+サブネットマスクはネットワークとホストを区別するための情報で，
+通常の環境では24(いわゆるクラスC)が妥当です．"
+
+config_gw="${eth}のデフォルトゲートウェイのアドレスを指定してください．\nデフォルトゲートウェイは，このネットワークと外部を接続しているマシンで，たいていはインターネットに接続したルータになります．"
+
+config_DNS="このマシンが参照するDNSサーバのアドレスを指定してください．\nDNSサーバはホスト名とIPアドレスを変換するサーバで，デフォルトゲートウェイが兼ねていることが多いようです．\nDNSサーバを指定しない場合は，空行にしてEnterを押してください．"
+
+are_you_sure="入力された情報は以下の通りです．
+この設定で大丈夫ですか？
+
+IPアドレス  : $IP
+ネットマスク: $NETMASK
+デフォルトGW: $GW"
+
+else
+addr_err="address $1 doesn't seem correct IP address. \
+IP adress is $2 digits number separated by '.' like 127.0.0.1 . \
+Input correct address again"
+
+input_IP="Input IP address for network IF ${eth}. \nIP address is a 4 digits number separated by '.' ."
+
+input_hostname="Let's configure hostname for this machine.
+Hostname is used to identify this machine.
+Enter only hostname here, domain name will be asked later.
+(in case of 'plamo.linet.gr.jp' , hostname is 'plamo'.)
+Only alphanumerics and some symbols are allowed to use for hostname."
+
+input_domainname="Next, configure domain name for this machine.
+Domain name is a network name in which this machine belongs to.
+(in case of 'plamo.linet.gr.jp', domain name is 'linet.gr.jp'.)
+Only alphanumerics and some symbols are allowed to use for domain name.
+If you use DHCP and don't need domain name, push [Enter] to proceed."
+
+no_eth_found="Couldn't find any network devices(ethXX).
+This setup script doesn't support wireless LAN(wlanXX), 
+so if you only want to use wireless LAN, you can safely finish this setup.
+If you want to use Ethnet devices, there should be some troubles related to 
+kernel modules, so please check your configurations."
+
+config_eth="How do you setup No.${count} ethnet device ?
+If you use it with static IP, then proceed to input IP addresses.
+If you use it with DHCP, then setup is complete for this device.
+If you don't want to setup this device, select 'NO'."
+config_eth_list01="use DHCP"
+config_eth_list02="use fixed address"
+config_eth_list03="don't use this device"
+
+config_DNS="Enter the IP address of DNS server. DNS server is a sever which converts hostname and IP address. In many cases, default GW is used for DNS server.\nIf you don't need to setup DNS server, clear input box and push Enter."
+
+config_netmask="Input subnetmask for IF ${eth}. Subnetmask is used to determine network address and host address. In most cases, '24' is an appropriate number(aka. Class C)."
+
+config_gw="Input default gateway(GW) address for ${eth}. \nNormally, default GW is a router which connects Internet and this network."
+
+are_you_sure="You entered these values. Are you sure ?
+
+IP address : $IP
+Subnetmask : $NETMASK
+Default GW : $GW"
+
+fi

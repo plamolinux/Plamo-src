@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libdrm'
-vers='2.4.89'
-url="http://dri.freedesktop.org/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+vers='2.4.98'
+url="https://dri.freedesktop.org/libdrm/libdrm-${vers}.tar.bz2"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-udev'
-DOCS='README'
+OPT_CONFIG=''
+DOCS='README meson_options.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -20,7 +20,6 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -42,20 +41,19 @@ fi
 if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#   patch apply to source tree but make at out of source tree
 ######################################################################
     cd $S
     for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
+        if [ -f .${patch} ]; then
             patch -p1 < $W/$patch
             touch .${patch}
         fi
     done
-
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG[$i]} $S
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -65,8 +63,7 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
     cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -77,8 +74,7 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install 
 
 ################################
 #      install tweaks
