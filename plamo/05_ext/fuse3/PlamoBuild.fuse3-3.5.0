@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fuse3'
-vers='3.2.2'
+vers='3.5.0'
 url="https://github.com/libfuse/libfuse/releases/download/fuse-${vers}/fuse-${vers}.tar.xz"
-verify=""
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="fuse-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=''
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog.rst README.md meson_options.txt'
 patchfiles=''
 compress=txz
@@ -82,7 +82,7 @@ if [ $opt_package -eq 1 ] ; then
   # libraries
   mkdir -pv $P/${libdir}
   mv -vf   $P/usr/lib/libfuse3.so.3*   $P/${libdir}
-  ln -sfvn ../../lib/libfuse3.so.3.2.1 $P/usr/lib/libfuse3.so
+  ln -sfvn ../../lib/libfuse3.so.${vers} $P/usr/lib/libfuse3.so
 
   # exec binaries
   mkdir -pv $P/{bin,sbin}
