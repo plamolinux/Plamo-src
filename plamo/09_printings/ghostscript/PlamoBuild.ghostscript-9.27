@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers='9.26'
-url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:806bc2dedbc7f69b003f536658e08d4a"
+vers='9.27'
+url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:dd531503dbbc524f73528359e2ea145c"
 #fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
 #	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
@@ -26,7 +26,7 @@ fontpath="/usr/share/ghostscript/fonts
 	/usr/share/fonts
 	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
-patchfiles="ghostscript-9.25-security_fixes-2.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
