@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='semi'
-vers='20180205'
-url="https://github.com/wanderlust/semi.git"
-commitid="44aa82ecf78273d8ff4c84f2121b885fb7149f41"
+pkgbase='apel'
+vers=""
+url="https://github.com/wanderlust/apel.git"
+commitid="d146ddbf8818e81d3577d5eee7825d377bec0c73"
 verify=""
 arch=`uname -m`
 build=B1
-src="semi"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='ChangeLog NEWS README.en README.ja TODO'
+src="apel"
+OPT_CONFIG=""
+DOCS='ChangeLog README.en README.ja install.el'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -37,6 +37,17 @@ else
     esac
   done
 fi
+
+###
+#version = date.commitid
+###
+if [ $opt_download -ne 1 ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
+fi
+
 if [ $opt_download -eq 1 ] ; then
   download_sources
 fi
@@ -44,7 +55,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
@@ -54,6 +65,7 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
+  export LDFLAGS='-Wl,--as-needed'
   make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -75,7 +87,7 @@ if [ $opt_package -eq 1 ] ; then
 ################################
   install_tweak
 
-  mv -v $docdir/$src $docdir/${pkgbase}-${vers}
+  mv $docdir/$src $docdir/${pkgbase}-${vers}
 
 #############################
 #   convert symlink to null file and 

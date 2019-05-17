@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='flim'
-vers='20180118'
+vers=""
 url="https://github.com/wanderlust/flim.git"
-commitid="e969ab24f729835b6f8dd71d57cee1aff345f959"
+commitid="faaa2b1f2bb8fcf835ddfb8981654e4d3b2bdbc6"
 verify=""
 arch=`uname -m`
 build=B1
@@ -37,6 +37,17 @@ else
     esac
   done
 fi
+
+###
+#version = date.commitid
+###
+if [ $opt_download -ne 1 ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
+fi
+
 if [ $opt_download -eq 1 ] ; then
   download_sources
 fi
