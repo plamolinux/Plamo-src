@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='wanderlust'
-vers='20180211'
-url="https://github.com/wanderlust/wanderlust.git"
-commitid="7c70e6308242a8e9f175fca02da9b55a1805508c"
+pkgbase='semi'
+vers=""
+url="https://github.com/wanderlust/semi.git"
+commitid="13bb56eb978439957964032cc3118a8bea43d7f4"
 verify=""
 arch=`uname -m`
 build=B1
-src="wanderlust"
-OPT_CONFIG=""
-DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README.ja README.md'
+src="semi"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='ChangeLog NEWS README.en README.ja TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -37,6 +37,17 @@ else
     esac
   done
 fi
+
+###
+#version = date.commitid
+###
+if [ $opt_download -ne 1 ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
+fi
+
 if [ $opt_download -eq 1 ] ; then
   download_sources
 fi
@@ -54,7 +65,6 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
   make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -67,18 +77,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install \
-       PIXMAPDIR=$P/usr/share/emacs/icons/wl \
-       LISPDIR=$P/usr/share/emacs/site-lisp \
-       INFODIR=$P/usr/share/info
-
-  install -dm755 -v $P/usr/share/info
-  make install-info INFODIR=$P/usr/share/info
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-( cd /usr/share/info ; /usr/bin/install-info wl-ja.info dir ; /usr/bin/install-info wl.info dir )
-EOF
+  make install PREFIX=$P/usr
 
 ################################
 #      install tweaks
