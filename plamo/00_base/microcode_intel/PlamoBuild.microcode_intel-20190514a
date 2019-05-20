@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='microcode_intel'
-vers='20180312'
-url="https://downloadmirror.intel.com/27591/eng/microcode-${vers}.tgz"
-digest="md5sum:be315cd99a7ca392a2f917ceacbe14f2"
+vers="20190514a"
+url="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/microcode-${vers}.tar.gz"
+digest=""
 verify=
 arch=`uname -m`
 build=B1
-src="intel-ucode"
+src="Intel-Linux-Processor-Microcode-Data-Files-microcode-${vers}"
 OPT_CONFIG=""
 DOCS=''
 patchfiles=''
@@ -58,8 +58,8 @@ if [ $opt_package -eq 1 ] ; then
   MICDIRINTEL=$MICDIR/intel-ucode
 
   install -dm755 -v $P/$MICDIRINTEL
-  install -m644  -v $S/* $P/$MICDIRINTEL
-  install -Dm644 -v $W/releasenote $docdir/$pkgbase-$vers/releasenote
+  install -m644  -v $S/intel-ucode/* $P/$MICDIRINTEL/
+  install -Dm644 -v $S/releasenote $docdir/$src/releasenote
 
 ################################
 #      install tweaks
