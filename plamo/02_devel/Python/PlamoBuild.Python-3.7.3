@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Python'
-vers='3.6.8'
+vers='3.7.3'
 url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-# --enable-shared と --enable-optimizations は同時指定できない
-# https://bugs.python.org/issue29712
+# pip,setuptools は無効化
 OPT_CONFIG="--disable-static --enable-shared
 	--with-system-expat --with-system-ffi
 	--with-computed-gotos --with-threads
+	--enable-optimizations --with-lto
 	--with-dbmliborder=gdbm:ndbm
 	--enable-loadable-sqlite-extensions --without-ensurepip"
 DOCS='LICENSE README.rst'
@@ -54,9 +54,15 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+
+  # https://bugs.python.org/issue34587
+  sed -i -e "s|testCongestion|disabled_&|" Lib/test/test_socket.py
   
   echo "patch to Lib/cgi.py"
   sed -i -e "s|^#.* /usr/local/bin/python|#!/usr/bin/python|" Lib/cgi.py
+
+  # Speed up LTO
+  sed -i -e "s|-flto |-flto=4 |g" configure configure.ac
   
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
@@ -99,7 +105,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  chmod -v 755 $P/usr/${libdir}/libpython3.6m.so
+  chmod -v 755 $P/usr/${libdir}/libpython3.7m.so
   chmod -v 755 $P/usr/${libdir}/libpython3.so
 
   # Why are these not done by default...
@@ -110,9 +116,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -s python${_pybasever}.1 "$P"/usr/share/man/man1/python.1
 
   # some useful "stuff" FS#46146
-  install -dm755 "$P"/usr/lib/python3.6/Tools/{i18n,scripts}
-  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.6/Tools/i18n/
-  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.6/Tools/scripts/
+  install -dm755 "$P"/usr/lib/python3.7/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.7/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.7/Tools/scripts/
 
 ################################
 #      install tweaks
