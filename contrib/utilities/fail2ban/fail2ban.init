@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# chkconfig: - 92 08
+# processname: fail2ban-server
+# config: /etc/fail2ban/fail2ban.conf
+# pidfile: /run/fail2ban/fail2ban.pid
+# description: fail2ban is a daemon to ban hosts that cause multiple authentication errors
+#
+### BEGIN INIT INFO
+# Provides: fail2ban
+# Required-Start: $local_fs $remote_fs
+# Required-Stop: $local_fs $remote_fs
+# Should-Start: $time $network $syslog iptables firehol shorewall ferm
+# Should-Stop: $network $syslog iptables firehol shorewall ferm
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start/Stop fail2ban
+# Description: Start/Stop fail2ban, a daemon to ban hosts that cause multiple authentication errors
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+# Check that the config file exists
+[ -f /etc/fail2ban/fail2ban.conf ] || exit 0
+
+FAIL2BAN="/usr/bin/fail2ban-client"
+prog=fail2ban-server
+lockfile=${LOCKFILE-/var/lock/subsys/fail2ban}
+socket=${SOCKET-/run/fail2ban/fail2ban.sock}
+pidfile=${PIDFILE-/run/fail2ban/fail2ban.pid}
+RETVAL=0
+
+if [ ! -d /run/fail2ban ]; then
+    mkdir -p /run/fail2ban
+fi
+
+start() {
+    status -p ${pidfile} ${prog} >/dev/null 2>&1 && exit 0
+    log_info_msg "Starting fail2ban..."
+    start_daemon ${FAIL2BAN} -x start > /dev/null
+    evaluate_retval
+}
+
+stop() {
+    log_info_msg "Stopping fail2ban..."
+    ${FAIL2BAN} stop > /dev/null
+    evaluate_retval
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    reload)
+        log_info_msg "Reloading fail2ban..."
+        ${FAIL2BAN} reload
+        evaluate_retval
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    status)
+        ${FAIL2BAN} status
+        ;;
+    *)
+        echo $"Usage: fail2ban {start|stop|restart|reload|status}"
+        RETVAL=2
+esac
+
+exit $RETVAL
