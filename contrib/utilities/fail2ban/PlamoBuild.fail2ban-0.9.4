@@ -1,0 +1,126 @@
+#!/bin/sh
+##############################################################
+pkgbase="fail2ban"
+vers="0.9.4"
+url="https://github.com/fail2ban/fail2ban/archive/${vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="fail2ban-${vers}"
+OPT_CONFIG=""
+DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO"
+patchfiles=""
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+######################################################################
+#  source copy build. patch apply in build dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+
+    find . -type f | xargs sed -i -e 's|/var/run|/run|g'
+
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    python setup.py config    
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    python setup.py build
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  python setup.py install --root $P --prefix=/usr --optimize=1
+
+  install -Dm644 -v files/fail2ban-logrotate $P/etc/logrotate.d/fail2ban
+
+  install -Dm644 -v man/fail2ban.1 "$P"/usr/share/man/man1/fail2ban.1
+  install -Dm644 -v man/fail2ban-client.1 \
+    "$P"/usr/share/man/man1/fail2ban-client.1
+  install -Dm644 -v man/fail2ban-regex.1 \
+    "$P"/usr/share/man/man1/fail2ban-regex.1
+  install -Dm644 -v man/fail2ban-server.1 \
+    "$P"/usr/share/man/man1/fail2ban-server.1
+  install -Dm644 -v man/jail.conf.5 "$P"/usr/share/man/man5/jail.conf.5
+
+  install -Dm755 -v $W/fail2ban.init $P/etc/rc.d/init.d/fail2ban
+  install -Dm644 -v $W/fail2ban.init $docdir/$src/fail2ban.init
+
+  for i in $(seq 0 6)
+  do
+      install -dm755 $P/etc/rc.d/rc"$i".d
+      case $i in
+          0|1|2|6)
+              ln -sfv ../init.d/fail2ban $P/etc/rc.d/rc"$i".d/K08fail2ban
+              ;;
+          3|4|5)
+              ln -sfv ../init.d/fail2ban $P/etc/rc.d/rc"$i".d/S92fail2ban
+              ;;
+      esac
+  done
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
