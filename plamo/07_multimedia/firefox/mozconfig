@@ -12,6 +12,7 @@ ac_add_options --with-system-jpeg
 ac_add_options --with-system-png
 # current firefox fails to build against libvpx-1.8.0
 # ac_add_options --with-system-libvpx
+ac_add_options --with-system-webp
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
 ac_add_options --with-system-libevent
