@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='p11_kit'
-vers='0.23.8'
+vers='0.23.15'
 url="https://github.com/p11-glue/p11-kit/releases/download/${vers}/p11-kit-${vers}.tar.gz"
-digest="md5sum:3caf26d841df1527d52549e7adc62966"
+digest="md5sum:c4c3eecfe6bd6e62e436f62b51980749"
 verify=""
 arch=`uname -m`
 build=B1
@@ -53,21 +53,30 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+
+  if [ ! -f .trust-extract ]; then
+      sed '20,$ d' -i trust/trust-extract-compat.in
+      cat >> trust/trust-extract-compat.in << "EOF"
+# Copy existing anchor modifications to /etc/ssl/local
+/usr/libexec/make-ca/copy-trust-modifications
+
+# Generate a new trust store
+/usr/sbin/make-ca -f -g
+EOF
+      touch .trust-extract
+  fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
@@ -84,6 +93,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  ln -sfv /usr/libexec/p11-kit/trust-extract-compat \
+     $P/usr/bin/update-ca-certificates
 
 ################################
 #      install tweaks
