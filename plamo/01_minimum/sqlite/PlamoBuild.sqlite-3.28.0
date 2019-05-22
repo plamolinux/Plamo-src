@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.27.2'
-srcver="3270200"
+vers='3.28.0'
+srcver="3280000"
 url="http://sqlite.org/2019/sqlite-autoconf-${srcver}.tar.gz"
-digest="sha1sum:5f5750e3f39b7b60394a2fb6ddb2371f848670e6"
+digest="sha1sum:01b9d8fc77085e144dddc87456c9783e53d09a53"
 verify=""
 arch=`uname -m`
 build=B1
