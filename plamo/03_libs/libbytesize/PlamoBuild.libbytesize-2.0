@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libbytesize'
-vers='1.2'
+vers='2.0'
 url="https://github.com/storaged-project/${pkgbase}/releases/download/${vers}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:874d37f534aa9e265013434ef7ab0342"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
