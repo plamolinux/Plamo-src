@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='python_setuptools'
-vers='38.2.4'
-url="https://github.com/pypa/setuptools/archive/v${vers}.tar.gz"
-digest="sha512sum:f06badd27f0b797482bf42314edb7ffde7fa80556825b0ef27b125a3fc876b9d2ec26bf2b540f88b39f52fb58536e762c5bef24d9a92115b5f5decdf01f00c6c"
+pkgbase='python_six'
+vers='1.11.0'
+url="https://pypi.io/packages/source/s/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+digest="md5sum:d12789f9baf7e9fb2524c0c64f1773f8"
 verify=""
 arch=noarch
 build=B2
-src="setuptools-${vers}"
+src="six-${vers}"
 OPT_CONFIG=''
-DOCS='LICENSE README.rst easy_install.py'
+DOCS='LICENSE README.rst'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -48,36 +48,21 @@ if [ $opt_config -eq 1 ] ; then
     echo "==== configure for python${i} ===="
     mkdir -p $B/${i}
     cp -a $S/* $B/${i}/
+
 ######################################################################
 #  copy srcs to build directory, patch and config in build dir
 ######################################################################
     cd $B/$i
-
     for patch in $patchfiles ; do
       patch -p1 < $W/$patch
     done
 
-    # prevent downloading and install deps
-    sed -i '/pip.main(args)/d' bootstrap.py
+    python${i} setup.py config
   
-    # Remove post-release tag since we are using stable tags
-    sed -e '/tag_build = .post/d' \
-	-e '/tag_date = 1/d' \
-	-i setup.cfg
-
-    # 'Clean' installation is expected to fail since we removed bundled packages
-    sed -i '/^def test_clean_env_install/i import pytest\n\n@pytest.mark.xfail' setuptools/tests/test_virtualenv.py
-
-    # Tests failed. Importing an unbundled new setuptools in a virtualenv does not work, but this won't
-    # affect normal virtualenv usage (which don't have to import the unbundled setuptools in *current*
-    # dir.
-    sed -e '/^def test_pip_upgrade_from_source/i @pytest.mark.xfail' \
-	-e '/^def test_test_command_install_requirements/i @pytest.mark.xfail' \
-	-i setuptools/tests/test_virtualenv.py
-
-    sed -i -e "s|^#\!.*/usr/bin/env python|#!/usr/bin/env python${i}|" setuptools/command/easy_install.py
-
-    python${i} bootstrap.py
+    if [ $? != 0 ]; then
+      echo "configure error. $0 script stop"
+      exit 255
+    fi
   done
 fi
     
@@ -88,7 +73,7 @@ if [ $opt_build -eq 1 ] ; then
     cd $B/$i
     python${i} setup.py build
     if [ $? != 0 ]; then
-      echo "build error for python${i}. $0 script stop"
+      echo "build error. $0 script stop"
       exit 255
     fi
   done
@@ -96,36 +81,32 @@ fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
   for i in 2 3
   do
-    P=$W/work/$i
-    docdir=$W/work/${i}/usr/share/doc
-    pkg=python${i}_setuptools-${vers}-${arch}-${build}
-    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
     cd $B/$i
-    python${i} setup.py install --prefix=/usr --root $P --skip-build
-
-    if [ $i = 2 ]; then
-      rm $P/usr/bin/easy_install
-    fi
-
+    python${i} setup.py install --root $P
+  done
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-    install_tweak
+  install_tweak
+
+  ( cd $P/usr/share/doc && mv $src python-$src )
 
 #############################
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
-    convert_links
+  convert_links
 
-    cd $P
-    /sbin/makepkg ../../$pkg.$compress <<EOF
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
 y
 1
 EOF
-  done
+
 fi
