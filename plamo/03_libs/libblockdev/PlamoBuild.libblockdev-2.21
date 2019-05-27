@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libblockdev'
-vers='2.14'
+vers='2.21'
 url="https://github.com/storaged-project/${pkgbase}/releases/download/${vers}-1/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:d13953db5247f326f730ff7ae64493de"
+digest="md5sum:26d2ebed3512decad4d7a4f86d5e59b4"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --without-dm --without-gtk-doc'
+OPT_CONFIG="--disable-static --enable-shared --without-dm --without-gtk-doc --without-nvdimm --with-python3"
 DOCS='LICENSE'
 patchfiles=''
 compress=txz
