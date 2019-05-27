@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='nss'
-vers='3.43'
-url="https://ftp.mozilla.org/pub/security/${pkgbase}/releases/NSS_${vers//./_}_RTM/src/${pkgbase}-${vers}.tar.gz"
+pkgbase='p11_kit'
+vers='0.23.15'
+url="https://github.com/p11-glue/p11-kit/releases/download/${vers}/p11-kit-${vers}.tar.gz"
+digest="md5sum:c4c3eecfe6bd6e62e436f62b51980749"
 verify=""
-digest="md5sum:67c8fa282c32cb56117fdd530dd77001"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS=''
-blfs_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/nss-${vers}-standalone-1.patch"
-patchfiles="${blfs_patch_url##*/}"
+src="p11-kit-${vers}"
+OPT_CONFIG='--with-trust-paths=/etc/pki/anchors'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING NEWS README'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -40,34 +39,48 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${blfs_patch_url##*/} ]; then
-    wget $blfs_patch_url
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-fi
-    
-if [ $opt_build -eq 1 ] ; then
-  cd $B/nss
-  export LDFLAGS='-Wl,--as-needed'
-  make -j1 \
-       BUILD_OPT=1 \
-       NSPR_INCLUDE_DIR=/usr/include/nspr \
-       USE_SYSTEM_ZLIB=1 \
-       ZLIB_LIBS=-lz \
-       NSS_ENABLE_WERROR=0 \
-       $([ $(uname -m) = x86_64 ] && echo USE_64=1) \
-       $([ -f /usr/include/sqlite3.h ] && echo NSS_USE_SYSTEM_SQLITE=1)
 
+  if [ ! -f .trust-extract ]; then
+      sed '20,$ d' -i trust/trust-extract-compat.in
+      cat >> trust/trust-extract-compat.in << "EOF"
+# Copy existing anchor modifications to /etc/ssl/local
+/usr/libexec/make-ca/copy-trust-modifications
+
+# Generate a new trust store
+/usr/sbin/make-ca -f -g
+EOF
+      touch .trust-extract
+  fi
+
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -77,27 +90,11 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B/dist
-
-  # libs
-  install -v -m755 -d $P/usr/${libdir}
-  install -v -m755 Linux*/lib/*.so $P/usr/${libdir}/
-  install -v -m644 Linux*/lib/{*.chk,libcrmf.a} $P/usr/${libdir}/
-
-  # includes
-  install -v -m755 -d $P/usr/include/nss
-  cp -v -RL {public,private}/nss/* $P/usr/include/nss
-  chmod -v 644 $P/usr/include/nss/*
-
-  # binaries
-  install -v -m755 -d $P/usr/bin
-  for file in certutil cmsutil crlutil modutil pk12util shlibsign signtool signver ssltap nss-config; do
-    install -v -m755 Linux*/bin/${file} $P/usr/bin
-  done
-
-  # pkgconfig
-  install -v -m755 -d $P/usr/${libdir}/pkgconfig
-  install -v -m644 Linux*/lib/pkgconfig/nss.pc $P/usr/${libdir}/pkgconfig
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+  ln -sfv /usr/libexec/p11-kit/trust-extract-compat \
+     $P/usr/bin/update-ca-certificates
 
 ################################
 #      install tweaks
