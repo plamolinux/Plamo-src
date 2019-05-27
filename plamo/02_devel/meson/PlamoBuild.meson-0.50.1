@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='six'
-vers='1.11.0'
-url="https://pypi.io/packages/source/s/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:d12789f9baf7e9fb2524c0c64f1773f8"
+pkgbase='meson'
+vers="0.50.1"
+url="https://github.com/${pkgbase}build/${pkgbase}/releases/download/${vers}/${pkgbase}-${vers}.tar.gz"
+digest=""
 verify=""
-arch=noarch
+arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
-DOCS='LICENSE README.rst'
+DOCS='COPYING README.md contributing.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -42,72 +42,55 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi
-  for i in 2 3
-  do
-    echo "==== configure for python${i} ===="
-    mkdir -p $B/${i}
-    cp -a $S/* $B/${i}/
-
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
 ######################################################################
 #  copy srcs to build directory, patch and config in build dir
 ######################################################################
-    cd $B/$i
-    for patch in $patchfiles ; do
-      patch -p1 < $W/$patch
-    done
-
-    python${i} setup.py config
-  
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
   done
+
+  python3 setup.py config
+  
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  for i in 2 3
-  do
-    echo "=== build for python${i} ==="
-    cd $B/$i
-    python${i} setup.py build
-    if [ $? != 0 ]; then
-      echo "build error. $0 script stop"
-      exit 255
-    fi
-  done
+  cd $B
+  python3 setup.py build
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
-  for i in 2 3
-  do
-    P=$W/work/$i
-    docdir=$P/usr/share/doc
-    pkg=python${i}_${pkgbase}-${vers}-${arch}-${build}
-    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-    cd $B/$i
-    python${i} setup.py install --root $P
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+  python3 setup.py install --root $P --optimize=1 --skip-build
 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-    install_tweak
+  install_tweak
 
 #############################
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
-    convert_links
+  convert_links
 
-    cd $P
-    /sbin/makepkg ../../$pkg.$compress <<EOF
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
 y
 1
 EOF
-  done
 
 fi
