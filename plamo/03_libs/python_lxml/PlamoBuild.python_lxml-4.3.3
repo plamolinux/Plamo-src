@@ -94,7 +94,7 @@ if [ $opt_package -eq 1 ] ; then
   convert_links
 
   cd $P
-  /sbin/makepkg ../../$pkg.$compress <<EOF
+  /sbin/makepkg ../$pkg.$compress <<EOF
 y
 1
 EOF
