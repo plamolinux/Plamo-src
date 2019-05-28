@@ -73,33 +73,30 @@ fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   for i in 2 3
   do
-    P=$W/work/$i
-    docdir=$P/usr/share/doc
-    pkg=python${i}_lxml-${vers}-${arch}-${build}
-    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
     cd $B/$i
     python${i} setup.py install --root $P --skip-build --optimize=1
+  done
 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-    install_tweak
+  install_tweak
 
 #############################
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
-    convert_links
+  convert_links
 
-    cd $P
-    /sbin/makepkg ../../$pkg.$compress <<EOF
+  cd $P
+  /sbin/makepkg ../../$pkg.$compress <<EOF
 y
 1
 EOF
-  done
 
 fi
