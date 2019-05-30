@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase='python_sip'
+pkgbase='sip'
 vers='4.19.17'
 url="https://www.riverbankcomputing.com/static/Downloads/sip/${vers}/sip-${vers}.tar.gz"
 arch=`uname -m`
