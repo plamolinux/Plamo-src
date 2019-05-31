@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='emacs'
-vers='26.1'
+vers='26.2'
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -11,12 +11,10 @@ OPT_CONFIG="
 	--disable-static
 	--enable-shared
 	--with-x-toolkit=gtk3
+	--with-xft
 	--with-modules"
 DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
-patchfiles="0001-Ignore-color-fonts-when-using-Xft.patch
-	0001-Port-FC_COLOR-change-to-older-fontconfig.patch
-	0001-src-ftfont.c-ftfont_spec_pattern-Fix-whitespace.patch
-	emacs-26.1-support-txz.patch"
+patchfiles="emacs-26.1-support-txz.patch"
 compress=txz
 ##############################################################
 
@@ -64,10 +62,14 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  export PKG_CONFIG_PATH="/usr/lib/imagemagick6/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig"
+  export LDFLAGS='-Wl,--as-needed'
+  ac_cv_lib_gif_EGifPutExtensionLast=yes  \
+				    $S/configure --prefix=/usr \
+				    --sysconfdir=/etc \
+				    --localstatedir=/var \
+				    --mandir='${prefix}'/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
