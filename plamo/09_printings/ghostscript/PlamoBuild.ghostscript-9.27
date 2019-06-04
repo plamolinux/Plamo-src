@@ -9,7 +9,7 @@ digest="md5sum:dd531503dbbc524f73528359e2ea145c"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
 	--with-ijs
@@ -125,7 +125,12 @@ if [ $opt_package -eq 1 ] ; then
   ln -v -s ghostscript $P/usr/include/ps
 
   # install cidfmap
-  install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
+  # install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
+
+  cat <<"EOF" >> $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
+/Ryumin-Light      << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipam.ttf) /CSI [(Japan1) 6] >> ;
+/GothicBBB-Medium  << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipag.ttf) /CSI [(Japan1) 6] >> ;
+EOF
 
   # install std_font
   for f in $fonturl
