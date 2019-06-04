@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase="linux_firmware"
+pkgbase='wanderlust'
 vers=""
-url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
-commitid="711d3297bac870af42088a467459a0634c1970ca"
+url="https://github.com/wanderlust/wanderlust.git"
+commitid="6528a0032342ec7bf6a95dda9b60d67292eaadfc"
 verify=""
-digest=""
 arch=`uname -m`
 build=B1
-src="linux-firmware"
+src="wanderlust"
 OPT_CONFIG=""
-DOCS="LICENCE.ralink-firmware.txt LICENCE.rtlwifi_firmware.txt LICENCE.tda7706-firmware.txt LICENSE.QualcommAtheros_ar3k LICENSE.QualcommAtheros_ath10k LICENSE.amd-ucode LICENSE.amdgpu LICENSE.atmel LICENSE.dib0700 LICENSE.hfi1_firmware LICENSE.i915 LICENSE.ipu3_firmware LICENSE.nxp_mc_firmware LICENSE.qcom LICENSE.radeon LICENSE.sdma_firmware README TDA7706_OM_v2.5.1_boot.txt TDA7706_OM_v3.0.2_boot.txt"
-patchfiles=""
+DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README.ja README.md'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -21,8 +20,9 @@ source /usr/share/plamobuild_functions.sh
 #
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -49,36 +49,59 @@ if [ $opt_download -ne 1 ]; then
 fi
 
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    echo "There is nothing to do in config section"
-    exit 0
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
-
+    
 if [ $opt_build -eq 1 ] ; then
-    echo "There is nothing to do in build section"
-    # TODO: In build section, we may have to make the AMD microcode.
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
-
+  cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make install \
+       PIXMAPDIR=$P/usr/share/emacs/icons/wl \
+       LISPDIR=$P/usr/share/emacs/site-lisp \
+       INFODIR=$P/usr/share/info
+
+  install -dm755 -v $P/usr/share/info
+  make install-info INFODIR=$P/usr/share/info
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+( cd /usr/share/info ; /usr/bin/install-info wl-ja.info dir ; /usr/bin/install-info wl.info dir )
+EOF
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man,
+#  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-  NO_STRIP=1 install_tweak
+  install_tweak
+
+  mv -v $docdir/$src $docdir/${pkgbase}-${vers}
 
 #############################
-#   convert symlink to null file and
+#   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
