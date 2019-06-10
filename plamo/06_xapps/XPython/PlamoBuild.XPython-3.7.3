@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-pkgbase='Python'
-vers='3.6.8'
-url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
+pkgbase='XPython'
+vers='3.7.3'
+url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
+build=B1
+src="Python-${vers}"
 OPT_CONFIG="--enable-shared --enable-optimizations
 	--with-system-expat --with-system-ffi
 	--with-computed-gotos --with-threads
