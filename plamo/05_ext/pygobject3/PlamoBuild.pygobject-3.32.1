@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pygobject3'
-vers='3.26.1'
+pkgbase="pygobject3"
+vers="3.32.1"
 url="http://ftp.gnome.org/pub/gnome/sources/pygobject/${vers%.*}/pygobject-${vers}.tar.xz"
 verify=""
+digest=""
 arch=`uname -m`
 build=B1
 src="pygobject-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+OPT_CONFIG=""
+DOCS="COPYING NEWS README.rst meson_options.txt"
+patchfiles=""
 compress=txz
 ##############################################################
 
@@ -19,9 +20,8 @@ source /usr/share/plamobuild_functions.sh
 #
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -37,64 +37,65 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
-  for i in 2 3
-  do
-    echo "==== configure for python${i} ===="
-    mkdir -p $B/${i}
-    cp -a $S/* $B/${i}/
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-    cd $B/$i
+    if [ -d $B ] ; then rm -rf $B ; fi
+    for i in 2 3
+    do
+	mkdir -p $B/$i
+	cd $S
+	for patch in $patchfiles ; do
+            if [ ! -f .${patch} ]; then
+		patch -p1 < $W/$patch
+		touch .${patch}
+            fi
+	done
 
-    for patch in $patchfiles ; do
-      patch -p1 < $W/$patch
+	cd $B/$i
+	meson --prefix=/usr --libdir=/usr/lib -Dpython=python${i} ${OPT_CONFIG} $S
+	if [ $? != 0 ]; then
+            echo "configure error. $0 script stop"
+            exit 255
+	fi
     done
-
-    ./configure --prefix=/usr --with-python=/usr/bin/python${i} ${OPT_CONFIG}
-    
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
-  done
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-  for i in 2 3
-  do
-    echo "=== build for python${i} ==="
-    cd $B/$i
-    make
-    if [ $? != 0 ]; then
-      echo "build error for python${i}. $0 script stop"
-      exit 255
-    fi
-  done
+    for i in 2 3
+    do
+	cd $B/$i
+	ninja
+	if [ $? != 0 ]; then
+            echo "build error. $0 script stop"
+            exit 255
+	fi
+    done
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -C 2 install DESTDIR=$P
-  make -C 3 install DESTDIR=$P
+  for i in 2 3
+  do
+      cd $B/$i
+
+      DESTDIR=$P ninja install
+  done
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
