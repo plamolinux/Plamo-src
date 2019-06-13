@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="random2"
-vers="1.0.1"
-url="https://files.pythonhosted.org/packages/ee/b5/5aca5217501fbd06b1e5aed6d5986baa0da5380880e6bb6f421ed18e3a32/random2-${vers}.zip"
+pkgbase="Mako"
+vers="1.0.10"
+url="https://files.pythonhosted.org/packages/source/M/Mako/Mako-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B2
-src="random2-${vers}"
+src="Mako-1.0.10"
 OPT_CONFIG=""
-DOCS="CHANGES.txt README.txt"
+DOCS="AUTHORS LICENSE README.rst"
 patchfiles=""
 compress=txz
 ##############################################################
