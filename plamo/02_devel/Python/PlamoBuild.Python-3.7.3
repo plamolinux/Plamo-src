@@ -1,15 +1,20 @@
 #!/bin/sh
 ##############################################################
-pkgbase='newt'
-vers='0.52.20'
-url="https://releases.pagure.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:70b288f821234593a8e7920e435b259b"
-verify=""
+pkgbase='Python'
+vers='3.7.3'
+url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-gpm-support'
-DOCS='AUTHORS COPYING README'
+# pip,setuptools は無効化
+OPT_CONFIG="--disable-static --enable-shared
+	--with-system-expat --with-system-ffi
+	--with-computed-gotos --with-threads
+	--enable-optimizations --with-lto
+	--with-dbmliborder=gdbm:ndbm
+	--enable-loadable-sqlite-extensions --without-ensurepip"
+DOCS='LICENSE README.rst'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -22,7 +27,6 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -50,14 +54,28 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-  sed -e 's/^LIBNEWT =/#&/' \
-      -e '/install -m 644 $(LIBNEWT)/ s/^/#/' \
-      -e 's/$(LIBNEWT)/$(LIBNEWTSONAME)/g' \
-      -i Makefile.in
+
+  # https://bugs.python.org/issue34587
+  sed -i -e "s|testCongestion|disabled_&|" Lib/test/test_socket.py
+  
+  echo "patch to Lib/cgi.py"
+  sed -i -e "s|^#.* /usr/local/bin/python|#!/usr/bin/python|" Lib/cgi.py
+
+  # Speed up LTO
+  sed -i -e "s|-flto |-flto=4 |g" configure configure.ac
+  
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+  
+  rm -rf Modules/expat
+  rm -rf Modules/zlib
+  rm -rf Modules/_ctypes/{darwin,libffi}*
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  export LDFLAGS='-Wl,--as-needed'
+  export LANG=C
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -68,7 +86,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  export LANG=C
+  make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -79,8 +98,27 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+
+  # Hack to avoid building again
+  sed -i 's/^all:.*$/all: build_all/' Makefile
+
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  chmod -v 755 $P/usr/${libdir}/libpython3.7m.so
+  chmod -v 755 $P/usr/${libdir}/libpython3.so
+
+  # Why are these not done by default...
+  ln -s python3               "$P"/usr/bin/python
+  ln -s python3-config        "$P"/usr/bin/python-config
+  ln -s idle3                 "$P"/usr/bin/idle
+  ln -s pydoc3                "$P"/usr/bin/pydoc
+  ln -s python${_pybasever}.1 "$P"/usr/share/man/man1/python.1
+
+  # some useful "stuff" FS#46146
+  install -dm755 "$P"/usr/lib/python3.7/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.7/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.7/Tools/scripts/
 
 ################################
 #      install tweaks
