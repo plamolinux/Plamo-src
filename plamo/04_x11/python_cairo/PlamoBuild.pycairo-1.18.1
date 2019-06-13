@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='newt'
-vers='0.52.20'
-url="https://releases.pagure.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:70b288f821234593a8e7920e435b259b"
+pkgbase='python_cairo'
+vers='1.18.1'
+url="https://github.com/pygobject/pycairo/releases/download/v${vers}/pycairo-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-gpm-support'
-DOCS='AUTHORS COPYING README'
+build=B1
+src="pycairo-${vers}"
+OPT_CONFIG=''
+DOCS='COPYING COPYING-LGPL-2.1 COPYING-MPL-1.1 NEWS README.rst'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -42,45 +41,41 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi
+  for i in 2 3
+  do
+    mkdir -p $B/$i
+    cp -a $S/* $B/$i
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy srcs to build directory, patch and config in build dir
 ######################################################################
-  cd $B
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    cd $B
+    for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+    done
   done
-  sed -e 's/^LIBNEWT =/#&/' \
-      -e '/install -m 644 $(LIBNEWT)/ s/^/#/' \
-      -e 's/$(LIBNEWT)/$(LIBNEWTSONAME)/g' \
-      -i Makefile.in
-
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  for i in 2 3
+  do
+    cd $B/$i
+    python${i} setup.py build
+    if [ $? != 0 ]; then
+      echo "build error. $0 script stop"
+      exit 255
+    fi
+  done
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  for i in 2 3
+  do
+    cd $B/$i
+    python${i} setup.py install --root $P --skip-build --optimize=1
+  done
 
 ################################
 #      install tweaks

@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='newt'
-vers='0.52.20'
-url="https://releases.pagure.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:70b288f821234593a8e7920e435b259b"
+pkgbase='libbytesize'
+vers='2.0'
+url="https://github.com/storaged-project/${pkgbase}/releases/download/${vers}/${pkgbase}-${vers}.tar.gz"
+digest=""
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-gpm-support'
-DOCS='AUTHORS COPYING README'
+OPT_CONFIG='--disable-static --enable-shared --without-gtk-doc'
+DOCS='ABOUT-NLS LICENSE README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -42,22 +42,25 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
-  sed -e 's/^LIBNEWT =/#&/' \
-      -e '/install -m 644 $(LIBNEWT)/ s/^/#/' \
-      -e 's/$(LIBNEWT)/$(LIBNEWTSONAME)/g' \
-      -i Makefile.in
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
+  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
