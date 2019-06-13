@@ -1,0 +1,34 @@
+From ca5732dbfdfb7c1e66da799ab81409ffef73ccf8 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Thu, 13 Jun 2019 20:03:16 +0900
+Subject: [PATCH] Fix for python 3.7
+
+---
+ acinclude.m4 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index 1227123..54c8d7a 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -71,7 +71,7 @@ AC_DEFUN([AM_PATH_PYTHON_VERSION],
+   dnl library.
+ 
+   AC_CACHE_CHECK([for $am_display_PYTHON version], [am_cv_python_version],
+-    [am_cv_python_version=`$PYTHON -c "import sys; print sys.version[[:3]]"`])
++    [am_cv_python_version=`$PYTHON -c "import sys; sys.stdout.write(sys.version[[:3]])"`])
+   AC_SUBST([PYTHON_VERSION], [$am_cv_python_version])
+ 
+   dnl Use the values of $prefix and $exec_prefix for the corresponding
+@@ -86,7 +86,7 @@ AC_DEFUN([AM_PATH_PYTHON_VERSION],
+   dnl to know which OS platform Python thinks this is.
+ 
+   AC_CACHE_CHECK([for $am_display_PYTHON platform], [am_cv_python_platform],
+-    [am_cv_python_platform=`$PYTHON -c "import sys; print sys.platform"`])
++    [am_cv_python_platform=`$PYTHON -c "import sys; sys.stdout.write(sys.platform)"`])
+   AC_SUBST([PYTHON_PLATFORM], [$am_cv_python_platform])
+ 
+ 
+-- 
+2.17.1
+

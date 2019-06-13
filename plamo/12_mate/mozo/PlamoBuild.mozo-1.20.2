@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mozo'
-vers='1.20.0'
+vers='1.20.2'
 url="http://pub.mate-desktop.org/releases/1.20/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+patchfiles='0001-Fix-for-python-3.7.patch'
 compress=txz
 ##############################################################
 
@@ -51,11 +51,16 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
+    aclocal
+    autoheader
+    automake
+    autoconf
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    export LDFLAGS='-Wl,--as-needed'
+    PYTHON="/usr/bin/python" \
+	  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -66,7 +71,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    PYTHON="/usr/bin/python" \
+	make -j3
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
