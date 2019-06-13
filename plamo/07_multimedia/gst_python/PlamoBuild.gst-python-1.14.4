@@ -2,12 +2,12 @@
 ##############################################################
 pkgbase="gst_python"
 vers="1.14.4"
-url="https://gstreamer.freedesktop.org/src/gst-python/gst-python-1.14.4.tar.xz"
-verify=""
+url="https://gstreamer.freedesktop.org/src/gst-python/gst-python-${vers}.tar.xz"
+verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
-src="gst-python-1.14.4"
+build=B2
+src="gst-python-${vers}"
 OPT_CONFIG=""
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README RELEASE TODO meson_options.txt"
 patchfiles=""
