@@ -5,7 +5,7 @@ vers='3.7.3'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="Python-${vers}"
 OPT_CONFIG="--enable-shared --enable-optimizations
 	--with-system-expat --with-system-ffi
@@ -99,7 +99,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  chmod -v 755 $P/usr/${libdir}/libpython3.6m.so
+  chmod -v 755 $P/usr/${libdir}/libpython3.7m.so
   chmod -v 755 $P/usr/${libdir}/libpython3.so
 
   # Why are these not done by default...
@@ -110,9 +110,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -s python${_pybasever}.1 "$P"/usr/share/man/man1/python.1
 
   # some useful "stuff" FS#46146
-  install -dm755 "$P"/usr/lib/python3.6/Tools/{i18n,scripts}
-  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.6/Tools/i18n/
-  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.6/Tools/scripts/
+  install -dm755 "$P"/usr/lib/python3.7/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.7/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.7/Tools/scripts/
 
   cat << "EOF" > $P/initpkg
 rm -rf /var/log/packages/Python
