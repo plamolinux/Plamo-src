@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dbus'
-vers="1.12.10"
+vers="1.12.16"
 url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
