@@ -1,0 +1,113 @@
+#!/bin/sh
+##############################################################
+pkgbase="openjdk"
+majorvers="12"
+minorvers="0"
+updatevers="1"
+vers="${majorvers}.${minorvers}.${updatevers}"
+url="https://download.java.net/java/GA/jdk${vers}/69cfe15208a647278a19ef0990eea691/${majorvers}/GPL/openjdk-${vers}_linux-x64_bin.tar.gz"
+sha256sum="${url}.sha256"
+digest=""
+arch=`uname -m`
+build=B1
+src="jdk-${vers}"
+OPT_CONFIG=""
+DOCS="release"
+patchfiles=""
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    if [ ! -f ${url##*/} ]; then
+        wget $url
+    fi
+    if [ ! -f ${sha256sum##*/} ]; then
+        wget $sha256sum
+    fi
+    digest=$(sha256sum ${url##*/} | awk '{ print $1 }')
+    checksum=$(cat ${sha256sum##*/})
+    if [ "$digest" != "$checksum" ]; then
+        echo "Download files is invalid."
+        exit 1
+    fi
+    tar xvf ${url##*/}
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    echo "There is nothing to do in config part."
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    echo "There is nothing to do in build part."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  mkdir -p $P/usr/java
+  cp -av $S $P/usr/java/
+
+  ln -sfv jdk-${vers} $P/usr/java/jdk
+
+  mkdir -p $P/etc/profile.d
+  cat <<"EOF" > $P/etc/profile.d/jdk.csh
+setenv JAVA_HOME /usr/java/jdk
+if ($?PATH) then
+   set path = ( $path $JAVA_HOME/bin )
+else
+   set path = ( /bin /usr/bin $JAVA_HOME/bin )
+endif
+EOF
+
+  cat <<"EOF" > $P/etc/profile.d/jdk.sh
+export JAVA_HOME=/usr/java/jdk
+if [ "$PATH.x" != ".x" ]; then
+    PATH=$PATH:$JAVA_HOME/bin
+else
+    PATH=/bin:/usr/bin:$JAVA_HOME/bin
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
