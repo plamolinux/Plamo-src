@@ -8,7 +8,7 @@ template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_ver
 verify="${url}.asc"
 template_verify="${template}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 template_src="lxc-templates-${template_vers}"
 OPT_CONFIG="--enable-static --enable-shared
@@ -18,6 +18,7 @@ OPT_CONFIG="--enable-static --enable-shared
 	    --without-systemdsystemunitdir"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=''
+template_patchfiles="lxc-template.patch"
 compress=txz
 ##############################################################
 
@@ -97,6 +98,10 @@ if [ $opt_config -eq 1 ] ; then
   cd $W
   cp -a $template_src template_build
   cd $W/template_build
+  for p in $template_patchfiles
+  do
+      patch -p1 -i $W/$p
+  done
   ./autogen.sh
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
   if [ $? != 0 ]; then
@@ -159,6 +164,11 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  for p in $template_patchfiles
+  do
+      install -Dm644 -v $W/$p $docdir/$src/$p
+  done
 
 #############################
 #   convert symlink to null file and 
