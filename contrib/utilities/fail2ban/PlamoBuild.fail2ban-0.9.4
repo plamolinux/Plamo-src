@@ -6,7 +6,7 @@ url="https://github.com/fail2ban/fail2ban/archive/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="fail2ban-${vers}"
 OPT_CONFIG=""
 DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO"
@@ -103,6 +103,15 @@ if [ $opt_package -eq 1 ] ; then
               ;;
       esac
   done
+
+  ( cd $P/etc && mv fail2ban fail2ban.dist )
+
+  mkdir -p $P/install
+  cat <<-EOF >> $P/install/initpkg
+if [ ! -d /etc/fail2ban ]; then
+   ( cd /etc && cp -a fail2ban.dist fail2ban )
+fi
+EOF
 
 ################################
 #      install tweaks
