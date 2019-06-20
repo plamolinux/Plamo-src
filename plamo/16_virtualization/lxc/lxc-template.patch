@@ -1,0 +1,53 @@
+diff --git a/templates/lxc-plamo.in b/templates/lxc-plamo.in
+index 019737c..2145d01 100644
+--- a/templates/lxc-plamo.in
++++ b/templates/lxc-plamo.in
+@@ -52,7 +52,10 @@ download_plamo() {
+   # download a mini plamo into a cache
+   echo "Downloading Plamo-$release minimal..."
+   cd $ptcache
+-  case $DLSCHEME in http) depth=2 ;; ftp) depth=3 ;; esac
++  case $DLSCHEME in
++      http|https) depth=2 ;;
++      ftp) depth=3 ;;
++  esac
+   rej=${IGNOREPKGS%% *} ; [ -n "$rej" ] && rej="$rej-*"
+   if [ `echo $IGNOREPKGS | wc -w` -gt 1 ] ; then
+     for p in ${IGNOREPKGS#* } ; do rej="$rej,$p-*" ; done
+@@ -123,6 +126,7 @@ install_plamo() {
+        pkgtool="pkgtools"
+     else
+        pkgtool="hdsetup"
++       LANG=C
+     fi
+ 
+     ( cd $dlcache ; tar xpJf "$pkgtool"-*.txz ; rm -rf tmp usr var )
+@@ -428,7 +432,7 @@ else
+     ADDONPKGS=${ADDONPKGS-"`echo contrib/Hamradio/{morse,qrq}`"}
+ fi
+ 
+-DLSCHEME=${DLSCHEME:-"http"}
++DLSCHEME=${DLSCHEME:-"https"}
+ MIRRORSRV=${MIRRORSRV:-"repository.plamolinux.org"}
+ MIRRORPATH=${MIRRORPATH:-"/pub/linux/Plamo"}
+ CATEGORIES=${CATEGORIES-"00_base 01_minimum"}
+diff --git a/templates/lxc-slackware.in b/templates/lxc-slackware.in
+index 0c85c51..5962475 100644
+--- a/templates/lxc-slackware.in
++++ b/templates/lxc-slackware.in
+@@ -566,6 +566,7 @@ grep
+ gzip
+ hostname
+ iputils
++libpsl
+ libunistring
+ logrotate
+ mpfr
+@@ -574,6 +575,7 @@ network-scripts
+ ncurses
+ openssh
+ openssl-solibs
++pcre2
+ pkgtools
+ procps-ng
+ sed
