@@ -14,7 +14,7 @@ DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
 patchfiles=''
 compress=txz
 
-rustver=""
+rustver="1.32.0"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
