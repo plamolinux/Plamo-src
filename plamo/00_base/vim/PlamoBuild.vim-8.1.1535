@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='vim'
-vers='8.0.586'
-url="http://ftp.vim.org/vim/unix/vim-${vers}.tar.bz2"
-digest="md5sum:b35e794140c196ff59b492b56c1e73db"
+vers='8.1.1535'
+url="http://github.com/vim/vim/archive/v${vers}/vim-${vers}.tar.gz"
+digest=""
 arch=`uname -m`
-build=B3
-src="vim80"
+build=B1
+src="vim-${vers}"
 OPT_CONFIG='--enable-multibyte --enable-gui=no --without-x --disable-gpm'
 DOCS='README.md README.txt README_ami.txt README_amibin.txt README_amisrc.txt README_bindos.txt README_dos.txt README_extra.txt README_mac.txt README_ole.txt README_os2.txt README_os390.txt README_src.txt README_srcdos.txt README_unix.txt README_vms.txt README_w32s.txt uninstal.txt'
 patchfiles=''
@@ -53,7 +53,10 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    # change the default location of vimrc file
+    echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
@@ -87,7 +90,12 @@ if [ $opt_package -eq 1 ] ; then
   rm -rfv $P/usr/share/man/{fr,it,pl,ru}*
 
   ln -sfv vim $P/usr/bin/vi
-  
+
+  for L in $P/usr/share/man/{,*/}man1/vim.1;
+  do
+      ln -sfv vim.1 $(dirname $L)/vi.1
+  done
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
