@@ -1,9 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='expat'
-vers='2.2.2'
-url="http://jaist.dl.sourceforge.net/project/${pkgbase}/${pkgbase}/${vers}/${pkgbase}-${vers}.tar.bz2"
-digest="sha1sum:891cee988b38d5d66953f62f94c3150b8810a70a"
+vers='2.2.7'
+url="https://github.com/libexpat/libexpat/releases/download/R_${vers//./_}/expat-${vers}.tar.xz"
+verify="${url}.asc"
+digest=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
