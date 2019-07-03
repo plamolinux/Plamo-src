@@ -31,11 +31,11 @@ urls=(https://downloads.sourceforge.net/pnsft-aur/x-ken-all-${_zipcode_rel}.zip
       https://raw.githubusercontent.com/iRi-E/mozc-el-extensions/master/mozc-isearch.el)
 
 arch=`uname -m`
-build=B1
+build=B2
 src="mozc"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md'
-patchfiles=''
+patchfiles='add-new-japanese-era.patch'
 compress=txz
 ##############################################################
 
