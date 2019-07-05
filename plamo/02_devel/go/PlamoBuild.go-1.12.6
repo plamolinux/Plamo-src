@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='go'
-vers='1.12.1'
+vers='1.12.6'
 url="https://dl.google.com/go/go${vers}.src.tar.gz"
-digest="sha256sum:0be127684df4b842a64e58093154f9d15422f1405f1fcff4b2c36ffc6a15818a"
+digest="sha256sum:c96c5ccc7455638ae1a8b7498a030fe653731c8391c5f8e79590bce72f92b4ca"
 verify=""
 arch=`uname -m`
 build=B1
@@ -29,7 +29,6 @@ case "$arch" in
 esac
 export GOROOT_FINAL=/usr/${libdir}/go
 export GOROOT_BOOTSTRAP=/usr/${libdir}/go
-export GOCACHE=off
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -61,7 +60,9 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   export GOPATH=$B
+  export GOROOT=$B
   export GOBIN=$GOROOT/bin
+
   cd $B/src
   ./make.bash --no-clean -v
 
