@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libvpx'
-vers='1.7.0'
+vers='1.8.0'
 url="https://github.com/webmproject/libvpx/archive/v${vers}/libvpx-${vers}.tar.gz"
-digest="md5sum:193346f9aec0726145e51db732417cd2"
+digest="md5sum:49cb591325f44a3459b040112e3b82e7"
 verify=""
 arch=`uname -m`
 build=B1
