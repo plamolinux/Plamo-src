@@ -1,43 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='ffmpeg'
-vers='4.0.1'
-url="http://ffmpeg.org/releases/${pkgbase}-${vers}.tar.xz"
-verify="${url}.asc"
+pkgbase='xine_lib'
+vers='1.2.9'
+url="https://downloads.sourceforge.net/xine/xine-lib-${vers}.tar.xz"
+digest="md5sum:cd42d2ba92f943d17736d9bca712b3d1"
+verify=""
 arch=`uname -m`
-build=B3
-src="${pkgbase}-${vers}"
-# 高品質のAACコーデックライブラリを使いたい場合は
-# --enable-libfdk-aac
-# をつけてビルドしてください。バイナリ配布は不可なので含めてません
-# ffmpeg 付属の AAC コーデックは含まれているはず
-# See. https://trac.ffmpeg.org/wiki/Encode/AAC
-OPT_CONFIG="--enable-gpl
-            --enable-version3
-            --disable-static
-            --enable-shared
-            --disable-debug
-            --enable-libass
-            --enable-libfreetype
-            --enable-libmp3lame
-            --enable-libopus
-            --enable-libtheora
-            --enable-libvorbis
-            --enable-libvpx
-            --enable-libx264
-            --enable-libx265
-	    --enable-libwebp
-	    --enable-libpulse
-	    --enable-libspeex
-	    --enable-libv4l2
-	    --enable-libxvid
-	    --enable-gnutls
-	    --disable-libfdk-aac
-	    --disable-nonfree
-            --docdir=/usr/share/doc/ffmpeg-${vers}"
-DOCS='COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 COPYING.LGPLv3 Changelog INSTALL.md LICENSE.md MAINTAINERS README.md RELEASE RELEASE_NOTES'
+build=B1
+src="xine-lib-${vers}"
+OPT_CONFIG="--disable-static --enable-shared --disable-vcd --with-external-dvdnav
+            --docdir=/usr/share/doc/${src}"
+DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
-#compatlibs="libavcodec.so.57.107.100 libavformat.so.57.83.100 libswresample.so.2.9.100 libavdevice.so.57.10.100 libavutil.so.55.78.100 libswscale.so.4.8.100 libavfilter.so.6.107.100 libpostproc.so.54.7.100"
 compress=txz
 ##############################################################
 
@@ -80,14 +54,15 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+  sed -e 's|wand/magick_wand.h|MagickWand/MagickWand.h|' \
+      -i src/video_dec/image.c
+  sed -e 's/\(xcb-shape >= 1.0\)/xcb \1/' \
+    -i m4/video_out.m4
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -103,12 +78,6 @@ if [ $opt_build -eq 1 ] ; then
     echo "build error. $0 script stop"
     exit 255
   fi
-  cp -a $S/tools $B/tools
-  gcc tools/qt-faststart.c -o tools/qt-faststart
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -118,17 +87,6 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -v -m755 tools/qt-faststart $P/usr/bin
-  install -v -m755 -d ${docdir}/${src}
-  install -v -m644 doc/*.txt ${docdir}/${src}
-
-  #for i in $compatlibs ; do
-  #    install -v -m755 $W/$i $P/usr/lib
-  #done
-  #for i in $compatlibs ; do
-  #    ( cd $P/usr/lib ; ln -s $i ${i%.[0-9]*.[0-9]*} )
-  #done
-  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 

@@ -1,16 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xine_lib'
-vers='1.2.8'
-url="https://downloads.sourceforge.net/xine/xine-lib-${vers}.tar.xz"
-digest="md5sum:427cc4568632eea725d5169a4a50ff22"
+pkgbase='libvpx'
+vers='1.8.0'
+url="https://github.com/webmproject/libvpx/archive/v${vers}/libvpx-${vers}.tar.gz"
+digest="md5sum:49cb591325f44a3459b040112e3b82e7"
 verify=""
 arch=`uname -m`
 build=B1
-src="xine-lib-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-vcd --with-external-dvdnav
-            --docdir=/usr/share/doc/${src}"
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS CHANGELOG LICENSE README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -54,15 +53,15 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -e 's|wand/magick_wand.h|MagickWand/MagickWand.h|' \
-      -i src/video_dec/image.c
-  sed -e 's/\(xcb-shape >= 1.0\)/xcb \1/' \
-    -i m4/video_out.m4
+  sed -i 's/cp -p/cp/' build/make/Makefile
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
