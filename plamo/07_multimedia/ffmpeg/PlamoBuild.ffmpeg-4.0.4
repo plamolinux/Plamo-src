@@ -1,20 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='ffmpeg34'
-vers='3.4.2'
-url="http://ffmpeg.org/releases/ffmpeg-${vers}.tar.xz"
+pkgbase='ffmpeg'
+vers='4.0.4'
+url="http://ffmpeg.org/releases/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B5
-src="ffmpeg-${vers}"
+build=B3
+src="${pkgbase}-${vers}"
 # 高品質のAACコーデックライブラリを使いたい場合は
 # --enable-libfdk-aac
 # をつけてビルドしてください。バイナリ配布は不可なので含めてません
 # ffmpeg 付属の AAC コーデックは含まれているはず
 # See. https://trac.ffmpeg.org/wiki/Encode/AAC
-OPT_CONFIG="--progs-suffix=3.4
-	    --incdir=/usr/include/ffmpeg-3.4
-            --enable-gpl
+OPT_CONFIG="--enable-gpl
             --enable-version3
             --disable-static
             --enable-shared
@@ -28,17 +26,18 @@ OPT_CONFIG="--progs-suffix=3.4
             --enable-libvpx
             --enable-libx264
             --enable-libx265
-            --enable-libwebp
-            --enable-libpulse
-            --enable-libspeex
-            --enable-libv4l2
-            --enable-libxvid
-            --enable-gnutls
-            --disable-libfdk-aac
-            --disable-nonfree
+	    --enable-libwebp
+	    --enable-libpulse
+	    --enable-libspeex
+	    --enable-libv4l2
+	    --enable-libxvid
+	    --enable-gnutls
+	    --disable-libfdk-aac
+	    --disable-nonfree
             --docdir=/usr/share/doc/ffmpeg-${vers}"
 DOCS='COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 COPYING.LGPLv3 Changelog INSTALL.md LICENSE.md MAINTAINERS README.md RELEASE RELEASE_NOTES'
 patchfiles=''
+#compatlibs="libavcodec.so.57.107.100 libavformat.so.57.83.100 libswresample.so.2.9.100 libavdevice.so.57.10.100 libavutil.so.55.78.100 libswscale.so.4.8.100 libavfilter.so.6.107.100 libpostproc.so.54.7.100"
 compress=txz
 ##############################################################
 
@@ -123,24 +122,13 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m755 -d ${docdir}/${src}
   install -v -m644 doc/*.txt ${docdir}/${src}
 
-  # remove *.so that includes in ffmpeg 4.0 package
-  rm -fv $P/usr/lib/*.so
-
-  # rename pkgconfig file
-  ( cd $P/usr/lib/pkgconfig
-    for f in $(ls *.pc)
-    do
-        tmp=${f%.*}
-        mv -v $f $tmp-3.4.pc
-    done
-  )
-
-  # remove share
-  rm -rfv $P/usr/share/
-
-  # remove qt-faststart
-  rm -rfv $P/usr/bin/qt-faststart
-
+  #for i in $compatlibs ; do
+  #    install -v -m755 $W/$i $P/usr/lib
+  #done
+  #for i in $compatlibs ; do
+  #    ( cd $P/usr/lib ; ln -s $i ${i%.[0-9]*.[0-9]*} )
+  #done
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
