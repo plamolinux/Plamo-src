@@ -2,17 +2,17 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='67.0.4'
+vers='68.0'
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 #verify="${url}.asc"
-digest="md5sum:6631ff5d6cf74bc881d68c375e628ebd"
+digest="md5sum:02cc438f5063d8e6a09644062aa825ba"
 arch=`uname -m`
 build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-67.0.4-system_graphite2_harfbuzz-1.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
 patchfiles="${blfspatch##*/}"
 compress=txz
 
