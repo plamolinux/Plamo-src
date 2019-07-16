@@ -106,8 +106,8 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
 /usr/sbin/make-ca -C /usr/share/doc/${pkgbase}-${vers}/certdata.txt
-( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-certificates.crt )
-( cd /etc/ssl/certs ; ln -s ../ca-bundle.crt ca-bundle.crt )
+( cd /etc/ssl/certs ; ln -sf ../ca-bundle.crt ca-certificates.crt )
+( cd /etc/ssl/certs ; ln -sf ../ca-bundle.crt ca-bundle.crt )
 EOF
 
 ################################
