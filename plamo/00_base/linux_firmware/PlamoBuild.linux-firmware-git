@@ -3,7 +3,7 @@
 pkgbase="linux_firmware"
 vers=""
 url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
-commitid="711d3297bac870af42088a467459a0634c1970ca"
+commitid="d52556e4592e64023157a83fb0f483661f23ac0e"
 verify=""
 digest=""
 arch=`uname -m`
