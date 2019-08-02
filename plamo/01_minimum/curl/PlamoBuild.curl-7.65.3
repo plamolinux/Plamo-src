@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='curl'
-vers='7.64.1'
+vers='7.65.3'
 url="https://curl.haxx.se/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
             --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
