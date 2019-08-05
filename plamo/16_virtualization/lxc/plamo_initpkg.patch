@@ -1,0 +1,38 @@
+From 50a41ba878f8ff2c5b7ce3dc39d989aac9865131 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Fri, 2 Aug 2019 12:12:03 +0900
+Subject: [PATCH] plamo: remove unnecesssary initpkg execution at container
+ config
+
+We do not have to re-execute initpkg at container configuration.
+The remaining initpkg script will be executed at container startup.
+
+Signed-off-by: KATOH Yasufumi <karma@jazz.email.ne.jp>
+---
+ templates/lxc-plamo.in | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/templates/lxc-plamo.in b/templates/lxc-plamo.in
+index 2145d01..4a023ae 100644
+--- a/templates/lxc-plamo.in
++++ b/templates/lxc-plamo.in
+@@ -281,18 +281,12 @@ configure_plamo7() {
+ 	SERVICE="dhclient"
+ 	EOF
+ 
+-    # initpkg
++    # remove initpkg that does not exec
+     noexec="shadow netconfig7 eudev openssh"
+     for f in $noexec
+     do
+       rm -f $rootfs/var/log/initpkg/"$f"
+     done
+-    pushd $rootfs
+-    for f in var/log/initpkg/*
+-    do
+-      chroot $rootfs sh ./$f
+-    done
+-    popd
+ }
+ 
+ configure_plamo() {
