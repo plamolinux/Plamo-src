@@ -187,7 +187,7 @@ if [ $opt_package -eq 1 ] ; then
     mkdir -pv $P/lib64
     ( cd $P/lib64 ; ln -v ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
   fi
-  cat <<-EOF > $P/etc/ld.so.conf.new
+  cat <<-EOF > $P/etc/ld.so.conf.dist
 	/lib64
 	/usr/lib64
 	/lib
@@ -226,7 +226,7 @@ echo "Replace /etc/ld.so.conf, and backup it to /etc/ld.so.conf.old"
 if [ -f /etc/ld.so.conf ]; then
   mv -v /etc/ld.so.conf /etc/ld.so.conf.old
 fi
-mv /etc/ld.so.conf.new /etc/ld.so.conf
+cp /etc/ld.so.conf.dist /etc/ld.so.conf
 ldconfig
 
 # 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
