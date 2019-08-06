@@ -5,7 +5,7 @@ vers='2.28'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B4
+build=B5
 src="glibc-${vers}"
 OPT_CONFIG="
 	--with-headers=/usr/include
@@ -19,18 +19,6 @@ OPT_CONFIG="
 	--disable-werror
 	--enable-kernel=3.2
 	libc_cv_slibdir=/lib"
-# for 2.26
-#OPT_CONFIG="--enable-add-ons
-#	--enable-kernel=3.2
-#	--localedir=/usr/share/locale
-#	--enable-tls
-#	--enable-obsolete-nsl
-#	--enable-obsolete-rpc
-#	--enable-stack-protector=strong
-#	--disable-profile
-#	--disable-werror
-#	--build=${arch}-pc-linux
-#	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
 	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
 	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
@@ -221,12 +209,10 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 echo "glibc package initializing"
-# ld.so.conf は置き換え
-echo "Replace /etc/ld.so.conf, and backup it to /etc/ld.so.conf.old"
-if [ -f /etc/ld.so.conf ]; then
-  mv -v /etc/ld.so.conf /etc/ld.so.conf.old
+# 既存の ld.so.conf があればそのまま
+if [ ! -f /etc/ld.so.conf ]; then
+  ( cd /etc && cp ld.so.conf.dist ld.so.conf )
 fi
-cp /etc/ld.so.conf.dist /etc/ld.so.conf
 ldconfig
 
 # 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
