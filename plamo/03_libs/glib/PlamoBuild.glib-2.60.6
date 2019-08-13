@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.60.4"
-url="http://ftp.gnome.org/pub/gnome/sources/glib/2.60/glib-2.60.4.tar.xz"
+vers="2.60.6"
+url="http://ftp.gnome.org/pub/gnome/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="md5sum:87e2c4973470811dfed3d6746c961488"
+digest="md5sum:cd6865d8ce40db5e4c12b7d180953de6"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
 OPT_CONFIG="-Dman=true -Dselinux=disabled"
 DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 meson_options.txt"
-blfspatch="glib-2.60.4-skip_warnings-1.patch"
+blfspatch="glib-2.60.6-skip_warnings-1.patch"
 patchfiles="${blfspatch}"
 compress=txz
 ##############################################################
