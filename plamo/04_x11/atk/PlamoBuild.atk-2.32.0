@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='atk'
-vers='2.26.1'
+vers='2.32.0'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:7cddcc313b9a3efd19b2ddf079ba68f5"
+digest="md5sum:c10b0b2af3c199e42caa6275b845c49d"
 verify=""
 arch=`uname -m`
 build=B1
