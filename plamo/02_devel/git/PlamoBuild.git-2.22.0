@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='git'
-vers='2.17.1'
+vers='2.22.0'
 url="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.sign"
 man_url="https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.xz"
