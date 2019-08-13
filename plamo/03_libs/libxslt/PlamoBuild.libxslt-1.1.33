@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxslt'
-vers='1.1.32'
+vers='1.1.33'
 url="ftp://xmlsoft.org/XSLT/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
