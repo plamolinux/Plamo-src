@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='vala'
-vers='0.38.3'
+vers='0.44.7'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:827a421a272014c015d7b6b9c9efddbf"
+digest="md5sum:27fd30535c51af5b87b0e7ffdbd906ef"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=''
+OPT_CONFIG='--disable-valadoc'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-0-4 ChangeLog.pre-0-5-7 INSTALL NEWS README THANKS'
 patchfiles='disable-doc.patch'
 compress=txz
