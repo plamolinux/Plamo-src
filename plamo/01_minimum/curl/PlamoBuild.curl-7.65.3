@@ -5,10 +5,15 @@ vers='7.65.3'
 url="https://curl.haxx.se/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
+# ca-path を指定
+#OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
+#            --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
+#            --with-random=/dev/urandom"
+# ca-bundle を指定
 OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
-            --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
+            --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt --without-nghttp2 --enable-threaded-resolver
             --with-random=/dev/urandom"
 DOCS='COPYING README RELEASE-NOTES'
 patchfiles=''
