@@ -81,6 +81,9 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P ninja install
 
+  # remove files for systemd
+  rm -rfv $P/usr/no
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
