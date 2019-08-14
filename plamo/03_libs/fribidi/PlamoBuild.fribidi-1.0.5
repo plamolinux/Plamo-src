@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='fribidi'
-vers='1.0.4'
-url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:00d058ac76e6c0f46a6671a63d31cf67"
+pkgbase="fribidi"
+vers="1.0.5"
+url="https://github.com/fribidi/fribidi/releases/download/v${vers}/fribidi-${vers}.tar.bz2"
 verify=""
+digest="md5sum:0f97f65038545340316ec0f4bd53df0b"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog.old HACKING HISTORY NEWS README THANKS TODO'
-patchfiles=''
+src="fribidi-${vers}"
+OPT_CONFIG=""
+DOCS="AUTHORS COPYING ChangeLog ChangeLog.old INSTALL NEWS README THANKS TODO meson_options.txt"
+patchfiles=""
 compress=txz
 ##############################################################
 
@@ -20,9 +20,8 @@ source /usr/share/plamobuild_functions.sh
 #
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -38,55 +37,59 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-  cd $B
-  for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
-  done
-
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j1
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+    cd $B 
+    ninja
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
