@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shared_mime_info'
-vers='1.9'
-url="https://people.freedesktop.org/~hadess/shared-mime-info-${vers}.tar.xz"
-digest="md5sum:45103889b91242850aa47f09325e798b"
+vers='1.12'
+url="https://gitlab.freedesktop.org/xdg/shared-mime-info/uploads/80c7f1afbcad2769f38aeb9ba6317a51/shared-mime-info-1.12.tar.xz"
+digest="md5sum:5f307837e6ac3df6679aaa03c1a897d4"
 verify=""
 arch=`uname -m`
 build=B1
