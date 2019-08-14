@@ -81,6 +81,9 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P ninja install
 
+  # We do not need files for systemd (installed under usr/no/ that is specified at-spi-core)
+  rm -rf $P/usr/no
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
