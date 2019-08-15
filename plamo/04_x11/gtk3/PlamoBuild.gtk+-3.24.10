@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gtk+"
+pkgbase="gtk3"
 vers="3.24.10"
 url="http://ftp.gnome.org/pub/gnome/sources/gtk+/${vers%.*}/gtk+-${vers}.tar.xz"
 verify=""
