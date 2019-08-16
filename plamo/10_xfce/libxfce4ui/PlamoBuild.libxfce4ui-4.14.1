@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxfce4ui'
-vers='4.12.1'
+vers='4.14.1'
 url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:ea9fad7d059fe8f531fe8db42dabb5a9"
+digest="md5sum:50eae4bab5eeced186bce16fb5f802ac"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux"
+OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux --disable-introspection"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO xfce4-about'
 patchfiles='dialog-char-corruption.patch'
 compress=txz
