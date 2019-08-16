@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='cairo'
-vers='1.14.12'
+vers='1.16.0'
 url="https://www.${pkgbase}graphics.org/releases/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sha1"
 arch=`uname -m`
