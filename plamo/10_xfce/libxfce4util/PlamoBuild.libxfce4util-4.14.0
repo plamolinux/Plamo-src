@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxfce4util'
-vers='4.12.1'
+vers='4.14.0'
 url="http://archive.xfce.org/src/xfce/libxfce4util/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:4eb012b6c1292ceedb3a83ebfc1ff08d"
+digest="md5sum:46f44e36acc3abf1a5ba814c22a773cb"
 verify=""
 arch=`uname -m`
 build=B1
