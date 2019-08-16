@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gtk2'
-vers='2.24.31'
+vers='2.24.32'
 url="http://ftp.gnome.org/pub/gnome/sources/gtk+/${vers%.*}/gtk+-${vers}.tar.xz"
-digest="md5sum:526a1008586094a2cbb4592fd3f9ee10"
+digest="md5sum:d5742aa42275203a499b59b4c382a784"
 arch=`uname -m`
-build=B2
+build=B1
 src="gtk+-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.gtk-async-file-chooser ChangeLog.gtk-printing ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-10 ChangeLog.pre-2-12 ChangeLog.pre-2-14 ChangeLog.pre-2-16 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-2-8 HACKING INSTALL NEWS NEWS.pre-1-0 README README.commits README.win32'
