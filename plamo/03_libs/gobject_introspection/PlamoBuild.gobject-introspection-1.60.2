@@ -3,12 +3,10 @@
 pkgbase="gobject_introspection"
 vers="1.60.2"
 url="http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.tar.xz"
-glib_vers="2.60.6"
-glib_url="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_vers%.*}/glib-${glib_vers}.tar.xz"
 verify=""
 digest="md5sum:57c1c5dcf3d0a9aa73d06c2d5e6960d7"
 arch=`uname -m`
-build=B3
+build=B2
 src="gobject-introspection-${vers}"
 OPT_CONFIG=""
 DOCS="COPYING COPYING.GPL COPYING.LGPL MSVC.README.rst NEWS README.rst TODO meson_options.txt"
@@ -40,11 +38,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-
-    if [ ! -f ${glib_url##*/} ]; then
-	wget $glib_url
-    fi
-    tar xvf ${glib_url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -65,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib -D glib_src_dir=$W/glib-${glib_vers} ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
