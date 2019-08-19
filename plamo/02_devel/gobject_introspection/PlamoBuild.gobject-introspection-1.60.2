@@ -13,8 +13,13 @@ DOCS="COPYING COPYING.GPL COPYING.LGPL MSVC.README.rst NEWS README.rst TODO meso
 patchfiles=""
 compress=txz
 ##############################################################
+glib_vers="2.60.6"
+glib_src="http://ftp.gnome.org/pub/gnome/sources/glib/${glib_vers%.*}/glib-${glib_vers}.tar.xz"
+##############################################################
 
 source /usr/share/plamobuild_functions.sh
+
+OPT_CONFIG="$OPT_CONFIG -Dglib_src_dir=$W/glib-${glib_vers}"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -38,6 +43,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${glib_src##*/} ]; then
+	wget $glib_src
+    fi
+    tar xvf ${glib_src##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
