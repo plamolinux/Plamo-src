@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfce4_panel'
-vers='4.12.2'
-url="http://archive.xfce.org/src/xfce/xfce4-panel/4.12/xfce4-panel-${vers}.tar.bz2"
-digest="md5sum:803c9aabc2925dc97f96de125c52ba2e"
+vers='4.14.0'
+url="http://archive.xfce.org/src/xfce/xfce4-panel/${vers%.*}/xfce4-panel-${vers}.tar.bz2"
+digest="md5sum:940e8b430e28093a2e56e390055bcd51"
 verify=""
 arch=`uname -m`
 build=B1
@@ -42,32 +42,25 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+  export LDFLAGS='-Wl,--as-needed'
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
