@@ -6,9 +6,9 @@ url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.t
 digest="md5sum:50eae4bab5eeced186bce16fb5f802ac"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux --disable-introspection"
+OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO xfce4-about'
 patchfiles='dialog-char-corruption.patch'
 compress=txz
@@ -42,26 +42,19 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
-    
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
