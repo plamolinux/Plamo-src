@@ -5,11 +5,11 @@ vers='0.44.7'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
 digest="md5sum:27fd30535c51af5b87b0e7ffdbd906ef"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-valadoc'
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-0-4 ChangeLog.pre-0-5-7 INSTALL NEWS README THANKS'
-patchfiles='disable-doc.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
@@ -52,10 +52,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  ACLOCAL= autoreconf -fiv
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
