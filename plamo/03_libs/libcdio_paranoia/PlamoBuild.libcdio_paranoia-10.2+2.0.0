@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libcdio_paranoia'
-vers='10.2+0.94+2'
-url="https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-${vers}.tar.gz"
+vers='10.2+2.0.0'
+url="https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="libcdio-paranoia-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --enable-cpp-progs --disable-example-progs'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README.md THANKS'
 patchfiles=''
 compress=txz
