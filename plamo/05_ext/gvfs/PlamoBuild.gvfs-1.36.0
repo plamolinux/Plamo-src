@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gvfs'
-vers='1.40.2'
+vers='1.36.0'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:47db9bec616e089513b7f1386e5c7d5f"
+digest="md5sum:216d461c5e96e2cea74253be407af6dc"
 verify=""
 arch=`uname -m`
 build=B1
