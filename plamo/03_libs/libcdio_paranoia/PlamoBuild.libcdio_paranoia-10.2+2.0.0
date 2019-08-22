@@ -55,6 +55,11 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  if [ ! -f .jpman_converted ]; then
+      ( cd doc/ja && mv cd-paranoia.1.in man_euc.txt && nkf -Ew man_euc.txt > cd-paranoia.1.in )
+      touch .jpman_converted
+  fi
+  autoreconf -i
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
