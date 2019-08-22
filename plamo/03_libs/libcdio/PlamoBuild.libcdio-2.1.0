@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libcdio'
-vers='2.0.0'
-url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+vers='2.1.0'
+url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
