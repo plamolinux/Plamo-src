@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfce4_appfinder'
-vers='4.12.0'
-url="http://archive.xfce.org/src/xfce/xfce4-appfinder/4.12/xfce4-appfinder-${vers}.tar.bz2"
-digest="md5sum:0b238b30686388c507c119b12664f1a1"
+vers='4.14.0'
+url="http://archive.xfce.org/src/xfce/xfce4-appfinder/${vers%.*}/xfce4-appfinder-${vers}.tar.bz2"
+digest="md5sum:03b226a2ee20f95243e74d1868e94e0e"
 verify=""
 arch=`uname -m`
 build=B1
