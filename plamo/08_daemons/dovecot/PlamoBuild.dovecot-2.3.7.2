@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dovecot'
-vers='2.3.0.1'
+vers='2.3.7.2'
 url="https://${pkgbase}.org/releases/2.3/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-rundir=/run/dovecot
 	    --with-mysql --with-sqlite --with-ssl=openssl
@@ -96,19 +96,25 @@ if [ $opt_package -eq 1 ] ; then
     install -dm755 -v $P/etc/rc.d/rc"$i".d
     case $i in
       0|1|2|6)
-	ln -sfv ../init.d/dovecot $P/etc/rc.d/rc"$i".d/K78dovecot
-	;;
+        ln -sfv ../init.d/dovecot $P/etc/rc.d/rc"$i".d/K78dovecot
+        ;;
       3|4|5)
-	ln -sfv ../init.d/dovecot $P/etc/rc.d/rc"$i".d/S27dovecot
-	;;
+        ln -sfv ../init.d/dovecot $P/etc/rc.d/rc"$i".d/S27dovecot
+        ;;
     esac
   done
 
   # config files
-  cp -rv $docdir/$src/example-config/* $P/etc/dovecot/
-  sed -i '/^\!include / s/^/#/' $P/etc/dovecot/dovecot.conf
-  install -Dm644 -v $W/dovecot.conf.plamo $P/etc/dovecot/local.conf
+  mv -v $P/etc/dovecot $P/etc/dovecot.dist
+  cp -rv $docdir/$src/example-config/* $P/etc/dovecot.dist/
+  sed -i '/^\!include / s/^/#/' $P/etc/dovecot.dist/dovecot.conf
+  install -Dm644 -v $W/dovecot.conf.plamo $P/etc/dovecot.dist/local.conf
   install -Dm644 -v $W/dovecot.conf.plamo $docdir/$src/dovecot.conf.plamo
+
+  # pam
+  mkdir -pv $P/etc/pam.d
+  install -Dm644 -v $W/dovecot.pam $P/etc/pam.d/dovecot
+  install -Dm644 -v $W/dovecot.pam $docdir/$src/dovecot.pam
 
   mkdir -p $P/install
   cat <<"EOF" >> $P/install/initpkg
@@ -123,12 +129,15 @@ fi
 if ! grep dovecot /etc/passwd; then
   echo "Add dovecot user"
   useradd -c "Dovecot unprivileged user" -d /dev/null -u 42 \
-	-g dovecot -s /bin/false dovecot
+        -g dovecot -s /bin/false dovecot
 fi
 if ! grep dovenull /etc/passwd; then
   echo "Add dovenull user"
   useradd -c "Dovecot login user" -d /dev/null -u 43 \
-	-g dovenull -s /bin/false dovenull
+        -g dovenull -s /bin/false dovenull
+fi
+if [ ! -d /etc/dovecot ]; then
+  cp -a /etc/dovecot.dist /etc/dovecot
 fi
 EOF
 
