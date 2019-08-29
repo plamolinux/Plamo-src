@@ -111,6 +111,11 @@ if [ $opt_package -eq 1 ] ; then
   install -Dm644 -v $W/dovecot.conf.plamo $P/etc/dovecot.dist/local.conf
   install -Dm644 -v $W/dovecot.conf.plamo $docdir/$src/dovecot.conf.plamo
 
+  # pam
+  mkdir -pv $P/etc/pam.d
+  install -Dm644 -v $W/dovecot.pam $P/etc/pam.d/dovecot
+  install -Dm644 -v $W/dovecot.pam $docdir/$src/dovecot.pam
+
   mkdir -p $P/install
   cat <<"EOF" >> $P/install/initpkg
 if ! grep dovecot /etc/group; then
