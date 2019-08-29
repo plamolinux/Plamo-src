@@ -65,8 +65,8 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P
   tar xf $W/${pkgbase/_/-}-${release}_${arch}.tar -C $P
 
-  rm -rf etc
-  rm -rf usr/share/gnome-control-center
+  rm -rf $P/etc
+  rm -rf $P/usr/share/gnome-control-center
 
 ################################
 #      install tweaks
