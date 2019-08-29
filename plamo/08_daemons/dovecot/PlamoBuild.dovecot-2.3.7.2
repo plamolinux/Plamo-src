@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dovecot'
-vers='2.3.0.1'
+vers='2.3.7.2'
 url="https://${pkgbase}.org/releases/2.3/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-rundir=/run/dovecot
 	    --with-mysql --with-sqlite --with-ssl=openssl
