@@ -85,6 +85,8 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  rm -rfv $P/usr/lib/systemd
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
