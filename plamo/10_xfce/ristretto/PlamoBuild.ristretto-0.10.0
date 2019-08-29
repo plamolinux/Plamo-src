@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ristretto'
-vers='0.8.3'
+vers='0.10.0'
 url="http://archive.xfce.org/src/apps/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:5866b4e11c32a38f72bc737239102544"
+digest="md5sum:4249e14fba78728481d89ce61a8771fc"
 verify=""
 arch=`uname -m`
 build=B1
