@@ -12,5 +12,5 @@ userdb {
 
 passdb {
        driver	= pam
-       args	= system-auth
+       args	= dovecot
 }
