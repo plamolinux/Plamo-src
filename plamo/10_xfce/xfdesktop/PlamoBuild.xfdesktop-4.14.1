@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfdesktop'
-vers='4.12.4'
-url="http://archive.xfce.org/src/xfce/${pkgbase}/4.12/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:7571889368be72df185ce2d470f37198"
+vers='4.14.1'
+url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:de4b8f6687862ad46dbe4e1ced453f4d"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='xfdesktop-4.12.0-file-utils-strftime.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
