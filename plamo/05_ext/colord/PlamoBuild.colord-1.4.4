@@ -1,21 +1,22 @@
 #!/bin/sh
 ##############################################################
 pkgbase='colord'
-vers='1.4.1'
+vers='1.4.4'
 url="https://www.freedesktop.org/software/${pkgbase}/releases/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:f457be5b7c44827e6c747ec80a6dc69a"
+digest="md5sum:32c2709a6002d9ee750483aaed6379c8"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="-Dwith-daemon-user=colord
-	-Denable-vala=true
-	-Denable-systemd=false
-	-Denable-libcolordcompat=true
-	-Denable-argyllcms-sensor=false
-	-Denable-bash-completion=false
-	-Denable-docs=false
-	-Denable-man=false"
+OPT_CONFIG="
+	-Dwith-daemon-user=colord
+	-Dvapi=true
+	-Dsystemd=false
+	-Dlibcolordcompat=true
+	-Dargyllcms-sensor=false
+	-Dbash_completion=false
+	-Ddocs=false
+	-Dman=false"
 DOCS='AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE meson_options.txt'
 patchfiles=''
 compress=txz
