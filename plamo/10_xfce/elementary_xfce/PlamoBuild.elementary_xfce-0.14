@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='elementary_xfce'
-vers='0.9'
+vers='0.14'
 url="https://github.com/shimmerproject/elementary-xfce/archive/v${vers}.tar.gz"
 verify=""
 arch=noarch
