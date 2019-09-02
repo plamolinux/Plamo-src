@@ -62,6 +62,11 @@ if [ $opt_package -eq 1 ] ; then
 ################################
   install_tweak
 
+  chk_me=`whoami | grep root`
+  if [ "$chk_me.x" != ".x" ]; then
+      chown -R root.root $P/usr/share/icons
+  fi
+
 #############################
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
