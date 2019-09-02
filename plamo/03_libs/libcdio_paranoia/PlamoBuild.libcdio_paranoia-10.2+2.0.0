@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
-verify=""
+pkgbase='libcdio_paranoia'
+vers='10.2+2.0.0'
+url="https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="libcdio-paranoia-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --enable-cpp-progs --disable-example-progs'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README.md THANKS'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,10 +52,14 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  if [ ! -f .jpman_converted ]; then
+      ( cd doc/ja && mv cd-paranoia.1.in man_euc.txt && nkf -Ew man_euc.txt > cd-paranoia.1.in )
+      touch .jpman_converted
+  fi
+  autoreconf -i
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig

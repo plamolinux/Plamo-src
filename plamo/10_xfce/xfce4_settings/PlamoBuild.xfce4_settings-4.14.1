@@ -1,16 +1,24 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='xfce4_settings'
+vers='4.14.1'
+url="http://archive.xfce.org/src/xfce/xfce4-settings/${vers%.*}/xfce4-settings-${vers}.tar.bz2"
+digest="md5sum:2f4171c21db905d9ba0ca9bee3fc7a5b"
 verify=""
 arch=`uname -m`
 build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+src="xfce4-settings-${vers}"
+OPT_CONFIG="--disable-static
+	--enable-shared
+	--enable-xrandr
+	--enable-xcursor
+	--enable-libnotify
+	--enable-libxklavier
+	--enable-pluggable-dialogs
+	--enable-xorg-libinput
+	--enable-sound-settings"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+patchfiles='xfce4-settings-xml-4.14.1.patch'
 compress=txz
 ##############################################################
 
@@ -53,7 +61,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
