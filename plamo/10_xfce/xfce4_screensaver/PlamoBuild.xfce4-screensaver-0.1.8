@@ -6,7 +6,7 @@ url="http://archive.xfce.org/src/apps/xfce4-screensaver/${vers%.*}/xfce4-screens
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="xfce4-screensaver-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS COPYING COPYING.LGPL COPYING.LIB ChangeLog INSTALL NEWS README.md TODO"
@@ -82,6 +82,11 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  # pam setting
+  mkdir -pv $P/etc/pam.d
+  install -Dm644 -v $W/xfce4-screensaver.pam $P/etc/pam.d/xfce4-screensaver
+  install -Dm644 -v $W/xfce4-screensaver.pam $docdir/$src/
 
 ################################
 #      install tweaks
