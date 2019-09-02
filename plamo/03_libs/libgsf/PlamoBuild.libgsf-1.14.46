@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='libgsf'
+vers='1.14.46'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:5bc6d1d6394f0ed5a58e8f2e5e4ead7f"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,7 +53,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -61,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"

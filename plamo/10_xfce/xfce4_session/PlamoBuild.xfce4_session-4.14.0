@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='xfce4_session'
+vers='4.14.0'
+url="http://archive.xfce.org/src/xfce/xfce4-session/${vers%.*}/xfce4-session-${vers}.tar.bz2"
+digest="md5sum:635361f99a01b2d26c430a520b6d1314"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="xfce4-session-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,7 +53,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -85,6 +84,12 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/update-desktop-database
+/usr/bin/update-mime-database /usr/share/mime
+EOF
 
 ################################
 #      install tweaks

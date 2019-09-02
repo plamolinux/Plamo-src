@@ -1,15 +1,23 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='colord'
+vers='1.4.4'
+url="https://www.freedesktop.org/software/${pkgbase}/releases/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:32c2709a6002d9ee750483aaed6379c8"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="
+	-Dwith-daemon-user=colord
+	-Dvapi=true
+	-Dsystemd=false
+	-Dlibcolordcompat=true
+	-Dargyllcms-sensor=false
+	-Dbash_completion=false
+	-Ddocs=false
+	-Dman=false"
+DOCS='AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE meson_options.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,7 +61,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -61,7 +68,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  meson --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG} $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -72,7 +79,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -84,7 +91,21 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+id colord > /dev/null 2>&1
+if [ \$? -ne 0 ]; then
+  echo -n "Add colord group and user: "
+  groupadd -g 71 colord
+  useradd -c "Color Daemon Owner" -d /var/lib/colord -u 71 \
+        -g colord -s /bin/false colord
+  echo "done."
+fi
+EOF
+
+  chown -v -R 71:71 $P/var/lib/colord
 
 ################################
 #      install tweaks

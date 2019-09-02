@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='libpng'
+vers='1.6.37'
+url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:015e8e15db1eecde5f2eb9eb5b6e59e9"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
+#apng_digest="1760dbaa13c2569fdda6d83f6483701e"
+patchfiles="$(basename ${apng_patch_url##*/} .gz)"
 compress=txz
 ##############################################################
 
@@ -39,6 +41,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f "$(basename ${apng_patch_url##*/} .gz)" ]; then
+    wget $apng_patch_url
+    gzip -d ${apng_patch_url##*/}
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -53,7 +59,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -61,7 +66,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  LIBS=-lpthread $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"

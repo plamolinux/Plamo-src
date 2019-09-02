@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
-verify=""
+pkgbase='libgcrypt'
+vers='1.8.4'
+url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.sig"
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG=''
+DOCS="AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-2011 INSTALL LICENSES NEWS README README.GIT THANKS TODO"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,7 +52,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -61,7 +59,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -85,6 +83,13 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -v -dm755 $docdir/$src/doc
+
+  for f in gcrypt.info fips-fsm.{eps,fig,png,pdf} libgcrypt-modules.{eps,fig,png,pdf}
+  do
+    install -v -m644 $S/doc/$f $docdir/$src/doc/$f
+  done
 
 ################################
 #      install tweaks

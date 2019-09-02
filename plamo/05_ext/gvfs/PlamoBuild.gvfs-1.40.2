@@ -1,15 +1,30 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='gvfs'
+vers='1.40.2'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:47db9bec616e089513b7f1386e5c7d5f"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="${pkgbase}-${vers}"
+# multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
+OPT_CONFIG="-Dfuse=true
+	-Dgphoto2=true
+	-Dafc=false
+	-Dafp=true
+	-Dbluray=false
+	-Dnfs=false
+	-Dmtp=true
+	-Dsmb=true
+	-Dtmpfilesdir=no
+	-Dlogind=false
+	-Ddnssd=true
+	-Dcdda=true
+	-Dgoa=false
+	-Dgoogle=false
+	-Dsystemduserunitdir=false"
+DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,15 +68,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  meson --prefix=/usr --libdir=${libdir} $OPT_CONFIG $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -72,7 +81,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -84,7 +93,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+EOF
 
 ################################
 #      install tweaks

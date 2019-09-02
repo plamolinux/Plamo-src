@@ -1,18 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gtk_xfce_engine'
-vers='3.2.0'
-url="http://archive.xfce.org/src/archive/gtk-xfce-engine/${vers%.*}/gtk-xfce-engine-${vers}.tar.bz2"
-digest="md5sum:363d6c16a48a00e26d45c45c2e1fd739"
+pkgbase='harfbuzz'
+vers='2.6.0'
+url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:3e2653d2195d6c18e5cded055c873601"
 verify=""
 arch=`uname -m`
-build=B2
-src="gtk-xfce-engine-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--with-gobject --with-graphite2'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.python THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
+# graphite2 -> harfbuzz -> graphite2 の順でビルド
 
 source /usr/share/plamobuild_functions.sh
 
@@ -53,7 +54,6 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  sed -i 's/\xd6/\xc3\x96/' gtk-3.0/xfce_style_types.h
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
