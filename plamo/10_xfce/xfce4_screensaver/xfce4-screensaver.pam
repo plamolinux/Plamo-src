@@ -1,6 +1,6 @@
-# Begin /etc/pam.d/xscreensaver
+# Begin /etc/pam.d/xfce4-screensaver
 
 auth    include system-auth
 account include system-account
 
-# End /etc/pam.d/xscreensaver
+# End /etc/pam.d/xfce4-screensaver
