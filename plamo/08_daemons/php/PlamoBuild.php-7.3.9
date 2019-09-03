@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='php'
-vers='7.3.8'
-url="http://jp2.${pkgbase}.net/distributions/${pkgbase}-${vers}.tar.xz"
-#verify="${url}.asc"
-digest="sha256sum:f6046b2ae625d8c04310bda0737ac660dc5563a8e04e8a46c1ee24ea414ad5a5"
+vers='7.3.9'
+url="https://www.php.net/distributions/php-${vers}.tar.xz"
+verify="${url}.asc"
+#digest=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
