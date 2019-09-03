@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='upower'
-vers='0.99.7'
-url="https://${pkgbase}.freedesktop.org/releases/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:236bb439d9ff1151450b3d8582399532"
+vers='0.99.10'
+url="https://gitlab.freedesktop.org/upower/upower/uploads/c438511024b9bc5a904f8775cfc8e4c4/upower-0.99.10.tar.xz"
+digest="md5sum:ac6b6bee31110fd8478a8e881c40fba6"
 verify=""
 arch=`uname -m`
 build=B1
