@@ -2,20 +2,15 @@
 export NO_STRIP=1
 ##############################################################
 pkgbase='slack'
-release='3.4.2_0.1'
+vers='4.0.2'
+url="https://downloads.slack-edge.com/linux_releases/slack-desktop-${vers}-amd64.deb"
 arch=`uname -m`
-if [ -x /usr/bin/rpm ]; then
-    vers=$(rpm -qpi slack-${release/_/-}.fc21.${arch}.rpm 2>/dev/null | egrep '^Version' | awk '{ print $3 }')
-else
-    vers=$release
-fi
 src="slack-${vers}"
-url="https://downloads.slack-edge.com/linux_releases/slack-${release/_/-}.fc21.x86_64.rpm"
 verify=""
 build=B1
 OPT_CONFIG=''
 DOCS=''
-patchfiles=''
+#patchfiles='slack-desktop.patch'
 compress=txz
 ##############################################################
 
@@ -46,7 +41,7 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  rpm2tar ${url##*/}
+  ar xv ${url##*/} data.tar.xz
   if [ $? != 0 ]; then
     echo "failed to convert rpm to tar."
     exit 255
@@ -63,10 +58,17 @@ if [ $opt_package -eq 1 ] ; then
     rm -rf $P
   fi
   mkdir -p $P
-  tar xf $W/${pkgbase}-${release/_/-}.fc21.${arch}.tar -C $P
+  tar xf data.tar.xz -C $P
 
-  rm -rf etc
-  rm -rf usr/share/gnome-control-center
+  rm -vrf $P/etc
+  mv -v $P/usr/share/doc/slack-desktop $P/usr/share/doc/$src
+
+  # slack-desktop needs a file for detecting distro or OSes
+  mkdir -pv $P/install
+  cat <<EOF >> $P/install/initpkg
+ln -sf plamo-release /etc/slackware-release
+EOF
+
 
 ################################
 #      install tweaks
