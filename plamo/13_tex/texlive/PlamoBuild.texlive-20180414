@@ -5,7 +5,7 @@ vers="20180414"
 url="ftp://tug.org/texlive/historic/2018/texlive-${vers}-source.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
-build=B2
+build=B3
 src="texlive-${vers}-source"
 
 PREFIX=/opt/texlive/2018
