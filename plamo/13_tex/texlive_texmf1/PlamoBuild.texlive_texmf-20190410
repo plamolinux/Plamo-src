@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive_texmf'
-vers='20180414'
-url="ftp://tug.org/texlive/historic/2018/texlive-${vers}-texmf.tar.xz"
+vers='20190410'
+url="ftp://tug.org/texlive/historic/2019/texlive-${vers}-texmf.tar.xz"
 verify=""
 arch=noarch
 build=B1
@@ -12,7 +12,7 @@ DOCS=''
 blfspatch=""
 patchfiles=""
 compress=txz
-PREFIX=/opt/texlive/2018
+PREFIX=/opt/texlive/2019
 ##############################################################
 PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
         dvips hbf2gf makeindex metafont metapost mft omega pbibtex

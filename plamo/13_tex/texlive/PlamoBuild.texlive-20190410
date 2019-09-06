@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive'
-vers="20180414"
-url="ftp://tug.org/texlive/historic/2018/texlive-${vers}-source.tar.xz"
+vers="20190410"
+url="ftp://tug.org/texlive/historic/2019/texlive-${vers}-source.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
-build=B3
+build=B1
 src="texlive-${vers}-source"
 
-PREFIX=/opt/texlive/2018
+PREFIX=/opt/texlive/2019
 TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
 
 OPT_CONFIG=(--prefix=${PREFIX}
@@ -19,6 +19,7 @@ OPT_CONFIG=(--prefix=${PREFIX}
 	    --mandir=${PREFIX}/texmf-dist/doc/man
 	    --disable-native-texlive-build
 	    --disable-static --enable-shared
+	    --disable-dvisvgm
 	    --with-system-cairo
 	    --with-system-fontconfig
 	    --with-system-freetype2
@@ -37,13 +38,14 @@ OPT_CONFIG=(--prefix=${PREFIX}
 	    --with-system-zlib
 	    --with-banner-add=' - Plamo')
 DOCS='ChangeLog README README.0overview README.1prerequisites README.2building README.3installing README.4layout README.5configure README.6cross README.7coding'
-blfspatches=(texlive-20180414-source-upstream_fixes-2.patch)
+blfspatches=(texlive-20190410-source-upstream_fixes-1.patch)
 # These patches are
 # + BLFS patch
 # + Arch linux patch (texlive-poppler-0.71.patch luatex-poppler-0.70-const-fixes.patch)
 # + generate by "find texk/web2c/{lua,pdf}texdir -type f | xargs sed -e 's|gTrue|true|g' -e 's|gFalse|false|g' -e 's|GBool|bool|g' -e 's|getCString|c_str|g' -i"
 # + https://github.com/TeX-Live/texlive-source/commit/729755bcb60695221cb368202822fc3181197ef7.patch (0001-cast-types-to-support-new-poppler.patch)
-patchfiles="${blfspatches[@]} texlive-poppler-0.72-fix.patch texlive-poppler-0.71.patch luatex-poppler-0.70-const-fixes.patch 0001-cast-types-to-support-new-poppler.patch"
+patchfiles="${blfspatches[@]}"
+additional_src="pdftoepdf-poppler0.76.0.cc pdftosrc-poppler0.76.0.cc"
 compress=txz
 ##############################################################
 
@@ -78,6 +80,14 @@ if [ $opt_download -eq 1 ] ; then
       wget http://www.linuxfromscratch.org/patches/blfs/svn/$p
     fi
   done
+
+  echo -n "Get additional source from github repository of texlive: "
+  add_url="https://raw.githubusercontent.com/TeX-Live/texlive-source/trunk/texk/web2c/pdftexdir/"
+  for f in $additional_src
+  do
+      wget -O $f $add_url/$f
+  done
+  echo "done."
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -97,9 +107,13 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   # These files are from https://github.com/TeX-Live/texlive-source/tree/f028afd033686b61f214847e84e4ae093f41d233
-  # for poppler 0.72.0
-  cp -v $W/pdftoepdf-poppler0.72.0.cc $S/texk/web2c/pdftexdir/pdftoepdf.cc
-  cp -v $W/pdftosrc-poppler0.72.0.cc  $S/texk/web2c/pdftexdir/pdftosrc.cc
+  # for poppler 0.76.0
+  for f in $additional_src
+  do
+      echo -n "copy $f to $S/texk/web2c/pdftexdir/${f%-*}.cc for using current poppler: "
+      cp -v $W/$f $S/texk/web2c/pdftexdir/${f%-*}.cc
+      echo "done."
+  done
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
