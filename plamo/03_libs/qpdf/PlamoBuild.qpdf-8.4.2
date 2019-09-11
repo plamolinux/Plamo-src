@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qpdf'
-vers='8.2.1'
-url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:a11c1f99753934be7d60c0ab43821bbc"
-verify=""
+vers='8.4.2'
+url="https://github.com/qpdf/qpdf/releases/download/release-qpdf-${vers}/qpdf-${vers}.tar.gz"
+digest=""
+verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='ChangeLog INSTALL LICENSE.txt README-hardening.md README-maintainer.md README-what-to-download.md README-windows-install.txt README-windows.md README.md TODO make_windows_releases make_windows_releases-finish'
