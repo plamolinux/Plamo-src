@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='inkscape'
-vers='0.92.3'
+vers='0.92.4'
 url="https://media.${pkgbase}.org/dl/resources/file/${pkgbase}-${vers}.tar.bz2"
 verify=""
 arch=`uname -m`
@@ -9,9 +9,9 @@ build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG='-DCMAKE_BUILD_TYPE=Release'
 DOCS='AUTHORS COPYING ChangeLog GPL2.txt GPL3.txt INSTALL LGPL2.1.txt NEWS README README.ca.txt README.de.txt README.es.txt README.fr.txt README.it.txt README.osx.txt README.pt_BR.txt README.sk.txt README.sr.txt'
-blfspatches=( "http://www.linuxfromscratch.org/patches/blfs/svn/inkscape-0.92.3-use_versioned_ImageMagick6-1.patch"
-	      "http://www.linuxfromscratch.org/patches/blfs/svn/inkscape-0.92.3-upstream_poppler_fixes-1.patch" )
-patchfiles="inkscape-0.92.3-upstream_poppler_fixes-2.patch"
+blfspatches=( "http://www.linuxfromscratch.org/patches/blfs/svn/inkscape-${vers}-use_versioned_ImageMagick6-1.patch"
+	      "http://www.linuxfromscratch.org/patches/blfs/svn/inkscape-${vers}-upstream_fixes-1.patch" )
+patchfiles=""
 compress=txz
 ##############################################################
 
