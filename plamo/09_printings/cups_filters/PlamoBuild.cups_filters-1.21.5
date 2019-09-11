@@ -3,7 +3,7 @@
 pkgbase='cups_filters'
 vers='1.21.5'
 url="https://www.openprinting.org/download/cups-filters/cups-filters-${vers}.tar.xz"
-digest="md5sum:c777215df39a6db7495a53ef3c41a352"
+digest="md5sum:cdf101d2c0ad6b9fe499395cda3e99c6"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,6 +11,7 @@ src="cups-filters-${vers}"
 OPT_CONFIG="
 	--disable-static
 	--enable-shared
+	--enable-ijs
 	--with-cups-rundir=/run/cups
 	--without-rcdir
 	--docdir=/usr/share/doc/${src}
