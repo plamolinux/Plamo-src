@@ -19,8 +19,9 @@ OPT_CONFIG="
       -DENABLE_MINIBROWSER=ON     \
       -DUSE_WOFF2=OFF             \
       -DUSE_WPE_RENDERER=OFF      \
+      -DUSE_LIBNOTIFY=ON          \
       -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
-      -Wno-dev"
+      -Wno-dev -G Ninja"
 DOCS="NEWS"
 patchfiles=""
 compress=txz
@@ -80,7 +81,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    cmake --build $B
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -93,7 +94,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  DESTDIR=$P cmake --build $B --target install
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
