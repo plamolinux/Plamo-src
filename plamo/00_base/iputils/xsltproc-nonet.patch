@@ -1,0 +1,20 @@
+diff -uNr iputils-s20190709.orig/doc/meson.build iputils-s20190709/doc/meson.build
+--- iputils-s20190709.orig/doc/meson.build	2019-07-10 05:55:49.000000000 +0900
++++ iputils-s20190709/doc/meson.build	2019-09-30 16:57:45.940199878 +0900
+@@ -40,7 +40,6 @@
+ 
+ xsltproc = find_program('xsltproc', required : build_mans or build_html_mans)
+ xsltproc_args = [
+-	'--nonet',
+ 	'--stringparam', 'man.output.quietly', '1',
+ 	'--stringparam', 'funcsynopsis.style', 'ansi',
+ 	'--stringparam', 'man.th.extra1.suppress', '1',
+@@ -58,7 +57,7 @@
+ 	xsltproc_works = true
+ 	foreach doc_target : doc_targets
+ 		xsl = 'http://docbook.sourceforge.net/release/xsl-ns/current/' + doc_target + '/docbook.xsl'
+-		testrun = run_command([xsltproc, '--nonet', xsl])
++		testrun = run_command([xsltproc, xsl])
+ 		if testrun.returncode() != 0
+ 			xsltproc_works = false
+ 			message('WARNING: xsltproc: cannot process ' + xsl)
