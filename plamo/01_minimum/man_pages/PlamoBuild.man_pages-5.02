@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='man_pages'
-vers='5.00'
+vers='5.02'
 url="https://www.kernel.org/pub/linux/docs/man-pages/man-pages-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/docs/man-pages/man-pages-${vers}.tar.sign"
 arch=noarch
