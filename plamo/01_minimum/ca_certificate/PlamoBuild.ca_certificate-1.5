@@ -91,9 +91,12 @@ if [ $opt_package -eq 1 ] ; then
 
   cd $W/$(basename ${url##*/} .tar.xz)
   make install DESTDIR=$P
-  
+
   install -v -d -m755 $P/usr/share/doc/"$pkgbase"-"$vers"/
   install -v -d -m755 $P/etc/pki
+
+  # remove files related systemd
+  rm -rf -v $P/usr/lib/systemd
 
   # docdir
   install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"/
