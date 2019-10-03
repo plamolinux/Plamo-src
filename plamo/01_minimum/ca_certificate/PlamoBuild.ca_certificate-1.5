@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ca_certificate"
-script_vers="1.4"
+script_vers="1.5"
 vers="${script_vers}_$(date +%Y%m%d)"
 url="https://github.com/djlucas/make-ca/releases/download/v${script_vers}/make-ca-${script_vers}.tar.xz"
-digest="md5sum:995896ca8b4ee1f92a4a8fa46585d59d"
+digest="md5sum:0d50d9e0c9ebd6059fe4116353f2d5be"
 cert_url="https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt"
 cacert_url=("http://www.cacert.org/certs/root.crt"
 	    "http://www.cacert.org/certs/class3.crt")
@@ -14,7 +14,7 @@ cacert_fp=("13:5C:EC:36:F4:9C:B8:E9:3B:1A:B2:70:CD:80:88:46:76:CE:8F:33"
 cacert_class=("1" "3")
 verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src=""
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
@@ -91,9 +91,12 @@ if [ $opt_package -eq 1 ] ; then
 
   cd $W/$(basename ${url##*/} .tar.xz)
   make install DESTDIR=$P
-  
+
   install -v -d -m755 $P/usr/share/doc/"$pkgbase"-"$vers"/
   install -v -d -m755 $P/etc/pki
+
+  # remove files related systemd
+  rm -rf -v $P/usr/lib/systemd
 
   # docdir
   install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"/
