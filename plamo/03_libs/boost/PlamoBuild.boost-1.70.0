@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='boost'
-vers='1.65.1'
-url="https://dl.bintray.com/boostorg/release/1.65.1/source/boost_${vers//./_}.tar.bz2"
+vers='1.70.0'
+url="https://dl.bintray.com/boostorg/release/$vers/source/boost_${vers//./_}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
 build=B2
