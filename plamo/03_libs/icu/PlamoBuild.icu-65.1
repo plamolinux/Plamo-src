@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='icu'
-vers='63.1'
-url="http://download.icu-project.org/files/icu4c/${vers}/icu4c-${vers/./_}-src.tgz"
-digest="md5sum:9e40f6055294284df958200e308bce50"
+vers='65.1'
+url="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz"
+verify="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz.asc"
 arch=`uname -m`
 build=B1
 src="icu"
