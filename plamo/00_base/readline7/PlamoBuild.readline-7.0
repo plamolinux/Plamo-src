@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
-pkgbase='readline6'
-basever='6.3'
-patchlevel=8
+pkgbase='readline7'
+basever='7.0'
+patchlevel=5
 if [ $patchlevel -ne 0 ]; then
     vers="$basever"."$patchlevel"
 else
@@ -10,7 +10,7 @@ else
 fi
 url="http://ftp.jaist.ac.jp/pub/GNU/readline/readline-${basever}.tar.gz"
 arch=`uname -m`
-build=P5
+build=B1
 src="readline-${basever}"
 OPT_CONFIG='--disable-static --enable-shared --with-curses'
 DOCS='CHANGELOG COPYING INSTALL NEWS README history.c history.h'
@@ -21,12 +21,12 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 # 
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -43,21 +43,21 @@ else
   done
 fi
 
-# readline ½ãÀµ¤Î patchlevel ÂĞ±ş¥Ñ¥Ã¥Á¤Ë¤Ä¤¤¤Æ¤Ï $patchfiles »ØÄê¤Ê¤·¤Ë¼èÆÀ¤·¡¢
-# Plamo ÆÈ¼«¤ÇÅö¤Æ¤ë¥Ñ¥Ã¥Á¤À¤± $patchfiles ´ÉÍı¤¹¤ë
+# readline ç´”æ­£ã® patchlevel å¯¾å¿œãƒ‘ãƒƒãƒã«ã¤ã„ã¦ã¯ $patchfiles æŒ‡å®šãªã—ã«å–å¾—ã—ã€
+# Plamo ç‹¬è‡ªã§å½“ã¦ã‚‹ãƒ‘ãƒƒãƒã ã‘ $patchfiles ç®¡ç†ã™ã‚‹
 if [ $patchlevel -gt 0 ]; then
     for (( _p=1; _p <= $((10#${patchlevel})); _p++ )); do
         patchfile=${url%/*}/readline-$basever-patches/readline${basever//.}-$(printf "%03d" $_p)
         genuine_patchfiles=($patchfile ${genuine_patchfiles[@]} )
         patchfiles_tmp=(${patchfiles_tmp[@]} ${patchfile##*/})
     done
-    # Plamo ÆÈ¼«¥Ñ¥Ã¥Á¤È½ãÀµ¥Ñ¥Ã¥Á¤Î¥Ş¡¼¥¸
+    # Plamo ç‹¬è‡ªãƒ‘ãƒƒãƒã¨ç´”æ­£ãƒ‘ãƒƒãƒã®ãƒãƒ¼ã‚¸
     patchfiles=(${patchfiles_tmp[@]} ${patchfiles[@]})
 fi
 
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    # readline ½ãÀµ¥Ñ¥Ã¥Á¤Î¼èÆÀ¤Èverify
+    # readline ç´”æ­£ãƒ‘ãƒƒãƒã®å–å¾—ã¨verify
     for patchfile in ${genuine_patchfiles[@]}
     do
         if [ ! -f ${patchfile##*/} ]; then
@@ -122,7 +122,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
   install -d $P/${libdir}
   mv -v $P/usr/${libdir}/lib{readline,history}.so.* $P/${libdir}/
-  mv -v $P/usr/include/readline $P/usr/include/readline6
+  mv -v $P/usr/include/readline $P/usr/include/readline7
   rm -rf $P/usr/${libdir}/
 
 ################################
