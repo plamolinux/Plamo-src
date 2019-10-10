@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qt'
-vers='5.10.1'
+vers='5.12.5'
 url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
-digest="md5sum:7e167b9617e7bd64012daaacb85477af"
+digest="md5sum:d8c9ed842d39f1a5f31a7ab31e4e886c"
 verify=""
 arch=`uname -m`
-build=B2
+build=B3
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG=(-prefix /usr
 	    -archdatadir    /usr/lib/qt5
