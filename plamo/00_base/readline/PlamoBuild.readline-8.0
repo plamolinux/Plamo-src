@@ -10,7 +10,7 @@ else
 fi
 url="http://ftp.jaist.ac.jp/pub/GNU/readline/readline-${basever}.tar.gz"
 arch=`uname -m`
-build=P1
+build=B1
 src="${pkgbase}-${basever}"
 OPT_CONFIG='--disable-static --enable-shared --with-curses'
 DOCS='CHANGELOG COPYING INSTALL NEWS README history.c history.h'
