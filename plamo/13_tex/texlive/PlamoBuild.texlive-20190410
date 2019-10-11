@@ -5,7 +5,7 @@ vers="20190410"
 url="ftp://tug.org/texlive/historic/2019/texlive-${vers}-source.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
-build=B3
+build=B4
 src="texlive-${vers}-source"
 
 PREFIX=/opt/texlive/2019
