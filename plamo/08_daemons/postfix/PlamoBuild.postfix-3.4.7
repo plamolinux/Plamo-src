@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='postfix'
-vers='3.3.2'
+vers='3.4.7'
 url="http://mirror.${pkgbase}.jp/${pkgbase}-release/official/${pkgbase}-${vers}.tar.gz"
 #verify="${url}.sig"
 arch=`uname -m`
@@ -9,8 +9,9 @@ build=B1
 src="${pkgbase}-${vers}"
 CCARGS_OPTS="-DUSE_SASL_AUTH -DHAS_SQLITE -DUSE_TLS -I/usr/include/openssl/"
 AUXLIBS_OPTS="-lsqlite3 -lpthread -lssl -lcrypto"
-DOCS='HISTORY INSTALL IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.10 RELEASE_NOTES-2.11 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-3.0 RELEASE_NOTES-3.1 TLS_LICENSE TLS_TODO pflogsumm_quickfix.txt postfix-install'
-patchfiles=''
+DOCS='HISTORY INSTALL IPv6-ChangeLog LICENSE RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.10 RELEASE_NOTES-2.11 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-3.0 RELEASE_NOTES-3.1 RELEASE_NOTES-3.2 RELEASE_NOTES-3.3 TLS_LICENSE TLS_TODO pflogsumm_quickfix.txt postfix-install'
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/postfix-3.4.7-glibc230_fix-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 ##############################################################
 
@@ -38,7 +39,10 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
+    if [ ! -f ${blfspatch##*/} ]; then
+	wget $blfspatch
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
