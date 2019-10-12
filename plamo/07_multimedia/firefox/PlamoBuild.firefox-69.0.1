@@ -96,8 +96,8 @@ if [ $opt_config -eq 1 ] ; then
       sudo removepkg rustc
   fi
 
+  export PATH="$PATH:$HOME/.cargo/bin"
   if [ -f ~/.cargo/bin/rustc ]; then
-    export PATH="$PATH:$HOME/.cargo/bin"
     if [ x"$rustver" = "x" ]; then
       rustup update
       rustup default stable
