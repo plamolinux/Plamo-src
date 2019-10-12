@@ -11,7 +11,8 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+# for disable failure by undocumented rust macros (for 68.1.1)
+patchfiles='0001-disable-failure-caused-by-undocumented-rust-macros.patch'
 compress=txz
 
 #rustver="1.32.0"
