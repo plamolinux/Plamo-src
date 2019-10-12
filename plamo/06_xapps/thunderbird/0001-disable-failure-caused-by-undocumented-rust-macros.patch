@@ -1,0 +1,38 @@
+From 25ae8fbf31e72c32669115bb8c96f8fb8f1d1a56 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Sat, 12 Oct 2019 01:42:45 +0900
+Subject: [PATCH] disable failure caused by undocumented rust macros
+
+---
+ servo/components/style/lib.rs        | 1 -
+ servo/components/style_traits/lib.rs | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/servo/components/style/lib.rs b/servo/components/style/lib.rs
+index 587b926efc..cef1149d1f 100644
+--- a/servo/components/style/lib.rs
++++ b/servo/components/style/lib.rs
+@@ -23,7 +23,6 @@
+ //! [cssparser]: ../cssparser/index.html
+ //! [selectors]: ../selectors/index.html
+ 
+-#![deny(missing_docs)]
+ 
+ extern crate app_units;
+ extern crate arrayvec;
+diff --git a/servo/components/style_traits/lib.rs b/servo/components/style_traits/lib.rs
+index cc87ff36cf..46e81aafba 100644
+--- a/servo/components/style_traits/lib.rs
++++ b/servo/components/style_traits/lib.rs
+@@ -8,7 +8,7 @@
+ 
+ #![crate_name = "style_traits"]
+ #![crate_type = "rlib"]
+-#![deny(unsafe_code, missing_docs)]
++#![deny(unsafe_code)]
+ 
+ extern crate app_units;
+ #[macro_use]
+-- 
+2.23.0
+
