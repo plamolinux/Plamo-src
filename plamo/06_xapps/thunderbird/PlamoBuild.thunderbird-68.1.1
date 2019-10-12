@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="68.0"
+vers="68.1.1"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
@@ -11,10 +11,11 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+# for disable failure by undocumented rust macros (for 68.1.1)
+patchfiles='0001-disable-failure-caused-by-undocumented-rust-macros.patch'
 compress=txz
 
-#rustver="1.32.0"
+rustver="1.35.0"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -71,8 +72,9 @@ if [ $opt_config -eq 1 ] ; then
       sudo removepkg rustc
   fi
 
+
+  export PATH="$PATH:$HOME/.cargo/bin"
   if [ -f ~/.cargo/bin/rustc ]; then
-    export PATH="$PATH:$HOME/.cargo/bin"
     if [ x"$rustver" = "x" ]; then
       rustup update
       rustup default stable
