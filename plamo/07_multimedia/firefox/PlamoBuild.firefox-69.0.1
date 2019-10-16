@@ -1,25 +1,25 @@
 #!/bin/sh
 unset LS_BLOCK_SIZE
 ##############################################################
-pkgbase='thunderbird'
-vers="68.0"
-url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
-langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
-verify=""
+pkgbase='firefox'
+vers='69.0.1'
+url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
+langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
+#verify="${url}.asc"
+digest="md5sum:74c51e50cd21361c378ba40921c8b626"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+src="firefox-${vers}"
+OPT_CONFIG=
+DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
+patchfiles="${blfspatch##*/}"
 compress=txz
 
-#rustver="1.32.0"
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-
-B=$W/build
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -28,6 +28,7 @@ B=$W/build
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
+B=$W/build
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -43,7 +44,13 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
+  if [ -d $src ]; then
+    rm -rf $src
+  fi
   download_sources
+  if [ ! -f ${blfspatch##*/} ]; then
+    wget ${blfspatch}
+  fi
   if [ ! -f ${langpack_ja##*/} ]; then
     wget $langpack_ja
   fi
@@ -56,12 +63,30 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    patch -p1 < $W/$patch
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
   mkdir -p path
-  ln -sf /usr/bin/python2 path/python
+  if [ ! -h path/python ]; then
+    ln -s /usr/bin/python2 path/python
+  fi
+
+  # for current ICU
+  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
+
+  # branding
+  #
+  sed -i \
+      -e "s|Mozilla|Plamo Linux Project|g" \
+      -e "s|Nightly|Plamo Browser|g" \
+      -e 's|\(.*trademarkInfo.part1.*"\).*">|\1Plamo Linux Project">|g' \
+      browser/branding/unofficial/locales/en-US/*
+
+  cp -v browser/branding/unofficial/locales/en-US/brand.* browser/branding/nightly/locales/en-US/
 
   # setup rust
   cd $W
@@ -71,8 +96,8 @@ if [ $opt_config -eq 1 ] ; then
       sudo removepkg rustc
   fi
 
+  export PATH="$PATH:$HOME/.cargo/bin"
   if [ -f ~/.cargo/bin/rustc ]; then
-    export PATH="$PATH:$HOME/.cargo/bin"
     if [ x"$rustver" = "x" ]; then
       rustup update
       rustup default stable
@@ -87,11 +112,15 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
+  # Fix a problem with certain versions of ICU
+  # sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$W/path:$HOME/.cargo/bin:$PATH"
+  export PATH="$S/path:$HOME/.cargo/bin:$PATH"
+  export CC=clang CXX=clang++ AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
@@ -109,32 +138,31 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
-  # Install langpack
-  sh $W/langpack.sh $W
-  install -Dm644 -v $W/ja.xpi.plamo \
-	  $P/usr/${libdir}/thunderbird/extensions/langpack-ja@thunderbird.mozilla.org.xpi
+  # plugin
+  install -dm755 -v $P/usr/${libdir}/mozilla/plugins
+  ln -sfv ../../mozilla/plugins /usr/${libdir}/firefox/browser
+
+  # config to docdir
+  install -Dm644 -v $W/mozconfig $docdir/$src/mozconfig
 
   # desktop file
-  install -Dm644 -v $W/thunderbird.desktop \
-	  $P/usr/share/applications/thunderbird.desktop
-  install -Dm644 -v $W/thunderbird.desktop \
-	  $docdir/$src/thunderbird.desktop
-
-  # vendor.js (default configuration)
-  install -Dm644 -v $W/vendor.js \
-	  $P/usr/${libdir}/thunderbird/defaults/preferences/vendor.js
-  install -Dm644 -v $W/vendor.js $docdir/$src/vendor.js
+  install -Dm644 -v $W/firefox.desktop $P/usr/share/applications/firefox.desktop
+  install -Dm644 -v $W/firefox.desktop $docdir/$src/firefox.desktop
 
   # icon
   install -dm755 -v $P/usr/share/pixmaps
-  ln -sfv /usr/${libdir}/thunderbird/chrome/icons/default/default256.png \
-     $P/usr/share/pixmaps/thunderbird.png
-  for i in 16 22 24 32 48 256
-  do
-    install -Dm644 comm/mail/branding/nightly/default${i}.png \
-	    $P/usr/share/icons/hicolor/${i}x${i}/apps/thunderbird.png
-  done
-  
+  ln -sfv /usr/${libdir}/firefox/browser/icons/mozicon128.png \
+     $P/usr/share/pixmaps/firefox.png
+
+  # lang pack
+  sh $W/langpack.sh $W
+  install -Dm644 -v $W/ja.xpi.plamo \
+	  $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
+  install -Dm644 -v $W/vendor.js \
+          $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor.js
+  install -Dm644 -v $W/vendor.js \
+	  $docdir/$src/vendor.js
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
