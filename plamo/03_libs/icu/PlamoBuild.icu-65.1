@@ -1,24 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase='harfbuzz'
-vers='2.6.0'
-url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:3e2653d2195d6c18e5cded055c873601"
-verify=""
+pkgbase='icu'
+vers='65.1'
+url="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz"
+verify="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--with-gobject --with-graphite2'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.python THANKS TODO'
+src="icu"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='LICENSE license.html readme.html'
 patchfiles=''
 compress=txz
 ##############################################################
-# graphite2 -> harfbuzz -> graphite2 の順でビルド
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-#
+# 
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -39,44 +37,46 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
+    tar xvf ${url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    if [ ! -f .glibc-2.26.patch ]; then
+	sed -i 's/xlocale/locale/' source/i18n/digitlst.cpp
+	touch .glibc-2.26.patch
     fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
-  cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/source/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+    if [ $? != 0 ]; then
+	echo "configure error. $0 script stop"
+	exit 255
+    fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -j3
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+    cd $B
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+	echo "build error. $0 script stop"
+	exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -91,6 +91,7 @@ if [ $opt_package -eq 1 ] ; then
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
+  src=${pkgbase}-${vers}
   install_tweak
 
 #############################
