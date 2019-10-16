@@ -138,9 +138,6 @@ EOF
     tar xvf $W/${f##*/} --no-same-owner -C $P/usr/share/ghostscript/
   done
 
-  # move doc dir
-  mv -v $P/usr/share/doc/ghostscript/${vers}/* $docdir/$src/
-
   # link to /usr/share/fonts
   mkdir -p $P/usr/share/fonts
   ln -sfv ../ghostscript/fonts $P/usr/share/fonts/gsfonts
@@ -158,7 +155,10 @@ EOF
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-  ln -sv ../ghostscript/${vers}/doc $P/usr/share/doc/${src}/doc
+
+  # move doc dir
+  mv -v $P/usr/share/doc/ghostscript/${vers}/* $docdir/$src/
+  rm -rfv $docdir/ghostscript
 
 #############################
 #   convert symlink to null file and 
