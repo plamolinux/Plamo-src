@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sudo'
-vers='1.8.22'
+vers='1.8.28'
 url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG=('--with-pam' '--with-env-editor'
+OPT_CONFIG=('--with-pam'
 	'--libexecdir=/usr/lib' '--with-rundir=/run/sudo' '--with-env-editor'
 	'--with-all-insults' '--with-secure-path' '--without-sendmail'
 	'--with-vardir=/var/db/sudo'

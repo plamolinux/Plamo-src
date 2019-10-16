@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers='9.27'
+vers='9.50'
 url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:dd531503dbbc524f73528359e2ea145c"
+digest="md5sum:6cea6bae4a7cdfac6ccb09f07f0caf8c"
 #fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
 #	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
 	--with-ijs
@@ -155,7 +155,10 @@ EOF
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-  ln -sv ../ghostscript/${vers}/doc $P/usr/share/doc/${src}/doc
+
+  # move doc dir
+  mv -v $P/usr/share/doc/ghostscript/${vers}/* $docdir/$src/
+  rm -rfv $docdir/ghostscript
 
 #############################
 #   convert symlink to null file and 
