@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.50'
+vers='5.51'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
-build=B1
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-library --disable-systemd"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
-blfs_patch="http://www.linuxfromscratch.org/patches/blfs/svn/bluez-5.50-obexd_without_systemd-1.patch"
-patchfiles="${blfs_patch##*/}"
+# from arch linux
+patchfiles="bluez-5.51-obexd_without_systemd-1.patch refresh_adv_manager_for_non-LE_devices.diff"
 compress=txz
 ##############################################################
 
@@ -56,17 +56,18 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  autoreconf -ivf
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
@@ -87,7 +88,10 @@ if [ $opt_package -eq 1 ] ; then
   install -dm755 -v $P/usr/sbin
   ln -svf ../libexec/bluetooth/bluetoothd $P/usr/sbin/bluetoothd
 
+  # conf
   install -Dm644 -v $S/src/main.conf $P/etc/bluetooth/main.conf
+  install -Dm644 -v $W/btusb.conf $P/etc/modprobe.d/btusb.conf
+  install -Dm644 -v $W/btusb.conf $docdir/$src/btusb.conf
 
   install -dm755 -v $docdir/$src
   install -m644  -v $S/doc/*.txt $docdir/$src/
@@ -100,11 +104,11 @@ if [ $opt_package -eq 1 ] ; then
     install -dm755 -v $P/etc/rc.d/rc"$i".d
     case $i in
       0|1|2|6)
-	ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/K27bluetooth
-	;;
+        ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/K27bluetooth
+        ;;
       3|4|5)
         ln -sfv ../init.d/bluetooth $P/etc/rc.d/rc"$i".d/S35bluetooth
-	;;
+        ;;
     esac
   done
 
