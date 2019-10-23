@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase='proftpd'
-vers='1.3.6'
+vers='1.3.6b'
 url="ftp://ftp.${pkgbase}.org/distrib/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared
 	    --enable-dso --disable-ident
 	    --with-lastlog=/var/log/lastlog
 	    --enable-openssl --with-shared=mod_tls"
 DOCS='COPYING ChangeLog INSTALL NEWS README.AIX README.DSO README.FreeBSD README.IPv6 README.LDAP README.PAM README.Solaris2.5x README.Unixware README.capabilities README.classes README.controls README.cygwin README.facl README.md README.modules README.ports RELEASE_NOTES'
-# There are many bugfixes after releasing 1.3.6
-patchfiles='proftpd-1.3.6-upstream.patch'
+patchfiles=''
+addfiles="proftpd.conf proftpd.init"
 compress=txz
 ##############################################################
 
@@ -45,6 +45,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
