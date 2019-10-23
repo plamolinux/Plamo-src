@@ -1,0 +1,278 @@
+#!/bin/sh
+##############################################################
+pkgbase="chromium"
+vers="77.0.3865.120"
+url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
+launcher_vers="6"
+launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="chromium-${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
+patchfiles="
+	include-memory-in-one_euro_filter.h.patch
+	link-against-harfbuzz-subset.patch
+	fix-wrong-string-initialization-in-LinkedHashSet.patch
+	include-limits-in-web_time_range.cc.patch
+	chromium-widevine.patch
+	chromium-skia-harmony.patch"
+compress=txz
+##############################################################
+
+get_gn_version() {
+    chromium_version=$(curl -s https://omahaproxy.appspot.com/linux)
+    curl -s https://chromium.googlesource.com/chromium/src/+/refs/tags/$chromium_version/DEPS?format=TEXT \
+	| base64 -d | grep -Po "'gn_version': 'git_revision:\K[^']*"
+}
+
+build_gn() {
+    gn_version=$(get_gn_version)
+    echo "*** build gn version $gn_version"
+
+    gn_src=$W/gn
+    gn_url="https://gn.googlesource.com/gn/"
+
+    if [ ! -d $W/gn_src ]; then
+	git clone $gn_url gn_src
+    fi
+
+    cd gn_src
+    git checkout master
+    if git branch | grep build > /dev/null; then
+	git branch -D build
+    fi
+    git checkout -b build $gn_version
+    ./build/gen.py
+    ninja -C out gn
+    if [ $? -eq 0 ]; then
+	cp out/gn $W/gn
+    else
+	echo "gn build error"
+	exit 255
+    fi
+    echo "*** build gn: end"
+}
+
+declare -gA _system_libs=(
+  [ffmpeg]=ffmpeg
+  [flac]=flac
+  [fontconfig]=fontconfig
+  [freetype]=freetype2
+  [harfbuzz-ng]=harfbuzz
+  #[icu]=icu
+  [libdrm]=
+  [libjpeg]=libjpeg
+  #[libpng]=libpng            # https://crbug.com/752403#c10
+  [libvpx]=libvpx
+  [libwebp]=libwebp
+  [libxml]=libxml2
+  [libxslt]=libxslt
+  [opus]=opus
+  #[re2]=re2
+  #[snappy]=snappy
+  [yasm]=
+  #[zlib]=minizip
+)
+_unwanted_bundled_libs=(
+  ${!_system_libs[@]}
+  ${_system_libs[libjpeg]+libjpeg_turbo}
+)
+
+_flags=(
+    'custom_toolchain="//build/toolchain/linux/unbundle:default"'
+    'host_toolchain="//build/toolchain/linux/unbundle:default"'
+    'clang_use_chrome_plugins=false'
+    'is_official_build=true' # implies is_cfi=true on x86_64
+    'treat_warnings_as_errors=false'
+    'fieldtrial_testing_like_official_build=true'
+    'ffmpeg_branding="Chrome"'
+    'proprietary_codecs=true'
+    'rtc_use_pipewire=false'  # we do not have libpipewire 
+    'rtc_link_pipewire=false' # we do not have libpipewire 
+    'link_pulseaudio=true'
+    'use_gnome_keyring=false'
+    'use_sysroot=false'
+    'linux_use_bundled_binutils=false'
+    'use_custom_libcxx=false'
+    'enable_hangout_services_extension=true'
+    'enable_widevine=true'
+    'enable_nacl=false'
+    'enable_swiftshader=false'
+    'symbol_level=0'
+)
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    if [ -d $S ]; then
+    	rm -rf $S
+    fi
+    download_sources
+    if [ ! -f ${launcher_url##*/} ]; then
+	wget $launcher_url
+    fi
+    rm -rf chromium-launcher-${launcher_vers}
+    tar xvf ${launcher_url##*/}
+fi
+
+if [ $opt_config -eq 1 ] ; then
+
+    if [ ! -x $W/gn ]; then
+	build_gn
+    fi
+
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    cd $S
+
+    sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
+	tools/generate_shim_headers/generate_shim_headers.py
+
+    sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
+	third_party/blink/renderer/core/xml/*.cc \
+	third_party/blink/renderer/core/xml/parser/xml_document_parser.cc \
+	third_party/libxml/chromium/libxml_utils.cc
+
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
+
+    mkdir -p third_party/node/linux/node-linux-x64/bin
+    ln -sfv /usr/bin/node third_party/node/linux/node-linux-x64/bin/
+
+    for _lib in ${_unwanted_bundled_libs[@]}; do
+	find "third_party/$_lib" -type f \
+	     \! -path "third_party/$_lib/chromium/*" \
+	     \! -path "third_party/$_lib/google/*" \
+	     \! -path 'third_party/yasm/run_yasm.py' \
+	     \! -regex '.*\.\(gn\|gni\|isolate\)' \
+	     -delete
+    done
+
+    python2 build/linux/unbundle/replace_gn_files.py \
+	--system-libraries "${!_system_libs[@]}"
+fi
+
+if [ $opt_build -eq 1 ] ; then
+
+    echo "*** Build chromium"
+    cd $S
+    #ninja -v -C out/Release -t clean
+    export CC=clang
+    export CXX=clang++
+    export AR=ar
+    export NM=nm
+
+    CFLAGS+='   -Wno-builtin-macro-redefined -fno-unwind-tables -fno-asynchronous-unwind-tables'
+    CXXFLAGS+=' -Wno-builtin-macro-redefined -fno-unwind-tables -fno-asynchronous-unwind-tables'
+    CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
+
+    $W/gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
+    # ninja -v -C out/Release chrome chrome_sandbox chromedriver
+    ninja -C out/Release chrome chrome_sandbox chromedriver
+
+    cd $W
+    echo "*** Build chromium launcher"
+    make -C chromium-launcher-${launcher_vers}
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  echo "*** Installing chromium-launcher"
+  cd chromium-launcher-${launcher_vers}
+  make PREFIX=/usr DESTDIR=$P install
+
+  echo "*** Installing chromium"
+  cd $S
+
+  OUTDIR="out/Release"
+  INSTALLDIR="/usr/lib/chromium"
+
+  install -Dm755 -v $OUTDIR/chrome $P/$INSTALLDIR/chromium
+  install -Dm4755 -v $OUTDIR/chrome $P/$INSTALLDIR/chrome-sandbox
+  install -d -v $P/usr/bin
+
+
+  install -Dm644 -v chrome/installer/linux/common/desktop.template \
+	  $P/usr/share/applications/chromium.desktop
+  install -Dm644 -v chrome/app/resources/manpage.1.in \
+	  $P/usr/share/man/man1/chromium.1
+
+  sed -i \
+      -e "s/@@MENUNAME@@/Chromium/g" \
+      -e "s/@@PACKAGE@@/chromium/g" \
+      -e "s/@@USR_BIN_SYMLINK_NAME@@/chromium/g" \
+      "$P/usr/share/applications/chromium.desktop" \
+      "$P/usr/share/man/man1/chromium.1"
+
+  cp out/Release/{chrome_{100,200}_percent,resources}.pak \
+     out/Release/{*.bin,chromedriver} \
+     "$P/$INSTALLDIR"
+  install -Dm644 -t "$P/$INSTALLDIR/locales" out/Release/locales/*.pak
+  ln -sfv $INSTALLDIR/chromedriver $P/usr/bin/chromedriver
+
+  if [[ -z ${_system_libs[icu]+set} ]]; then
+      cp -v out/Release/icudtl.dat "$P/$INSTALLDIR"
+  fi
+
+  for size in 22 24 48 64 128 256; do
+      install -Dm644 -v "chrome/app/theme/chromium/product_logo_$size.png" \
+	      "$P/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
+  done
+
+  for size in 16 32; do
+      install -Dm644 -v "chrome/app/theme/default_100_percent/chromium/product_logo_$size.png" \
+	      "$P/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
+  done
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
