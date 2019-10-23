@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="77.0.3865.120"
+vers="78.0.3904.70"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
@@ -13,10 +13,10 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	include-memory-in-one_euro_filter.h.patch
-	link-against-harfbuzz-subset.patch
-	fix-wrong-string-initialization-in-LinkedHashSet.patch
-	include-limits-in-web_time_range.cc.patch
+	add-missing-include-for-unique_ptr.patch
+	dns_util-make-DohUpgradeEntry-non-const.patch
+	fix-shutdown-crash-in-ProfileManager.patch
+	chromium-system-icu.patch
 	chromium-widevine.patch
 	chromium-skia-harmony.patch"
 compress=txz
@@ -62,11 +62,11 @@ declare -gA _system_libs=(
   [fontconfig]=fontconfig
   [freetype]=freetype2
   [harfbuzz-ng]=harfbuzz
-  #[icu]=icu
+  [icu]=icu
   [libdrm]=
   [libjpeg]=libjpeg
   #[libpng]=libpng            # https://crbug.com/752403#c10
-  [libvpx]=libvpx
+  #[libvpx]=libvpx
   [libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
@@ -192,8 +192,8 @@ if [ $opt_build -eq 1 ] ; then
     export AR=ar
     export NM=nm
 
-    CFLAGS+='   -Wno-builtin-macro-redefined -fno-unwind-tables -fno-asynchronous-unwind-tables'
-    CXXFLAGS+=' -Wno-builtin-macro-redefined -fno-unwind-tables -fno-asynchronous-unwind-tables'
+    CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
+    CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
     CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
 
     $W/gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
