@@ -17,10 +17,26 @@ patchfiles="
 	dns_util-make-DohUpgradeEntry-non-const.patch
 	fix-shutdown-crash-in-ProfileManager.patch
 	chromium-system-icu.patch
+	fix-spammy-unique-font-matching-log.patch
 	chromium-widevine.patch
-	chromium-skia-harmony.patch"
+	chromium-skia-harmony.patch
+	u16_next.patch" # I don't know the reasen that build is failed because of missing ";"
+                        # in third_party/blink/renderer/core/dom/document.cc at 78.0.3904.70.
+                        # why on arch linux build successfully? (they have no patch)
 compress=txz
 ##############################################################
+
+# /etc/sysconfig/google_api_keys に Google から取得した
+# $GOOGLE_API_KEY
+# $GOOGLE_DEFAULT_CLIENT_ID
+# $GOOGLE_DEFAULT_CLIENT_SECRET
+# がある場合はそれを使ってビルドする
+# 取得は
+# https://www.chromium.org/developers/how-tos/api-keys
+# 参照。
+if [ -f /etc/sysconfig/google_api_keys ]; then
+    . /etc/sysconfig/google_api_keys
+fi
 
 get_gn_version() {
     chromium_version=$(curl -s https://omahaproxy.appspot.com/linux)
@@ -102,6 +118,12 @@ _flags=(
     'enable_nacl=false'
     'enable_swiftshader=false'
     'symbol_level=0'
+)
+
+_api_flags=(
+    "google_api_key=\"${GOOGLE_API_KEY}\""
+    "google_default_client_id=\"${GOOGLE_DEFAULT_CLIENT_ID}\""
+    "google_default_client_secret=\"${GOOGLE_DEFAULT_CLIENT_SECRET}\""
 )
 
 source /usr/share/plamobuild_functions.sh
@@ -196,7 +218,7 @@ if [ $opt_build -eq 1 ] ; then
     CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
     CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
 
-    $W/gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
+    $W/gn gen out/Release --args="${_flags[*]} ${_api_flags[*]}" --script-executable=/usr/bin/python2
     # ninja -v -C out/Release chrome chrome_sandbox chromedriver
     ninja -C out/Release chrome chrome_sandbox chromedriver
 
@@ -212,6 +234,11 @@ if [ $opt_package -eq 1 ] ; then
   echo "*** Installing chromium-launcher"
   cd chromium-launcher-${launcher_vers}
   make PREFIX=/usr DESTDIR=$P install
+
+  echo "*** Installing a wrapper script for chromium-launcher of Plamo"
+  ( cd $P/usr/bin && mv -v chromium chromium-bin )
+  install -Dm755 -v $W/chromium.sh $P/usr/bin/chromium
+  install -Dm644 -v $W/chromium.sh $docdir/$src/chromium.sh
 
   echo "*** Installing chromium"
   cd $S
