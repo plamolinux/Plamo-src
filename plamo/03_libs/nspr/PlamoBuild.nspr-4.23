@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nspr'
-vers='4.21'
+vers='4.23'
 url="https://ftp.mozilla.org/pub/nspr/releases/v${vers}/src/${pkgbase}-${vers}.tar.gz"
 verify=""
-digest="md5sum:b865586f19912a50acc3755d8a45dbaa"
+digest="md5sum:90af0450423b0588f0eba6255c07ab79"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -59,7 +59,7 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
