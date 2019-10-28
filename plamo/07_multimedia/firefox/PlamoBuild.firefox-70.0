@@ -2,18 +2,19 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='69.0.1'
+vers='70.0'
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 #verify="${url}.asc"
-digest="md5sum:74c51e50cd21361c378ba40921c8b626"
+digest="sha256sum:cd9f2902753831c07c4b2ee64f7826f33ca1123add6440dc34abe3ff173a0cc6"
 arch=`uname -m`
 build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-${vers}-system_graphite2_harfbuzz-1.patch"
-patchfiles="${blfspatch##*/}"
+#blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-68.2.0esr-system_graphite2_harfbuzz-1.patch"
+#patchfiles="${blfspatch##*/}"
+addfiles="firefox.desktop langpack.sh mozconfig vendor.js"
 compress=txz
 
 rustver=""
@@ -57,6 +58,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
