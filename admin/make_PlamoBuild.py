@@ -90,6 +90,8 @@ src="{3}"
 OPT_CONFIG="{6}"
 DOCS="{4}"
 patchfiles="{5}"
+# specifies files that are not in source archive and patchfiles
+addfiles=""
 compress=txz
 ##############################################################
 '''.format(self.url, self.basename, self.version, self.srcdir, self.readmes, self.patches, opt_config)
@@ -126,6 +128,15 @@ fi
     def copy_source(self):
         self.config = '''
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
@@ -144,6 +155,15 @@ if [ $opt_config -eq 1 ] ; then
     def not_copy_source(self):
         self.config = '''
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
