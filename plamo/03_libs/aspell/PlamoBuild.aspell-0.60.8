@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='aspell'
-vers='0.60.6.1'
+vers='0.60.8'
 majorvers="0.60"
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="$url.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ABOUT-NLS COPYING README TODO'
@@ -54,14 +54,10 @@ if [ $opt_config -eq 1 ] ; then
   #   sh ./autogen.sh
   # fi
 
-  # for gcc7
-  sed -i '/ top.do_check ==/s/top.do_check/*&/' modules/filter/tex.cpp
-  sed -i '/word ==/s/word/*&/'                  prog/check_funs.cpp
-
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
