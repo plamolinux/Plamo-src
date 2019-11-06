@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B1
 src="tiff-${vers}"
-OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libtiff-${vers} -G Ninja"
+OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/tiff-${vers} -G Ninja"
 DOCS="ChangeLog HOWTO-RELEASE README.md RELEASE-DATE TODO"
 patchfiles=""
 compress=txz
