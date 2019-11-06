@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="tiff"
-vers="4.0.10"
-url="url=http://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz"
-verify=""
+vers="4.1.0"
+url="http://download.osgeo.org/libtiff/tiff-${vers}.tar.gz"
+verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
-src="tiff-4.0.10"
-OPT_CONFIG=""
+src="tiff-${vers}"
+OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/tiff-${vers} -G Ninja"
 DOCS="ChangeLog HOWTO-RELEASE README.md RELEASE-DATE TODO"
 patchfiles=""
 compress=txz
@@ -52,9 +52,7 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
@@ -68,7 +66,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -81,7 +79,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
