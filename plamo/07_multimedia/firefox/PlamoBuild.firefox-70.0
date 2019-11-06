@@ -8,7 +8,7 @@ langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/x
 #verify="${url}.asc"
 digest="sha256sum:cd9f2902753831c07c4b2ee64f7826f33ca1123add6440dc34abe3ff173a0cc6"
 arch=`uname -m`
-build=B1
+build=B2
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
@@ -160,18 +160,26 @@ if [ $opt_package -eq 1 ] ; then
   install -Dm644 -v $W/firefox.desktop $docdir/$src/firefox.desktop
 
   # icon
-  install -dm755 -v $P/usr/share/pixmaps
-  ln -sfv /usr/${libdir}/firefox/browser/icons/mozicon128.png \
-     $P/usr/share/pixmaps/firefox.png
+  for i in 16 22 24 32 48 64 128 256
+  do
+      install -Dm644 -v $S/browser/branding/nightly/default$i.png \
+              $P/usr/share/icons/hicolor/${i}x${i}/apps/firefox.png
+  done
+  install -Dvm644 browser/branding/official/content/about-logo.png \
+          $P/usr/share/icons/hicolor/192x192/apps/firefox.png
+  install -Dvm644 browser/branding/official/content/about-logo@2x.png \
+          $P/usr/share/icons/hicolor/384x384/apps/firefox.png
+  install -Dvm644 browser/branding/official/content/identity-icons-brand.svg \
+          $P/usr/share/icons/hicolor/symbolic/apps/firefox-symbolic.svg
 
   # lang pack
   sh $W/langpack.sh $W
   install -Dm644 -v $W/ja.xpi.plamo \
-	  $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
+          $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
   install -Dm644 -v $W/vendor.js \
           $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor.js
   install -Dm644 -v $W/vendor.js \
-	  $docdir/$src/vendor.js
+          $docdir/$src/vendor.js
 
 ################################
 #      install tweaks
