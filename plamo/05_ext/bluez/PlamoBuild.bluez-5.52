@@ -1,16 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.51'
+vers='5.52'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-library --disable-systemd"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
 # from arch linux
 patchfiles="bluez-5.51-obexd_without_systemd-1.patch refresh_adv_manager_for_non-LE_devices.diff"
+addfiles="bluetooth.config bluetooth.init btusb.conf"
 compress=txz
 ##############################################################
 
@@ -45,6 +46,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
