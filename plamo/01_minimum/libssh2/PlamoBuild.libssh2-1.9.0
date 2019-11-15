@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libssh2'
-vers='1.8.0'
+vers='1.9.0'
 url="https://www.${pkgbase}.org/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING ChangeLog NEWS README RELEASE-NOTES'
-patchfiles=''
+patchfiles='CVE-2019-17498.patch'
+addfiles=''
 compress=txz
 ##############################################################
 
@@ -41,6 +42,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
