@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Python'
-vers='3.7.3'
+vers='3.7.5'
 url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 # pip,setuptools は無効化
 OPT_CONFIG="--disable-static --enable-shared
