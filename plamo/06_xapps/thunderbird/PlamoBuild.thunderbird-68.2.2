@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="68.1.1"
+vers="68.2.2"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
@@ -11,11 +11,11 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
-# for disable failure by undocumented rust macros (for 68.1.1)
-patchfiles='0001-disable-failure-caused-by-undocumented-rust-macros.patch'
+patchfiles='thunderbird-rust-1.39.patch'
+addfiles=''
 compress=txz
 
-rustver="1.35.0"
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -51,6 +51,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
