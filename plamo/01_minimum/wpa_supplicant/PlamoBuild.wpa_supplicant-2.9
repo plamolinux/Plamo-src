@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wpa_supplicant'
-vers='2.7'
+vers='2.9'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -10,7 +10,9 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README'
 blfspatch=""
-patchfiles=""
+# https://w1.fi/security/2019-7/ap-mode-pmf-disconnection-protection-bypass.txt
+patchfiles="0001-AP-Silently-ignore-management-frame-from-unexpected-.patch"
+addfiles="config ifconfig_wlan0-sample wpa.service"
 compress=txz
 ##############################################################
 
@@ -45,6 +47,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
