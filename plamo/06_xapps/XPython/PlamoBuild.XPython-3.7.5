@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='XPython'
-vers='3.7.3'
+vers='3.7.5'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="Python-${vers}"
 OPT_CONFIG="--enable-shared --enable-optimizations
 	--with-system-expat --with-system-ffi
