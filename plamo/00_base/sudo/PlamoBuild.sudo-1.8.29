@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sudo'
-vers='1.8.28'
+vers='1.8.29'
 url="http://www.sudo.ws/dist/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=('--with-pam'
 	'--libexecdir=/usr/lib' '--with-rundir=/run/sudo' '--with-env-editor'
@@ -15,6 +15,7 @@ OPT_CONFIG=('--with-pam'
 	"--docdir=/usr/share/doc/${src}")
 DOCS='ABOUT-NLS ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
 patchfiles=''
+addfiles="pam.sudo"
 compress=txz
 ##############################################################
 
@@ -46,6 +47,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
