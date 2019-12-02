@@ -87,6 +87,8 @@
     ;(menu-bar-mode 0)
     ;;; 色付け
     (global-font-lock-mode 1)
+    ;;; Terminal が黒背景の時見やすくする
+    ;(set-terminal-parameter nil 'background-mode 'dark)
     ))
 
 ;;; ステータスラインに時間を表示する
