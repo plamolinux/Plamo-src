@@ -20,6 +20,12 @@ sed -i \
     -e 's|\(.*trademarkInfo.part1.*"\).*">|\1Plamo Linux Project">|g' \
     langpack/browser/chrome/ja/locale/branding/brand.*
 
+sed -i \
+    -e "s|-brand-shorter-name = Firefox|-brand-shorter-name = Plamo Browser|g" \
+    -e "s|-brand-short-name = Firefox|-brand-short-name = Plamo Browser|g" \
+    -e "s|-brand-full-name = Firefox|-brand-full-name = Plamo Browser|g" \
+    langpack/browser/localization/ja/branding/brand.ftl
+
 cd $W/langpack
 zip -r9mX ../$langpack.plamo *
 
