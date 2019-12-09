@@ -9,7 +9,7 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
-BUILD_TYPE=(apache cgi)
+BUILD_TYPE=(cgi apache)
 DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.md'
 patchfiles=''
 addfiles="php7.conf php-fpm.init"
@@ -157,7 +157,7 @@ if [ $opt_build -eq 1 ] ; then
   for t in ${BUILD_TYPE[@]}
   do
     pushd $B/$t
-    export LDFLAGS='-Wl,--no-as-needed'
+    export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
       echo "build error. $0 script stop"
@@ -180,7 +180,7 @@ if [ $opt_package -eq 1 ] ; then
   do
       echo "==== Installing a part of $t ===="
       cd $B/$t
-      export LDFLAGS='-Wl,--no-as-needed'
+      export LDFLAGS='-Wl,--as-needed'
       make install INSTALL_ROOT=$P
   done
 
@@ -234,7 +234,7 @@ EOF
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-  install_tweak
+  NO_STRIP=1 install_tweak
 
 #############################
 #   convert symlink to null file and 
