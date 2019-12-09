@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iproute2'
-vers='4.20.0'
+vers='5.4.0'
 url="https://www.kernel.org/pub/linux/utils/net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-${vers}.tar.sign"
 arch=`uname -m`
