@@ -157,7 +157,7 @@ if [ $opt_build -eq 1 ] ; then
   for t in ${BUILD_TYPE[@]}
   do
     pushd $B/$t
-    #export LDFLAGS='-Wl,--as-needed'
+    export LDFLAGS='-Wl,--no-as-needed'
     make -j3
     if [ $? != 0 ]; then
       echo "build error. $0 script stop"
@@ -180,7 +180,7 @@ if [ $opt_package -eq 1 ] ; then
   do
       echo "==== Installing a part of $t ===="
       cd $B/$t
-      #export LDFLAGS='-Wl,--as-needed'
+      export LDFLAGS='-Wl,--no-as-needed'
       make install INSTALL_ROOT=$P
   done
 
