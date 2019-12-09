@@ -234,7 +234,7 @@ EOF
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-  NO_STRIP=1 install_tweak
+  install_tweak
 
 #############################
 #   convert symlink to null file and 
