@@ -21,21 +21,26 @@ source /usr/share/plamobuild_functions.sh
 # 共通オプション
 OPT_CONFIG=("${OPT_CONFIG[@]}"
 	    --srcdir=$S
+	    --config-cache
+	    --prefix=/usr
+	    --localstatedir=/var
 	    --with-libdir=$libdir
 	    --sysconfdir=/etc/php
 	    --with-layout=GNU
 	    --with-config-file-path=/etc/php
 	    --with-config-file-scan-dir=/etc/php/conf.d
-	    --disable-rpath)
+	    --disable-rpath
+	    --mandir=/usr/share/man)
 
 OPT_MODULE=(--enable-bcmath=shared
 	    --enable-calendar=shared
 	    --enable-dba=shared
 	    --enable-exif=shared
 	    --enable-ftp=shared
+	    --enable-gd=shared
 	    --enable-intl=shared
 	    --enable-mysqlnd
-	    --enable-mbstring=shared
+	    --enable-mbstring
 	    --enable-pcntl
 	    --enable-shmop=shared
 	    --enable-soap=shared
@@ -45,15 +50,18 @@ OPT_MODULE=(--enable-bcmath=shared
 	    --enable-sysvshm=shared
 	    --with-bz2=shared
 	    --with-curl=shared
-	    --enable-gd=shared
+	    --with-db4
+	    --with-enchant=shared
+	    --with-external-pcre
 	    --with-freetype
-	    --with-jpeg
-	    --with-webp
+	    --with-gdbm
 	    --with-gettext=shared
-	    --enable-gd-jis-conv
 	    --with-gmp=shared
 	    --with-iconv=shared
+	    --with-jpeg
 	    --with-ldap=shared
+	    --with-webp
+	    --enable-gd-jis-conv
 	    --with-pspell=shared
 	    --with-xmlrpc=shared
 	    --with-mhash
@@ -62,9 +70,7 @@ OPT_MODULE=(--enable-bcmath=shared
 	    --with-readline
 	    --with-zlib
 	    --with-gdbm
-	    --with-external-pcre
 	    --with-zip=shared
-	    --with-enchant=shared
 	    --with-pdo-sqlite=shared
 	    --with-sodium=shared
 	    --with-sqlite3=shared
@@ -143,7 +149,7 @@ if [ $opt_config -eq 1 ] ; then
     fi
 
     echo "==== Configure $t ===="
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${CONFIG[@]}
+    $S/configure ${CONFIG[@]}
     
     if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
