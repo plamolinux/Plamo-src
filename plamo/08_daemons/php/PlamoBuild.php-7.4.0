@@ -6,10 +6,10 @@ url="https://www.php.net/distributions/php-${vers}.tar.xz"
 verify="${url}.asc"
 #digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=()
-BUILD_TYPE=(cgi apache)
+BUILD_TYPE=(apache cgi)
 DOCS='INSTALL LICENSE NEWS README.EXT_SKEL README.GIT-RULES README.MAILINGLIST_RULES README.NEW-OUTPUT-API README.PARAMETER_PARSING_API README.REDIST.BINS README.RELEASE_PROCESS README.SELF-CONTAINED-EXTENSIONS README.STREAMS README.SUBMITTING_PATCH README.TESTING README.TESTING2 README.UNIX-BUILD-SYSTEM README.WIN32-BUILD-SYSTEM README.md'
 patchfiles=''
 addfiles="php7.conf php-fpm.init"
@@ -189,7 +189,7 @@ if [ $opt_package -eq 1 ] ; then
   ( cd $P ; rm -rfv .channels .depdb .filemap .lock .registry .depdblock )
   rm -rfv $P/var
 
-  ln -sfv phar.phar $P/usr/bin/phar
+  #ln -sfv phar.phar $P/usr/bin/phar
 
   # config for php
   install -Dm644 -v $S/php.ini-production $P/etc/php/php.ini.dist
