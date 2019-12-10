@@ -176,13 +176,13 @@ if [ $opt_package -eq 1 ] ; then
   install -dm755 -v $P/etc/httpd
   cp -v /etc/httpd/original/httpd.conf $P/etc/httpd/
 
-  for t in ${BUILD_TYPE[@]}
-  do
-      echo "==== Installing a part of $t ===="
-      cd $B/$t
-      export LDFLAGS='-Wl,--as-needed'
-      make install INSTALL_ROOT=$P
-  done
+  # cgi, fpm, modules
+  cd $B/cgi
+  export LDFLAGS='-Wl,--as-needed'
+  make install INSTALL_ROOT=$P
+
+  # apache module
+  install -Dm755 $B/apache/libs/libphp7.so $P/usr/${libdir}/httpd/modules/libphp7.so
 
   # delete unneeded files
   rm -fv $P/etc/httpd/httpd.conf*
