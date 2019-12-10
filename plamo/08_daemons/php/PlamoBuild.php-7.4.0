@@ -50,6 +50,7 @@ OPT_CONFIG=(--srcdir=$B
 	    --with-enchant=shared
 	    --with-external-pcre
 	    --with-ffi=shared
+	    --with-freetype
 	    --with-gdbm
 	    --with-gettext=shared
 	    --with-gmp=shared
