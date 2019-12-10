@@ -20,8 +20,7 @@ compress=txz
 source /usr/share/plamobuild_functions.sh
 
 # 共通オプション
-OPT_CONFIG=("${OPT_CONFIG[@]}"
-	    --srcdir=$B
+OPT_CONFIG=(--srcdir=$B
 	    --config-cache
 	    --prefix=/usr
 	    --sysconfdir=/etc/php
@@ -30,10 +29,8 @@ OPT_CONFIG=("${OPT_CONFIG[@]}"
 	    --with-config-file-path=/etc/php
 	    --with-config-file-scan-dir=/etc/php/conf.d
 	    --disable-rpath
-	    --mandir=/usr/share/man)
-
-# 拡張
-OPT_MODULE=(--enable-bcmath=shared
+	    --mandir=/usr/share/man
+	    --enable-bcmath=shared
 	    --enable-calendar=shared
 	    --enable-dba=shared
 	    --enable-exif=shared
@@ -72,20 +69,15 @@ OPT_MODULE=(--enable-bcmath=shared
 	    --with-xmlrpc=shared
 	    --with-xsl=shared
 	    --with-zip=shared
-	    --with-zlib)
-
-OPT_CONFIG_cgi=(--enable-cgi
-		--enable-fpm
-		--with-fpm-acl
-		--with-fpm-user=www
-		--with-fpm-group=apache
-		--enable-embed=shared
-		${OPT_MODULE[@]})
-
-OPT_CONFIG_apache=(--with-apxs2=/usr/bin/apxs
-		   ${OPT_MODULE[@]})
+	    --with-zlib
+	    --enable-fpm
+	    --with-fpm-acl
+	    --with-fpm-user=www
+	    --with-fpm-group=apache
+	    --with-apxs2=/usr/bin/apxs)
 
 export EXTENSION_DIR=/usr/${libdir}/php/modules
+export CXXFLAGS="$CXXFLAGS -DU_USING_ICU_NAMESPACE=1"
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -123,41 +115,23 @@ if [ $opt_config -eq 1 ] ; then
         patch -p1 < $W/$patch
     done
 
-    mkdir cgi apache
+    sed -i "s|build$|php/build|" scripts/Makefile.frag
+    sed -i "s|build\"$|php/build\"|" scripts/phpize.in
 
-    echo "=== configure cgi/fpm ==="
-    pushd cgi
-    ln -s ../configure
-    ./configure ${OPT_CONFIG[@]} ${OPT_CONFIG_cgi[@]}
+    ./configure ${OPT_CONFIG[@]}
     if [ $? != 0 ]; then
       echo "configure error. $0 script stop"
       exit 255
     fi
-    popd
-
-    echo "=== configure apache ==="
-    pushd apache
-    ln -s ../configure
-    ./configure ${OPT_CONFIG[@]} ${OPT_CONFIG_apache[@]}
-    if [ $? != 0 ]; then
-      echo "configure error. $0 script stop"
-      exit 255
-    fi
-    popd
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    for t in ${BUILD_TYPE[@]}
-    do
-	cd $B/$t
-	echo "=== build $t ==="
-	export LDFLAGS='-Wl,--as-needed'
-	make
-	if [ $? != 0 ]; then
-            echo "build error. $0 script stop"
-            exit 255
-	fi
-    done
+    cd $B/$t
+    make -j3
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -165,41 +139,41 @@ if [ $opt_package -eq 1 ] ; then
     if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
     cd $B
 
-    pushd cgi
-    make -j1 INSTALL_ROOT=$P install-{modules,cli,build,headers,programs,pharcmd}
-    make -j1 INSTALL_ROOT=$P install-cgi
-    make -j1 INSTALL_ROOT=$P install-fpm
-    install -D -m644 -v $B/php.ini-production $P/etc/php/php.ini
+    # install dummy httpd.conf
+    echo "Install dummy apache httpd.conf"
+    install -dm755 -v $P/etc/httpd
+    cp -v /etc/httpd/original/httpd.conf $P/etc/httpd/
+
+    make -j1 INSTALL_ROOT=$P install
+    install -D -m644 -v $B/php.ini-production $P/etc/php/php.ini.dist
     install -d -m755 -v $P/etc/php/conf.d/
-    popd
 
-    pushd apache
-    install -Dm755 libs/libphp7.so $P/usr/${libdir}/httpd/modules/libphp7.so
-    popd
-
+    # delete unneeded files
+    rm -fv $P/etc/httpd/httpd.conf*
     ( cd $P ; rm -rfv .channels .depdb .filemap .lock .registry .depdblock )
     rm -rfv $P/var
+    rm -fv $P/usr/${libdir}/php/extensions/*.a
 
     install -Dm644 -v $W/php7.conf $P/etc/httpd/extra.dist/php7.conf
-  install -Dm644 -v $W/php7.conf $docdir/$src/php7.conf
+    install -Dm644 -v $W/php7.conf $docdir/$src/php7.conf
 
-  # php-fpm init
-  install -Dm644 -v $W/php-fpm.init $P/etc/rc.d/init.d/php-fpm
-  for i in $(seq 0 6)
-  do
-    install -dm755 -v $P/etc/rc.d/rc"$i".d
-    case $i in
-      0|1|2|6)
-        ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/K28php-fpm
-	;;
-      3|4|5)
-	ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/S32php-fpm
-	;;
-    esac
-  done
+    # php-fpm init
+    install -Dm644 -v $W/php-fpm.init $P/etc/rc.d/init.d/php-fpm
+    for i in $(seq 0 6)
+    do
+	install -dm755 -v $P/etc/rc.d/rc"$i".d
+	case $i in
+	    0|1|2|6)
+		ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/K28php-fpm
+		;;
+	    3|4|5)
+		ln -sfv ../init.d/php-fpm $P/etc/rc.d/rc"$i".d/S32php-fpm
+		;;
+	esac
+    done
 
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
+    mkdir -p $P/install
+    cat <<EOF >> $P/install/initpkg
 if [ ! -f /etc/httpd/extra/php7.conf ]; then
   ( cd /etc/httpd ; cp extra.dist/php7.conf extra/php7.conf )
 fi
@@ -215,21 +189,21 @@ fi
 EOF
 
 
-################################
-#      install tweaks
-#  strip binaries, delete locale except ja, compress man,
-#  install docs and patches, compress them and  chown root.root
-################################
-  install_tweak
+    ################################
+    #      install tweaks
+    #  strip binaries, delete locale except ja, compress man,
+    #  install docs and patches, compress them and  chown root.root
+    ################################
+    install_tweak
 
-#############################
-#   convert symlink to null file and
-#   add "ln -sf" command into install/doinst.sh
-################################
-  convert_links
+    #############################
+    #   convert symlink to null file and
+    #   add "ln -sf" command into install/doinst.sh
+    ################################
+    convert_links
 
-  cd $P
-  /sbin/makepkg ../$pkg.$compress <<EOF
+    cd $P
+    /sbin/makepkg ../$pkg.$compress <<EOF
 y
 1
 EOF
