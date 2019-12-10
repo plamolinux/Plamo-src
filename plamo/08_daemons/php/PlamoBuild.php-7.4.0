@@ -179,7 +179,9 @@ if [ $opt_package -eq 1 ] ; then
   # cgi, fpm, modules
   cd $B/cgi
   export LDFLAGS='-Wl,--as-needed'
-  make install INSTALL_ROOT=$P
+  make -j1 INSTALL_ROOT=$P install-{modules,cli,build,headers,programs,pharcmd}
+  make -j1 INSTALL_ROOT=$P install-cgi
+  make -j1 INSTALL_ROOT=$P install-fpm
 
   # apache module
   install -Dm755 $B/apache/libs/libphp7.so $P/usr/${libdir}/httpd/modules/libphp7.so
