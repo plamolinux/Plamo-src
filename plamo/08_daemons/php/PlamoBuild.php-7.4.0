@@ -19,12 +19,13 @@ compress=txz
 source /usr/share/plamobuild_functions.sh
 
 # 共通オプション
+# remove   --with-libdir=$libdir
+# this is --with-libdir=$libdir/php ?? I dont know
 OPT_CONFIG=("${OPT_CONFIG[@]}"
 	    --srcdir=$B
 	    --config-cache
 	    --prefix=/usr
 	    --localstatedir=/var
-	    --with-libdir=$libdir
 	    --sysconfdir=/etc/php
 	    --with-layout=GNU
 	    --with-config-file-path=/etc/php
