@@ -1,13 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xf86_video_intel"
-vers="20190723"
-url="http://anduin.linuxfromscratch.org/BLFS/xf86-video-intel/xf86-video-intel-${vers}.tar.xz"
+vers=""
+#url="http://anduin.linuxfromscratch.org/BLFS/xf86-video-intel/xf86-video-intel-${vers}.tar.xz"
+url="https://anongit.freedesktop.org/git/xorg/driver/xf86-video-intel.git"
+commitid="f66d39544bb8339130c96d282a80f87ca1606caf"
 verify=""
-digest="md5sum:2a57bf1548916305bdb8e092b07dfc35"
+digest=""
 arch=`uname -m`
 build=B1
-src="xf86-video-intel-${vers}"
+#src="xf86-video-intel-${vers}"
+src="xf86-video-intel"
 OPT_CONFIG="--enable-kms-only --enable-uxa --with-default-dri=3"
 DOCS="AUTHORS COPYING NEWS README meson_options.txt"
 patchfiles=""
@@ -38,6 +41,13 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+fi
+
+if [ $opt_download -ne 1 -a -n $commitid ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
 fi
 
 if [ $opt_config -eq 1 ] ; then
