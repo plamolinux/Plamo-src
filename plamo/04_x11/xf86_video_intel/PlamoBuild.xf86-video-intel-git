@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xf86_video_intel"
-vers=""
+vers="20191209"
 #url="http://anduin.linuxfromscratch.org/BLFS/xf86-video-intel/xf86-video-intel-${vers}.tar.xz"
 url="https://anongit.freedesktop.org/git/xorg/driver/xf86-video-intel.git"
 commitid="f66d39544bb8339130c96d282a80f87ca1606caf"
