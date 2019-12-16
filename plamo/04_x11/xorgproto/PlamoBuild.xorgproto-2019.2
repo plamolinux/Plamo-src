@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xorgproto"
-vers="2018.4"
-url="https://xorg.freedesktop.org/archive/individual/proto/xorgproto-2018.4.tar.bz2"
-verify=""
+vers="2019.2"
+url="https://xorg.freedesktop.org/archive/individual/proto/xorgproto-${vers}.tar.bz2"
+verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
-src="xorgproto-2018.4"
+src="xorgproto-${vers}"
 OPT_CONFIG=""
 DOCS="AUTHORS COPYING-applewmproto COPYING-bigreqsproto COPYING-compositeproto COPYING-damageproto COPYING-dmxproto COPYING-dri2proto COPYING-dri3proto COPYING-evieproto COPYING-fixesproto COPYING-fontcacheproto COPYING-fontsproto COPYING-glproto COPYING-inputproto COPYING-kbproto COPYING-lg3dproto COPYING-panoramixproto COPYING-pmproto COPYING-presentproto COPYING-printproto COPYING-randrproto COPYING-recordproto COPYING-renderproto COPYING-resourceproto COPYING-scrnsaverproto COPYING-trapproto COPYING-videoproto COPYING-windowswmproto COPYING-x11proto COPYING-xcmiscproto COPYING-xextproto COPYING-xf86bigfontproto COPYING-xf86dgaproto COPYING-xf86driproto COPYING-xf86miscproto COPYING-xf86rushproto COPYING-xf86vidmodeproto COPYING-xineramaproto INSTALL README compositeproto.txt damageproto.txt dri2proto.txt dri3proto.txt fixesproto.txt meson_options.txt presentproto.txt randrproto.txt renderproto.txt resproto.txt xv-protocol-v2.txt"
 patchfiles=""
