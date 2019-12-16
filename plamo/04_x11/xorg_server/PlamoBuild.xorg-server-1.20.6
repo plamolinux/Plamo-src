@@ -1,14 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xorg_server"
-vers="1.20.5"
-url="https://www.x.org/pub/individual/xserver/xorg-server-1.20.5.tar.bz2"
-verify=""
+vers="1.20.6"
+url="https://www.x.org/pub/individual/xserver/xorg-server-${vers}.tar.bz2"
+verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
-src="xorg-server-1.20.5"
-OPT_CONFIG='--enable-glamor --enable-install-setuid --enable-suid-wrapper --disable-systemd-logind --enable-listen-tcp --with-xkb-output=/var/lib/xkb'
+src="xorg-server-${vers}"
+OPT_CONFIG="--enable-glamor
+	--enable-install-setuid
+	--enable-suid-wrapper
+	--disable-systemd-logind
+	--enable-listen-tcp
+	--enable-dmx
+	--with-xkb-output=/var/lib/xkb"
 DOCS="COPYING ChangeLog INSTALL README.md meson_options.txt"
 patchfiles=""
 compress=txz
