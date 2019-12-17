@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="78.0.3904.108"
+vers="79.0.3945.79"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
@@ -13,16 +13,13 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	add-missing-include-for-unique_ptr.patch
-	dns_util-make-DohUpgradeEntry-non-const.patch
-	fix-shutdown-crash-in-ProfileManager.patch
+	launch_manager.h-uses-std-vector.patch
+	include-algorithm-to-use-std-lower_bound.patch
+	icu65.patch
 	chromium-system-icu.patch
 	fix-spammy-unique-font-matching-log.patch
 	chromium-widevine.patch
-	chromium-skia-harmony.patch
-	u16_next.patch" # I don't know the reasen that build is failed because of missing ";"
-                        # in third_party/blink/renderer/core/dom/document.cc at 78.0.3904.70.
-                        # why on arch linux build successfully? (they have no patch)
+	chromium-skia-harmony.patch"
 compress=txz
 ##############################################################
 
@@ -118,6 +115,7 @@ _flags=(
     'enable_nacl=false'
     'enable_swiftshader=false'
     'symbol_level=0'
+    'icu_use_data_file=false' # if use system icu
 )
 
 _api_flags=(
@@ -162,6 +160,14 @@ fi
 
 if [ $opt_config -eq 1 ] ; then
 
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ ! -x $W/gn ]; then
 	build_gn
     fi
@@ -181,6 +187,7 @@ if [ $opt_config -eq 1 ] ; then
 
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
+	    echo "=== patching $patch ==="
             patch -p1 < $W/$patch
             touch .${patch}
         fi
@@ -214,9 +221,10 @@ if [ $opt_build -eq 1 ] ; then
     export AR=ar
     export NM=nm
 
-    CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
-    CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
-    CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
+    export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
+    export CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
+    #export CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
+    export CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
 
     $W/gn gen out/Release --args="${_flags[*]} ${_api_flags[*]}" --script-executable=/usr/bin/python2
     # ninja -v -C out/Release chrome chrome_sandbox chromedriver
