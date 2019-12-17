@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="linux_firmware"
-vers=""
+vers="20191215.eefb5f7"
 url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
-commitid="d52556e4592e64023157a83fb0f483661f23ac0e"
+commitid="eefb5f7410150c00d0ab5c41c5d817ae9bf449b3"
 verify=""
 digest=""
 arch=`uname -m`
@@ -11,7 +11,7 @@ build=B1
 src="linux-firmware"
 OPT_CONFIG=""
 DOCS="LICENCE.ralink-firmware.txt LICENCE.rtlwifi_firmware.txt LICENCE.tda7706-firmware.txt LICENSE.QualcommAtheros_ar3k LICENSE.QualcommAtheros_ath10k LICENSE.amd-ucode LICENSE.amdgpu LICENSE.atmel LICENSE.dib0700 LICENSE.hfi1_firmware LICENSE.i915 LICENSE.ipu3_firmware LICENSE.nxp_mc_firmware LICENSE.qcom LICENSE.radeon LICENSE.sdma_firmware README TDA7706_OM_v2.5.1_boot.txt TDA7706_OM_v3.0.2_boot.txt"
-patchfiles=""
+patchfiles="0001-iwlwifi-Add-Core47-firmwares.patch.xz"
 compress=txz
 ##############################################################
 
@@ -53,8 +53,18 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    echo "There is nothing to do in config section"
-    exit 0
+    #echo "There is nothing to do in config section"
+    #exit 0
+    cd $W
+    if [ -f $patchfiles ]; then
+	xz -d $patchfiles
+    fi
+    cd $S
+    patchfile=$(basename $patchfiles .xz)
+    if [ ! -f ."$patchfile" ]; then
+	git apply -3 $W/$patchfile
+	touch ."$patchfile"
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
