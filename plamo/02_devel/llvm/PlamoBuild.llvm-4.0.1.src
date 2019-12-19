@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='llvm'
-vers="9.0.0"
-url="http://releases.${pkgbase}.org/${vers}/${pkgbase}-${vers}.src.tar.xz"
+vers='4.0.1'
+url="http://releases.${pkgbase}.org/4.0.1/${pkgbase}-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}.src"
-src2="http://releases.llvm.org/${vers}/cfe-${vers}.src.tar.xz"
-src3="http://releases.llvm.org/${vers}/compiler-rt-${vers}.src.tar.xz"
-src4="http://releases.llvm.org/${vers}/lld-${vers}.src.tar.xz"
-OPT_CONFIG=''
+src2="http://releases.llvm.org/4.0.1/cfe-4.0.1.src.tar.xz"
+src3="http://releases.llvm.org/4.0.1/compiler-rt-4.0.1.src.tar.xz"
+OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT LLVMBuild.txt README.txt RELEASE_TESTERS.TXT'
 patchfiles=''
 compress=txz
@@ -40,9 +39,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    wget $src2
-    wget $src3
-    wget $src4
 fi
 
 B=`pwd`/build
@@ -51,12 +47,9 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-
-    cd $W
-    tar xvf lld-${vers}.src.tar.xz
-    ln -sf lld-${vers}.src lld
-    
     cd $S
+
+
     tar -xf $W/cfe-${vers}.src.tar.xz -C tools
     tar -xf $W/compiler-rt-${vers}.src.tar.xz -C projects
     mv tools/cfe-${vers}.src tools/clang
@@ -70,7 +63,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     CC=gcc CXX=g++                              \
     cmake -DCMAKE_INSTALL_PREFIX=/usr           \
@@ -78,11 +71,8 @@ if [ $opt_config -eq 1 ] ; then
 	  -DCMAKE_BUILD_TYPE=Release            \
 	  -DLLVM_BUILD_LLVM_DYLIB=ON            \
 	  -DLLVM_LINK_LLVM_DYLIB=ON             \
-	  -DLLVM_TARGETS_TO_BUILD="host;AMDGPU;BPF" \
-	  -DLLVM_BUILD_TESTS=ON                  \
-	  -DLLVM_ENABLE_RTTI=ON  \
-	  -DLLVM_ENABLE_PROJECTS=lld \
-	  -Wno-dev -G Ninja $S
+	  -DLLVM_TARGETS_TO_BUILD="host;AMDGPU" \
+	  -Wno-dev $S
 
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
@@ -93,7 +83,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    ninja
+    make -j4
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -104,7 +94,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  DESTDIR=$P ninja install 
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks
