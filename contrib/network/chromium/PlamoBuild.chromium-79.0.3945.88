@@ -17,6 +17,7 @@ patchfiles="
         include-algorithm-to-use-std-lower_bound.patch
         icu65.patch
         chromium-system-icu.patch
+        chromium-system-hb.patch
         fix-spammy-unique-font-matching-log.patch
         chromium-widevine.patch
         chromium-skia-harmony.patch"
@@ -194,7 +195,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=ar
+    export AR=llvm-ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
