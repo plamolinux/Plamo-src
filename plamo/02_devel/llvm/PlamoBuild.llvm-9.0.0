@@ -1,14 +1,32 @@
 #!/bin/sh
 ##############################################################
 pkgbase="llvm"
-vers="9.0.0.src"
-url="http://releases.llvm.org/9.0.0/llvm-9.0.0.src.tar.xz"
+vers="9.0.0"
+urls=(https://releases.llvm.org/${vers}/llvm-${vers}.src.tar.xz
+      https://releases.llvm.org/${vers}/cfe-${vers}.src.tar.xz
+      https://releases.llvm.org/${vers}/compiler-rt-${vers}.src.tar.xz
+      https://releases.llvm.org/${vers}/clang-tools-extra-${vers}.src.tar.xz
+      https://releases.llvm.org/${vers}/lld-${vers}.src.tar.xz)
+url=""
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="llvm-9.0.0.src"
-OPT_CONFIG=""
+src="llvm-${vers}.src"
+# -DLLVM_LINK_LLVM_DYLIB=ON
+# -DLLVM_BUILD_LLVM_DYLIB=ON
+# -DCLANG_RESOURCE_DIR=../${libdir}/clang/${vers}
+OPT_CONFIG="-G Ninja
+	-DLLVM_ENABLE_FFI=ON
+	-DCMAKE_BUILD_TYPE=Release
+	-DLLVM_ENABLE_RTTI=ON
+	-DLLVM_TARGETS_TO_BUILD='host;AMDGPU;BPF'
+	-DBUILD_SHARED_LIBS=ON
+	-DLLVM_USE_LINKER=gold
+	-DLLVM_ENABLE_ASSERTIONS=OFF
+	-DLLVM_INSTALL_UTILS=ON
+	-DLLVM_BINUTILS_INCDIR=/usr/include
+	-DLLVM_BUILD_TESTS=ON"
 DOCS="CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT LLVMBuild.txt README.txt RELEASE_TESTERS.TXT"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -39,7 +57,11 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
+    for url in ${urls[@]}
+    do
+        verify=${url}.sig
+        download_sources
+    done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -52,10 +74,20 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+    ( cd $S/tools &&
+          cp -a $W/cfe-${vers}.src clang &&
+          cp -a $W/lld-${vers}.src lld )
+
+    ( cd $S/tools/clang/tools &&
+          cp -a $W/clang-tools-extra-${vers}.src extra )
+
+    ( cd $S/projects &&
+          cp -a $W/compiler-rt-${vers}.src compiler-rt )
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B
     cd $S
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
@@ -63,13 +95,11 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
+    export LDFLAGS='-Wl,--as-needed'
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,7 +109,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    CC=gcc CXX=g++ \
+    ninja -v
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -90,9 +121,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
