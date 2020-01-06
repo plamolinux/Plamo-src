@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='cracklib'
-vers='2.9.6'
-url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-${vers}.tar.gz"
-digest="md5sum:c52f463585d85924b28cdc1e373ae06d"
-w_url="https://github.com/cracklib/cracklib/releases/download/cracklib-${vers}/cracklib-words-${vers}.gz"
+vers='2.9.7'
+url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-${vers}.tar.bz2"
+digest="md5sum:0d68de25332cee5660850528a385427f"
+w_url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-words-${vers}.bz2"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --without-python --with-default-dict=/lib/cracklib/pw_dict'
 DOCS='ABOUT-NLS AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README README-DAWG README-LICENSE README-WORDS'
@@ -94,8 +94,8 @@ if [ $opt_package -eq 1 ] ; then
   ln -sfv ../../$libdir/$(readlink $P/usr/lib/libcrack.so) $P/usr/lib/libcrack.so
 
   # dict
-  install -Dm644 -v $W/${w_url##*/} $P/usr/share/dict/cracklib-words.gz
-  gzip -d -v $P/usr/share/dict/cracklib-words.gz
+  install -Dm644 -v $W/${w_url##*/} $P/usr/share/dict/cracklib-words.bz2
+  bunzip2 -v $P/usr/share/dict/cracklib-words.bz2
   ln -sfv cracklib-words $P/usr/share/dict/words
 
   echo $(hostname) >> $P/usr/share/dict/cracklib-extra-words
