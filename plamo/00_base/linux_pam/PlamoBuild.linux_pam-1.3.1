@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='linux_pam'
-vers='1.3.0'
-url="http://linux-pam.org/library/Linux-PAM-${vers}.tar.bz2"
-digest="md5sum:da4b2289b7cfb19583d54e9eaaef1c3a"
-doc_url="http://linux-pam.org/documentation/Linux-PAM-1.2.0-docs.tar.bz2"
+vers='1.3.1'
+url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}.tar.xz"
+digest="md5sum:558ff53b0fc0563ca97f79e911822165"
+doc_url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}-docs.tar.xz"
 arch=`uname -m`
-build=B4
+build=B1
 src="Linux-PAM-${vers}"
 OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
 patchfiles=''
+# specifies files that are not in source archive and patchfiles
+addfiles="console.handlers system-account system-auth system-password system-session other halt securetty"
 compress=txz
 ##############################################################
 
@@ -47,6 +49,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
