@@ -127,7 +127,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B/$t
+    cd $B
     make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
