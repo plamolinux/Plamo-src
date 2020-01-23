@@ -1,18 +1,18 @@
 Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
-Date:                    2018-12-14
+Date:                    2018-12-13
+Update Date:             2019-02-22
 Initial Package Version: 0.115
 Upstream Status:         Applied
 Origin:                  Upstream/Self
-Description:             This patch contains security fixes for polkit since
-                         version 0.115. This also fixes some debug text that
-                         was deprecated, and changes some errors to debug msgs.
-                         This fixes a vulnerability that has gotten national
-                         attention because it allows any UID over 4,000,000
-                         to execute any command without authentication.
+Description:             Security fixes to polkit since version 0.115. Includes
+                         one that has gotten attention worldwide for allowing
+                         anyone with a UID over 4,000,000 to execute commands
+                         without authentication.
+Update Description:      Fix another authentication bypass.
 
 diff -Naurp polkit-0.115.orig/src/polkit/polkitpermission.c polkit-0.115/src/polkit/polkitpermission.c
 --- polkit-0.115.orig/src/polkit/polkitpermission.c	2018-04-03 15:57:57.000000000 -0500
-+++ polkit-0.115/src/polkit/polkitpermission.c	2018-12-13 13:00:43.554424180 -0600
++++ polkit-0.115/src/polkit/polkitpermission.c	2019-02-22 07:34:49.226233421 -0600
 @@ -137,10 +137,13 @@ polkit_permission_finalize (GObject *obj
    g_free (permission->tmp_authz_id);
    g_object_unref (permission->subject);
@@ -33,7 +33,7 @@ diff -Naurp polkit-0.115.orig/src/polkit/polkitpermission.c polkit-0.115/src/pol
      G_OBJECT_CLASS (polkit_permission_parent_class)->finalize (object);
 diff -Naurp polkit-0.115.orig/src/polkit/polkitunixgroup.c polkit-0.115/src/polkit/polkitunixgroup.c
 --- polkit-0.115.orig/src/polkit/polkitunixgroup.c	2017-09-04 14:52:53.000000000 -0500
-+++ polkit-0.115/src/polkit/polkitunixgroup.c	2018-12-13 12:22:14.903159457 -0600
++++ polkit-0.115/src/polkit/polkitunixgroup.c	2019-02-22 07:34:49.227233402 -0600
 @@ -71,6 +71,7 @@ G_DEFINE_TYPE_WITH_CODE (PolkitUnixGroup
  static void
  polkit_unix_group_init (PolkitUnixGroup *unix_group)
@@ -90,7 +90,7 @@ diff -Naurp polkit-0.115.orig/src/polkit/polkitunixgroup.c polkit-0.115/src/polk
                                         NULL));
 diff -Naurp polkit-0.115.orig/src/polkit/polkitunixprocess.c polkit-0.115/src/polkit/polkitunixprocess.c
 --- polkit-0.115.orig/src/polkit/polkitunixprocess.c	2018-06-25 08:55:45.000000000 -0500
-+++ polkit-0.115/src/polkit/polkitunixprocess.c	2018-12-13 12:58:33.019565824 -0600
++++ polkit-0.115/src/polkit/polkitunixprocess.c	2019-02-22 07:34:49.227233402 -0600
 @@ -159,9 +159,14 @@ polkit_unix_process_set_property (GObjec
        polkit_unix_process_set_pid (unix_process, g_value_get_int (value));
        break;
@@ -127,7 +127,7 @@ diff -Naurp polkit-0.115.orig/src/polkit/polkitunixprocess.c polkit-0.115/src/po
  
 diff -Naurp polkit-0.115.orig/src/polkit/polkitunixuser.c polkit-0.115/src/polkit/polkitunixuser.c
 --- polkit-0.115.orig/src/polkit/polkitunixuser.c	2017-09-04 14:52:53.000000000 -0500
-+++ polkit-0.115/src/polkit/polkitunixuser.c	2018-12-13 12:26:43.659067703 -0600
++++ polkit-0.115/src/polkit/polkitunixuser.c	2019-02-22 07:34:49.227233402 -0600
 @@ -72,6 +72,7 @@ G_DEFINE_TYPE_WITH_CODE (PolkitUnixUser,
  static void
  polkit_unix_user_init (PolkitUnixUser *unix_user)
@@ -183,7 +183,7 @@ diff -Naurp polkit-0.115.orig/src/polkit/polkitunixuser.c polkit-0.115/src/polki
                                          NULL));
 diff -Naurp polkit-0.115.orig/src/polkitagent/polkitagentlistener.c polkit-0.115/src/polkitagent/polkitagentlistener.c
 --- polkit-0.115.orig/src/polkitagent/polkitagentlistener.c	2018-04-03 15:57:57.000000000 -0500
-+++ polkit-0.115/src/polkitagent/polkitagentlistener.c	2018-12-13 12:14:09.418533147 -0600
++++ polkit-0.115/src/polkitagent/polkitagentlistener.c	2019-02-22 07:34:49.227233402 -0600
 @@ -178,10 +178,10 @@ on_notify_authority_owner (GObject    *o
    owner = polkit_authority_get_owner (server->authority);
    if (owner == NULL)
@@ -229,7 +229,7 @@ diff -Naurp polkit-0.115.orig/src/polkitagent/polkitagentlistener.c polkit-0.115
      }
 diff -Naurp polkit-0.115.orig/src/polkitbackend/polkitbackendinteractiveauthority.c polkit-0.115/src/polkitbackend/polkitbackendinteractiveauthority.c
 --- polkit-0.115.orig/src/polkitbackend/polkitbackendinteractiveauthority.c	2018-06-22 17:20:18.000000000 -0500
-+++ polkit-0.115/src/polkitbackend/polkitbackendinteractiveauthority.c	2018-12-13 12:19:01.492266182 -0600
++++ polkit-0.115/src/polkitbackend/polkitbackendinteractiveauthority.c	2019-02-22 07:39:08.109674233 -0600
 @@ -935,7 +935,7 @@ polkit_backend_interactive_authority_che
      }
  
@@ -248,9 +248,61 @@ diff -Naurp polkit-0.115.orig/src/polkitbackend/polkitbackendinteractiveauthorit
     */
    if (!user_of_subject_matches
        || !polkit_identity_equal (user_of_caller, user_of_subject)
+@@ -3032,6 +3032,42 @@ temporary_authorization_store_free (Temp
+ }
+ 
+ static gboolean
++subject_equal_for_authz (PolkitSubject *a,
++                         PolkitSubject *b)
++{
++   if (!polkit_subject_equal (a, b))
++      return FALSE;
++
++   /* Now special case unix processes, as we want to protect against
++    * PID reuse by including the UID.
++    */
++   if (POLKIT_IS_UNIX_PROCESS (a) && POLKIT_IS_UNIX_PROCESS (b)) {
++      PolkitUnixProcess *ap = (PolkitUnixProcess*)a;
++      int uid_a = polkit_unix_process_get_uid ((PolkitUnixProcess*)a);
++      PolkitUnixProcess *bp = (PolkitUnixProcess*)b;
++      int uid_b = polkit_unix_process_get_uid ((PolkitUnixProcess*)b);
++
++      if (uid_a != -1 && uid_b != -1)
++      {
++         if (uid_a == uid_b)
++         {
++            return TRUE;
++         }
++         else
++         {
++            g_printerr ("denying slowfork; pid %d uid %d != %d!\n",
++                        polkit_unix_process_get_pid (ap),
++                        uid_a, uid_b);
++            return FALSE;
++         }
++      }
++      /* Fall through, one of the UIDs is unset so we can't reliably compare. */
++   }
++   
++   return TRUE;
++}
++
++static gboolean
+ temporary_authorization_store_has_authorization (TemporaryAuthorizationStore *store,
+                                                  PolkitSubject               *subject,
+                                                  const gchar                 *action_id,
+@@ -3073,7 +3109,7 @@ temporary_authorization_store_has_author
+     TemporaryAuthorization *authorization = l->data;
+ 
+     if (strcmp (action_id, authorization->action_id) == 0 &&
+-        polkit_subject_equal (subject_to_use, authorization->subject))
++        subject_equal_for_authz (subject_to_use, authorization->subject))
+       {
+         ret = TRUE;
+         if (out_tmp_authz_id != NULL)
 diff -Naurp polkit-0.115.orig/src/polkitbackend/polkitbackendjsauthority.cpp polkit-0.115/src/polkitbackend/polkitbackendjsauthority.cpp
 --- polkit-0.115.orig/src/polkitbackend/polkitbackendjsauthority.cpp	2018-04-03 15:57:57.000000000 -0500
-+++ polkit-0.115/src/polkitbackend/polkitbackendjsauthority.cpp	2018-12-13 12:11:38.194585334 -0600
++++ polkit-0.115/src/polkitbackend/polkitbackendjsauthority.cpp	2019-02-22 07:34:49.229233364 -0600
 @@ -1595,7 +1595,8 @@ utils_spawn_data_free (UtilsSpawnData *d
                               (GSourceFunc) utils_child_watch_from_release_cb,
                               source,
@@ -263,7 +315,7 @@ diff -Naurp polkit-0.115.orig/src/polkitbackend/polkitbackendjsauthority.cpp pol
      }
 diff -Naurp polkit-0.115.orig/src/programs/pkttyagent.c polkit-0.115/src/programs/pkttyagent.c
 --- polkit-0.115.orig/src/programs/pkttyagent.c	2018-04-03 15:57:57.000000000 -0500
-+++ polkit-0.115/src/programs/pkttyagent.c	2018-12-13 13:05:01.181202945 -0600
++++ polkit-0.115/src/programs/pkttyagent.c	2019-02-22 07:34:49.229233364 -0600
 @@ -160,7 +160,8 @@ main (int argc, char *argv[])
    authority = polkit_authority_get_sync (NULL /* GCancellable* */, &error);
    if (authority == NULL)
@@ -276,7 +328,7 @@ diff -Naurp polkit-0.115.orig/src/programs/pkttyagent.c polkit-0.115/src/program
        ret = 127;
 diff -Naurp polkit-0.115.orig/test/data/etc/group polkit-0.115/test/data/etc/group
 --- polkit-0.115.orig/test/data/etc/group	2017-09-04 14:52:54.000000000 -0500
-+++ polkit-0.115/test/data/etc/group	2018-12-13 12:29:00.729037998 -0600
++++ polkit-0.115/test/data/etc/group	2019-02-22 07:34:49.229233364 -0600
 @@ -5,3 +5,4 @@ john:x:500:
  jane:x:501:
  sally:x:502:
@@ -284,7 +336,7 @@ diff -Naurp polkit-0.115.orig/test/data/etc/group polkit-0.115/test/data/etc/gro
 +highuid2:x:4000000000:
 diff -Naurp polkit-0.115.orig/test/data/etc/passwd polkit-0.115/test/data/etc/passwd
 --- polkit-0.115.orig/test/data/etc/passwd	2017-09-04 14:52:54.000000000 -0500
-+++ polkit-0.115/test/data/etc/passwd	2018-12-13 12:28:51.034039809 -0600
++++ polkit-0.115/test/data/etc/passwd	2019-02-22 07:34:49.229233364 -0600
 @@ -3,3 +3,5 @@ john:x:500:500:John Done:/home/john:/bin
  jane:x:501:501:Jane Smith:/home/jane:/bin/bash
  sally:x:502:502:Sally Derp:/home/sally:/bin/bash
@@ -293,7 +345,7 @@ diff -Naurp polkit-0.115.orig/test/data/etc/passwd polkit-0.115/test/data/etc/pa
 +highuid2:x:4000000000:4000000000:An example high uid:/home/example:/sbin/nologin
 diff -Naurp polkit-0.115.orig/test/data/etc/polkit-1/rules.d/10-testing.rules polkit-0.115/test/data/etc/polkit-1/rules.d/10-testing.rules
 --- polkit-0.115.orig/test/data/etc/polkit-1/rules.d/10-testing.rules	2017-09-04 14:52:54.000000000 -0500
-+++ polkit-0.115/test/data/etc/polkit-1/rules.d/10-testing.rules	2018-12-13 13:09:41.535019708 -0600
++++ polkit-0.115/test/data/etc/polkit-1/rules.d/10-testing.rules	2019-02-22 07:34:49.230233345 -0600
 @@ -53,6 +53,27 @@ polkit.addRule(function(action, subject)
      }
  });
@@ -324,7 +376,7 @@ diff -Naurp polkit-0.115.orig/test/data/etc/polkit-1/rules.d/10-testing.rules po
  
 diff -Naurp polkit-0.115.orig/test/polkitbackend/test-polkitbackendjsauthority.c polkit-0.115/test/polkitbackend/test-polkitbackendjsauthority.c
 --- polkit-0.115.orig/test/polkitbackend/test-polkitbackendjsauthority.c	2018-04-03 15:57:57.000000000 -0500
-+++ polkit-0.115/test/polkitbackend/test-polkitbackendjsauthority.c	2018-12-13 12:41:19.054977178 -0600
++++ polkit-0.115/test/polkitbackend/test-polkitbackendjsauthority.c	2019-02-22 07:34:49.230233345 -0600
 @@ -330,6 +330,78 @@ static const RulesTestCase rules_test_ca
      NULL,
      POLKIT_IMPLICIT_AUTHORIZATION_AUTHORIZED,
