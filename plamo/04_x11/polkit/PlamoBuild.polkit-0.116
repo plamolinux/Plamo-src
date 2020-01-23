@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='polkit'
-vers="0.115"
+vers="0.116"
 url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --disable-libelogind'
+OPT_CONFIG="--disable-static --enable-shared --with-polkitd-user=polkituser --enable-libsystemd-login=no --with-os-type=Plamo"
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
-patchfiles="polkit-0.115-security_patch-2.patch"
+blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/polkit-0.116-fix_elogind_detection-1.patch"
+patchfiles="${blfspatch##*/}"
+addfiles="polkit.pam"
 compress=txz
 ##############################################################
 
@@ -39,9 +41,21 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${blfspatch##*/} ]; then
+	wget $blfspatch
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
