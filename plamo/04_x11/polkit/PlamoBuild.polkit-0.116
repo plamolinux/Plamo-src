@@ -6,7 +6,7 @@ url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-polkitd-user=polkituser --enable-libsystemd-login=no --with-os-type=Plamo"
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
