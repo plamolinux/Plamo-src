@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers="4.5"
+vers="4.8"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
-digest="md5sum:c350da50c2120de6bb29177699d89fe3"
+digest="md5sum:723ebb19b06e2f52d9ed7f0653483851"
 arch=`uname -m`
-build=B9
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
@@ -74,7 +74,7 @@ if [ $opt_config -eq 1 ] ; then
     sed -i 's@DICTPATH.*@DICTPATH\t/lib/cracklib/pw_dict@' etc/login.defs
 
     disable_func=(FAIL_DELAY
-		  FAILLOG_ENAB
+                  FAILLOG_ENAB
                   LASTLOG_ENAB
                   MAIL_CHECK_ENAB
                   OBSCURE_CHECKS_ENAB
@@ -91,7 +91,7 @@ if [ $opt_config -eq 1 ] ; then
                   ENVIRON_FILE)
     for func in ${disable_func[@]}
     do
-	sed -i "s/^${func}/# &/" etc/login.defs
+        sed -i "s/^${func}/# &/" etc/login.defs
     done
 
     #if [ -f $S/autogen.sh ] ; then
@@ -104,8 +104,8 @@ if [ $opt_config -eq 1 ] ; then
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
     
@@ -114,8 +114,8 @@ if [ $opt_build -eq 1 ] ; then
     export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -140,7 +140,7 @@ if [ $opt_package -eq 1 ] ; then
     install -Dm644 -v $W/"$f".pam $docdir/$src/$f
   done
   for f in chfn chgpasswd chpasswd chsh groupadd groupdel \
-	   groupmems groupmod newusers useradd userdel usermod
+           groupmems groupmod newusers useradd userdel usermod
   do
       install -m644 -v $P/etc/pam.d/chage $P/etc/pam.d/$f
       sed -i "s/chage/$f/" $P/etc/pam.d/$f
@@ -158,17 +158,17 @@ if [ $opt_package -eq 1 ] ; then
   cat <<"EOF" >> $P/install/initpkg
 if [ -z "`grep "^root:" /etc/shadow | cut -d: -f2`" ] ; then
     if [ "$LANG" = "ja_JP.UTF-8" ]; then
-	echo "root(システム管理者)のパスワードを設定してください。"
-	until passwd root ; do
-	    echo "root(システム管理者)のパスワードを設定してください。"
-	done
-	echo "rootのパスワードの設定が完了しました。"
+        echo "root(システム管理者)のパスワードを設定してください。"
+        until passwd root ; do
+            echo "root(システム管理者)のパスワードを設定してください。"
+        done
+        echo "rootのパスワードの設定が完了しました。"
     else
-	echo "Password for root(Admin)?"
-	until passwd root ; do
-	    echo "Password for root(Admin)?"
-	done
-	echo "Root password setup was done."
+        echo "Password for root(Admin)?"
+        until passwd root ; do
+            echo "Password for root(Admin)?"
+        done
+        echo "Root password setup was done."
     fi
 fi
 EOF
