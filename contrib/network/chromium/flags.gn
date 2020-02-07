@@ -8,6 +8,7 @@ ffmpeg_branding="Chrome"
 proprietary_codecs=true
 rtc_use_pipewire=false
 rtc_link_pipewire=false
+rtc_build_opus=true
 link_pulseaudio=true
 use_gnome_keyring=false
 use_sysroot=false
