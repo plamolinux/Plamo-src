@@ -1,4 +1,2 @@
 # /etc/pam.d/system-session
 session	required	pam_unix.so
-session	optional	pam_loginuid.so
-session	optional	pam_ck_connector.so nox11
