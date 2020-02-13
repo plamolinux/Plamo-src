@@ -6,7 +6,7 @@ url="https://github.com/elogind/elogind/archive/v${vers}/elogind-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="elogind-${vers}"
 OPT_CONFIG="-Dcgroup-controller=elogind -Ddbuspolicydir=/etc/dbus-1/system.d"
 DOCS="LICENSE.GPL2 LICENSE.LGPL2.1 NEWS README.md TODO meson_options.txt"
@@ -99,6 +99,22 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 -v $W/elogind-user.pam $P/etc/pam.d/elogind-user
   install -Dm644 -v $W/elogind-user.pam $docdir/$src/elogind-user.pam
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+grep pam_elogind /etc/pam.d/system-session > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+	exit 0
+fi
+cat >> /etc/pam.d/system-session << "EOF2"
+# Begin elogind addition
+    
+session  required    pam_loginuid.so
+session  optional    pam_elogind.so
+
+# End elogind addition
+EOF2
+EOF
 
 ################################
 #      install tweaks
