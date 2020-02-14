@@ -5,16 +5,22 @@ vers="1.12.16"
 url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-doxygen-docs
+OPT_CONFIG="
+	--enable-user-session
+	--disable-doxygen-docs
 	--disable-xml-docs
 	--disable-static
+	--with-systemduserunitdir=no
+	--with-systemdsystemunitdir=no
+	--docdir=/usr/share/doc/dbus-${vers}
 	--with-console-auth-dir=/run/console
 	--with-system-pid-file=/run/dbus/pid
 	--with-system-socket=/run/dbus/system_bus_socket"
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 HACKING INSTALL NEWS NEWS.pre-1-0 NEWS.pre-1-2 README README.cygwin README.launchd README.valgrind README.win README.wince'
-patchfiles=''
+patchfiles=""
+addfiles="dbus.init"
 compress=txz
 ##############################################################
 
@@ -46,6 +52,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
