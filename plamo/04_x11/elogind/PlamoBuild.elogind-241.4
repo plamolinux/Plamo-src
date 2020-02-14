@@ -107,11 +107,10 @@ if [ \$? -eq 0 ]; then
 	exit 0
 fi
 cat >> /etc/pam.d/system-session << "EOF2"
+
 # Begin elogind addition
-    
 session  required    pam_loginuid.so
 session  optional    pam_elogind.so
-
 # End elogind addition
 EOF2
 EOF
