@@ -113,6 +113,8 @@ if [ $opt_package -eq 1 ] ; then
   ( cd $P/etc/rc.d/rc5.d ; ln -sf ../init.d/dbus S29dbus )
   ( cd $P/etc/rc.d/rc6.d ; ln -sf ../init.d/dbus K30dbus )
 
+  ln -sfv /var/lib/dbus/machine-id $P/etc/machine-id
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
