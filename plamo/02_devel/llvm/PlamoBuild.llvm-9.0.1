@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="llvm"
-vers="9.0.0"
-urls=(https://releases.llvm.org/${vers}/llvm-${vers}.src.tar.xz
-      https://releases.llvm.org/${vers}/cfe-${vers}.src.tar.xz
-      https://releases.llvm.org/${vers}/compiler-rt-${vers}.src.tar.xz
-      https://releases.llvm.org/${vers}/clang-tools-extra-${vers}.src.tar.xz
-      https://releases.llvm.org/${vers}/lld-${vers}.src.tar.xz)
+vers="9.0.1"
+urls=(https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/llvm-${vers}.src.tar.xz
+      https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/clang-${vers}.src.tar.xz
+      https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/compiler-rt-${vers}.src.tar.xz
+      https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/clang-tools-extra-${vers}.src.tar.xz
+      https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/lld-${vers}.src.tar.xz)
 url=""
 verify=""
 digest=""
@@ -75,7 +75,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     ( cd $S/tools &&
-          cp -a $W/cfe-${vers}.src clang &&
+          cp -a $W/clang-${vers}.src clang &&
           cp -a $W/lld-${vers}.src lld )
 
     ( cd $S/tools/clang/tools &&
