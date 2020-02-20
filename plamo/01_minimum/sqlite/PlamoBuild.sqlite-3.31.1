@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.30.1'
-srcver="3300100"
-url="http://sqlite.org/2019/sqlite-autoconf-${srcver}.tar.gz"
-digest="md5sum:51252dc6bc9094ba11ab151ba650ff3c"
+vers='3.31.1'
+srcver="3310100"
+url="http://sqlite.org/2020/sqlite-autoconf-${srcver}.tar.gz"
+digest="md5sum:2d0a553534c521504e3ac3ad3b90f125"
 verify=""
-arch=`uname -m`
+arch=$(uname -m)
 build=B1
 src="sqlite-autoconf-${srcver}"
 OPT_CONFIG='--disable-static --enable-fts5'
