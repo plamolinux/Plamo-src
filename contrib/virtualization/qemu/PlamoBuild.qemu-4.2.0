@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qemu'
-vers='2.12.1'
+vers="4.2.0"
 url="http://download.qemu-project.org/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
@@ -9,9 +9,6 @@ build=B1
 src="${pkgbase}-${vers}"
 
 OPT_CONFIG="--audio-drv-list=alsa
-	    --with-sdlabi=2.0
-	    --with-gtkabi=3.0
-	    --python=/usr/bin/python2
 	    --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.LIB COPYING.PYTHON Changelog HACKING LICENSE MAINTAINERS README qdict-test-data.txt'
 patchfiles=''
