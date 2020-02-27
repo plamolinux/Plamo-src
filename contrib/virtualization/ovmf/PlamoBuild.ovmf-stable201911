@@ -9,7 +9,7 @@ url=""
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="edk2-edk2-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="License-History.txt License.txt Maintainers.txt Readme.md pip-requirements.txt"
@@ -97,6 +97,7 @@ if [ $opt_package -eq 1 ] ; then
   install -Dm644 $B/Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd $P/usr/share/ovmf/x64/OVMF_CODE.fd
   install -Dm644 $B/Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd $P/usr/share/ovmf/x64/OVMF_VARS.fd
   install -Dm644 $W/60-edk2-ovmf-x86_64.json $P/usr/share/qemu/firmware/60-edk2-ovmf-x86_64.json
+  ( cd $P/usr/share/ovmf/x64 && ln -v OVMF_VARS.fd OVMF_VARS.ms.fd )
 
 ################################
 #      install tweaks
