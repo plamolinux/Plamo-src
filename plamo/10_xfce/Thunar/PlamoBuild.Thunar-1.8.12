@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Thunar'
-vers='1.8.9'
+vers='1.8.12'
 url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:fd1166e879294e4490d5fa9dccfdd9da"
+digest="md5sum:bebd2d83ad2ed111b906c99b65fb32ed"
 verify=""
 arch=`uname -m`
 build=B1
