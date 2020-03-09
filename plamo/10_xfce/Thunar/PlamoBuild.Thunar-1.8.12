@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Thunar'
-vers='1.8.9'
-url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:fd1166e879294e4490d5fa9dccfdd9da"
+vers='1.8.12'
+url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/thunar-${vers}.tar.bz2"
+digest="md5sum:bebd2d83ad2ed111b906c99b65fb32ed"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="thunar-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
