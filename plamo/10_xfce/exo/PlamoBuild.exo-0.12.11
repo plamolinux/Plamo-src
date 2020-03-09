@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='exo'
-vers='0.12.8'
+vers='0.12.11'
 url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:e618ce760a12ac7427a48a44c69f3d31"
+digest="md5sum:efeb039d64b3257e39a1a38e75eb19b1"
 verify=""
 arch=`uname -m`
 build=B1
