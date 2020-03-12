@@ -15,6 +15,9 @@ vbell off
 startup_message off
 autodetach on
 
+term screen-256color
+# term xterm-256color
+
 defutf8 on
 defencoding utf8
 encoding utf8 utf8
