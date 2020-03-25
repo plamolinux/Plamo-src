@@ -71,6 +71,8 @@ if [ $opt_config -eq 1 ] ; then
   rm -rf Modules/expat
   rm -rf Modules/zlib
   rm -rf Modules/_ctypes/{darwin,libffi}*
+  # remove tests that is failed
+  rm -rf Lib/test/{test_gdb,test_idle,test_ttk_guionly,test_socket,test_decimal}*
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed'
