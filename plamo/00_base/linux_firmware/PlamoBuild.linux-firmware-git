@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="linux_firmware"
-vers="20200122"
+vers="20200320"
 url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
-commitid="1eb2408c6feacccd10b02a49214745f15d1c6fb7"
+commitid="edf390c23a4e185ff36daded36575f669f5059f7"
 verify=""
 digest=""
 arch=`uname -m`
