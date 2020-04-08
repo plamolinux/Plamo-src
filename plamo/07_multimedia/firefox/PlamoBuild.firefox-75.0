@@ -2,11 +2,11 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers='74.0.1'
+vers="75.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
-#digest="sha256sum:cd9f2902753831c07c4b2ee64f7826f33ca1123add6440dc34abe3ff173a0cc6"
+digest=""
 arch=`uname -m`
 build=B1
 src="firefox-${vers}"
