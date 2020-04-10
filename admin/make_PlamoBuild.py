@@ -59,7 +59,12 @@ class Package():
             self.method = method
         else:
             files = os.listdir(self.srcdir)
-            types = {'CMakeLists.txt':'cmake', 'meson.build':'meson', 'configure':'config', 'setup.py':'python', 'Makefile.PL':'perl'}
+            ''' 
+            configure と CMakeLists.txt の双方がある場合，configure を
+            優先した方が安全っぽい(多分，cmake への移行中)
+            '''
+            types = {'configure':'config', 'CMakeLists.txt':'cmake', 'meson.build':'meson', 'setup.py':'python', 'Makefile.PL':'perl'}
+
             for i in types.keys():
                 for j in files:
                     if j == i:
@@ -75,6 +80,8 @@ class Package():
     def make_header(self):
         if self.method == 'config' :
             opt_config = '--disable-static --enable-shared'
+        elif self.method == 'cmake' :
+            opt_config = '-DCMAKE_BUILD_TYPE=Release'
         else:
             opt_config = ''
         self.header = '''#!/bin/sh
@@ -149,11 +156,12 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' '''
 
     def not_copy_source(self):
         self.config = '''
+
 if [ $opt_config -eq 1 ] ; then
 
     for f in $addfiles $patchfiles
@@ -179,7 +187,7 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' '''
 
     def make_config(self):
@@ -187,21 +195,21 @@ if [ $opt_config -eq 1 ] ; then
             if self.source == True :  # with source build
                 self.copy_source()
                 self.config += '''
-    ./configure --prefix=/{} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}'''.format(self.prefix)
+    ./configure --prefix={} --libdir={}/${{libdir}} --sysconfdir=/etc --localstatedir=/var --mandir={}/share/man ${{OPT_CONFIG}}'''.format(self.prefix, self.prefix, self.prefix)
             else:     # out of source build
                 self.not_copy_source()
                 self.config += '''
-    $S/configure --prefix={0} --sysconfdir=/etc --localstatedir=/var --mandir='${{prefix}}'/share/man ${{OPT_CONFIG}}'''.format(self.prefix)
+    $S/configure --prefix={} --libdir={}/${{libdir}} --sysconfdir=/etc --localstatedir=/var --mandir={}/share/man ${{OPT_CONFIG}}'''.format(self.prefix, self.prefix, self.prefix)
 
         elif self.method == 'cmake' :
             self.not_copy_source()
             self.config += '''
-    cmake -DCMAKE_INSTALL_PREFIX:PATH={0} ${{OPT_CONFIG}} $S  '''.format(self.prefix)
+    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH={} ${{OPT_CONFIG}} $S  '''.format(self.prefix)
 
         elif self.method == 'meson' :
             self.not_copy_source()
             self.config += '''
-    meson --prefix=/usr --libdir=/usr/lib ${{OPT_CONFIG}} $S  '''.format(self.prefix)
+    meson --prefix={} --libdir={}/${{libdir}} ${{OPT_CONFIG}} $S  '''.format(self.prefix, self.prefix)
 
         elif self.method == 'python' :
             self.copy_source()
@@ -230,7 +238,7 @@ if [ $opt_build -eq 1 ] ; then
             self.build += '''
     python setup.py build'''
 
-        elif self.method == 'meson':
+        elif self.method == 'cmake' or self.method == 'meson' :
             self.build += '''
     ninja'''
 
@@ -258,11 +266,10 @@ if [ $opt_package -eq 1 ] ; then
             self.package += '''
   python setup.py install --root $P --prefix={}'''.format(self.prefix)
 
-        elif self.method == 'meson':
+        elif self.method == 'cmake' or self.method == 'meson' :
             self.package += '''
   DESTDIR=$P ninja install
 '''
-
         else:
             self.package += '''
   export LDFLAGS='-Wl,--as-needed'
