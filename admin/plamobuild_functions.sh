@@ -399,6 +399,6 @@ if [ $arch = "x86_64" ]; then
   suffix=""
 else
   target="-m32"
-  libdir="lib"
+  libdir="lib32"
   suffix=""
 fi
