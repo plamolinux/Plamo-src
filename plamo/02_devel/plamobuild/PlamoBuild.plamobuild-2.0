@@ -1,12 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='plamobuild'
-vers='1.5'
+vers='2.0'
 url=("https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/plamobuild_functions.sh"
      "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/make_PlamoBuild.py"
+     "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/make_PlamoBuild32.py"
      "https://raw.githubusercontent.com/plamolinux/Plamo-src/plamo-7.x/admin/remove-la-files.sh")
 arch='noarch'
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 pkg="${pkgbase}-${vers}-${arch}-${build}"
 OPT_CONFIG=''
@@ -65,6 +66,7 @@ if [ $opt_package -eq 1 ] ; then
     mkdir -p $P/usr/bin
     mkdir -p $P/usr/share
     install -v -m755 make_PlamoBuild.py $P/usr/bin
+    install -v -m755 make_PlamoBuild32.py $P/usr/bin
     install -v -m755 remove-la-files.sh $P/usr/bin
     install -v -m644 plamobuild_functions.sh $P/usr/share
 
