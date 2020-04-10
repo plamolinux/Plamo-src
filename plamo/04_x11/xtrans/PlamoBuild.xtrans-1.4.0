@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xtrans'
-vers='1.3.5'
+vers='1.4.0'
 url="${pkgbase}-${vers}.tar.bz2"
 arch=`uname -m`
 build=B1
