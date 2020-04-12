@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="80.0.3987.162"
+vers="81.0.4044.92"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
@@ -12,13 +12,8 @@ build=B1
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
-patchfiles="cros-search-service-Include-cmath-for-std-pow.patch
-        move-RemoteTreeNode-declaration.patch
-        sync-enable-USSPasswords-by-default.patch
-        fix-shim-header-generation-when-unbundling-ICU.patch
-        fix-building-with-system-zlib.patch
-        remove-verbose-logging-in-local-unique-font-matching.patch
-        fix-building-with-unbundled-libxml.patch
+patchfiles="rename-Relayout-in-DesktopWindowTreeHostPlatform.patch
+        rebuild-Linux-frame-button-cache-when-activation.patch
         chromium-widevine.patch
         chromium-skia-harmony.patch"
 compress=txz
@@ -91,8 +86,7 @@ declare -gA _system_libs=(
   #[zlib]=minizip
 )
 _unwanted_bundled_libs=(
-  ${!_system_libs[@]}
-  ${_system_libs[libjpeg]+libjpeg_turbo}
+  $(printf "%s\n" ${!_system_libs[@]} | sed 's/^libjpeg$/&_turbo/')
 )
 
 _api_flags=(
