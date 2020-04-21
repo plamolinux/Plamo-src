@@ -51,7 +51,7 @@ class Package():
             opt_config = ''
         self.header = '''#!/bin/sh
 ##############################################################
-pkgbase="{1}"
+pkgbase="lib32_{1}"
 vers="{2}"
 url="{0}"
 verify=""
