@@ -1,0 +1,100 @@
+#!/bin/sh
+##############################################################
+pkgbase="zoom"
+vers="latest"
+url="https://zoom.us/client/latest/zoom_x86_64.pkg.tar.xz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="zoom-${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS=""
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=txz
+##############################################################
+
+export NO_STRIP=1
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+
+if [ $opt_download -eq 1 ] ; then
+    if [ ! -f ${url##*/} ]; then
+        wget $url
+    fi
+    rm -f $W/.PKGINFO
+    tar xvf ${url##*/} .PKGINFO
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    echo "There is nothing to do."
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    echo "There is nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+
+
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  tar xvf $W/${url##*/} -C $P
+
+  vers=$(grep pkgver $P/.PKGINFO | awk '{ print $3 }' | sed -e 's|-|_|g')
+  pkg=$pkgbase-$vers-$arch-$build
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+update-mime-database /usr/share/mime || true
+if [ -x "/usr/bin/update-desktop-database" ]; then 
+  update-desktop-database || true
+fi 
+EOF
+  rm -vf $P/.{INSTALL,MTREE}
+  mv -v $P/.PKGINFO $docdir/$src/PKGINFO
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  echo $vers
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
