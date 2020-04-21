@@ -2,8 +2,8 @@
 <libosinfo version="0.0.1">
 
   <os id="http://plamolinux.org/plamo/7.0">
-    <short-id>plamo7.0</short-id>
-    <name>Plamo 7.0</name>
+    <short-id>plamo7.x</short-id>
+    <name>Plamo 7.x</name>
     <version>7.0</version>
     <vendor>Plamo Linux Project</vendor>
     <vendor xml:lang="ca">Plamo Linux Project</vendor>
@@ -35,7 +35,7 @@
       </minimum>
       <recommended>
         <cpu>1000000000</cpu>
-        <ram>1073741824</ram>
+        <ram>2147483648</ram>
         <storage>16106127360</storage>
       </recommended>
     </resources>
