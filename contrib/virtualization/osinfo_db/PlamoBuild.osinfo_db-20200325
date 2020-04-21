@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='osinfo_db'
-vers='20180325'
+vers="20200325"
 url="https://releases.pagure.org/libosinfo/osinfo-db-${vers}.tar.xz"
 verify="${url}.asc"
 arch=noarch
