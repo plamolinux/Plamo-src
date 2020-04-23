@@ -1,0 +1,163 @@
+#!/bin/sh
+##############################################################
+pkgbase="lxd"
+vers="4.0.1"
+url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
+verify="${url}.asc"
+arch=`uname -m`
+build=B1
+src="lxd-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='AUTHORS COPYING'
+#patchfiles="dqlite.patch"
+compress=txz
+##############################################################
+
+#source /usr/lib/setup/plamobuild_functions.sh
+source /usr/share/plamobuild_functions.sh
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ;
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
+
+    cd $S
+    if [ ! -f .patched ]; then
+      for patch in $patchfiles ; do
+        patch -p1 < $W/$patch
+      done
+    fi
+    touch .patched
+
+    if [ -f $W/linux-containers-lxd-ja.po ]; then
+        cp -v $W/linux-containers-lxd-ja.po $S/po/ja.po
+    fi
+
+    cd $B
+    # put in the stuff under the GOPATH under the golang rule
+    if [ -d src/github.com/lxc/lxd ]; then
+        rm -rf src/github.com/lxc/lxd
+    else
+        mkdir -p src/github.com/lxc/
+    fi
+    cp -a $W/lxd-${vers} src/github.com/lxc/lxd
+
+    # copy dependent sources including lxd source archive to src
+    rm -rf src/github.com/lxc/lxd/_dist/src/github.com/lxc
+    rsync -a src/github.com/lxc/lxd/_dist/src/ src
+    rsync -a src/github.com/lxc/lxd/_dist/deps/ deps
+
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    export GOPATH=$B
+    cd $B/src/github.com/lxc/lxd
+
+    export CGO_CFLAGS="-I$B/deps/sqlite/ -I$B/deps/dqlite/include/ -I$B/deps/libco/include/ -I$B/deps/raft/include/"
+    export CGO_LDFLAGS="-L$B/deps/sqlite/.libs/ -L$B/deps/dqlite/.libs/ -L$B/deps/libco/ -L$B/deps/raft/.libs/"
+    export LD_LIBRARY_PATH="$B/deps/sqlite/.libs/:$B/deps/dqlite/.libs/:$B/deps/libco/:$B/deps/raft/.libs/"
+
+    make deps
+    make
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+    #make build-mo
+    make po/ja.mo
+    if [ $? != 0 ]; then
+        echo "build-mo error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+
+  check_root
+    
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  # bin
+  for f in $(ls $B/bin/)
+  do
+      install -D -m755 -v bin/$f $P/usr/bin/$f
+  done
+
+  # dep libs
+  install -D -m755 -v deps/dqlite/.libs/libdqlite.so.0 $P/usr/lib/lxd/libdqlite.so.0
+  install -D -m755 -v deps/sqlite/.libs/libsqlite3.so.0 $P/usr/lib/lxd/libsqlite3.so.0
+  install -D -v deps/raft/.libs/libraft.so* -t $P/usr/lib/lxd/
+  install -D -v deps/libco/libco.so* -t $P/usr/lib/lxd/
+
+  # message
+  install -D -m644 src/github.com/lxc/lxd/po/ja.mo $P/usr/share/locale/ja/LC_MESSAGES/lxd.mo
+
+  # directory
+  install -d $P/var/log/lxd
+  install -d $P/var/lib/lxd
+
+  # init file
+  install -D -m755 $W/lxd.init $P/etc/rc.d/init.d/lxd
+
+  #
+  install -D -m644 src/github.com/lxc/lxd/scripts/bash/lxd-client \
+          $P/usr/share/bash-completion/completions/lxc
+
+  # initpkg
+  mkdir -p $P/install
+  cat > $P/install/initpkg <<EOF
+touch /etc/subuid /etc/subgid
+groupadd -f -r lxd
+usermod -v 100000-165536 -w 100000-165536 root
+EOF
+
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6)
+	      ln -sfv ../init.d/lxd $P/etc/rc.d/rc"$i".d/K01lxd
+	      ;;
+	  3|4|5)
+	      ln -sfv ../init.d/lxd $P/etc/rc.d/rc"$i".d/S99lxd
+	      ;;
+      esac
+  done
+
+  install -D -dm755 -v $docdir/$src
+
+  cd $W
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man, 
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
