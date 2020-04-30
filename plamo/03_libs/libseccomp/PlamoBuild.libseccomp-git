@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libseccomp'
-vers='2.4.3'
-url="https://github.com/seccomp/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:1de97a3c04889a790d97722d08f4a8d1"
+vers=""
+url="https://github.com/seccomp/libseccomp.git"
+commitid="ff2a538cfcfbd1d10c4b460d74d725ac866136f4"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="libseccomp"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CHANGELOG LICENSE README.md'
 patchfiles=''
@@ -37,6 +38,17 @@ else
     esac
   done
 fi
+
+###
+#version = date.commitid
+###
+if [ $opt_download -ne 1 ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
+fi
+
 if [ $opt_download -eq 1 ] ; then
   download_sources
 fi
@@ -53,9 +65,12 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+
+  sed -i -e '/AC_INIT/s/0.0.0/2.4.99/' configure.ac
+
+  if [ -f autogen.sh ] ; then
+    sh ./autogen.sh
+  fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
