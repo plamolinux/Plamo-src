@@ -83,7 +83,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install INSTALLROOT=$P
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks
