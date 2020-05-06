@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nasm'
-vers='2.13.01'
+vers="2.14.02"
 url="http://www.${pkgbase}.us/pub/${pkgbase}/releasebuilds/${vers}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:b3ae134bd1b5ead73d659286f568da95"
+digest="md5sum:6390bd67b07ff1df9fe628b6929c0353"
 verify=""
 arch=`uname -m`
 build=B1
