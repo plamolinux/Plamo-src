@@ -1,3 +1,9 @@
+export CC='clang --target=x86_64-unknown-linux-gnu'
+export CXX='clang++ --target=x86_64-unknown-linux-gnu'
+export AR=llvm-ar
+export NM=llvm-nm
+export RANLIB=llvm-ranlib
+
 ac_add_options --enable-application=browser
 
 ac_add_options --prefix=/usr
