@@ -8,13 +8,13 @@ langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/x
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
 #blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-68.2.0esr-system_graphite2_harfbuzz-1.patch"
 #patchfiles="${blfspatch##*/}"
-addfiles="firefox.desktop langpack.sh mozconfig vendor.js"
+addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=txz
 
 rustver=""
@@ -176,10 +176,14 @@ if [ $opt_package -eq 1 ] ; then
   sh $W/langpack.sh $W
   install -Dm644 -v $W/ja.xpi.plamo \
           $P/usr/${libdir}/firefox/browser/extensions/langpack-ja@firefox.mozilla.org.xpi
-  install -Dm644 -v $W/vendor.js \
-          $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor.js
-  install -Dm644 -v $W/vendor.js \
-          $docdir/$src/vendor.js
+  install -Dm644 -v $W/vendor-firefox.js \
+          $P/usr/${libdir}/firefox/browser/defaults/preferences/vendor-firefox.js
+  install -Dm644 -v $W/vendor-gre.js \
+	  $P/usr/${libdir}/firefox/defaults/pref/vendor-gre.js
+  install -Dm644 -v $W/vendor-firefox.js \
+          $docdir/$src/vendor-firefox.js
+  install -Dm644 -v $W/vendor-gre.js \
+	  $docdir/$src/vendor-gre.js
 
 ################################
 #      install tweaks
