@@ -1,11 +1,11 @@
-// Use LANG environment variable to choose locale
-pref("intl.locale.requested", "");
-
 // Disable default browser checking.
 pref("browser.shell.checkDefaultBrowser", false);
 
 // Don't disable our bundled extensions in the application directory
-pref("extensions.autoDisableScopes", 11);
+pref("extensions.autoDisableScopes", 3);
+
+// Don't display the one-off addon selection dialog when
+// upgrading from a version of Firefox older than 8.0
 pref("extensions.shownSelectionUI", true);
 
 // for using Plamo original langpack
