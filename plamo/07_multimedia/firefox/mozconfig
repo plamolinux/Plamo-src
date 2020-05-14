@@ -52,5 +52,8 @@ ac_add_options --disable-official-branding
 ac_add_options --with-branding=browser/branding/unofficial
 ac_add_options --with-distribution-id=org.plamolinux
 
+ac_add_options --with-unsigned-addon-scopes=app,system
+ac_add_options --allow-addon-sideload
+
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
 #mk_add_options MOZ_MAKE_FLAGS="-j3"
