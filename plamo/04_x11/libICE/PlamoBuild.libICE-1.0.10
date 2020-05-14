@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libICE'
-vers='1.0.9'
-url="${pkgbase}-${vers}.tar.bz2"
+vers='1.0.10'
+url="https://www.x.org/archive/individual/lib/libICE-${vers}.tar.bz2"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared ICE_LIBS=-lpthread'
+OPT_CONFIG="--disable-static --enable-shared ICE_LIBS=-lpthread --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL README'
 patchfiles=''
 compress=txz
