@@ -124,6 +124,9 @@ if [ $opt_config -eq 1 ] ; then
         patch -p1 < $W/$patch
     done
 
+    touch configure.ac
+    ./buildconf --force
+
     mkdir cgi apache
 
     echo "=== configure cgi/fpm ==="
