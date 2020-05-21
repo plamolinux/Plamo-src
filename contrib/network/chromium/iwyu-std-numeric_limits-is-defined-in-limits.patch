@@ -1,0 +1,10 @@
+--- chromium-83.0.4103.61/chrome/browser/performance_manager/graph/policies/background_tab_loading_policy_helpers.cc.orig	2020-05-21 13:10:52.198410901 +0900
++++ chromium-83.0.4103.61/chrome/browser/performance_manager/graph/policies/background_tab_loading_policy_helpers.cc	2020-05-21 15:21:16.518856865 +0900
+@@ -4,6 +4,7 @@
+ 
+ #include "chrome/browser/performance_manager/graph/policies/background_tab_loading_policy_helpers.h"
+ #include "base/logging.h"
++#include <limits>
+ 
+ namespace performance_manager {
+ 
