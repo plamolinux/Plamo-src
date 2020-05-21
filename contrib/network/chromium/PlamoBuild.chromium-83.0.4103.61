@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="81.0.4044.138"
+vers="83.0.4103.61"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
@@ -12,9 +12,16 @@ build=B1
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
-patchfiles="rename-Relayout-in-DesktopWindowTreeHostPlatform.patch
-        rebuild-Linux-frame-button-cache-when-activation.patch
-        chromium-widevine.patch
+patchfiles="
+        clean-up-a-call-to-set_utf8.patch
+        iwyu-std-numeric_limits-is-defined-in-limits.patch
+        add-missing-algorithm-header-in-crx_install_error.cc.patch
+        libstdc-fix-incomplete-type-in-AXTree-for-NodeSetSiz.patch
+        include-memory-header-to-get-the-definition-of-std-u.patch
+        make-some-of-blink-custom-iterators-STL-compatible.patch
+        avoid-double-destruction-of-ServiceWorkerObjectHost.patch
+        v8-remove-soon-to-be-removed-getAllFieldPositions.patch
+        chromium-83-gcc-10.patch
         chromium-skia-harmony.patch"
 compress=txz
 ##############################################################
@@ -50,6 +57,7 @@ build_gn() {
 
     cd gn_src
     git checkout master
+    git pull origin master
     if git branch | grep build > /dev/null; then
         git branch -D build
     fi
@@ -70,12 +78,12 @@ declare -gA _system_libs=(
   [flac]=flac
   [fontconfig]=fontconfig
   [freetype]=freetype2
-  [harfbuzz-ng]=harfbuzz
-  [icu]=icu
+  #[harfbuzz-ng]=harfbuzz
+  #[icu]=icu
   [libdrm]=
   [libjpeg]=libjpeg
   #[libpng]=libpng            # https://crbug.com/752403#c10
-  #[libvpx]=libvpx
+  [libvpx]=libvpx
   [libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
@@ -139,9 +147,7 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    if [ ! -x $W/gn ]; then
-        build_gn
-    fi
+    build_gn
 
 ######################################################################
 #  out of tree build. patch apply in src dir
@@ -194,7 +200,6 @@ if [ $opt_build -eq 1 ] ; then
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
     export CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
-    #export CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__= -DNO_UNWIND_TABLES'
     export CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
 
     # copy GN flags file and tweak GN flags
@@ -208,8 +213,8 @@ if [ $opt_build -eq 1 ] ; then
     done
 
     $W/gn gen out/Release --script-executable=/usr/bin/python2
-    # ninja -v -C out/Release chrome chrome_sandbox chromedriver
-    ninja -C out/Release chrome chrome_sandbox chromedriver
+    ninja -v -C out/Release chrome chrome_sandbox chromedriver
+    # ninja -C out/Release chrome chrome_sandbox chromedriver
 
     cd $W
     echo "*** Build chromium launcher"
