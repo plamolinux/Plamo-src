@@ -8,7 +8,7 @@ launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
@@ -78,7 +78,7 @@ declare -gA _system_libs=(
   [flac]=flac
   [fontconfig]=fontconfig
   [freetype]=freetype2
-  #[harfbuzz-ng]=harfbuzz
+  [harfbuzz-ng]=harfbuzz
   #[icu]=icu
   [libdrm]=
   [libjpeg]=libjpeg
@@ -179,6 +179,7 @@ if [ $opt_config -eq 1 ] ; then
         find "third_party/$_lib" -type f \
              \! -path "third_party/$_lib/chromium/*" \
              \! -path "third_party/$_lib/google/*" \
+             \! -path "third_party/harfbuzz-ng/utils/hb_scoped.h" \
              \! -path 'third_party/yasm/run_yasm.py' \
              \! -regex '.*\.\(gn\|gni\|isolate\)' \
              -delete
