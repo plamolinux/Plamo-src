@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ffmpeg'
-vers='4.0.4'
+vers='4.2.3'
 url="http://ffmpeg.org/releases/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
 # 高品質のAACコーデックライブラリを使いたい場合は
 # --enable-libfdk-aac
@@ -26,18 +26,17 @@ OPT_CONFIG="--enable-gpl
             --enable-libvpx
             --enable-libx264
             --enable-libx265
-	    --enable-libwebp
-	    --enable-libpulse
-	    --enable-libspeex
-	    --enable-libv4l2
-	    --enable-libxvid
-	    --enable-gnutls
-	    --disable-libfdk-aac
-	    --disable-nonfree
+            --enable-libwebp
+            --enable-libpulse
+            --enable-libspeex
+            --enable-libv4l2
+            --enable-libxvid
+            --enable-gnutls
+            --disable-libfdk-aac
+            --disable-nonfree
             --docdir=/usr/share/doc/ffmpeg-${vers}"
 DOCS='COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 COPYING.LGPLv3 Changelog INSTALL.md LICENSE.md MAINTAINERS README.md RELEASE RELEASE_NOTES'
 patchfiles=''
-#compatlibs="libavcodec.so.57.107.100 libavformat.so.57.83.100 libswresample.so.2.9.100 libavdevice.so.57.10.100 libavutil.so.55.78.100 libswscale.so.4.8.100 libavfilter.so.6.107.100 libpostproc.so.54.7.100"
 compress=txz
 ##############################################################
 
@@ -87,7 +86,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --mandir=/usr/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
