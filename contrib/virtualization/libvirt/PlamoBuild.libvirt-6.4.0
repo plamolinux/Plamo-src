@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libvirt'
-vers='4.4.0'
+vers='6.4.0'
 url="https://${pkgbase}.org/sources/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
@@ -10,7 +10,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared
             --with-storage-lvm --without-xen --with-udev --without-hal
 	    --with-qemu-user=libvirt-qemu --with-qemu-group=kvm
-	    --with-init-script=redhat --with-macvtap --with-interface"
+	    --with-init-script=check --with-macvtap --with-interface"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-old INSTALL NEWS README README.md'
 patchfiles=''
 compress=txz
@@ -67,7 +67,6 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed -lX11'
-  export PYTHON=/usr/bin/python2
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
