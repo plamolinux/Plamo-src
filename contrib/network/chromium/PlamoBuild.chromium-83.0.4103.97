@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="83.0.4103.61"
+vers="83.0.4103.97"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
