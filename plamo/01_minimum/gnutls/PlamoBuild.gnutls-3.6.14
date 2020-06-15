@@ -1,13 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gnutls'
-vers='3.6.5'
+vers='3.6.14'
 url="https://www.gnupg.org/ftp/gcrypt/${pkgbase}/v${vers%.*}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-included-unistring --with-default-trust-store-pkcs11=pkcs11:"
+OPT_CONFIG="
+	--with-included-unistring
+	--with-default-trust-store-pkcs11=pkcs11:
+	--docdir=/usr/share/doc/$src
+	--disable-guile"
 DOCS='.clcopying ABOUT-NLS AUTHORS ChangeLog INSTALL INSTALL.md LICENSE NEWS README.md THANKS'
 patchfiles=""
 compress=txz
