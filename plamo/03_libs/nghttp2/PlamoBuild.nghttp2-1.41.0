@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nghttp2'
-vers='1.39.2'
+vers='1.41.0'
 url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
