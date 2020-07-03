@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='lxcfs'
-vers="4.0.3"
-url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="${url}.asc"
+pkgbase='libexif'
+vers='0.6.22'
+url="https://github.com/libexif/libexif/releases/download/libexif-${vers//./_}-release/libexif-${vers}.tar.xz"
+digest="md5sum:1070601438443fdd5b8635565693cf99"
+verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-init-script=sysvinit --with-distro=plamo'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+OPT_CONFIG="--disable-static --enable-shared --with-doc-dir=/usr/share/doc/${src}"
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-Win32.txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -41,13 +42,16 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $B
+  cd $S
   for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
+      touch .${patch}
+    fi
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
@@ -56,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -80,20 +84,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  install -Dm755 -v $W/lxcfs.init $P/etc/rc.d/init.d/lxcfs
-  for i in $(seq 0 6)
-  do
-      install -dm755 -v $P/etc/rc.d/rc"$i".d
-      case $i in
-	  0|1|2|6)
-	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/K02lxcfs
-	      ;;
-	  3|4|5)
-	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/S98lxcfs
-	      ;;
-      esac
-  done
 
 ################################
 #      install tweaks
