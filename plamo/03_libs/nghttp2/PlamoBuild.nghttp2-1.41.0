@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libexif'
-vers='0.6.21'
-url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:27339b89850f28c8f1c237f233e05b27"
+pkgbase='nghttp2'
+vers='1.41.0'
+url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.xz"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-Win32.txt'
+OPT_CONFIG='--disable-static --enable-shared --disable-examples --disable-python-bindings --enable-asio-lib --enable-lib-only'
+DOCS='AUTHORS CMakeOptions.txt COPYING ChangeLog INSTALL NEWS README README.rst'
 patchfiles=''
 compress=txz
 ##############################################################

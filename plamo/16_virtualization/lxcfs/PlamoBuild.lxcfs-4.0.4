@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='ntp'
-vers='4.2.8p11'
-url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
-verify="$url.md5"
+pkgbase='lxcfs'
+vers="4.0.4"
+url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-linuxcaps --with-lineeditlibs=readline --docdir=/usr/share/doc/${src}"
-DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.pullrequests README.refclocks README.versions TODO readme.y2kfixes'
+OPT_CONFIG='--disable-static --enable-shared --with-init-script=sysvinit --with-distro=plamo'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -41,27 +41,22 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
-      touch .${patch}
-    fi
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  sed -e 's/"(\\S+)"/"?([^\\s"]+)"?/' \
-      -i scripts/update-leap/update-leap.in
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -86,44 +81,19 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  install -dm755 -v $P/usr/sbin
-  mv -v $P/usr/bin/ntpd $P/usr/sbin/ntpd
-
-  # install init script
-  install -D -m 0755 -v $W/ntp.init $P/etc/rc.d/init.d/ntpd
+  install -Dm755 -v $W/lxcfs.init $P/etc/rc.d/init.d/lxcfs
   for i in $(seq 0 6)
   do
       install -dm755 -v $P/etc/rc.d/rc"$i".d
       case $i in
-	  0|1|2|6) ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/K46ntpd ;;
-	  3|4|5)   ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/S26ntpd ;;
+	  0|1|2|6)
+	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/K02lxcfs
+	      ;;
+	  3|4|5)
+	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/S98lxcfs
+	      ;;
       esac
   done
-
-  # install config file
-  install -D -m 0644 -v $W/ntp.conf $P/etc/ntp.conf.dist
-
-  # install plamo original files to docdir
-  install -D -m 0644 -v $W/ntp.conf $docdir/$src/ntp.conf
-  install -D -m 0644 -v $W/ntp.init $docdir/$src/ntp.init
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/ntp.conf ]; then
-  mv /etc/ntp.conf.dist /etc/ntp.conf
-fi
-EOF
-
-  # make directory that drift file is placed
-  install -d -o 49 -g 49 -m 0755 $P/var/lib/ntp
-
-  cat <<EOF >> $P/install/initpkg
-if ! id ntp >/dev/null 2>&1; then
-  echo "Ntpd requires ntp user and group. Run following command"
-  echo "  sudo groupadd -g 49 ntp"
-  echo "  sudo useradd -u 49 -g ntp -s /bin/false ntp"
-fi
-EOF
 
 ################################
 #      install tweaks

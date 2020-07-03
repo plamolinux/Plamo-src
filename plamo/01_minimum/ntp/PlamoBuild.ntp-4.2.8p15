@@ -1,29 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='sqlite'
-vers='3.32.1'
-srcver="3320100"
-url="http://sqlite.org/2020/sqlite-autoconf-${srcver}.tar.gz"
-digest="md5sum:bc7afc06f1e30b09ac930957af68d723"
-verify=""
-arch=$(uname -m)
+pkgbase='ntp'
+vers='4.2.8p15'
+url="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${vers:0:3}/ntp-${vers}.tar.gz"
+verify="$url.md5"
+arch=`uname -m`
 build=B1
-src="sqlite-autoconf-${srcver}"
-OPT_CONFIG='--disable-static --enable-fts5'
-DOCS='INSTALL README.txt'
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--enable-linuxcaps --with-lineeditlibs=readline --docdir=/usr/share/doc/${src}"
+DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.pullrequests README.refclocks README.versions TODO readme.y2kfixes'
 patchfiles=''
 compress=txz
 ##############################################################
-export CPPFLAGS="$CPPFLAGS \
-       -DSQLITE_ENABLE_FTS3=1 \
-       -DSQLITE_ENABLE_FTS4=1 \
-       -DSQLITE_ENABLE_COLUMN_METADATA=1 \
-       -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 \
-       -DSQLITE_ENABLE_DBSTAT_VTAB=1 \
-       -DSQLITE_ENABLE_FTS3_TOKENIZER=1 \
-       -DSQLITE_SECURE_DELETE=1 \
-       -DSQLITE_MAX_VARIABLE_NUMBER=250000 \
-       -DSQLITE_MAX_EXPR_DEPTH=10000"
 
 source /usr/share/plamobuild_functions.sh
 
@@ -67,6 +55,8 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  sed -e 's/"(\\S+)"/"?([^\\s"]+)"?/' \
+      -i scripts/update-leap/update-leap.in
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
@@ -95,6 +85,45 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -dm755 -v $P/usr/sbin
+  mv -v $P/usr/bin/ntpd $P/usr/sbin/ntpd
+
+  # install init script
+  install -D -m 0755 -v $W/ntp.init $P/etc/rc.d/init.d/ntpd
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6) ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/K46ntpd ;;
+	  3|4|5)   ln -sf ../init.d/ntpd $P/etc/rc.d/rc"$i".d/S26ntpd ;;
+      esac
+  done
+
+  # install config file
+  install -D -m 0644 -v $W/ntp.conf $P/etc/ntp.conf.dist
+
+  # install plamo original files to docdir
+  install -D -m 0644 -v $W/ntp.conf $docdir/$src/ntp.conf
+  install -D -m 0644 -v $W/ntp.init $docdir/$src/ntp.init
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/ntp.conf ]; then
+  mv /etc/ntp.conf.dist /etc/ntp.conf
+fi
+EOF
+
+  # make directory that drift file is placed
+  install -d -o 49 -g 49 -m 0755 $P/var/lib/ntp
+
+  cat <<EOF >> $P/install/initpkg
+if ! id ntp >/dev/null 2>&1; then
+  echo "Ntpd requires ntp user and group. Run following command"
+  echo "  sudo groupadd -g 49 ntp"
+  echo "  sudo useradd -u 49 -g ntp -s /bin/false ntp"
+fi
+EOF
 
 ################################
 #      install tweaks
