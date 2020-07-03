@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="83.0.4103.106"
+vers="83.0.4103.116"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
