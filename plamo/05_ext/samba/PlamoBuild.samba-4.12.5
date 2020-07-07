@@ -101,6 +101,7 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   # Libraries
+  mkdir -p -v $P/${libdir}
   mv -v $P/usr/lib/libnss_win{s,bind}.so*   $P/${libdir}
   ln -v -sf ../../${libdir}/libnss_winbind.so.2 $P/usr/${libdir}/libnss_winbind.so
   ln -v -sf ../../${libdir}/libnss_wins.so.2    $P/usr/${libdir}/libnss_wins.so
