@@ -5,7 +5,7 @@ vers="4.3"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="lxd-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
@@ -128,6 +128,10 @@ if [ $opt_package -eq 1 ] ; then
 touch /etc/subuid /etc/subgid
 groupadd -f -r lxd
 usermod -v 100000-165536 -w 100000-165536 root
+
+if [ -x /usr/bin/xorrisofs ]; then
+  ( cd /usr/bin ; ln -sf xorrisofs mkisofs )
+fi
 EOF
 
   for i in $(seq 0 6)

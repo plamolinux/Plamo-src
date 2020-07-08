@@ -18,7 +18,8 @@
 DAEMON=/usr/bin/lxd
 ARGS="--group lxd --logfile=/var/log/lxd/lxd.log"
 PIDFILE=/run/lxd.pid
-export LD_LIBRARY_PATH="/usr/lib/lxd" \
+export LD_LIBRARY_PATH="/usr/lib/lxd"
+export LXD_OVMF_PATH="/usr/share/OVMF/x64/"
 
 case "${1}" in
    start)

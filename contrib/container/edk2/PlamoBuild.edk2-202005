@@ -104,7 +104,7 @@ if [ $opt_build -eq 1 ] ; then
 
     make -C BaseTools
 
-    export WORKSPACE=$B
+    # export WORKSPACE=$B
     . edksetup.sh
 
     for _arch in ${_arch_list[@]}
