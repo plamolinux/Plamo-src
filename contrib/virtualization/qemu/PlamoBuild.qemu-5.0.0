@@ -5,10 +5,13 @@ vers="5.0.0"
 url="http://download.qemu-project.org/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-
 OPT_CONFIG="--audio-drv-list=alsa
+	    --enable-modules
+	    --enable-xfsctl
+	    --enable-sdl
+	    --enable-virtfs
 	    --docdir=/usr/share/doc/${src}"
 DOCS='COPYING COPYING.LIB COPYING.PYTHON Changelog HACKING LICENSE MAINTAINERS README qdict-test-data.txt'
 patchfiles=''
