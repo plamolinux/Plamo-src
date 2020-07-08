@@ -1,0 +1,239 @@
+#!/bin/bash
+##############################################################
+pkgbase="edk2"
+vers="202005"
+url="https://github.com/tianocore/edk2/archive/edk2-stable${vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="edk2-edk2-stable${vers}"
+OPT_CONFIG=""
+DOCS="License-History.txt License.txt Maintainers.txt ReadMe.rst pip-requirements.txt"
+patchfiles="edk2-202005-openssl-1.1.1g.patch"
+# specifies files that are not in source archive and patchfiles
+addfiles="50-edk2-ovmf-i386-secure.json 50-edk2-ovmf-x86_64-secure.json 60-edk2-ovmf-i386.json 60-edk2-ovmf-x86_64.json"
+compress=txz
+##############################################################
+openssl_vers="1.1.1g"
+openssl_url="https://www.openssl.org/source/openssl-${openssl_vers}.tar.gz"
+###
+brotli_vers="1.0.7"
+brotli_url="https://github.com/google/brotli/archive/v${brotli_vers}.tar.gz"
+###
+_arch_list=('IA32' 'X64')
+_build_type="RELEASE"
+_build_plugin="GCC5"
+nproc=$(grep processor /proc/cpuinfo | wc -l)
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+B=$W/build
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+    if [ ! -f ${openssl_url##*/} ]; then
+        wget $openssl_url
+    fi
+    tar xvf ${openssl_url##*/}
+    if [ ! -f ${brotli_url##*/} ]; then
+        wget $brotli_url
+    fi
+    tar xvf ${brotli_url##*/}
+fi
+
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+    cd $B
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    # remove included openssl and replace with symbolic link to openssl
+    rm -rfv CryptoPkg/Library/OpensslLib/openssl
+    ln -sfv $W/openssl-${openssl_vers} CryptoPkg/Library/OpensslLib/openssl
+    cp -v CryptoPkg/Library/Include/internal/dso_conf.h CryptoPkg/Library/OpensslLib/openssl/include/crypto/
+
+    # remove included brotli and replace
+    rm -rfv BaseTools/Source/C/BrotliCompress/brotli MdeModulePkg/Library/BrotliCustomDecompressLib/brotli
+    ln -sfv "$W/brotli-${brotli_vers}" BaseTools/Source/C/BrotliCompress/brotli
+    ln -sfv "$W/brotli-${brotli_vers}" MdeModulePkg/Library/BrotliCustomDecompressLib/brotli
+
+    sed -e 's/ -Werror//g' \
+        -i BaseTools/Conf/*.template BaseTools/Source/C/Makefiles/*.makefile
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B
+
+    make -C BaseTools
+
+    # export WORKSPACE=$B
+    . edksetup.sh
+
+    for _arch in ${_arch_list[@]}
+    do
+	echo "Building shell (${_arch})"
+	BaseTools/BinWrappers/PosixLike/build -p ShellPkg/ShellPkg.dsc \
+					      -a "${_arch}" \
+					      -b "${_build_type}" \
+					      -n "$(nproc)" \
+					      -t "${_build_plugin}"
+	# ovmf
+	if [[ "${_arch}" == 'IA32' ]]; then
+	    echo "Building ovmf (${_arch}) with secure boot"
+	    OvmfPkg/build.sh -p OvmfPkg/OvmfPkgIa32.dsc \
+			     -a "${_arch}" \
+			     -b "${_build_type}" \
+			     -n "$(nproc)" \
+			     -t "${_build_plugin}" \
+			     -D LOAD_X64_ON_IA32_ENABLE \
+			     -D NETWORK_IP6_ENABLE \
+			     -D TPM2_ENABLE \
+			     -D HTTP_BOOT_ENABLE \
+			     -D TLS_ENABLE \
+			     -D FD_SIZE_2MB \
+			     -D SECURE_BOOT_ENABLE \
+			     -D SMM_REQUIRE \
+			     -D EXCLUDE_SHELL_FROM_FD
+	    mv -v Build/Ovmf{Ia32,IA32-secure}
+	    echo "Building ovmf (${_arch}) without secure boot"
+	    OvmfPkg/build.sh -p OvmfPkg/OvmfPkgIa32.dsc \
+			     -a "${_arch}" \
+			     -b "${_build_type}" \
+			     -n "$(nproc)" \
+			     -t "${_build_plugin}" \
+			     -D LOAD_X64_ON_IA32_ENABLE \
+			     -D NETWORK_IP6_ENABLE \
+			     -D TPM2_ENABLE \
+			     -D HTTP_BOOT_ENABLE \
+			     -D TLS_ENABLE \
+			     -D FD_SIZE_2MB
+	    mv -v Build/Ovmf{Ia32,IA32}
+	fi
+	if [[ "${_arch}" == 'X64' ]]; then
+	    echo "Building ovmf (${_arch}) with secure boot"
+	    OvmfPkg/build.sh -p "OvmfPkg/OvmfPkg${_arch}.dsc" \
+			     -a "${_arch}" \
+			     -b "${_build_type}" \
+			     -n "$(nproc)" \
+			     -t "${_build_plugin}" \
+			     -D NETWORK_IP6_ENABLE \
+			     -D TPM2_ENABLE \
+			     -D FD_SIZE_2MB \
+			     -D TLS_ENABLE \
+			     -D HTTP_BOOT_ENABLE \
+			     -D SECURE_BOOT_ENABLE \
+			     -D SMM_REQUIRE \
+			     -D EXCLUDE_SHELL_FROM_FD
+	    mv -v Build/OvmfX64{,-secure}
+	    echo "Building ovmf (${_arch}) without secure boot"
+	    OvmfPkg/build.sh -p "OvmfPkg/OvmfPkg${_arch}.dsc" \
+			     -a "${_arch}" \
+			     -b "${_build_type}" \
+			     -n "$(nproc)" \
+			     -t "${_build_plugin}" \
+			     -D NETWORK_IP6_ENABLE \
+			     -D TPM2_ENABLE \
+			     -D FD_SIZE_2MB \
+			     -D TLS_ENABLE \
+			     -D HTTP_BOOT_ENABLE
+	fi
+    done
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  ## Shell
+  
+  # minimal UEFI shell, as defined in ShellPkg/Application/Shell/ShellPkg.inf
+  _min='7C04A583-9E3E-4f1c-AD65-E05268D0B4D1'
+  # full UEFI shell, as defined in ShellPkg/ShellPkg.dsc
+  _full='EA4BB293-2D7F-4456-A681-1F22F42CD0BC'
+  for _arch in ${_arch_list[@]}; do
+      install -vDm 644 "Build/Shell/${_build_type}_${_build_plugin}/${_arch}/Shell_${_min}.efi" \
+	      "${P}/usr/share/${pkgbase}/${_arch,,}/Shell.efi"
+      install -vDm 644 "Build/Shell/${_build_type}_${_build_plugin}/${_arch}/Shell_${_full}.efi" \
+	      "${P}/usr/share/${pkgbase}/${_arch,,}/Shell_Full.efi"
+  done
+
+  ## firmware
+  # installing the various firmwares
+  for _arch in ${_arch_list[@]}; do
+      # installing OVMF.fd for xen: https://bugs.archlinux.org/task/58635
+      install -vDm 644 "Build/Ovmf${_arch}/${_build_type}_${_build_plugin}/FV/OVMF.fd" \
+	      -t "${P}/usr/share/${pkgbase}/${_arch,,}"
+      install -vDm 644 "Build/Ovmf${_arch}/${_build_type}_${_build_plugin}/FV/OVMF_CODE.fd" \
+	      -t "${P}/usr/share/${pkgbase}/${_arch,,}"
+      install -vDm 644 "Build/Ovmf${_arch}/${_build_type}_${_build_plugin}/FV/OVMF_VARS.fd" \
+	      -t "${P}/usr/share/${pkgbase}/${_arch,,}"
+      install -vDm 644 "Build/Ovmf${_arch}-secure/${_build_type}_${_build_plugin}/FV/OVMF_CODE.fd" \
+	      "${P}/usr/share/${pkgbase}/${_arch,,}/OVMF_CODE.secboot.fd"
+  done
+
+  install -vDm 644 $W/*"${pkgbase}"*.json -t "${P}/usr/share/qemu/firmware"
+  # adding symlink for previous ovmf location
+  # https://bugs.archlinux.org/task/66528
+  ln -svf "/usr/share/${pkgbase}" "${P}/usr/share/ovmf"
+  # adding a symlink for applications with questionable heuristics (such as lxd)
+  ln -svf "/usr/share/${pkgbase}" "${P}/usr/share/OVMF"
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
