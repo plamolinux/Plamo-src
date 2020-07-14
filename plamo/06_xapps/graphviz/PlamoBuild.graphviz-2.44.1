@@ -1,19 +1,21 @@
 #!/bin/sh
 ##############################################################
 pkgbase='graphviz'
-vers='2.40.1'
-url="http://${pkgbase}.gitlab.io/pub/${pkgbase}/stable/SOURCES/${pkgbase}.tar.gz"
-verify=""
+vers='2.44.1'
+url="https://www2.graphviz.org/Packages/stable/portable_source/graphviz-${vers}.tar.gz"
+verify="${url}.md5"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-python=yes --enable-ruby=yes --with-qt=yes"
+OPT_CONFIG="--disable-static --enable-shared --enable-python=no --enable-python3=yes --enable-ruby=yes --with-qt=yes"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README cpl1.0.txt'
 patchfiles=''
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
+
+export RUBY_VER="2.5"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -53,9 +55,6 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
 
-  # for ruby 2.5
-  sed -e '/ruby/s/1\.9/2.4/' -i configure.ac
-
   # avoid /usr/lib64
   sed -i '/LIBPOSTFIX="64"/s/64//' configure.ac
 
@@ -63,7 +62,7 @@ if [ $opt_config -eq 1 ] ; then
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
+  export LDFLAGS='-Wl,--as-needed'
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
