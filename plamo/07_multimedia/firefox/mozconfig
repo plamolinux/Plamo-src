@@ -7,54 +7,43 @@ export RANLIB=llvm-ranlib
 ac_add_options --enable-application=browser
 
 ac_add_options --prefix=/usr
+ac_add_options --enable-release
 ac_add_options --enable-hardening
 ac_add_options --enable-optimize
 ac_add_options --enable-rust-simd
-ac_add_options --enable-release
+ac_add_options --enable-linker=lld
+ac_add_options --disable-elf-hack
 
+# Branding
+ac_add_options --disable-official-branding
+ac_add_options --with-branding=browser/branding/unofficial
+ac_add_options --with-distribution-id=org.plamolinux
+ac_add_options --with-unsigned-addon-scopes=app,system
+ac_add_options --allow-addon-sideload
 ac_add_options --with-distribution-id=org.plamolinux
 
 # System libraries
+ac_add_options --with-system-nspr
+ac_add_options --with-system-nss
 ac_add_options --with-system-zlib
-# do not exist 78.0 or later
-#ac_add_options --with-system-bz2
 # need icu 67.1 or later
 #ac_add_options --with-system-icu
 ac_add_options --with-system-jpeg
 ac_add_options --with-system-png
 # current firefox fails to build against libvpx-1.8.0
 # ac_add_options --with-system-libvpx
-ac_add_options --with-system-webp
-ac_add_options --with-system-nspr
-ac_add_options --with-system-nss
+# ac_add_options --with-system-webp
 ac_add_options --with-system-libevent
-# BLFS do not have the patch for firefox 70 with system graphite2 and harfbuzz
-#ac_add_options --with-system-graphite2
-#ac_add_options --with-system-harfbuzz
-#ac_add_options --enable-system-sqlite
 ac_add_options --enable-system-ffi
-# In 59.0, system cairo breaks a build, so comment
-#ac_add_options --enable-system-cairo
 ac_add_options --enable-system-pixman
 
 # Features
-#ac_add_options --enable-startup-notification
-ac_add_options --disable-crashreporter
-ac_add_options --disable-tests
-ac_add_options --disable-updater
-#ac_add_options --disable-necko-wifi
-#ac_add_options --disable-dbus
-#ac_add_options --disable-gconf
 ac_add_options --enable-pulseaudio
+ac_add_options --enable-jack
 ac_add_options --enable-alsa
-
-# Branding
-ac_add_options --disable-official-branding
-ac_add_options --with-branding=browser/branding/unofficial
-ac_add_options --with-distribution-id=org.plamolinux
-
-ac_add_options --with-unsigned-addon-scopes=app,system
-ac_add_options --allow-addon-sideload
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-tests
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
 #mk_add_options MOZ_MAKE_FLAGS="-j3"
