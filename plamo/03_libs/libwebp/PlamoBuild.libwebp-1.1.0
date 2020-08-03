@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libwebp"
-vers="1.0.2"
-url="https://github.com/webmproject/libwebp/archive/v1.0.2.tar.gz"
+vers="1.1.0"
+url="https://github.com/webmproject/libwebp/archive/v${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="libwebp-1.0.2"
+build=B1
+src="libwebp-${vers}"
 OPT_CONFIG="--enable-libwebpmux --enable-libwebpdemux --enable-libwebpdecoder --enable-libwebpextras --enable-swap-16bit-csp --disable-static --enable-shared"
 DOCS="AUTHORS COPYING ChangeLog NEWS README README.mux README.webp_js"
 patchfiles=""
