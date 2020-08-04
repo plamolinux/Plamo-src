@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libjpeg_turbo"
-vers="2.0.2"
+vers="2.0.5"
 url="https://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${vers}.tar.gz"
-verify=""
+verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B3
