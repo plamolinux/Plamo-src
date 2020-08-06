@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B1
 src="libX11-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-loadable-i18n"
+OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README.md"
 patchfiles="93fce3f4e79cbc737d6468a4f68ba3de1b83953b.patch"
 # specifies files that are not in source archive and patchfiles
