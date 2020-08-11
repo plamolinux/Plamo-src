@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='httpd'
-vers='2.4.41'
+vers="2.4.46"
 url="https://archive.apache.org/dist/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
