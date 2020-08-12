@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="firefox"
+pkgbase="js68"
 vers="68.11.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}esr/source/firefox-${vers}esr.source.tar.xz"
 verify=""
