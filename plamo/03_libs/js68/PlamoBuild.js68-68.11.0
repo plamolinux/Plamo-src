@@ -71,7 +71,8 @@ if [ $opt_config -eq 1 ] ; then
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
+    export LDFLAGS='-Wl,--as-needed'
+    CC=gcc CXX=g++ LLVM_OBJDUMP=/bin/false \
     $S/js/src/configure --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
@@ -82,7 +83,8 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    CC=gcc CXX=g++ LLVM_OBJDUMP=/bin/false \
+      make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
