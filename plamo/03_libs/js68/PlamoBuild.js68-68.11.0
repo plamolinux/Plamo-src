@@ -69,6 +69,29 @@ if [ $opt_config -eq 1 ] ; then
 	touch .moz.configure.patch
     fi
 
+    cd $W
+    echo "We need rust toolchain. Now, setup rust"
+    if [ -f /var/log/packages/rustc ]; then
+	echo "Rustc pacakge is installed. We don't use it, so remove."
+	sudo removepkg rustc
+    fi
+
+    export PATH="$PATH:$HOME/.cargo/bin"
+    if [ -f ~/.cargo/bin/rustc ]; then
+	if [ x"$rustver" = "x" ]; then
+	    rustup update
+	    rustup default stable
+	else
+	    rustup default $rustver
+	fi
+    else
+	wget -O rustup-init.sh https://sh.rustup.rs
+	sh rustup-init.sh -y
+	if [ x"$rustver" != "x" ]; then
+	    rustup default $rustver
+	fi
+    fi
+
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
