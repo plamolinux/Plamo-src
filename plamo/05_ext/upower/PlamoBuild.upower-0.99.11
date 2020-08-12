@@ -3,7 +3,7 @@
 pkgbase='upower'
 vers='0.99.11'
 url="https://gitlab.freedesktop.org/upower/upower/uploads/c438511024b9bc5a904f8775cfc8e4c4/upower-0.99.10.tar.xz"
-digest="md5sum:abe6acb617f11f2e8dbd9846fcf86e24"
+digest=""
 verify=""
 arch=`uname -m`
 build=B2
