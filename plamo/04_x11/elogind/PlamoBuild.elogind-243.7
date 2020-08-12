@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="elogind"
-vers="241.4"
+vers="243.7"
 url="https://github.com/elogind/elogind/archive/v${vers}/elogind-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="elogind-${vers}"
 OPT_CONFIG="-Dcgroup-controller=elogind -Ddbuspolicydir=/etc/dbus-1/system.d"
 DOCS="LICENSE.GPL2 LICENSE.LGPL2.1 NEWS README.md TODO meson_options.txt"
