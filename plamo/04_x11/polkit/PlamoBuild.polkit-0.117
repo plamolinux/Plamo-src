@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='polkit'
-vers="0.116"
+vers="0.117"
 url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-polkitd-user=polkituser --enable-libsystemd-login=no --with-os-type=Plamo"
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/polkit-0.116-fix_elogind_detection-1.patch"
+blfspatch=""
 patchfiles="${blfspatch##*/}"
 addfiles="polkit.pam"
 compress=txz
