@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.32.3'
-srcver="3320300"
+vers='3.33.0'
+srcver="3330000"
 url="http://sqlite.org/2020/sqlite-autoconf-${srcver}.tar.gz"
-digest="sha1sum:ea14ef2dc4cc7fcbc5ebbb018d3a03faa3a41cb4"
+digest="md5sum:842a8a100d7b01b09e543deb2b7951dd"
 verify=""
 arch=$(uname -m)
 build=B1
@@ -14,7 +14,7 @@ DOCS='INSTALL README.txt'
 patchfiles=''
 compress=txz
 ##############################################################
-export CPPFLAGS="$CPPFLAGS \
+export CFLAGS="$CFLAGS \
        -DSQLITE_ENABLE_FTS3=1 \
        -DSQLITE_ENABLE_FTS4=1 \
        -DSQLITE_ENABLE_COLUMN_METADATA=1 \
