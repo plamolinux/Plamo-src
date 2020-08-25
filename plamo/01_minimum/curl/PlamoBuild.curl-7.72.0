@@ -1,29 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='sqlite'
-vers='3.32.3'
-srcver="3320300"
-url="http://sqlite.org/2020/sqlite-autoconf-${srcver}.tar.gz"
-digest="sha1sum:ea14ef2dc4cc7fcbc5ebbb018d3a03faa3a41cb4"
-verify=""
-arch=$(uname -m)
+pkgbase='curl'
+vers='7.72.0'
+url="https://curl.haxx.se/download/${pkgbase}-${vers}.tar.gz"
+verify="${url}.asc"
+arch=`uname -m`
 build=B1
-src="sqlite-autoconf-${srcver}"
-OPT_CONFIG='--disable-static --enable-fts5'
-DOCS='INSTALL README.txt'
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
+            --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
+            --with-random=/dev/urandom"
+DOCS='COPYING README RELEASE-NOTES'
 patchfiles=''
 compress=txz
 ##############################################################
-export CPPFLAGS="$CPPFLAGS \
-       -DSQLITE_ENABLE_FTS3=1 \
-       -DSQLITE_ENABLE_FTS4=1 \
-       -DSQLITE_ENABLE_COLUMN_METADATA=1 \
-       -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 \
-       -DSQLITE_ENABLE_DBSTAT_VTAB=1 \
-       -DSQLITE_ENABLE_FTS3_TOKENIZER=1 \
-       -DSQLITE_SECURE_DELETE=1 \
-       -DSQLITE_MAX_VARIABLE_NUMBER=250000 \
-       -DSQLITE_MAX_EXPR_DEPTH=10000"
 
 source /usr/share/plamobuild_functions.sh
 
