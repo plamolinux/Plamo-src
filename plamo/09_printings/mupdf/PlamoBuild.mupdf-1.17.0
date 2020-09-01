@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mupdf'
-vers='1.11'
+vers="1.17.0"
 url="http://www.mupdf.com/downloads/archive/mupdf-${vers}-source.tar.gz"
-digest="md5sum:ab9a6629f572225e803c4cf426bdb09c"
+digest="md5sum:f6ffcd81fcd4c57016eb630bcd617c50"
 verify=""
 arch=`uname -m`
 build=B1
 src="mupdf-${vers}-source"
 OPT_CONFIG=
 DOCS='COPYING README'
-blfspatches="http://www.linuxfromscratch.org/patches/blfs/svn/mupdf-${vers}-shared_libs-1.patch 
-http://www.linuxfromscratch.org/patches/blfs/svn/mupdf-${vers}-openjpeg-3.patch"
+blfspatches="http://www.linuxfromscratch.org/patches/blfs/svn/mupdf-${vers}-shared_libs-1.patch"
 patchfiles=
 compress=txz
 ##############################################################
@@ -57,14 +56,6 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   cd $B
 
-  rm -rf thirdparty/curl
-  rm -rf thirdparty/freetype
-  rm -rf thirdparty/harfbuzz
-  rm -rf thirdparty/jpeg
-  rm -rf thirdparty/libjpeg
-  rm -rf thirdparty/openjpeg
-  rm -rf thirdparty/zlib
-
   for p in $blfspatches
   do
     patchfiles="$patchfiles ${p##*/}"
@@ -78,7 +69,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make build=release
+  USE_SYSTEM_LIBS=yes make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -90,11 +81,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install prefix=$P/usr build=release \
-       docdir=$P/usr/share/doc/mupdf-${vers}
+  USE_SYSTEM_LIBS=yes \
+      make install prefix=$P/usr build=release \
+      docdir=$P/usr/share/doc/mupdf-${vers}
   docdir=$P/usr/share/doc/mupdf-${vers}
 
-  ln -sfv mupdf-x11-curl $P/usr/bin/mupdf
+  ln -sfv mupdf-x11 $P/usr/bin/mupdf
 
 ################################
 #      install tweaks
