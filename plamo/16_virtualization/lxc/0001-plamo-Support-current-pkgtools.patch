@@ -1,0 +1,39 @@
+From 0afc4b78d0abadab5c656160278cf5b8b62e2d56 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Thu, 3 Sep 2020 14:42:29 +0900
+Subject: [PATCH] plamo: Support current pkgtools
+
+Our package manager "pkgtools" is updated, and renamed "pkgtools7".
+
+Signed-off-by: KATOH Yasufumi <karma@jazz.email.ne.jp>
+---
+ templates/lxc-plamo.in | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/templates/lxc-plamo.in b/templates/lxc-plamo.in
+index 4a023ae..54f1300 100644
+--- a/templates/lxc-plamo.in
++++ b/templates/lxc-plamo.in
+@@ -123,13 +123,18 @@ install_plamo() {
+     echo "Installing 'installpkg' command into $dlcache/sbin..."
+ 
+     if [ $majorver -ge 7 ]; then
+-       pkgtool="pkgtools"
++	pkgtool="pkgtools"
++	pkgtool=$( cd $dlcache ; ls "$pkgtool"* )
++	pkgtool=${pkgtool%%-*}
+     else
+        pkgtool="hdsetup"
+        LANG=C
+     fi
+ 
+     ( cd $dlcache ; tar xpJf "$pkgtool"-*.txz ; rm -rf tmp usr var )
++    if [ $pkgtool = "pkgtools${majorver}" ]; then
++	( cd $dlcache/sbin ; mv installer_new installer )
++    fi
+ 
+     sed -i "/ldconfig/!s@/sbin@$dlcache&@g" $dlcache/sbin/installpkg*
+     PATH=$dlcache/sbin:$PATH
+-- 
+2.26.1
+
