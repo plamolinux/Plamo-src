@@ -1,0 +1,47 @@
+From cbd166a91d81d98628bc07fda90cf5050c331486 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Sat, 5 Sep 2020 15:01:38 +0900
+Subject: [PATCH] plamo: fix for current Plamo 7.x
+
+* glibc is now initialized when a container is first started
+* pkgtools7 is not initialized when a container is first started
+
+Signed-off-by: KATOH Yasufumi <karma@jazz.email.ne.jp>
+---
+ templates/lxc-plamo.in | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/templates/lxc-plamo.in b/templates/lxc-plamo.in
+index 57f8951..a1e2523 100644
+--- a/templates/lxc-plamo.in
++++ b/templates/lxc-plamo.in
+@@ -183,9 +183,6 @@ configure_plamo6() {
+ 	EOF
+   # configure the network using the dhcp
+   echo "DHCP" > $rootfs/var/run/inet1-scheme
+-  # glibc configure
+-  mv $rootfs/etc/ld.so.conf{.new,}
+-  chroot $rootfs ldconfig
+ 
+   # delete unnecessary process from rc.S
+   ed - $rootfs/etc/rc.d/rc.S <<- "EOF"
+@@ -287,7 +284,7 @@ configure_plamo7() {
+ 	EOF
+ 
+     # initpkg
+-    noexec="shadow netconfig7 eudev openssh"
++    noexec="shadow netconfig7 eudev openssh pkgtools${majorver}"
+     for f in $noexec
+     do
+       rm -f $rootfs/var/log/initpkg/"$f"
+@@ -298,6 +295,7 @@ configure_plamo7() {
+       chroot $rootfs sh ./$f
+     done
+     popd
++    ( cd $rootfs/sbin ; mv installer_new installer )
+ }
+ 
+ configure_plamo() {
+-- 
+2.26.1
+
