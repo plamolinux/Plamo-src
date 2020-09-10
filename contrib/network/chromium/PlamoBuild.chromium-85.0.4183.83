@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="84.0.4147.135"
+vers="85.0.4183.83"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="3"
+patchset_vers="2"
 chromium_patch_url="https://github.com/stha09/chromium-patches/archive/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.gz"
 verify=""
 digest=""
@@ -15,19 +15,11 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-        remove-NotifyError-calls-and-just-send-a-normal-message.patch
-        avoid-calling-DeleteForCurrentDocument-from-destructor.patch
-        force-mp3-files-to-have-a-start-time-of-zero.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-AXObject-stl-iterator.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-ListContainerHelper-include-cstring.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-crashpad-include-cstring.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-gcc-10-include-stddef.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-gcc-10-webrtc-include-stddef.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-gcc-DCHECK_EQ-unique_ptr.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-84-std-vector-const.patch
-        chromium-ffmpeg-4.3.patch
+	media-Set-allocation-limit-compatible-with-FFmpeg-4.3.patch
+        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-85-NearbyShareEncryptedMetadataKey-include.patch
+        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-85-sim_hash-include.patch
         chromium-fix-vaapi-on-intel.patch
-        chromium-skia-harmony.patch"
+	chromium-skia-harmony.patch"
 compress=txz
 ##############################################################
 
@@ -88,7 +80,7 @@ declare -gA _system_libs=(
   [libdrm]=
   [libjpeg]=libjpeg
   [libpng]=libpng
-  [libvpx]=libvpx
+  #[libvpx]=libvpx
   [libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
