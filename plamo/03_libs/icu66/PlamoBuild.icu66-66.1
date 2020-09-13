@@ -102,12 +102,12 @@ if [ $opt_package -eq 1 ] ; then
 #   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
-  #convert_links
+  convert_links
 
-  #cd $P
-  #/sbin/makepkg ../$pkg.$compress <<EOF
-#y
-#1
-#EOF
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
 
 fi
