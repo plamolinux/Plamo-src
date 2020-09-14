@@ -1,0 +1,25 @@
+From c5e855dd49a8f1d99120037c1dafd7ff400919d6 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 14 Sep 2020 18:26:37 +0900
+Subject: [PATCH] Tweak the place of sysctl.h
+
+---
+ memory/mozjemalloc/jemalloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/memory/mozjemalloc/jemalloc.c b/memory/mozjemalloc/jemalloc.c
+index 5d4d83a2..e47d369c 100644
+--- a/memory/mozjemalloc/jemalloc.c
++++ b/memory/mozjemalloc/jemalloc.c
+@@ -332,7 +332,7 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
+ #include <sys/time.h>
+ #include <sys/types.h>
+ #if !defined(MOZ_MEMORY_SOLARIS) && !defined(MOZ_MEMORY_ANDROID)
+-#include <sys/sysctl.h>
++#include <linux/sysctl.h>
+ #endif
+ #include <sys/uio.h>
+ #ifndef MOZ_MEMORY
+-- 
+2.26.1
+
