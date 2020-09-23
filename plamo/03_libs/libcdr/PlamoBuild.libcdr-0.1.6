@@ -1,25 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase="samba"
-vers="4.12.5"
-url="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.gz"
-verify="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.asc"
+pkgbase="libcdr"
+vers="0.1.6"
+url="https://dev-www.libreoffice.org/src/libcdr/libcdr-${vers}.tar.xz"
+verify=""
 digest=""
 arch=`uname -m`
-build=B1
-src="samba-${vers}"
-OPT_CONFIG="
-	--with-piddir=/run/samba
-	--with-pammodulesdir=/lib/security
-	--enable-fhs
-	--without-ad-dc
-	--without-systemd
-	--disable-cups
-	--enable-selftest"
-DOCS="BUILD_SYSTEMS.txt COPYING PFIF.txt README.Coding README.cifs-utils README.contributing README.md WHATSNEW.txt release-scripts"
+build=B2
+src="libcdr-${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="AUTHORS COPYING.MPL ChangeLog NEWS README"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles="samba.init samba.pam"
+addfiles=""
 compress=txz
 ##############################################################
 
@@ -49,6 +42,7 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
 
     for f in $addfiles $patchfiles
@@ -62,19 +56,21 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
-        patch -p1 < $W/$patch
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
     done
-
-    # Fix a test that always fails:
-    echo "^samba4.rpc.echo.*on.*ncacn_np.*with.*object.*nt4_dc" >> selftest/knownfail
-
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-    export CFLAGS="-I/usr/include/tirpc"
-    export LDFLAGS='-Wl,--as-needed -ltirpc'
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -82,9 +78,8 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export CFLAGS="-I/usr/include/tirpc"
-    export LDFLAGS='-Wl,--as-needed -ltirpc'
+    cd $B 
+    export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
@@ -99,41 +94,6 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  # Libraries
-  mkdir -p -v $P/${libdir}
-  mv -v $P/usr/lib/libnss_win{s,bind}.so*   $P/${libdir}
-  ln -v -sf ../../${libdir}/libnss_winbind.so.2 $P/usr/${libdir}/libnss_winbind.so
-  ln -v -sf ../../${libdir}/libnss_wins.so.2    $P/usr/${libdir}/libnss_wins.so
-
-  # config
-  install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
-  sed -i -e '/log file/s|/usr/local/samba/var|/var/log/samba|' $P/etc/samba/smb.conf.dist
-
-  # for openldap
-  mkdir -p -v $P/etc/openldap/schema
-  install -v -m644    examples/LDAP/samba* $P/etc/openldap/schema
-  install -v -m755    examples/LDAP/{get*,ol*} $P/etc/openldap/schema
-
-  # pam
-  install -v -m644 -D $W/samba.pam $P/etc/pam.d/samba
-
-  # init (default to not spawn)
-  install -v -m644 -D $W/samba.init $P/etc/rc.d/init.d/samba
-  for i in $(seq 0 6)
-  do
-      install -dm755 -v $P/etc/rc.d/rc"$i".d
-      case $i in
-	  0|1|2|6) ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/K48samba ;;
-	  3|4|5)   ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/S45samba ;;
-      esac
-  done
-
-  # docdir
-  for f in samba.pam samba.init
-  do
-    install -Dm644 -v $W/$f $docdir/$src/$f
-  done
 
 ################################
 #      install tweaks

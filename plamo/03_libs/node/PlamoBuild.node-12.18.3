@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='icu'
-vers='65.1'
-url="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz"
-verify="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz.asc"
+pkgbase='node'
+vers="12.18.3"
+url="https://${pkgbase}js.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
+digest="md5sum:cb746f860a64fced875d8aa3ebf69591"
+verify=""
 arch=`uname -m`
-build=B1
-src="icu"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='LICENSE license.html readme.html'
+build=B2
+src="${pkgbase}-v${vers}"
+OPT_CONFIG="--shared-cares --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=system-icu"
+DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -16,7 +17,7 @@ compress=txz
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
@@ -37,46 +38,38 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    download_sources
-    tar xvf ${url##*/}
+  download_sources
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-    cd $S
-    for patch in $patchfiles ; do
-        if [ ! -f .${patch} ]; then
-            patch -p1 < $W/$patch
-            touch .${patch}
-        fi
-    done
-    if [ ! -f .glibc-2.26.patch ]; then
-	sed -i 's/xlocale/locale/' source/i18n/digitlst.cpp
-	touch .glibc-2.26.patch
-    fi
+  cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+    touch .${patch}
+  done
 
-    cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
-    $S/source/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  export PKG_CONFIG_PATH=/usr/${libdir}/openssl-1.0/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  ./configure --prefix=/usr ${OPT_CONFIG[$i]}
     
-    if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
-    fi
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
 fi
     
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
-    if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
-    fi
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -86,12 +79,13 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  mv $docdir/node $docdir/$src
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
-  src=${pkgbase}-${vers}
   install_tweak
 
 #############################
