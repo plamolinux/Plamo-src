@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="80.0"
+vers="81.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -132,6 +132,7 @@ if [ $opt_build -eq 1 ] ; then
   export PATH="$S/path:$HOME/.cargo/bin:$PATH"
   export CC=clang CXX=clang++ AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
+  export MACH_USE_SYSTEM_PYTHON=1
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
