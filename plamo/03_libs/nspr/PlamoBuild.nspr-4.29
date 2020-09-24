@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nspr'
-vers='4.27'
+vers='4.29'
 url="https://ftp.mozilla.org/pub/nspr/releases/v${vers}/src/${pkgbase}-${vers}.tar.gz"
 verify=""
-digest="md5sum:7a686cbf6e0ddfe7d99062565dc47192"
+digest="md5sum:a546926d3c8e887be02c668c1293da92"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
