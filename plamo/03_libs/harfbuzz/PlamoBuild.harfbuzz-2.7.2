@@ -1,23 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libical'
-vers='3.0.6'
-url="https://github.com/${pkgbase}/${pkgbase}/releases/download/v${vers}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:463a59244c6767b8e67b29379405e297"
+pkgbase='harfbuzz'
+vers="2.7.2"
+url="https://github.com/harfbuzz/harfbuzz/releases/download/${vers}/harfbuzz-${vers}.tar.xz"
+digest="md5sum:ca494256b731a4ceaf6d44ed832226bd"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='
-	-DCMAKE_BUILD_TYPE=Release
-	-DSHARED_ONLY=yes
-	-DICAL_BUILD_DOCS=false
-	-DGOBJECT_INTROSPECTION=yes
-	-DICAL_GLIB_VAPI=yes'
-DOCS='AUTHORS COPYING Install.txt LICENSE ReadMe.md ReadMe.txt ReleaseNotes.txt THANKS TODO'
+OPT_CONFIG='--with-gobject --with-graphite2'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.python THANKS TODO'
 patchfiles=''
 compress=txz
 ##############################################################
+# graphite2 -> harfbuzz -> graphite2 の順でビルド
 
 source /usr/share/plamobuild_functions.sh
 
@@ -49,20 +45,24 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
-#   patch apply to source tree but make at out of source tree
+#  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    if [ -f .${patch} ]; then
+    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
       touch .${patch}
     fi
   done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
+
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG[$i]} $S
-  
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
