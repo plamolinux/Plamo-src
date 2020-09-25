@@ -14,7 +14,9 @@ OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
 #blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/firefox-68.2.0esr-system_graphite2_harfbuzz-1.patch"
 #patchfiles="${blfspatch##*/}"
-patchfiles="0001-Use-remoting-name-for-GDK-application-names.patch"
+patchfiles="0001-Use-remoting-name-for-GDK-application-names.patch
+        0002-Bug-1660901-Support-the-fstat-like-subset-of-fstatat.patch
+        0003-Bug-1660901-ignore-AT_NO_AUTOMOUNT-in-fstatat-system.patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=txz
 
@@ -147,6 +149,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
+  export MACH_USE_SYSTEM_PYTHON=1
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
