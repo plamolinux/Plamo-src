@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxd"
-vers="4.3"
+vers="4.6"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="lxd-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
 #patchfiles="dqlite.patch"
+patchfiles=""
 compress=txz
 ##############################################################
 
@@ -71,9 +72,10 @@ if [ $opt_build -eq 1 ] ; then
     export GOPATH=$B
     cd $B/src/github.com/lxc/lxd
 
-    export CGO_CFLAGS="-I$B/deps/sqlite/ -I$B/deps/dqlite/include/ -I$B/deps/libco/include/ -I$B/deps/raft/include/"
-    export CGO_LDFLAGS="-L$B/deps/sqlite/.libs/ -L$B/deps/dqlite/.libs/ -L$B/deps/libco/ -L$B/deps/raft/.libs/"
-    export LD_LIBRARY_PATH="$B/deps/sqlite/.libs/:$B/deps/dqlite/.libs/:$B/deps/libco/:$B/deps/raft/.libs/"
+    export CGO_CFLAGS="-I$B/deps/dqlite/include/ -I$B/deps/libco/include/ -I$B/deps/raft/include/"
+    export CGO_LDFLAGS="-L$B/deps/dqlite/.libs/ -L$B/deps/libco/ -L$B/deps/raft/.libs/"
+    export LD_LIBRARY_PATH="$B/deps/dqlite/.libs/:$B/deps/libco/:$B/deps/raft/.libs/:${LD_LIBRARY_PATH}"
+    export CGO_LDFLAGS_ALLOW="-Wl,-wrap,pthread_create"
 
     make deps
     make
@@ -104,7 +106,6 @@ if [ $opt_package -eq 1 ] ; then
 
   # dep libs
   install -D -m755 -v deps/dqlite/.libs/libdqlite.so.0 $P/usr/lib/lxd/libdqlite.so.0
-  install -D -m755 -v deps/sqlite/.libs/libsqlite3.so.0 $P/usr/lib/lxd/libsqlite3.so.0
   install -D -v deps/raft/.libs/libraft.so* -t $P/usr/lib/lxd/
   install -D -v deps/libco/libco.so* -t $P/usr/lib/lxd/
 
