@@ -26,8 +26,7 @@ ac_add_options --with-distribution-id=org.plamolinux
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
 ac_add_options --with-system-zlib
-# need icu 67.1 or later
-#ac_add_options --with-system-icu
+ac_add_options --with-system-icu
 ac_add_options --with-system-jpeg
 ac_add_options --with-system-png
 # current firefox fails to build against libvpx-1.8.0
