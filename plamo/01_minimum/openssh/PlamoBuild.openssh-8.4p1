@@ -112,7 +112,8 @@ if [ $opt_package -eq 1 ] ; then
   mv -v $P/etc/ssh/ssh_config{,.dist}
   mv -v $P/etc/ssh/sshd_config{,.dist}
 
-  install -v -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  #install -v -D -m 644 contrib/sshd.pam.generic $P/etc/pam.d/sshd
+  install -v -Dm 644 $W/sshd.pam $P/etc/pam.d/sshd
   install -v -m 755 contrib/ssh-copy-id $P/usr/bin/ssh-copy-id
   install -v -m 644 contrib/ssh-copy-id.1 $mandir/man1/ssh-copy-id.1
 
