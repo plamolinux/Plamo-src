@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssh'
-vers='8.3p1'
+vers='8.4p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd
+OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd --with-xauth=/usr/bin/xauth
     --with-privsep-path=/var/lib/sshd --with-md5-passwords --with-pid-dir=/run"
 DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     README README.dns README.platform README.privsep README.tun
