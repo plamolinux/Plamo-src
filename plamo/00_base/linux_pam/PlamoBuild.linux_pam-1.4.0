@@ -6,7 +6,7 @@ url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM
 digest="md5sum:39fca0523bccec6af4b63b5322276c84"
 doc_url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}-docs.tar.xz"
 arch=`uname -m`
-build=B1
+build=B2
 src="Linux-PAM-${vers}"
 OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
@@ -129,11 +129,11 @@ if [ $opt_package -eq 1 ] ; then
   #  install -Dm644 -v $P/etc/pam.d/halt $P/etc/pam.d/${f}
   #done
 
-  install -Dm644 -v $W/securetty $P/etc/securetty
-  seq -f "tty%g" 12 >> $P/etc/securetty
-  seq -f "ttyp%g" 12 >> $P/etc/securetty
-  seq -f "ttyS%g" 0 3 >> $P/etc/securetty
-  install -Dm644 -v $W/securetty $docdir/$src/securetty
+  install -Dm644 -v $W/securetty $P/etc/securetty.dist
+  seq -f "tty%g" 12 >> $P/etc/securetty.dist
+  seq -f "ttyp%g" 12 >> $P/etc/securetty.dist
+  seq -f "ttyS%g" 0 3 >> $P/etc/securetty.dist
+  install -Dm644 -v $P/etc/securetty $docdir/$src/securetty
 
   install -d $P/usr/share/doc/$src/doc
   mv -v $P/usr/share/doc/$src/*.txt $P/usr/share/doc/$src/doc/
@@ -153,6 +153,9 @@ do
     cp /etc/pam.d/halt /etc/pam.d/$f
   fi
 done
+if [ ! -f /etc/securetty ]; then
+  cp /etc/securetty.dist /etc/securetty
+fi 
 EOF
 
 ################################
