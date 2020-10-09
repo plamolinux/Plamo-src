@@ -6,9 +6,9 @@ url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM
 digest="md5sum:39fca0523bccec6af4b63b5322276c84"
 doc_url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}-docs.tar.xz"
 arch=`uname -m`
-build=B2
+build=B3
 src="Linux-PAM-${vers}"
-OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
+OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu --enable-cracklib"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
 patchfiles=''
 # specifies files that are not in source archive and patchfiles
