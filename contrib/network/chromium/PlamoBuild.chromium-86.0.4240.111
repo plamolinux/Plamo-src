@@ -1,12 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="85.0.4183.121"
+vers="86.0.4240.111"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="2"
+patchset_vers="6"
 chromium_patch_url="https://github.com/stha09/chromium-patches/archive/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.gz"
+chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
@@ -15,10 +16,12 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	media-Set-allocation-limit-compatible-with-FFmpeg-4.3.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-85-NearbyShareEncryptedMetadataKey-include.patch
-        chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-85-sim_hash-include.patch
-        chromium-fix-vaapi-on-intel.patch
+	fix-invalid-end-iterator-usage-in-CookieMonster.patch
+	only-fall-back-to-the-i965-driver-if-we-re-on-iHD.patch
+	remove-dead-reloc-in-nonalloc-LD-flags.patch
+	check-for-enable-accelerated-video-decode-on-Linux.patch
+	xproto-fix-underflow-in-Fp1616ToDouble.patch
+	patches/chromium-86-nearby-include.patch
 	chromium-skia-harmony.patch"
 compress=txz
 ##############################################################
