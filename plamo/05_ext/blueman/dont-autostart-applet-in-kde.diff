@@ -1,0 +1,9 @@
+diff -Nur blueman-20170523_git_1500d60ebf3e.orig/data/blueman.desktop.in blueman-20170523_git_1500d60ebf3e/data/blueman.desktop.in
+--- blueman-20170523_git_1500d60ebf3e.orig/data/blueman.desktop.in	2014-12-19 09:25:34.000000000 -0600
++++ blueman-20170523_git_1500d60ebf3e/data/blueman.desktop.in	2017-06-27 16:59:28.121073690 -0500
+@@ -5,4 +5,5 @@
+ Exec=blueman-applet
+ Terminal=false
+ Type=Application
++NotShowIn=KDE;
+ Categories=
