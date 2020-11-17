@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase="js68"
-vers="68.11.0"
+pkgbase="js78"
+vers="78.4.1"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}esr/source/firefox-${vers}esr.source.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="firefox-${vers}"
-OPT_CONFIG="--with-intl-api --with-system-zlib --with-system-icu --disable-jemalloc --disable-debug-symbols --enable-readline --enable-unaligned-private-values"
+OPT_CONFIG="--with-intl-api --with-system-zlib --with-system-icu --disable-jemalloc --disable-debug-symbols --enable-readline"
 DOCS="AUTHORS LICENSE README.txt other-licenses sourcestamp.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -64,10 +64,10 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    if [ ! -f .moz.configure.patch ]; then
-	sed '21,+4d' -i js/moz.configure
-	touch .moz.configure.patch
-    fi
+    #if [ ! -f .moz.configure.patch ]; then
+    #  sed '21,+4d' -i js/moz.configure
+    #  touch .moz.configure.patch
+    #fi
 
     cd $W
     echo "We need rust toolchain. Now, setup rust"
@@ -95,7 +95,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
-    CC=gcc CXX=g++ LLVM_OBJDUMP=/bin/false \
+    CC=gcc CXX=g++ \
     $S/js/src/configure --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
