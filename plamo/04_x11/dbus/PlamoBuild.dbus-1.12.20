@@ -91,7 +91,8 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  mv -v $P/usr/${libdir}/libdbus-1.so.* $P/lib
+  mkdir -p $P/${libdir}
+  mv -v $P/usr/${libdir}/libdbus-1.so.* $P/${libdir}
   ln -sfv ../../${libdir}/$(readlink $P/usr/${libdir}/libdbus-1.so) $P/usr/lib/libdbus-1.so
 
   chown -v root:messagebus $P/usr/libexec/dbus-daemon-launch-helper
