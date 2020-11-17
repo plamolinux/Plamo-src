@@ -1,15 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dbus'
-vers="1.12.16"
+vers="1.12.20"
 url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-doxygen-docs
+OPT_CONFIG="
+	--enable-user-session
+	--disable-doxygen-docs
 	--disable-xml-docs
 	--disable-static
+	--with-systemduserunitdir=no
+	--with-systemdsystemunitdir=no
+	--docdir=/usr/share/doc/$src
 	--with-console-auth-dir=/run/console
 	--with-system-pid-file=/run/dbus/pid
 	--with-system-socket=/run/dbus/system_bus_socket"
@@ -85,6 +90,12 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mv -v $P/usr/${libdir}/libdbus-1.so.* $P/lib
+  ln -sfv ../../${libdir}/$(readlink $P/usr/${libdir}/libdbus-1.so) $P/usr/lib/libdbus-1.so
+
+  chown -v root:messagebus $P/usr/libexec/dbus-daemon-launch-helper
+  chmod -v      4750       $P/usr/libexec/dbus-daemon-launch-helper
 
   install -v -m 0755 -D $W/dbus.init $P/etc/rc.d/init.d/dbus
   install -v -m 0644 -D $W/dbus.init $docdir/$src/dbus.init
