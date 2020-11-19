@@ -79,10 +79,6 @@ if [ $opt_config -eq 1 ] ; then
   done
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
-  mkdir -p path
-  if [ ! -h path/python ]; then
-    ln -s /usr/bin/python2 path/python
-  fi
 
   # for current ICU
   sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
@@ -127,7 +123,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$S/path:$HOME/.cargo/bin:$PATH"
+  export PATH="$HOME/.cargo/bin:$PATH"
   export CC=clang CXX=clang++ AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export MACH_USE_SYSTEM_PYTHON=1
