@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="82.0"
+vers="83.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
