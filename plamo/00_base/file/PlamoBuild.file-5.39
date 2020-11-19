@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='file'
-vers='5.36'
+vers='5.39'
 url="ftp://ftp.astron.com/pub/file/file-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="file-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG='--disable-static --enable-shared --disable-libseccomp'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
@@ -15,12 +15,12 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-# д│д╬е╣епеъе╫е╚д╟╗╚дж1╩╕╗·╩╤┐Їд╬░╒╠г
+# уБУуБоуВ╣уВпуГкуГЧуГИуБзф╜┐уБЖ1цЦЗхнЧхдЙцХ░уБоцДПхС│
 # 
-# $W : д│д╬е╣епеъе╫е╚дЄ╞░длд╣елеьеєе╚е╟егеьепе╚еъ
-# $S : е╜б╝е╣е│б╝е╔д╬двдые╟егеьепе╚еъ(е╟е╒ейеые╚: $W/${src})
-# $B : е╙еые╔═╤е╟егеьепе╚еъ(е╟е╒ейеые╚: /tmp/build{,32})
-# $P : е╙еые╔д╖д┐е╒ебедеыдЄедеєе╣е╚б╝еыд╣дые╟егеьепе╚еъб╩е╟е╒ейеые╚: $W/work)
+# $W : уБУуБоуВ╣уВпуГкуГЧуГИуВТхЛХуБЛуБЩуВлуГмуГ│уГИуГЗуВгуГмуВпуГИуГк
+# $S : уВ╜уГ╝уВ╣уВ│уГ╝уГЙуБоуБВуВЛуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: $W/${src})
+# $B : уГУуГлуГЙчФиуГЗуВгуГмуВпуГИуГк(уГЗуГХуВйуГлуГИ: /tmp/build{,32})
+# $P : уГУуГлуГЙуБЧуБЯуГХуВбуВдуГлуВТуВдуГ│уВ╣уГИуГ╝уГлуБЩуВЛуГЗуВгуГмуВпуГИуГкя╝ИуГЗуГХуВйуГлуГИ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
