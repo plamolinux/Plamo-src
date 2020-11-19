@@ -127,6 +127,11 @@ if [ $opt_build -eq 1 ] ; then
   export CC=clang CXX=clang++ AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export MACH_USE_SYSTEM_PYTHON=1
+  # disable desktop notification (? maybe...)
+  export MOZ_NOSPAM=1
+
+  ulimit -n 4096
+
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
