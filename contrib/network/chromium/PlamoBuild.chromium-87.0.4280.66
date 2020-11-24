@@ -1,12 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="86.0.4240.198"
+vers="87.0.4280.66"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="6"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="6"
-chromium_patch_url="https://github.com/stha09/chromium-patches/archive/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.gz"
+patchset_vers="9"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -16,12 +15,8 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	fix-invalid-end-iterator-usage-in-CookieMonster.patch
-	only-fall-back-to-the-i965-driver-if-we-re-on-iHD.patch
-	remove-dead-reloc-in-nonalloc-LD-flags.patch
-	check-for-enable-accelerated-video-decode-on-Linux.patch
-	xproto-fix-underflow-in-Fp1616ToDouble.patch
-	patches/chromium-86-nearby-include.patch
+	patches/chromium-87-ServiceWorkerContainerHost-crash.patch
+	patches/chromium-87-openscreen-include.patch
 	chromium-skia-harmony.patch"
 compress=txz
 ##############################################################
@@ -205,7 +200,6 @@ if [ $opt_build -eq 1 ] ; then
     export CXX=clang++
     export AR=llvm-ar
     export NM=nm
-    export PYTHONPATH=$W # for running ui/gfx/x/gen_xproto.py, we use python3 xcbgen module from python2
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
     export CXXFLAGS+=' -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
@@ -222,8 +216,8 @@ if [ $opt_build -eq 1 ] ; then
     done
 
     $W/gn gen out/Release --script-executable=/usr/bin/python2
-    ninja -v -C out/Release chrome chrome_sandbox chromedriver
-    #ninja -C out/Release chrome chrome_sandbox chromedriver
+    #ninja -v -C out/Release chrome chrome_sandbox chromedriver
+    ninja -C out/Release chrome chrome_sandbox chromedriver
 
     cd $W
     echo "*** Build chromium launcher"
