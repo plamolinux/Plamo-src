@@ -10,7 +10,7 @@ chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
@@ -79,7 +79,7 @@ declare -gA _system_libs=(
   [libjpeg]=libjpeg
   [libpng]=libpng
   #[libvpx]=libvpx
-  [libwebp]=libwebp
+  #[libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
   [opus]=opus
@@ -160,7 +160,7 @@ if [ $opt_config -eq 1 ] ; then
     sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
         third_party/blink/renderer/core/xml/*.cc \
         third_party/blink/renderer/core/xml/parser/xml_document_parser.cc \
-        third_party/libxml/chromium/libxml_utils.cc
+        third_party/libxml/chromium/*.cc
 
     for patch in $patchfiles ; do
         if [ ! -f .$(basename ${patch}) ]; then
