@@ -15,6 +15,6 @@ enable_hangout_services_extension=true
 enable_widevine=true
 use_vaapi=true
 enable_nacl=false
-enable_swiftshader=false
+#enable_swiftshader=false
 symbol_level=0
 #icu_use_data_file=false
