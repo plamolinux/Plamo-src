@@ -8,7 +8,7 @@ ac_add_options --enable-optimize=-O2
 #ac_add_options --enable-rust-simd
 
 # System Libraries
-ac_add_options --enable-system-sqlite
+#ac_add_options --enable-system-sqlite
 ac_add_options --with-system-libevent
 #ac_add_options --with-system-libvpx
 ac_add_options --with-system-nspr
@@ -25,7 +25,7 @@ ac_add_options --with-system-zlib
 #ac_add_options --disable-dbus
 #ac_add_options --disable-necko-wifi
 #ac_add_options --enable-system-hunspell
-ac_add_options --enable-startup-notification
+#ac_add_options --enable-startup-notification
 ac_add_options --disable-pulseaudio
 #ac_add_options --disable-gconf
 ac_add_options --disable-crashreporter
@@ -37,5 +37,7 @@ ac_add_options --disable-tests
 ac_add_options --disable-official-branding
 ac_add_options --with-branding=comm/mail/branding/nightly
 ac_add_options --with-distribution-id=org.plamolinux
+ac_add_options --with-unsigned-addon-scopes=app,system
+ac_add_options --allow-addon-sideload
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
