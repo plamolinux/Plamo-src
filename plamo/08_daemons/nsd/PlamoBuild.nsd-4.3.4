@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nsd'
-vers="4.3.1"
+vers="4.3.4"
 url="https://www.nlnetlabs.nl/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-pidfile=/run/nsd/nsd.pid
 	    --enable-ratelimit
