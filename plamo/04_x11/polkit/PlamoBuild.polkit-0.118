@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B3
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --disable-libelogind'
+OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --enable-libelogind=yes'
 DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
 blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/polkit-0.118-fix_elogind_detection-1.patch"
 patchfiles="${blfspatch##*/}"
