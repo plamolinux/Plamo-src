@@ -19,6 +19,8 @@ compress=txz
 rustver=""
 ##############################################################
 
+ulimit -n 4096
+
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
