@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libpcap'
-vers='1.8.1'
+vers='1.9.1'
 url="http://www.tcpdump.org/release/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--enable-shared'
+OPT_CONFIG='--enable-shared --enable-ipv6 --enable-usb --with-libnl'
 DOCS='INSTALL.txt LICENSE README README.Win32 README.aix README.dag README.hpux README.linux README.macosx README.septel README.sita README.tru64 TODO'
 patchfiles=''
 compress=txz
