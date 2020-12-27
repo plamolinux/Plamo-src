@@ -6,7 +6,7 @@ url="http://www.${pkgbase}.org/files/v${vers%.*}/${pkgbase}-${vers}.tar.gz"
 digest="md5sum:043d47c9a37755f3da1e8c1123e1a2dd"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--system-libs
@@ -56,6 +56,8 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
+  # disable libuv
+    sed -i '/CMAKE_USE_LIBUV 1/s/1/0/' CMakeLists.txt
   # disable lib64
   if [ $libdir != "lib64" ]; then
     sed -i '/"lib64"/s/64//' Modules/GNUInstallDirs.cmake
