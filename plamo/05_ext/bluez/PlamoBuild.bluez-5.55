@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.52'
+vers='5.55'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-library --disable-systemd"
+OPT_CONFIG="--enable-library --disable-systemd --enable-btpclient --enable-hid2hci --enable-experimental"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
 # from arch linux
-patchfiles="bluez-5.51-obexd_without_systemd-1.patch refresh_adv_manager_for_non-LE_devices.diff"
+patchfiles=""
 addfiles="bluetooth.config bluetooth.init btusb.conf"
 compress=txz
 ##############################################################
@@ -66,7 +66,7 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  autoreconf -ivf
+  #autoreconf -ivf
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
@@ -97,6 +97,12 @@ if [ $opt_package -eq 1 ] ; then
 
   install -dm755 -v $P/usr/sbin
   ln -svf ../libexec/bluetooth/bluetoothd $P/usr/sbin/bluetoothd
+
+  for f in $(find tools/ -type f -perm -755)
+  do
+      filename=$(basename $f)
+      install -Dm755 $B/tools/$filename $P/usr/bin/$filename
+  done
 
   # conf
   install -Dm644 -v $S/src/main.conf $P/etc/bluetooth/main.conf
