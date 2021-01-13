@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="php"
-vers="7.4.11"
+vers="8.0.1"
 url="https://www.php.net/distributions/php-${vers}.tar.xz"
 verify="${url}.asc"
 digest=""
@@ -13,7 +13,7 @@ BUILD_TYPE=(apache cgi)
 DOCS="LICENSE NEWS README.REDIST.BINS README.md"
 patchfiles="0001-Disable-MPM-detection-in-configure-Always-build-NTS.patch"
 # specifies files that are not in source archive and patchfiles
-addfiles="php7.conf php-fpm.init"
+addfiles="php8.conf php-fpm.init"
 compress=txz
 ##############################################################
 
@@ -70,7 +70,6 @@ OPT_MODULE=(--enable-bcmath=shared
 	    --with-readline
 	    --with-sodium=shared
 	    --with-sqlite3=shared
-	    --with-xmlrpc=shared
 	    --with-xsl=shared
 	    --with-zip=shared
 	    --with-zlib)
@@ -178,14 +177,14 @@ if [ $opt_package -eq 1 ] ; then
   popd
 
   pushd apache
-  install -Dm755 libs/libphp7.so $P/usr/${libdir}/httpd/modules/libphp7.so
+  install -Dm755 libs/libphp.so $P/usr/${libdir}/httpd/modules/libphp.so
   popd
 
   ( cd $P ; rm -rfv .channels .depdb .filemap .lock .registry .depdblock )
   rm -rfv $P/var
 
-  install -Dm644 -v $W/php7.conf $P/etc/httpd/extra.dist/php7.conf
-  install -Dm644 -v $W/php7.conf $docdir/$src/php7.conf
+  install -Dm644 -v $W/php8.conf $P/etc/httpd/extra.dist/php8.conf
+  install -Dm644 -v $W/php8.conf $docdir/$src/php8.conf
 
   # php-fpm init
   install -Dm644 -v $W/php-fpm.init $P/etc/rc.d/init.d/php-fpm
@@ -204,8 +203,11 @@ if [ $opt_package -eq 1 ] ; then
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/httpd/extra/php7.conf ]; then
-  ( cd /etc/httpd ; cp extra.dist/php7.conf extra/php7.conf )
+if [ -f /etc/httpd/extra/php7.conf ]; then
+  rm -fv /etc/httpd/extra/php7.conf
+fi
+if [ ! -f /etc/httpd/extra/php8.conf ]; then
+  ( cd /etc/httpd ; cp extra.dist/php8.conf extra/php8.conf )
 fi
 if [ ! -f /etc/php/php.ini ]; then
   ( cd /etc/php ; cp php.ini.dist php.ini )
