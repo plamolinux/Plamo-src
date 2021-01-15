@@ -1,17 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase="glib"
-vers="2.64.4"
-url="http://ftp.gnome.org/pub/gnome/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
+pkgbase="gsettings_desktop_schemas"
+vers="3.38.0"
+url="http://ftp.gnome.org/pub/gnome/sources/gsettings-desktop-schemas/${vers%.*}/gsettings-desktop-schemas-${vers}.tar.xz"
 verify=""
-digest="md5sum:0a4f67e9a9d729976e2f797e36fc1a57"
+digest="md5sum:465a98f5ab8a5ca896009228257fc40d"
 arch=`uname -m`
 build=B1
-src="glib-${vers}"
-OPT_CONFIG="-Dman=true -Dselinux=disabled"
-DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 meson_options.txt"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/glib-2.64.4-skip_warnings-1.patch"
-patchfiles="${blfspatch}"
+src="gsettings-desktop-schemas-${vers}"
+OPT_CONFIG=""
+DOCS="AUTHORS COPYING ChangeLog HACKING MAINTAINERS NEWS README meson_options.txt"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
 compress=txz
 ##############################################################
 
@@ -39,12 +40,19 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    if [ ! -f ${blfspatch##*/} ]; then
-	wget $blfspatch
-    fi
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -56,11 +64,15 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    sed -i -r 's:"(/system):"/org/gnome\1:g' schemas/*.in
 
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -82,6 +94,13 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/glib-compile-schemas ]; then
+  /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+fi
+EOF
 
 ################################
 #      install tweaks
