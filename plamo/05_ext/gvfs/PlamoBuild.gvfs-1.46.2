@@ -1,15 +1,30 @@
 #!/bin/sh
 ##############################################################
-pkgbase='upower'
-vers='0.99.10'
-url="https://gitlab.freedesktop.org/upower/upower/uploads/c438511024b9bc5a904f8775cfc8e4c4/upower-0.99.10.tar.xz"
-digest="md5sum:ac6b6bee31110fd8478a8e881c40fba6"
+pkgbase='gvfs'
+vers='1.46.2'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:852fff7ae3215012f3e143d0b13a81ff"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-deprecated'
-DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
+# multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
+OPT_CONFIG="-Dfuse=true
+	-Dgphoto2=true
+	-Dafc=false
+	-Dafp=true
+	-Dbluray=false
+	-Dnfs=false
+	-Dmtp=true
+	-Dsmb=true
+	-Dtmpfilesdir=no
+	-Dlogind=false
+	-Ddnssd=true
+	-Dcdda=true
+	-Dgoa=false
+	-Dgoogle=false
+	-Dsystemduserunitdir=false"
+DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -53,14 +68,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  meson --prefix=/usr --libdir=${libdir} $OPT_CONFIG $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -71,7 +81,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -83,7 +93,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+EOF
 
 ################################
 #      install tweaks
