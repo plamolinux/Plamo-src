@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lightdm_gtk_greeter'
-vers='2.0.3'
-url="https://launchpad.net/lightdm-gtk-greeter/${vers%.*}/${vers}/+download/lightdm-gtk-greeter-${vers}.tar.gz"
+vers='2.0.8'
+url="https://github.com/Xubuntu/lightdm-gtk-greeter/releases/download/lightdm-gtk-greeter-${vers}/lightdm-gtk-greeter-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
@@ -14,6 +14,7 @@ OPT_CONFIG="--disable-static --enable-shared
 	    --libexecdir=/usr/${libdir}/lightdm --sbindir=/usr/bin
 	    --with-libxklavier --enable-kill-on-sigterm
 	    --disable-libido --disable-libindicator
+	    --disable-maintainer-mode
 	    --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
@@ -59,9 +60,11 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+
+  # data/ 以下だけ docdir が決め打ちになっているので
+  # configure で指定した docdir が効かないので
+  sed -i -e '/docdir/d' data/Makefile.am
+  autoreconf -fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
