@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gsettings_desktop_schemas"
-vers="3.36.1"
-url="http://ftp.gnome.org/pub/gnome/sources/gsettings-desktop-schemas/3.36/gsettings-desktop-schemas-${vers}.tar.xz"
+vers="3.38.0"
+url="http://ftp.gnome.org/pub/gnome/sources/gsettings-desktop-schemas/${vers%.*}/gsettings-desktop-schemas-${vers}.tar.xz"
 verify=""
-digest="md5sum:708ddd8dec388ebda5539667604197c3"
+digest="md5sum:465a98f5ab8a5ca896009228257fc40d"
 arch=`uname -m`
 build=B1
 src="gsettings-desktop-schemas-${vers}"
