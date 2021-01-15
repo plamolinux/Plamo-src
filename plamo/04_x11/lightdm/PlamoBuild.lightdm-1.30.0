@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lightdm'
-vers='1.24.0'
-url="https://launchpad.net/${pkgbase}/1.24/${vers}/+download/${pkgbase}-${vers}.tar.xz"
+vers='1.30.0'
+url="https://github.com/CanonicalLtd/lightdm/releases/download/${vers}/lightdm-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 
 source /usr/share/plamobuild_functions.sh
@@ -16,6 +16,7 @@ OPT_CONFIG="--disable-static --enable-shared --disable-tests
 	    --docdir=/usr/share/doc/${src} "
 DOCS='COPYING.GPL3 COPYING.LGPL2 COPYING.LGPL3 NEWS TODO'
 patchfiles=''
+addfiles="lightdm.init lightdm-session"
 compress=txz
 ##############################################################
 
@@ -45,6 +46,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
@@ -56,21 +66,20 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+
+  sed -i s/systemd/elogind/ data/pam/*
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
@@ -87,7 +96,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  make -C liblightdm-qt uninstall DESTDIR=$P
 
   install -Dm755 -v $W/lightdm-session $P/usr/bin
   rm -rfv $P/etc/init
@@ -96,7 +104,7 @@ if [ $opt_package -eq 1 ] ; then
   install -v -dm755 -o 65 -g 65 $P/var/lib/lightdm
   install -v -dm755 -o 65 -g 65 $P/var/lib/lightdm-data
   install -v -dm755 -o 65 -g 65 $P/var/cache/lightdm
-  install -v -dm755 -o 65 -g 65 $P/var/log/lightdm
+  install -v -dm770 -o 65 -g 65 $P/var/log/lightdm
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
