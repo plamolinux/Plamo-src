@@ -5,7 +5,7 @@ vers='1.30.0'
 url="https://github.com/CanonicalLtd/lightdm/releases/download/${vers}/lightdm-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B3
 src="${pkgbase}-${vers}"
 
 source /usr/share/plamobuild_functions.sh
@@ -137,6 +137,10 @@ EOF
       esac
   done
   install -Dm644 -v $W/lightdm.init $docdir/$src/lightdm.init
+
+  # install polkit rule for greeter
+  install -Dm644 -v $W/lightdm.rules $P/etc/polkit-1/rules.d/90-lightdm.rules
+  install -Dm644 -v $W/lightdm.rules $docdir/$src/lightdm.rules
 
 ################################
 #      install tweaks
