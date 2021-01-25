@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="87.0.4280.141"
+vers="88.0.4324.96"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
-launcher_vers="6"
+launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="9"
+patchset_vers="3"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -15,9 +15,11 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	patches/chromium-87-ServiceWorkerContainerHost-crash.patch
+	subpixel-anti-aliasing-in-FreeType-2.8.1.patch
 	patches/chromium-87-openscreen-include.patch
-	chromium-skia-harmony.patch"
+	patches/chromium-88-CompositorFrameReporter-dcheck.patch
+	patches/chromium-88-ideographicSpaceCharacter.patch
+	patches/chromium-88-AXTreeFormatter-include.patch"
 compress=txz
 ##############################################################
 
