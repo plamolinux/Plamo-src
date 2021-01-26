@@ -15,7 +15,7 @@ class Package():
             self.basename = "_".join(parts[0:-1])
             self.version = parts[-1]
 
-        keywords = ['ABOUT', 'AUTHOR', 'COPYING', 'CHANGELOG', 'HACKING', 'HISTORY', 'INSTALL', 'LICENSE', 'LSM', 'MAINTAINERS', 'NEWS', 'README', 'RELEASE', 'THANKS', 'THANKYOU', 'TODO',  'TXT']
+        keywords = ['DOC', 'DOCS', 'ABOUT', 'AUTHOR', 'COPYING', 'CHANGELOG', 'HACKING', 'HISTORY', 'INSTALL', 'LICENSE', 'LSM', 'MAINTAINERS', 'NEWS', 'README', 'RELEASE', 'THANKS', 'THANKYOU', 'TODO',  'TXT']
         exceptions = ['CMakeLists.txt', 'install-sh', 'mkinstalldirs',  '.in', '.sh', 'meson-options.txt']
         tmplist = []
         newlist = []
