@@ -323,23 +323,25 @@ install_tweak() {
   # doc ファイルのインストールと圧縮
   cd $W
   if [ -n "$DOCS" ]; then
-    echo "Install docs"
-    for doc in $DOCS ; do
-      chk_wc=`echo $doc | grep \*`
-      if [ "$chk_wc.x" != ".x" ]; then  # wildcard(*)があれば展開
-        # echo "in wildcard :chk_wc=${chk_wc}"
-        for doc2 in `(cd $src ; ls $doc)` ; do
-          echo "doc2: $doc2"
-          install2 $S/$doc2 $docdir/$src/$doc2
-          touch -r $S/$doc2 $docdir/$src/$doc2
-          gzip_one $docdir/$src/$doc2
-        done
-      else
-        install2 $S/$doc $docdir/$src/$doc
-        touch -r $S/$doc $docdir/$src/$doc
-        gzip_one $docdir/$src/$doc
-      fi
-    done
+      docfiles=()
+      for doc in $DOCS ; do
+         if [ -d $S/$doc ] ; then
+             for i in `find $S/$doc`; do
+                 if [ ! -d $i ]; then
+                     docfiles=("${docfiles[@]}" ${i##$S/})
+                 fi
+             done
+         else
+             docfiles=("${docfiles[@]}" $doc)
+         fi
+      done
+
+      for i in "${docfiles[@]}" ; do
+         echo "installing $i"
+         install2 $S/$i $docdir/$src/$i
+         touch -r $S/$i $docdir/$src/$i
+         gzip_one $docdir/$src/$i
+      done
   else
     echo "No docs"
     mkdir -v -p $docdir/$src
