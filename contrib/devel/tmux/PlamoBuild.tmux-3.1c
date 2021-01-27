@@ -2,13 +2,13 @@
 ##############################################################
 pkgbase="tmux"
 vers="3.1c"
-url="https://github.com/tmux/tmux/releases/download/3.1c/tmux-3.1c.tar.gz"
+url="https://github.com/tmux/tmux/releases/download/${vers}/tmux-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="tmux-3.1c"
-OPT_CONFIG="--disable-static --enable-shared"
+src="tmux-${vers}"
+OPT_CONFIG="--enable-utempter"
 DOCS="COPYING README README.ja"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
