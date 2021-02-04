@@ -1,0 +1,122 @@
+#!/bin/sh
+##############################################################
+pkgbase="skypeforlinux"
+url="https://repo.skype.com/latest/skypeforlinux-64.deb"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src=""
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS=""
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles="skype-dbus-mock.conf skype-dbus-mock.py org.freedesktop.login1.service"
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+if [ -f $W/control ]; then
+    vers=$(grep Version control | awk '{ print $2 }')
+    pkg=$pkgbase-$vers-$arch-$build
+else
+    vers="latest"
+fi
+
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+    ar x ${url##*/}
+    tar xvf control.tar.gz ./control
+fi
+
+if [ -f $W/control ]; then
+    vers=$(grep Version control | awk '{ print $2 }')
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    echo "There is nothing to do."
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+  cd $W
+  tar xvf data.tar.xz -C $P
+
+  rm -vrf $P/opt
+
+  install -Dm644 -v $W/skype-dbus-mock.conf \
+	  $P/usr/share/dbus-1/system.d/skype-dbus-mock.conf
+  install -Dm644 -v $W/org.freedesktop.login1.service \
+	  $P/usr/share/dbus-1/system-services/org.freedesktop.login1.service
+  install -Dm755 -v $W/skype-dbus-mock.py \
+	  $P/usr/bin/skype-dbus-mock
+
+  mv -v $P/usr/share/doc/$pkgbase $docdir/$pkgbase-$vers
+  
+  mkdir -vp $P/install
+  cat <<EOF > $P/install/initpkg
+if [ -x /usr/bin/update-desktop-database ]; then
+  /usr/bin/update-desktop-database -q /usr/share/applications >/dev/null 2>&1
+fi
+
+if [ -x /usr/bin/gtk-update-icon-cache ]; then
+  /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1
+fi
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
