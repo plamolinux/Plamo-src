@@ -12,7 +12,7 @@ OPT_CONFIG="-Dcgroup-controller=elogind -Ddbuspolicydir=/etc/dbus-1/system.d -Dm
 DOCS="LICENSE.GPL2 LICENSE.LGPL2.1 README.md TODO meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="elogind-user.pam"
 compress=txz
 ##############################################################
 
@@ -94,6 +94,15 @@ if [ $opt_package -eq 1 ] ; then
   DESTDIR=$P ninja install
   ln -sfv  libelogind.pc $P/usr/lib/pkgconfig/libsystemd.pc
   ln -sfvn elogind $P/usr/include/systemd
+
+  mkdir -p $P/install
+  cat <<EOF> $P/install/initpkg
+if [ -f /etc/pam.d/system-session ]; then
+  sed -i -e 's|pam_ck_connector.so nox11|pam_elogind.so|' /etc/pam.d/system-session
+fi
+EOF
+
+  install -Dm0644 -v $W/elogind-user.pam $P/etc/pam.d/elogind-user
 
 ################################
 #      install tweaks
