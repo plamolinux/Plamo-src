@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="elogind"
-vers="243.7"
+vers="246.9.2"
 url="https://github.com/elogind/elogind/archive/v${vers}/elogind-${vers}.tar.gz"
 verify=""
 digest=""
@@ -92,6 +92,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+  ln -sfv  libelogind.pc $P/usr/lib/pkgconfig/libsystemd.pc
+  ln -sfvn elogind $P/usr/include/systemd
 
 ################################
 #      install tweaks
