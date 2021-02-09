@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2018-03-30 17:58:08 karma>
+#                           Time-stamp: <2021-02-09 17:43:58 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -35,7 +35,7 @@ GTK_IM_MODULE=@IM@
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 
-LAUNCH="ck-launch-session dbus-launch --exit-with-session"
+LAUNCH="dbus-launch --exit-with-session"
 
 mesg n
 
