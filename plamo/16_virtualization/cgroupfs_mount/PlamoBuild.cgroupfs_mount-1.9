@@ -1,30 +1,14 @@
 #!/bin/sh
 ##############################################################
-pkgbase='gvfs'
-vers='1.40.2'
-url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:47db9bec616e089513b7f1386e5c7d5f"
+pkgbase='cgroupfs_mount'
+vers="1.9"
+url="https://github.com/tenforward/cgroupfs-mount/archive/${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-# multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
-OPT_CONFIG="-Dfuse=true
-	-Dgphoto2=true
-	-Dafc=false
-	-Dafp=true
-	-Dbluray=false
-	-Dnfs=false
-	-Dmtp=true
-	-Dsmb=true
-	-Dtmpfilesdir=no
-	-Dlogind=false
-	-Ddnssd=true
-	-Dcdda=true
-	-Dgoa=false
-	-Dgoogle=false
-	-Dsystemduserunitdir=false"
-DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
+src="cgroupfs-mount-${vers}"
+OPT_CONFIG=''
+DOCS='README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -69,35 +53,42 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
 
-  cd $B
-  meson --prefix=/usr --libdir=${libdir} $OPT_CONFIG $S
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  sed -i -e 's/log_begin_msg/log_info_msg/g' \
+         -e 's/log_end_msg/evaluate_retval/g' $S/debian/cgroupfs-mount.init
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  ninja
-  if [ $? != 0 ]; then
-    echo "build error. $0 script stop"
-    exit 255
-  fi
+  echo "There is nothing to do."
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  DESTDIR=$P ninja install
+  cd $S
+  install -Dm755 -v $S/cgroupfs-mount  $P/usr/bin/cgroupfs-mount
+  install -Dm755 -v $S/cgroupfs-umount  $P/usr/bin/cgroupfs-umount
+  install -Dm644 -v $S/cgroupfs-mount.8 $P/usr/share/man/man8/cgroupfs-mount.8
+  install -Dm755 -v $S/plamo/cgroupfs-mount.init $P/etc/rc.d/init.d/cgroupfs-mount
+  install -Dm644 -v $S/plamo/sysconfig $P/etc/sysconfig/cgroupfs-mount.dist
+
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|6)
+        ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/K31cgroupfs-mount
+	;;
+      2|3|4|5)
+	ln -sfv ../init.d/cgroupfs-mount $P/etc/rc.d/rc"$i".d/S28cgroupfs-mount
+	;;
+    esac
+  done
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+if [ ! -f /etc/sysconfig/cgroupfs-mount ]; then
+  ( cd /etc/sysconfig ; cp cgroupfs-mount.dist cgroupfs-mount )
+fi
 EOF
 
 ################################

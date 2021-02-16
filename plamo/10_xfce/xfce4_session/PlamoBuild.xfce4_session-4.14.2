@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='etc'
-vers='7.0'
-url=""
+pkgbase='xfce4_session'
+vers='4.14.2'
+url="http://archive.xfce.org/src/xfce/xfce4-session/${vers%.*}/xfce4-session-${vers}.tar.bz2"
+digest=""
 verify=""
-arch=noarch
-build=B22
-src="files"
-OPT_CONFIG=''
-DOCS=''
+arch=`uname -m`
+build=B1
+src="xfce4-session-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -41,71 +42,61 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  echo "There is nothing to do."
-fi
+  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+######################################################################
+#  don't copy sources, so need patch in the src dir
+######################################################################
+  cd $S
+  for patch in $patchfiles ; do
+    if [ ! -f .${patch} ]; then
+      patch -p1 < $W/$patch
+      touch .${patch}
+    fi
+  done
+  # if [ -f autogen.sh ] ; then
+  #   sh ./autogen.sh
+  # fi
 
+  cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed' 
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
+  if [ $? != 0 ]; then
+    echo "configure error. $0 script stop"
+    exit 255
+  fi
+fi
+    
 if [ $opt_build -eq 1 ] ; then
-  echo "There is nothing to do."
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make -j3
+  if [ $? != 0 ]; then
+    echo "build error. $0 script stop"
+    exit 255
+  fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $S
-  cp -a etc $P/
-  if [ `id -u` -eq 0 ]; then
-    chown -R root:root $P/*
-  fi
-  mkdir -p $docdir/$src
+  cd $B
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
   mkdir -p $P/install
-  cat <<EOF > $P/install/doinst.sh
-( cd etc ; rm -rf issue.net )
-( cd etc ; ln -sf issue issue.net )
-( cd etc ; rm -rf skel )
-( cd etc ; ln -sf template/Default skel )
-( cd etc ; rm -rf HOSTNAME )
-( cd etc ; ln -sf hostname HOSTNAME )
-( cd var/log ; rm -rf utmp )
-( cd var/log ; ln -sf /var/run/utmp utmp)
-if [ ! -r etc/passwd ] ; then
-  cp etc/npasswd etc/passwd
-fi
-if [ ! -r etc/passwd.OLD ] ; then
-  mv etc/npasswd etc/passwd.OLD
-else
-  rm etc/npasswd
-fi
-if [ ! -r etc/shadow ] ; then
-  mv etc/nshadow etc/shadow
-else
-  rm etc/nshadow
-fi
-if [ ! -r etc/group ] ; then
-  mv etc/ngroup etc/group
-else
-  rm etc/ngroup
-fi
-if [ ! -r etc/hosts ] ; then
-  mv etc/hosts-incoming etc/hosts
-else
-  rm -f etc/hosts-incoming
-fi
-if [ ! -r etc/networks ] ; then
-  mv etc/networks-incoming etc/networks
-else
-  rm -f etc/networks-incoming
-fi
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/update-desktop-database
+/usr/bin/update-mime-database /usr/share/mime
 EOF
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man,
+#  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-
-  mv $P/usr/share/doc/$src $P/usr/share/doc/"$pkgbase"-"$vers"
 
 #############################
 #   convert symlink to null file and 

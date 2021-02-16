@@ -1,18 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gsettings_desktop_schemas"
-vers="3.36.1"
-url="http://ftp.gnome.org/pub/gnome/sources/gsettings-desktop-schemas/3.36/gsettings-desktop-schemas-${vers}.tar.xz"
+pkgbase="xinit"
+vers="1.4.1"
+url="https://www.x.org/pub/individual/app/xinit-${vers}.tar.bz2"
 verify=""
-digest="md5sum:708ddd8dec388ebda5539667604197c3"
+digest=""
 arch=`uname -m`
 build=B1
-src="gsettings-desktop-schemas-${vers}"
-OPT_CONFIG=""
-DOCS="AUTHORS COPYING ChangeLog HACKING MAINTAINERS NEWS README meson_options.txt"
-patchfiles=""
-# specifies files that are not in source archive and patchfiles
-addfiles=""
+src="xinit-${vers}"
+OPT_CONFIG="--with-xinitdir=/etc/X11/app-defaults"
+DOCS="COPYING ChangeLog INSTALL README.md"
+patchfiles="0001-logind-tracks-startx-sessions.patch"
 compress=txz
 ##############################################################
 
@@ -42,17 +40,7 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
-
 if [ $opt_config -eq 1 ] ; then
-
-    for f in $addfiles $patchfiles
-    do
-        if [ ! -f $f ]; then
-            echo "Required file ($f) is missing."
-            exit 255
-        fi
-    done
-
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -64,15 +52,15 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
+
+    sed -e '/$serverargs $vtarg/ s/serverargs/: #&/' -i startx.cpp
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    sed -i -r 's:"(/system):"/org/gnome\1:g' schemas/*.in
-
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -81,7 +69,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -93,14 +82,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  DESTDIR=$P ninja install
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/glib-compile-schemas ]; then
-  /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
-fi
-EOF
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks
