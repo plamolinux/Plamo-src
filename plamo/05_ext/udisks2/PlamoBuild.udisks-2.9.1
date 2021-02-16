@@ -1,18 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pulseaudio'
-vers='12.2'
-url="https://www.freedesktop.org/software/${pkgbase}/releases/${pkgbase}-${vers}.tar.xz"
-verify="${url}.sha256"
+pkgbase='udisks2'
+vers="2.9.1"
+url="https://github.com/storaged-project/udisks/releases/download/udisks-${vers}/udisks-${vers}.tar.bz2"
+digest="md5sum:aad9c50f4cafccee01a621a6a6665784"
+verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG="
-	--disable-bluez4
-	--disable-rpath
-	--disable-orc
-	--disable-tcpwrap"
-DOCS='ABOUT-NLS LICENSE NEWS README todo'
+src="udisks-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --enable-lvm2 --enable-lvmcache --enable-btrfs'
+DOCS='AUTHORS COPYING HACKING NEWS README.md'
 patchfiles=''
 compress=txz
 ##############################################################
@@ -87,8 +84,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  rm -rf -v $P/etc/dbus-1/
 
 ################################
 #      install tweaks

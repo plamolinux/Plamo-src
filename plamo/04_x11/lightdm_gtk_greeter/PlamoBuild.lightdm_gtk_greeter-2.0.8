@@ -1,20 +1,27 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xfce4_session'
-vers='4.14.1'
-url="http://archive.xfce.org/src/xfce/xfce4-session/${vers%.*}/xfce4-session-${vers}.tar.bz2"
-digest="md5sum:36593207ac0c67c81907a4846f4b604c"
-verify=""
+pkgbase='lightdm_gtk_greeter'
+vers='2.0.8'
+url="https://github.com/Xubuntu/lightdm-gtk-greeter/releases/download/lightdm-gtk-greeter-${vers}/lightdm-gtk-greeter-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="xfce4-session-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+src="lightdm-gtk-greeter-${vers}"
+
+source /usr/share/plamobuild_functions.sh
+
+OPT_CONFIG="--disable-static --enable-shared
+	    --libexecdir=/usr/${libdir}/lightdm --sbindir=/usr/bin
+	    --with-libxklavier --enable-kill-on-sigterm
+	    --disable-libido --disable-libindicator
+	    --disable-maintainer-mode
+	    --docdir=/usr/share/doc/${src}"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################
 
-source /usr/share/plamobuild_functions.sh
+
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -53,12 +60,15 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+
+  # data/ 以下だけ docdir が決め打ちになっているので
+  # configure で指定した docdir が効かないので
+  sed -i -e '/docdir/d' data/Makefile.am
+  autoreconf -fi
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export CFLAGS="$CFLAGS -Wno-declaration-after-statement"
   export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
@@ -84,12 +94,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-/usr/bin/update-desktop-database
-/usr/bin/update-mime-database /usr/share/mime
-EOF
 
 ################################
 #      install tweaks
