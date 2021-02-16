@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase='udisks2'
-vers='2.8.4'
-url="https://github.com/storaged-project/udisks/releases/download/udisks-${vers}/udisks-${vers}.tar.bz2"
-digest="md5sum:ee74a32fe2a7ab3dd3aa9e2283b844ea"
+pkgbase='upower'
+vers='0.99.11'
+url="https://upower.freedesktop.org/releases/upower-0.99.11.tar.xz"
+digest="md5sum:abe6acb617f11f2e8dbd9846fcf86e24"
 verify=""
 arch=`uname -m`
 build=B1
-src="udisks-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-available-modules'
-DOCS='AUTHORS COPYING HACKING NEWS README.md'
+src="${pkgbase}-${vers}"
+OPT_CONFIG='--disable-static --enable-shared --enable-deprecated'
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README'
 patchfiles=''
 compress=txz
 ##############################################################

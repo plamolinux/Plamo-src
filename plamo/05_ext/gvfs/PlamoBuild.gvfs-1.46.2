@@ -1,26 +1,35 @@
 #!/bin/sh
 ##############################################################
-pkgbase='lightdm_gtk_greeter'
-vers='2.0.3'
-url="https://launchpad.net/lightdm-gtk-greeter/${vers%.*}/${vers}/+download/lightdm-gtk-greeter-${vers}.tar.gz"
-verify="${url}.asc"
+pkgbase='gvfs'
+vers='1.46.2'
+url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:852fff7ae3215012f3e143d0b13a81ff"
+verify=""
 arch=`uname -m`
 build=B1
-src="lightdm-gtk-greeter-${vers}"
-
-source /usr/share/plamobuild_functions.sh
-
-OPT_CONFIG="--disable-static --enable-shared
-	    --libexecdir=/usr/${libdir}/lightdm --sbindir=/usr/bin
-	    --with-libxklavier --enable-kill-on-sigterm
-	    --disable-libido --disable-libindicator
-	    --docdir=/usr/share/doc/${src}"
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+src="${pkgbase}-${vers}"
+# multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
+OPT_CONFIG="-Dfuse=true
+	-Dgphoto2=true
+	-Dafc=false
+	-Dafp=true
+	-Dbluray=false
+	-Dnfs=false
+	-Dmtp=true
+	-Dsmb=true
+	-Dtmpfilesdir=no
+	-Dlogind=false
+	-Ddnssd=true
+	-Dcdda=true
+	-Dgoa=false
+	-Dgoogle=false
+	-Dsystemduserunitdir=false"
+DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
 patchfiles=''
 compress=txz
 ##############################################################
 
-
+source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -59,15 +68,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export CFLAGS="$CFLAGS -Wno-declaration-after-statement"
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  meson --prefix=/usr --libdir=${libdir} $OPT_CONFIG $S
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -78,7 +81,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  ninja
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -90,7 +93,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+EOF
 
 ################################
 #      install tweaks
