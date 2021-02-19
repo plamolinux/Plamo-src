@@ -1,35 +1,26 @@
---- a/dbus/dbus-userdb-util.c	2015-09-30 16:48:40.000000000 +0200
-+++ b/dbus/dbus-userdb-util.c	2016-11-03 11:09:42.550520587 +0100
-@@ -32,6 +32,9 @@
- #if HAVE_SYSTEMD
- #include <systemd/sd-login.h>
- #endif
-+#if HAVE_ELOGIND
-+#include <elogind/sd-login.h>
-+#endif
- 
- /**
-  * @addtogroup DBusInternalsUtils
-@@ -54,7 +57,7 @@
-   const DBusUserInfo *info;
-   dbus_bool_t result = FALSE;
- 
--#ifdef HAVE_SYSTEMD
-+#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
-   /* check if we have logind */
-   if (access ("/run/systemd/seats/", F_OK) >= 0)
-     {
---- a/configure.ac	2016-11-03 11:13:58.286528265 +0100
-+++ b/configure.ac	2016-11-03 11:22:11.210543063 +0100
-@@ -185,6 +185,7 @@
+From ff099cf34bcdea1836fcae7d633bad59a75fe269 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Sat, 20 Feb 2021 00:26:44 +0900
+Subject: [PATCH] Support elogind
+
+---
+ configure.ac            | 22 +++++++++++++++++++++-
+ dbus/dbus-userdb-util.c |  5 ++++-
+ 2 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 3bb9cce..a9e3718 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -206,6 +206,7 @@ AC_ARG_ENABLE(inotify, AS_HELP_STRING([--enable-inotify],[build with inotify sup
  AC_ARG_ENABLE(kqueue, AS_HELP_STRING([--enable-kqueue],[build with kqueue support]),enable_kqueue=$enableval,enable_kqueue=auto)
  AC_ARG_ENABLE(console-owner-file, AS_HELP_STRING([--enable-console-owner-file],[enable console owner file]),enable_console_owner_file=$enableval,enable_console_owner_file=auto)
  AC_ARG_ENABLE(launchd, AS_HELP_STRING([--enable-launchd],[build with launchd auto-launch support]),enable_launchd=$enableval,enable_launchd=auto)
 +AC_ARG_ENABLE(elogind, AS_HELP_STRING([--enable-elogind],[build with elogind user seat support]),enable_elogind=$enableval,enable_elogind=auto)
  AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd],[build with systemd at_console support]),enable_systemd=$enableval,enable_systemd=auto)
  
- AC_ARG_WITH(init-scripts, AS_HELP_STRING([--with-init-scripts=[redhat]],[Style of init scripts to install]))
-@@ -1184,6 +1185,24 @@
+ AC_ARG_WITH(session-socket-dir, AS_HELP_STRING([--with-session-socket-dir=[dirname]],[Where to put sockets for the per-login-session message bus]))
+@@ -1078,6 +1079,24 @@ fi
  
  AM_CONDITIONAL(HAVE_CONSOLE_OWNER_FILE, test x$have_console_owner_file = xyes)
  
@@ -54,7 +45,7 @@
  dnl systemd detection
  if test x$enable_systemd = xno ; then
      have_systemd=no;
-@@ -1290,7 +1309,7 @@
+@@ -1184,7 +1203,7 @@ if test x$with_valgrind != xno; then
  fi
  
  #### Set up final flags
@@ -63,7 +54,7 @@
  AC_SUBST([LIBDBUS_LIBS])
  
  ### X11 detection
-@@ -1949,6 +1968,7 @@
+@@ -1826,6 +1845,7 @@ echo "
          Building AppArmor support: ${have_apparmor}
          Building inotify support: ${have_inotify}
          Building kqueue support:  ${have_kqueue}
@@ -71,3 +62,29 @@
          Building systemd support: ${have_systemd}
          Building X11 code:        ${have_x11}
          Building Doxygen docs:    ${enable_doxygen_docs}
+diff --git a/dbus/dbus-userdb-util.c b/dbus/dbus-userdb-util.c
+index 170d233..343ba09 100644
+--- a/dbus/dbus-userdb-util.c
++++ b/dbus/dbus-userdb-util.c
+@@ -32,6 +32,9 @@
+ #ifdef HAVE_SYSTEMD
+ #include <systemd/sd-login.h>
+ #endif
++#if HAVE_ELOGIND
++#include <elogind/sd-login.h>
++#endif
+ 
+ /**
+  * @addtogroup DBusInternalsUtils
+@@ -63,7 +66,7 @@ _dbus_is_console_user (dbus_uid_t uid,
+   const DBusUserInfo *info;
+   dbus_bool_t result = FALSE;
+ 
+-#ifdef HAVE_SYSTEMD
++#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
+   /* check if we have logind */
+   if (access ("/run/systemd/seats/", F_OK) >= 0)
+     {
+-- 
+2.26.1
+
