@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="88.0.4324.182"
+vers="89.0.4389.72"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="3"
+patchset_vers="6"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -15,11 +15,11 @@ src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
-	subpixel-anti-aliasing-in-FreeType-2.8.1.patch
-	patches/chromium-87-openscreen-include.patch
-	patches/chromium-88-CompositorFrameReporter-dcheck.patch
-	patches/chromium-88-ideographicSpaceCharacter.patch
-	patches/chromium-88-AXTreeFormatter-include.patch"
+	use-oauth2-client-switches-as-default.patch
+	add-dependency-on-opus-in-webcodecs.patch
+	don-t-crash-on-reentrant-RunMoveLoop-call.patch
+	add-ctime-for-std-time.patch
+	patches/chromium-89-quiche-dcheck.patch"
 compress=txz
 ##############################################################
 
