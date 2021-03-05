@@ -2,6 +2,7 @@ custom_toolchain="//build/toolchain/linux/unbundle:default"
 host_toolchain="//build/toolchain/linux/unbundle:default"
 clang_use_chrome_plugins=false
 is_official_build=true
+chrome_pgo_phase=0
 treat_warnings_as_errors=false
 fieldtrial_testing_like_official_build=true
 ffmpeg_branding="Chrome"
