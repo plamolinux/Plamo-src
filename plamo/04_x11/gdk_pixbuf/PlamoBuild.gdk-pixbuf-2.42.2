@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gdk_pixbuf"
-vers="2.38.1"
+vers="2.42.2"
 url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${vers%.*}/gdk-pixbuf-${vers}.tar.xz"
 verify=""
-digest="md5sum:f6ba2195acd18c5c9555421f30c31cc1"
+digest="md5sum:7d7617db8dae8ce313160384ab0a71db"
 arch=`uname -m`
 build=B1
 src="gdk-pixbuf-${vers}"
-OPT_CONFIG="-Djasper=true"
+OPT_CONFIG="-Dinstalled_tests=false -Ddocs=false"
 DOCS="COPYING NEWS README.md README.msvc meson_options.txt"
 patchfiles=""
 compress=txz
