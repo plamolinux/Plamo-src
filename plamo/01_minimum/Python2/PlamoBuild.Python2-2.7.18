@@ -4,14 +4,23 @@ pkgbase='Python2'
 vers='2.7.18'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
+patches="https://dev.gentoo.org/~mgorny/dist/python/python-gentoo-patches-2.7.18_p7.tar.xz"
 arch=`uname -m`
-build=B1
+build=B2
 src="Python-${vers}"
 OPT_CONFIG="--enable-shared --with-system-expat --with-system-ffi
-	--with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4
-	--enable-optimizations --without-ensurepip"
+        --with-dbmliborder=gdbm:bdb:ndbm --enable-unicode=ucs4
+        --enable-optimizations --without-ensurepip"
 DOCS='LICENSE README'
-patchfiles=''
+patchfiles="
+        python-gentoo-patches-2.7.18_p7/0001-bpo-39017-Avoid-infinite-loop-in-the-tarfile-module-.patch
+        python-gentoo-patches-2.7.18_p7/0002-bpo-39503-CVE-2020-8492-Fix-AbstractBasicAuthHandler.patch
+        python-gentoo-patches-2.7.18_p7/0003-bpo-39603-Prevent-header-injection-in-http-methods-G.patch
+        python-gentoo-patches-2.7.18_p7/0004-bpo-42051-Reject-XML-entity-declarations-in-plist-fi.patch
+        python-gentoo-patches-2.7.18_p7/0005-bpo-41944-No-longer-call-eval-on-content-received-vi.patch
+        python-gentoo-patches-2.7.18_p7/0006-bpo-40791-Make-compare_digest-more-constant-time.-GH.patch
+        python-gentoo-patches-2.7.18_p7/0007-3.6-closes-bpo-42938-Replace-snprintf-with-Python-un.patch
+        python-gentoo-patches-2.7.18_p7/0024-3.6-bpo-42967-only-use-as-a-query-string-separator-G.patch"
 compress=txz
 ##############################################################
 
@@ -39,7 +48,11 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
+    if [ ! -f ${patches##*/} ]; then
+        wget $patches
+    fi
+    tar xvf ${patches##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
