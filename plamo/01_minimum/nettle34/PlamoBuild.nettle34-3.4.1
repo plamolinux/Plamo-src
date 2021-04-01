@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-pkgbase='nettle'
+pkgbase='nettle34'
 vers='3.4.1'
-url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+url="https://ftp.gnu.org/gnu/nettle/nettle-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="nettle-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING.LESSERv3 COPYINGv2 COPYINGv3 ChangeLog INSTALL NEWS README TODO descore.README'
 patchfiles=''
@@ -84,8 +84,11 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
   chmod -v 755 $P/usr/$libdir/lib{hogweed,nettle}.so
-  install -v -d -m755 $docdir/$src
-  install -v -m644 $S/nettle.html $docdir/$src/nettle.html
+
+  rm -rvf $P/usr/include
+  rm -rvf $P/usr/bin
+  rm -rvf $P/usr/share
+  rm -rvf $P/usr/${libdir}/pkgconfig
 
 ################################
 #      install tweaks
