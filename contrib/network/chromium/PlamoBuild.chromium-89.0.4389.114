@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="89.0.4389.72"
+vers="89.0.4389.114"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="6"
+patchset_vers="7"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -14,12 +14,13 @@ build=B1
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
+#	chromium-fix-libva-redef.patch
 patchfiles="
 	use-oauth2-client-switches-as-default.patch
+	chromium-glibc-2.33.patch
 	add-dependency-on-opus-in-webcodecs.patch
-	don-t-crash-on-reentrant-RunMoveLoop-call.patch
-	add-ctime-for-std-time.patch
-	patches/chromium-89-quiche-dcheck.patch"
+	patches/chromium-89-quiche-dcheck.patch
+	patches/chromium-89-AXTreeSerializer-include.patch"
 compress=txz
 ##############################################################
 
@@ -267,6 +268,8 @@ if [ $opt_package -eq 1 ] ; then
      "$P/$INSTALLDIR"
   install -Dm644 -t "$P/$INSTALLDIR/locales" out/Release/locales/*.pak
   ln -sfv $INSTALLDIR/chromedriver $P/usr/bin/chromedriver
+  install -Dm755 out/Release/{libEGL,libGLESv2}.so $P/$INSTALLDIR
+  install -Dm755 -t "$P/usr/lib/chromium/swiftshader" out/Release/swiftshader/*.so
 
   if [[ -z ${_system_libs[icu]+set} ]]; then
       cp -v out/Release/icudtl.dat "$P/$INSTALLDIR"
@@ -282,7 +285,8 @@ if [ $opt_package -eq 1 ] ; then
               "$P/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
   done
 
-  mkdir -p $docdir/$src/chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}
+  #mkdir -p $docdir/$src/chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}
+  mkdir -p $docdir/$src/patches
 
 ################################
 #      install tweaks
