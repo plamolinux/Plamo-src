@@ -14,6 +14,7 @@ use_sysroot=false
 use_custom_libcxx=false
 enable_hangout_services_extension=true
 enable_widevine=true
+use_vaapi=true
 enable_nacl=false
 #enable_swiftshader=false
 symbol_level=0

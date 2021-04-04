@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="90.0.4430.30"
+vers="89.0.4389.114"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="6"
+patchset_vers="7"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -14,14 +14,13 @@ build=B1
 src="chromium-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
+#	chromium-fix-libva-redef.patch
 patchfiles="
 	use-oauth2-client-switches-as-default.patch
 	chromium-glibc-2.33.patch
-	patches/chromium-90-CrossThreadCopier-qualification.patch
-	patches/chromium-90-TokenizedOutput-include.patch
-	patches/chromium-90-angle-constexpr.patch
-	patches/chromium-90-quantization_utils-include.patch
-	patches/chromium-90-ruy-include.patch"
+	add-dependency-on-opus-in-webcodecs.patch
+	patches/chromium-89-quiche-dcheck.patch
+	patches/chromium-89-AXTreeSerializer-include.patch"
 compress=txz
 ##############################################################
 
@@ -83,7 +82,7 @@ declare -gA _system_libs=(
   [libjpeg]=libjpeg
   [libpng]=libpng
   #[libvpx]=libvpx
-  [libwebp]=libwebp
+  #[libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
   [opus]=opus
@@ -176,6 +175,9 @@ if [ $opt_config -eq 1 ] ; then
 
     sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
 
+    # for running ui/gfx/x/gen_xproto.py, we use python3 xcbgen module from python2
+    ln -sf /usr/lib/python3.7/site-packages/xcbgen $W/
+
     mkdir -p third_party/node/linux/node-linux-x64/bin
     ln -sfv /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 
@@ -188,7 +190,7 @@ if [ $opt_config -eq 1 ] ; then
              -delete
     done
 
-    ./build/linux/unbundle/replace_gn_files.py \
+    python2 build/linux/unbundle/replace_gn_files.py \
         --system-libraries "${!_system_libs[@]}"
 fi
 
@@ -261,21 +263,13 @@ if [ $opt_package -eq 1 ] ; then
       "$P/usr/share/applications/chromium.desktop" \
       "$P/usr/share/man/man1/chromium.1"
 
-  install -Dm644 chrome/installer/linux/common/chromium-browser/chromium-browser.appdata.xml \
-	  "$P/usr/share/metainfo/chromium.appdata.xml"
-  sed -ni \
-      -e 's/chromium-browser\.desktop/chromium.desktop/' \
-      -e '/<update_contact>/d' \
-      -e '/<p>/N;/<p>\n.*\(We invite\|Chromium supports Vorbis\)/,/<\/p>/d' \
-      -e '/^<?xml/,$p' \
-      "$P/usr/share/metainfo/chromium.appdata.xml"
-
   cp out/Release/{chrome_{100,200}_percent,resources}.pak \
-     out/Release/{v8_context_snapshot.bin,libEGL.so,libGLESv2.so,chromedriver} \
+     out/Release/{*.bin,chromedriver} \
      "$P/$INSTALLDIR"
   install -Dm644 -t "$P/$INSTALLDIR/locales" out/Release/locales/*.pak
-  install -Dm755 -t "$P/usr/lib/chromium/swiftshader" out/Release/swiftshader/*.so
   ln -sfv $INSTALLDIR/chromedriver $P/usr/bin/chromedriver
+  install -Dm755 out/Release/{libEGL,libGLESv2}.so $P/$INSTALLDIR
+  install -Dm755 -t "$P/usr/lib/chromium/swiftshader" out/Release/swiftshader/*.so
 
   if [[ -z ${_system_libs[icu]+set} ]]; then
       cp -v out/Release/icudtl.dat "$P/$INSTALLDIR"
@@ -291,14 +285,14 @@ if [ $opt_package -eq 1 ] ; then
               "$P/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
   done
 
-  mkdir -p $docdir/$src/chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}
+  #mkdir -p $docdir/$src/chromium-patches-chromium-${vers%%.*}-patchset-${patchset_vers}
+  mkdir -p $docdir/$src/patches
 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
-  export NO_STRIP=1
   install_tweak
 
 #############################
