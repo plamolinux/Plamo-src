@@ -1,16 +1,36 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fontconfig'
-vers='2.13.1'
-url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:36cdea1058ef13cbbfdabe6cb019dc1c"
+vers='2.13.93'
+url="https://www.freedesktop.org/software/${pkgbase}/release/${pkgbase}-${vers}.tar.xz"
+digest="sha256sum:ea968631eadc5739bc7c8856cef5c77da812d1f67b763f5e51b57b8026c1a0a0"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-docs --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="--disable-static
+	--enable-shared
+	--disable-docs
+	--docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-patchfiles=''
+enabled_config="
+	09-autohint-if-no-hinting.conf
+	10-autohint.conf
+	10-hinting-full.conf
+	10-no-sub-pixel.conf
+	10-scale-bitmap-fonts.conf
+	20-unhint-small-vera.conf
+	30-metric-aliases.conf
+	40-nonlatin.conf
+	49-sansserif.conf
+	51-local.conf
+	60-generic.conf
+	60-latin.conf
+	65-nonlatin.conf
+	69-unifont.conf
+	80-delicious.conf
+	90-synthetic.conf"
+patchfiles=""
 compress=txz
 ##############################################################
 
@@ -101,6 +121,23 @@ if [ $opt_package -eq 1 ] ; then
   install -v -dm755 $P/etc/template/Source/.config/fontconfig
   install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
   install -v -Dm644 $W/fonts.conf $docdir/$src/fonts.conf
+
+  conf_dir="/usr/share/fontconfig/conf.avail"
+  ( cd $P/etc/fonts/conf.d
+    for fontconf in $enabled_config
+    do
+	if [ -r $P/$conf_dir ]; then
+	    ln -svf $conf_dir/$fontconf .
+	fi
+    done
+  )
+
+  mkdir -pv $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/fc-cache ]; then
+   /usr/bin/fc-cache -f
+fi
+EOF
 
 ################################
 #      install tweaks
