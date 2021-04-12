@@ -76,6 +76,7 @@ class Package():
                 print("cannot find proper configure methods.")
                 print("PlamoBuild script is setup for configure, but you should adjust build script manually")
                 self.method = 'config'
+                self.source = True
 
     def make_header(self):
         if self.method == 'config' :
