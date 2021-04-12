@@ -41,6 +41,7 @@ class Package():
                 print("cannot find proper configure methods.")
                 print("PlamoBuild script is setup for configure, but you should adjust build script manually")
                 self.method = 'config'
+                self.source = True
 
     def make_header(self):
         if self.method == 'config' :
@@ -187,7 +188,7 @@ if [ $opt_config -eq 1 ] ; then
         elif self.method == 'perl' :
             self.copy_source()
             self.config += '''
-    perl Makefile.PL INSTALL_BASE={}'''.format(self.prefix)
+    PERL_MM_USEDEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor '''.format(self.prefix)
 
         self.config += '''
     if [ $? != 0 ]; then
