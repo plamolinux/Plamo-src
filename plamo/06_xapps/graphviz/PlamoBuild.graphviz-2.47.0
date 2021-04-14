@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='graphviz'
-vers='2.44.1'
-url="https://www2.graphviz.org/Packages/stable/portable_source/graphviz-${vers}.tar.gz"
-verify="${url}.md5"
+vers="2.47.0"
+url="https://gitlab.com/graphviz/graphviz/-/archive/${vers}/graphviz-${vers}.tar.gz"
+digest="md5sum:59d59068abdeef18b53a099cc8a4b9c3"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -13,6 +13,7 @@ OPT_CONFIG="
 	--enable-python=no
 	--enable-python3=yes
 	--enable-ruby=yes
+	--enable-php=no
 	--with-qt=yes"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README cpl1.0.txt'
 patchfiles=''
@@ -20,8 +21,6 @@ compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-
-export RUBY_VER="2.5"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -49,27 +48,24 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
-      touch .${patch}
-    fi
   done
 
   # avoid /usr/lib64
   sed -i '/LIBPOSTFIX="64"/s/64//' configure.ac
 
-  autoreconf
+  ./autogen.sh
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export CXXFLAGS=' -fPIC -fpermissive'
   export LDFLAGS='-Wl,--as-needed'
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
