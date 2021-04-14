@@ -12,7 +12,7 @@ OPT_CONFIG="
 	--docdir=/usr/share/doc/${src}
 	--enable-python=no
 	--enable-python3=yes
-	--enable-ruby=yes
+	--enable-ruby=no
 	--enable-php=no
 	--with-qt=yes"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README cpl1.0.txt'
@@ -22,7 +22,7 @@ compress=txz
 
 source /usr/share/plamobuild_functions.sh
 
-export RUBY_VER=3.0
+# export RUBY_VER=3.0
 
 # このスクリプトで使う1文字変数の意味
 #
