@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="89.0.4389.114"
+vers="90.0.4430.72"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="7"
+patchset_vers="6"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -18,9 +18,8 @@ DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 patchfiles="
 	use-oauth2-client-switches-as-default.patch
 	chromium-glibc-2.33.patch
-	add-dependency-on-opus-in-webcodecs.patch
-	patches/chromium-89-quiche-dcheck.patch
-	patches/chromium-89-AXTreeSerializer-include.patch"
+	patches/chromium-90-quantization_utils-include.patch
+	patches/chromium-90-TokenizedOutput-include.patch"
 compress=txz
 ##############################################################
 
@@ -82,7 +81,7 @@ declare -gA _system_libs=(
   [libjpeg]=libjpeg
   [libpng]=libpng
   #[libvpx]=libvpx
-  #[libwebp]=libwebp
+  [libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
   [opus]=opus
@@ -172,11 +171,12 @@ if [ $opt_config -eq 1 ] ; then
             touch .$(basename ${patch})
         fi
     done
+    patch -Rp1 < $W/add-clang-nomerge-attribute-to-CheckError.patch
 
     sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
 
     # for running ui/gfx/x/gen_xproto.py, we use python3 xcbgen module from python2
-    ln -sf /usr/lib/python3.7/site-packages/xcbgen $W/
+    # ln -sf /usr/lib/python3.9/site-packages/xcbgen $W/
 
     mkdir -p third_party/node/linux/node-linux-x64/bin
     ln -sfv /usr/bin/node third_party/node/linux/node-linux-x64/bin/
@@ -190,7 +190,7 @@ if [ $opt_config -eq 1 ] ; then
              -delete
     done
 
-    python2 build/linux/unbundle/replace_gn_files.py \
+    ./build/linux/unbundle/replace_gn_files.py \
         --system-libraries "${!_system_libs[@]}"
 fi
 
@@ -201,7 +201,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=llvm-ar
+    export AR=ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
@@ -218,7 +218,7 @@ if [ $opt_build -eq 1 ] ; then
         fi
     done
 
-    $W/gn gen out/Release --script-executable=/usr/bin/python2
+    $W/gn gen out/Release
     #ninja -v -C out/Release chrome chrome_sandbox chromedriver
     ninja -C out/Release chrome chrome_sandbox chromedriver
 
@@ -262,6 +262,15 @@ if [ $opt_package -eq 1 ] ; then
       -e "s/@@USR_BIN_SYMLINK_NAME@@/chromium/g" \
       "$P/usr/share/applications/chromium.desktop" \
       "$P/usr/share/man/man1/chromium.1"
+
+  install -Dm644 chrome/installer/linux/common/chromium-browser/chromium-browser.appdata.xml \
+	  "$P/usr/share/metainfo/chromium.appdata.xml"
+  sed -ni \
+    -e 's/chromium-browser\.desktop/chromium.desktop/' \
+    -e '/<update_contact>/d' \
+    -e '/<p>/N;/<p>\n.*\(We invite\|Chromium supports Vorbis\)/,/<\/p>/d' \
+    -e '/^<?xml/,$p' \
+    "$P/usr/share/metainfo/chromium.appdata.xml"
 
   cp out/Release/{chrome_{100,200}_percent,resources}.pak \
      out/Release/{*.bin,chromedriver} \
