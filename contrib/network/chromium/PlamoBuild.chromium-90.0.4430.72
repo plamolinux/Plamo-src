@@ -71,20 +71,20 @@ build_gn() {
 }
 
 declare -gA _system_libs=(
-  [ffmpeg]=ffmpeg
+  #[ffmpeg]=ffmpeg
   [flac]=flac
-  [fontconfig]=fontconfig
-  [freetype]=freetype2
-  [harfbuzz-ng]=harfbuzz
+  #[fontconfig]=fontconfig
+  #[freetype]=freetype2
+  #[harfbuzz-ng]=harfbuzz
   #[icu]=icu
-  [libdrm]=
-  [libjpeg]=libjpeg
-  [libpng]=libpng
+  #[libdrm]=
+  #[libjpeg]=libjpeg
+  #[libpng]=libpng
   #[libvpx]=libvpx
-  [libwebp]=libwebp
-  [libxml]=libxml2
-  [libxslt]=libxslt
-  [opus]=opus
+  #[libwebp]=libwebp
+  #[libxml]=libxml2
+  #[libxslt]=libxslt
+  #[opus]=opus
   #[re2]=re2
   #[snappy]=snappy
   #[zlib]=minizip
@@ -201,7 +201,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=ar
+    export AR=llvm-ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
