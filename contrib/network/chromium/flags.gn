@@ -12,7 +12,6 @@ is_component_build=false
 is_component_ffmpeg=false
 ozone_platform_wayland=true
 use_allocator="none"
-use_bundled_fontconfig=false
 use_cfi_icall=false
 use_cups=true
 #use_custom_libcxx=true
