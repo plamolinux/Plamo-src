@@ -201,7 +201,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=ar
+    export AR=llvm-ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
