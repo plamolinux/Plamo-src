@@ -1,34 +1,39 @@
 #! /usr/bin/python
-# -*- coding: euc-jp -*-;
+# -*- coding: utf-8 -*-;
 
 '''
-¥Ð¥¤¥Ê¥ê¥Õ¥¡¥¤¥ë¤Î¤¢¤ê¤½¤¦¤Ê¥Ç¥£¥ì¥¯¥È¥ê(search_dirs(['/bin', '/lib', 
-'/lib64', '/sbin', '/usr', '/opt']))°Ê²¼¤Ë¤¢¤ë¥Ð¥¤¥Ê¥ê¥Õ¥¡¥¤¥ë
-(file ¥³¥Þ¥ó¥É¤Ç ELF, dynamically linked ¤ò
-ÊÖ¤¹¥Õ¥¡¥¤¥ë)¤Ë¤Ä¤¤¤Æ¡¤ldd¤·¤¿·ë²Ì¤ò¥Ç¡¼¥¿¥Ù¡¼¥¹ ./depends.sql3 ¤Ë
-µ­Ï¿¤¹¤ë¡¥root¸¢¸Â¤Ç¤·¤«ÆÉ¤á¤Ê¤¤¥Õ¥¡¥¤¥ë¤â¤¢¤ë¤Î¤Ç¡¤sudo ¤Ç¼Â¹Ô¤¹¤ë¤³¤È¤¬Ë¾¤Þ¤·¤¤¡¥
+ãƒã‚¤ãƒŠãƒªãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚ã‚Šãã†ãªãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(search_dirs(['/bin', '/lib', 
+'/lib64', '/sbin', '/usr', '/opt']))ä»¥ä¸‹ã«ã‚ã‚‹ãƒã‚¤ãƒŠãƒªãƒ•ã‚¡ã‚¤ãƒ«
+(file ã‚³ãƒžãƒ³ãƒ‰ã§ ELF, dynamically linked ã‚’
+è¿”ã™ãƒ•ã‚¡ã‚¤ãƒ«)ã«ã¤ã„ã¦ï¼Œlddã—ãŸçµæžœã‚’ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ ./depends.sql3 ã«
+è¨˜éŒ²ã™ã‚‹ï¼Žrootæ¨©é™ã§ã—ã‹èª­ã‚ãªã„ãƒ•ã‚¡ã‚¤ãƒ«ã‚‚ã‚ã‚‹ã®ã§ï¼Œsudo ã§å®Ÿè¡Œã™ã‚‹ã“ã¨ãŒæœ›ã¾ã—ã„ï¼Ž
 
-./depends.sql3 ¤Ë¤Ï depends ¤È¤¤¤¦¥Æ¡¼¥Ö¥ë¤¬¤¢¤ê¡¤¤½¤Î¥Æ¡¼¥Ö¥ë¤Î¹½Â¤¤Ï
-(base text, path text, soname text, realname text) ¤È¤Ê¤Ã¤Æ¤¤¤ë¡¥
-  base ¡§ ¥Ð¥¤¥Ê¥ê¥Õ¥¡¥¤¥ë¤Î¥Ù¡¼¥¹Ì¾(¥Ñ¥¹Ìµ¤·)¡¤
-  path ¡§ base ¤Ø¤Î¥Ñ¥¹
-  soname : É¬Í×¤È¤¹¤ë¶¦Í­¥é¥¤¥Ö¥é¥ê¤Îsoname
-  realname : ¾åµ­¥é¥¤¥Ö¥é¥ê¤Î¥Ñ¥¹Ì¾ÉÕ¤­¤ÎÌ¾Á°
+./depends.sql3 ã«ã¯ depends ã¨ã„ã†ãƒ†ãƒ¼ãƒ–ãƒ«ãŒã‚ã‚Šï¼Œãã®ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ§‹é€ ã¯
+(base text, path text, soname text, realname text) ã¨ãªã£ã¦ã„ã‚‹ï¼Ž
+  base ï¼š ãƒã‚¤ãƒŠãƒªãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ™ãƒ¼ã‚¹å(ãƒ‘ã‚¹ç„¡ã—)ï¼Œ
+  path ï¼š base ã¸ã®ãƒ‘ã‚¹
+  soname : å¿…è¦ã¨ã™ã‚‹å…±æœ‰ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®soname
+  realname : ä¸Šè¨˜ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®ãƒ‘ã‚¹åä»˜ãã®åå‰
 
-°ì¤Ä¤Î¥Ù¡¼¥¹Ì¾(Îã¤¨¤Ð cat)¤ËÂÐ¤·¤Æ¡¤path ¤Ï°ì¤Ä(/bin/cat)¤À¤¬¡¤
-Ê£¿ô¤Îsoname ¤Èrealname ¤¬É¬Í×¤È¤Ê¤ë¤Î¤Ç¡¤¥Ç¡¼¥¿¥Ù¡¼¥¹¤Ë¤Ï¤³¤Î¤è¤¦¤ËÊÂ¤ó¤Ç¤¤¤ë
+ä¸€ã¤ã®ãƒ™ãƒ¼ã‚¹å(ä¾‹ãˆã° cat)ã«å¯¾ã—ã¦ï¼Œpath ã¯ä¸€ã¤(/bin/cat)ã ãŒï¼Œ
+è¤‡æ•°ã®soname ã¨realname ãŒå¿…è¦ã¨ãªã‚‹ã®ã§ï¼Œãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã«ã¯ã“ã®ã‚ˆã†ã«ä¸¦ã‚“ã§ã„ã‚‹
  cat|/bin/cat|linux-vdso.so.1|none
  cat|/bin/cat|libc.so.6|/lib64/libc.so.6
  cat|/bin/cat|/lib64/ld-linux-x86-64.so.2|/lib64/ld-linux-x86-64.so.2
 
-¥Õ¥¡¥¤¥ë¤Î¹¹¿·(¸Å¤¤¥é¥¤¥Ö¥é¥ê¤Îºï½ü)¤òÄÉÀ×¤¹¤ëÊýË¡¤¬Ìµ¤¤¤Î¤Ç¡¤¥Ç¡¼¥¿¥Ù¡¼¥¹¤ò¹¹¿·¤¹¤ë¤Ë¤Ï
-¸Å¤¤¥Õ¥¡¥¤¥ë(./depends.sql3)¤òºï½ü¤·¤Æ¡¤ºÆÅÙ¤³¤Î¥³¥Þ¥ó¥É¤ò¼Â¹Ô¤¹¤ë¤³¤È¡¥
+ãƒ•ã‚¡ã‚¤ãƒ«ã®æ›´æ–°(å¤ã„ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®å‰Šé™¤)ã‚’è¿½è·¡ã™ã‚‹æ–¹æ³•ãŒç„¡ã„ã®ã§ï¼Œ
+ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã‚’æ›´æ–°ã™ã‚‹ã«ã¯å¤ã„ãƒ•ã‚¡ã‚¤ãƒ«(./depends.sql3)ã‚’å‰Šé™¤ã—ã¦ï¼Œ
+å†åº¦ã“ã®ã‚³ãƒžãƒ³ãƒ‰ã‚’å®Ÿè¡Œã™ã‚‹ã“ã¨ï¼Ž
+
+ãƒ•ã‚¡ã‚¤ãƒ«ã®ç¨®é¡žã®åˆ¤å®šã« libmagic ã‚’ä½¿ã£ã¦ã„ã‚‹ã®ã§ï¼Œ
+python-magic ãŒå¿…è¦(pip install python-magic)
 '''
 
-import sqlite3, os, subprocess, sys, time
+import sqlite3, os, subprocess, sys, time, magic
 
 def init_db(dbname):
     conn = sqlite3.connect(dbname)
+    #  conn.execute('''drop table if exists depends''') 
     conn.execute('''create table depends
        (base text, path text, soname text, realname text)''')
     conn.close
@@ -36,11 +41,11 @@ def init_db(dbname):
 def insert_db(dbname, t):
     conn = sqlite3.connect(dbname)
     try:
-        print "inserting ", t
+        print("inserting ", t)
         conn.execute('insert into depends values(?, ?, ?, ?)', t)
         conn.commit()
-    except sqlite3.Error, e:
-        print "An error occurred:", e.args[0]
+    except sqlite3.Error as e:
+        print("An error occurred:", e.args[0])
         conn.rollback()
 
 def get_elfs(path):
@@ -59,13 +64,15 @@ def get_elfs(path):
                 path = os.path.join(root,i)
                 if os.path.islink(path) == False:
                     if check_elf(path) :
-                        print("{0} is ELF".format(path))
+                        print(("{0} is ELF".format(path)))
                         elfs.append(path)
     return elfs
 
 def check_elf(file):
-    res = subprocess.check_output(['file', file])
-    if res.find('ELF') > 0 and res.find('dynamically linked') > 0 and res.find('32-bit') == -1: 
+    res = magic.from_file(file)
+    # res = str(subprocess.check_output(['file', file]))
+    print("{}:{}".format(file,res))
+    if res.find('ELF') >= 0 and res.find('dynamically linked') > 0 and res.find('32-bit') == -1: 
         return True
     else:
         return False
@@ -73,18 +80,18 @@ def check_elf(file):
 def get_depends(file):
     list = []
     try:
-        res = subprocess.check_output(['ldd', file])
+        res = subprocess.check_output(['ldd', file]).decode('utf-8')
         tmp = res.splitlines()
         for i in tmp:
             list.append(i.lstrip())
 
     except subprocess.CalledProcessError:
-        print("error occured to ldd {0}. maybe different archs?".format(file))
+        print(("error occured to ldd {0}. maybe different archs?".format(file)))
 
     return list
 
 def split_parts(l):
-    (soname, sep, last) = l.partition(' => ')
+    (soname, sep, last) = str(l).partition(' => ')
     if soname == 'linux-vdso.so.1' :
         realname = 'none'
     elif soname.find('ld-linux') > 0:
@@ -107,10 +114,10 @@ def main():
     # print("last_checked:", time.ctime(last_checked))
 
     # search_dirs = ['/bin', '/etc', '/lib', '/lib64', '/opt', '/sbin', '/usr']
-    search_dirs = ['/bin',  '/lib', '/lib64', '/sbin', '/usr', '/opt']
-
+    search_dirs = ['/bin',  '/lib', '/lib64', '/lib32', '/sbin', '/usr', '/opt']
+    
     for dir in search_dirs:
-        print("searching {0}".format(dir))
+        print(("searching {0}".format(dir)))
         files = get_elfs(dir)
         list = []
         for file in files:
@@ -118,11 +125,12 @@ def main():
             tmp = get_depends(file)
             for i in tmp:
                 (soname, realname) = split_parts(i)
-                print("{0}, {1}, {2}, {3}".format(base, file, soname, realname))
+                print(("{0}, {1}, {2}, {3}".format(base, file, soname, realname)))
                 t = (base, file, soname, realname)
                 list.append(t)
             
         conn = sqlite3.connect(dbname)
+        # print("db input list:{}".format(list))
         conn.executemany('insert into depends values(?, ?, ?, ?)', list)
         conn.commit()
 
