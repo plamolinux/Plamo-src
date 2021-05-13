@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='qt'
-vers='5.15.1'
+vers='5.15.2'
 url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
 verify=""
-digest="md5sum:ab16c28f4f9e6db8299096312decdbc4"
+digest="md5sum:e1447db4f06c841d8947f0a6ce83a7b5"
 arch=`uname -m`
-build=B2
+build=B1
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG=(-prefix /usr
 	    -archdatadir    /usr/lib/qt5
@@ -111,13 +111,13 @@ if [ $opt_package -eq 1 ] ; then
   
   # /usr/share/pixmap
   mkdir -p $P/usr/share/pixmaps
-  install -v -Dm644 qttools/src/assistant/assistant/images/assistant-128.png \
+  install -v -Dm644 $S/qttools/src/assistant/assistant/images/assistant-128.png \
           $P/usr/share/pixmaps/assistant-qt5.png
-  install -v -Dm644 qttools/src/designer/src/designer/images/designer.png \
+  install -v -Dm644 $S/qttools/src/designer/src/designer/images/designer.png \
           $P/usr/share/pixmaps/designer-qt5.png
-  install -v -Dm644 qttools/src/linguist/linguist/images/icons/linguist-128-32.png \
+  install -v -Dm644 $S/qttools/src/linguist/linguist/images/icons/linguist-128-32.png \
           $P/usr/share/pixmaps/linguist-qt5.png
-  install -v -Dm644 qttools/src/qdbus/qdbusviewer/images/qdbusviewer-128.png \
+  install -v -Dm644 $S/qttools/src/qdbus/qdbusviewer/images/qdbusviewer-128.png \
           $P/usr/share/pixmaps/qdbusviewer-qt5.png
 
   # /usr/share/applications
