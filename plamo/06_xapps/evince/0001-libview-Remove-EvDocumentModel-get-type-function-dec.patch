@@ -1,0 +1,25 @@
+From b5aa521e5f0d44604f96f2082ec17e966681c047 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Thu, 27 May 2021 12:38:21 +0900
+Subject: [PATCH] libview: Remove EvDocumentModel get type function declaration
+
+ref. https://patchwork.openembedded.org/patch/160930/
+---
+ libview/ev-document-model.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/libview/ev-document-model.h b/libview/ev-document-model.h
+index 784e27d..6a99e43 100644
+--- a/libview/ev-document-model.h
++++ b/libview/ev-document-model.h
+@@ -54,7 +54,6 @@ typedef enum {
+ 	EV_PAGE_LAYOUT_AUTOMATIC
+ } EvPageLayout;
+ 
+-GType            ev_document_model_get_type          (void) G_GNUC_CONST;
+ EvDocumentModel *ev_document_model_new               (void);
+ EvDocumentModel *ev_document_model_new_with_document (EvDocument      *document);
+ 
+-- 
+2.26.1
+
