@@ -1,0 +1,27 @@
+From f7071bedceb8d4e477e92d5d0c4a9973491edc77 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Sun, 30 May 2021 17:47:02 +0900
+Subject: [PATCH] Update WHENCE to prevent generation of filenames with spaces
+
+---
+ WHENCE | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/WHENCE b/WHENCE
+index a096d0d..4b8528c 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -2776,8 +2776,8 @@ Link: brcm/brcmfmac43430-sdio.raspberrypi,model-zero-w.txt -> brcmfmac43430-sdio
+ File: "brcm/brcmfmac43455-sdio.raspberrypi,3-model-b-plus.txt"
+ Link: brcm/brcmfmac43455-sdio.raspberrypi,3-model-a-plus.txt -> brcmfmac43455-sdio.raspberrypi,3-model-b-plus.txt
+ File: "brcm/brcmfmac43455-sdio.raspberrypi,4-model-b.txt"
+-Link: brcm/brcmfmac43455-sdio.Raspberry\ Pi\ Foundation-Raspberry\ Pi\ 4\ Model\ B.txt -> brcmfmac43455-sdio.raspberrypi,4-model-b.txt
+-Link: brcm/brcmfmac43455-sdio.Raspberry\ Pi\ Foundation-Raspberry\ Pi\ Compute\ Module\ 4.txt -> brcmfmac43455-sdio.raspberrypi,4-model-b.txt
++Link: brcm/brcmfmac43455-sdio.Raspberry_Pi_Foundation-Raspberry_Pi_4_Model_B.txt -> brcmfmac43455-sdio.raspberrypi,4-model-b.txt
++Link: brcm/brcmfmac43455-sdio.Raspberry_Pi_Foundation-Raspberry_Pi_Compute_Module_4.txt -> brcmfmac43455-sdio.raspberrypi,4-model-b.txt
+ File: "brcm/brcmfmac43455-sdio.MINIX-NEO Z83-4.txt"
+ File: "brcm/brcmfmac4356-pcie.gpd-win-pocket.txt"
+ File: brcm/brcmfmac4356-sdio.vamrs,rock960.txt
+-- 
+2.26.1
+
