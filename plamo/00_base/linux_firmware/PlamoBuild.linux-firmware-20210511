@@ -7,11 +7,11 @@ url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 verify="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-20210511.tar.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="linux-firmware-${vers}"
 OPT_CONFIG=""
 DOCS="LICENCE.ralink-firmware.txt LICENCE.rtlwifi_firmware.txt LICENCE.tda7706-firmware.txt LICENSE.QualcommAtheros_ar3k LICENSE.QualcommAtheros_ath10k LICENSE.amd-ucode LICENSE.amdgpu LICENSE.atmel LICENSE.dib0700 LICENSE.hfi1_firmware LICENSE.i915 LICENSE.ipu3_firmware LICENSE.nxp_mc_firmware LICENSE.qcom LICENSE.radeon LICENSE.sdma_firmware README TDA7706_OM_v2.5.1_boot.txt TDA7706_OM_v3.0.2_boot.txt"
-patchfiles=""
+patchfiles="0001-Update-WHENCE-to-prevent-generation-of-filenames-wit.patch"
 compress=txz
 ##############################################################
 
@@ -53,8 +53,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    echo "There is nothing to do in config section"
-    exit 0
+    if [ -n $patchfiles ]; then
+        pushd $S
+        for p in $patchfiles
+        do
+            patch -p1 -i $W/$p
+        done
+        popd
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
@@ -81,7 +87,7 @@ if [ $opt_package -eq 1 ] ; then
 #   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
-  #convert_links
+  convert_links
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
