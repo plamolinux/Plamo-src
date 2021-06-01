@@ -62,7 +62,9 @@
       ;;; Emacs23 以上の設定 (TrueType/OpenType フォントの使用)
       (if (>= emacs-major-version 23)
           (progn
-	    (set-default-font "Noto Sans Mono-8")
+	    (if (>= emacs-major-version 27)
+		(set-frame-font "Noto Sans Mono-8")
+	    (set-default-font "Noto Sans Mono-8"))
 	    (set-fontset-font
 	     (frame-parameter nil 'font)
 	     'japanese-jisx0208
