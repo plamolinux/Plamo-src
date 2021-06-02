@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="cbindgen"
-vers="0.17.0"
+vers="0.19.0"
 url="https://github.com/eqrion/cbindgen/archive/v${vers}/cbindgen-${vers}.tar.gz"
 verify=""
-digest="md5sum:319023d51257da454f9a30aa3a358429"
+digest="md5sum:b707b093702d4f1995f9a97f44ed081d"
 arch=`uname -m`
 build=B1
 src="cbindgen-${vers}"
