@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chromium"
-vers="90.0.4430.93"
+vers="91.0.4472.77"
 url="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-${vers}.tar.xz"
 launcher_vers="7"
 launcher_url="https://github.com/foutrelis/chromium-launcher/archive/v${launcher_vers}.tar.gz"
-patchset_vers="6"
+patchset_vers="5"
 chromium_patch_url="https://github.com/stha09/chromium-patches/releases/download/chromium-${vers%%.*}-patchset-${patchset_vers}/chromium-${vers%%.*}-patchset-${patchset_vers}.tar.xz"
 verify=""
 digest=""
@@ -17,9 +17,13 @@ DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 #	chromium-fix-libva-redef.patch
 patchfiles="
 	use-oauth2-client-switches-as-default.patch
+	unexpire-accelerated-video-decode-flag.patch
 	chromium-glibc-2.33.patch
-	patches/chromium-90-quantization_utils-include.patch
-	patches/chromium-90-TokenizedOutput-include.patch"
+	fix-crash-in-ThemeService.patch
+	unbundle-use-char16_t-as-UCHAR_TYPE.patch
+	add-clang-nomerge-attribute-to-CheckError.patch
+	sql-make-VirtualCursor-standard-layout-type.patch
+	patches/chromium-90-ruy-include.patch"
 compress=txz
 ##############################################################
 
@@ -180,6 +184,7 @@ if [ $opt_config -eq 1 ] ; then
 
     mkdir -p third_party/node/linux/node-linux-x64/bin
     ln -sfv /usr/bin/node third_party/node/linux/node-linux-x64/bin/
+    ln -sfv /usr/java/jdk/bin/java third_party/jdk/current/bin/
 
     for _lib in ${_unwanted_bundled_libs[@]}; do
         find "third_party/$_lib" -type f \
@@ -201,7 +206,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=llvm-ar
+    export AR=ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
