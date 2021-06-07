@@ -1,0 +1,21 @@
+
+if [ "$LANG" = "ja_JP.UTF-8" ]; then
+#    echo "Japanese mode"
+    install_1="$shortname のインストール中"
+    install_2="$shortname($PMSG) のインストール中"
+    install_3="$shortname のインストールスクリプトを実行中"
+
+    error_mes1="既に $packagebase というパッケージはインストールされています。再インストールする場合は、removepkg $packagebase で旧パッケージを削除するか、/var/log/packages/$packagebase を別の名前に変更してください。"
+    error_mes2="$packageをインストールできませんでした。パッケージが壊れているようです(tar のエラーコード: $TARERROR)"
+else
+#    echo "English mode"
+    install_1="Installing $shortname..."
+    install_2="Installing $shortname($PMSG)..."
+    install_3="Executing install script of $shortname"
+
+    error_mes1="$packagebase was already installed.\n\
+If you want to reinstall, uninstall old package using \"removepkg $packagebase\" ,\n\
+or rename /var/log/packages/$packagebase to different name."
+    error_mes2="Couldn't install $package. Package seems to be broken(tar error code: $TARERROR)"
+
+fi    
