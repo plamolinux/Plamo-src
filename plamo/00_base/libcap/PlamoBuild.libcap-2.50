@@ -56,7 +56,7 @@ if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
     export CFLAGS="$CFLAGS -Dlinux"
-    make KERNEL_HEADERS=/usr/include lib=/${libdir}
+    GO="" make KERNEL_HEADERS=/usr/include lib=/${libdir}
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -68,7 +68,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make DESTDIR=$P lib=${libdir} RAISE_SETFCAP=no install
+  GO="" make DESTDIR=$P lib=${libdir} RAISE_SETFCAP=no install
 
   chmod -v 755 $P/${libdir}/libcap.so
 
