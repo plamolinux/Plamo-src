@@ -17,11 +17,10 @@ DOCS="AUTHORS LICENSE LICENSE.chromium_os README.md"
 #	chromium-fix-libva-redef.patch
 patchfiles="
 	use-oauth2-client-switches-as-default.patch
-	unexpire-accelerated-video-decode-flag.patch
 	chromium-glibc-2.33.patch
 	fix-crash-in-ThemeService.patch
 	unbundle-use-char16_t-as-UCHAR_TYPE.patch
-	add-clang-nomerge-attribute-to-CheckError.patch
+	extend-enable-accelerated-video-decode-flag.patch
 	sql-make-VirtualCursor-standard-layout-type.patch
 	patches/chromium-90-ruy-include.patch"
 compress=txz
@@ -175,8 +174,6 @@ if [ $opt_config -eq 1 ] ; then
             touch .$(basename ${patch})
         fi
     done
-    patch -Rp1 < $W/add-clang-nomerge-attribute-to-CheckError.patch
-
     sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
 
     # for running ui/gfx/x/gen_xproto.py, we use python3 xcbgen module from python2
@@ -206,7 +203,7 @@ if [ $opt_build -eq 1 ] ; then
     #ninja -v -C out/Release -t clean
     export CC=clang
     export CXX=clang++
-    export AR=ar
+    export AR=llvm-ar
     export NM=nm
 
     export CFLAGS+='   -Wno-builtin-macro-redefined -Wno-unknown-warning-option'
