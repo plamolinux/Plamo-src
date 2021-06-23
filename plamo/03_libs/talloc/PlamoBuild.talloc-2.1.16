@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='talloc'
-vers='2.1.10'
+vers='2.1.16'
 url="https://www.samba.org/ftp/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="https://www.samba.org/ftp/${pkgbase}/${pkgbase}-${vers}.tar.asc"
+#verify="https://www.samba.org/ftp/${pkgbase}/${pkgbase}-${vers}.tar.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=
+OPT_CONFIG=""
 DOCS='NEWS pytalloc_guide.txt talloc_guide.txt'
 patchfiles=''
 compress=txz
+
+export PYTHON=/usr/bin/python2
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -55,14 +57,14 @@ if [ $opt_config -eq 1 ] ; then
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG[$i]}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
