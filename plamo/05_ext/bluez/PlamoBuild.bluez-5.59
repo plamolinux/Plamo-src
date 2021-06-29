@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bluez'
-vers='5.55'
+vers='5.59'
 url="https://www.kernel.org/pub/linux/bluetooth/${pkgbase}-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/bluetooth/bluez-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-library --disable-systemd --enable-btpclient --enable-hid2hci --enable-experimental"
+OPT_CONFIG="--enable-library --disable-systemd --enable-btpclient --enable-hid2hci --enable-experimental --disable-manpages"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO'
 # from arch linux
 patchfiles=""
