@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libuv"
-vers="1.35.0"
+vers="1.41.0"
 url="https://dist.libuv.org/dist/v${vers}/libuv-v${vers}.tar.gz"
-verify=""
-digest="md5sum:6b0ad0df2cfe90ed556a500423d6f1b8"
+verify="${url}.sign"
+digest=""
 arch=`uname -m`
 build=B1
 src="libuv-v${vers}"
