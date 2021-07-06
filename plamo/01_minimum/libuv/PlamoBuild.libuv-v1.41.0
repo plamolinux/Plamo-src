@@ -10,7 +10,7 @@ build=B1
 src="libuv-v${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS ChangeLog LICENSE LICENSE-docs MAINTAINERS.md README.md"
-patchfiles=""
+patchfiles="CVE-2021-22918.patch"
 compress=txz
 ##############################################################
 
