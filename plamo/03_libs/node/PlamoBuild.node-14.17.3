@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='node'
-vers="12.18.3"
-url="https://${pkgbase}js.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
-digest="md5sum:cb746f860a64fced875d8aa3ebf69591"
+vers="14.17.3"
+url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
+digest="sha256sum:4b8b4b5e1b360f9e51dd72130eec21b79f5832ca55200393c657e9ad76697f48"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-v${vers}"
 OPT_CONFIG="--shared-cares --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=system-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
