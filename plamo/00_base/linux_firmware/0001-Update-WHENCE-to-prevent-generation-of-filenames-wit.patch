@@ -1,17 +1,18 @@
-From f7071bedceb8d4e477e92d5d0c4a9973491edc77 Mon Sep 17 00:00:00 2001
+From 507334cfff502e2c051f4931939669e20d807cc5 Mon Sep 17 00:00:00 2001
 From: KATOH Yasufumi <karma@jazz.email.ne.jp>
-Date: Sun, 30 May 2021 17:47:02 +0900
+Date: Mon, 19 Jul 2021 14:29:09 +0900
 Subject: [PATCH] Update WHENCE to prevent generation of filenames with spaces
 
+for linux-firmware 2021-07-16
 ---
  WHENCE | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/WHENCE b/WHENCE
-index a096d0d..4b8528c 100644
+index 0eefe3c..ad7fd8c 100644
 --- a/WHENCE
 +++ b/WHENCE
-@@ -2776,8 +2776,8 @@ Link: brcm/brcmfmac43430-sdio.raspberrypi,model-zero-w.txt -> brcmfmac43430-sdio
+@@ -2812,8 +2812,8 @@ Link: brcm/brcmfmac43430-sdio.raspberrypi,model-zero-w.txt -> brcmfmac43430-sdio
  File: "brcm/brcmfmac43455-sdio.raspberrypi,3-model-b-plus.txt"
  Link: brcm/brcmfmac43455-sdio.raspberrypi,3-model-a-plus.txt -> brcmfmac43455-sdio.raspberrypi,3-model-b-plus.txt
  File: "brcm/brcmfmac43455-sdio.raspberrypi,4-model-b.txt"
@@ -23,5 +24,5 @@ index a096d0d..4b8528c 100644
  File: "brcm/brcmfmac4356-pcie.gpd-win-pocket.txt"
  File: brcm/brcmfmac4356-sdio.vamrs,rock960.txt
 -- 
-2.26.1
+2.31.1
 
