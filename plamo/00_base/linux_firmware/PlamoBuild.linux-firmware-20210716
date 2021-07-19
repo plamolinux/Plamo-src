@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="linux_firmware"
-vers="20210511"
+vers="20210716"
 url="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-${vers}.tar.gz"
 #commitid="7a30af16115959cf5a817ae51429e72c0084fc0c"
-verify="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-20210511.tar.asc"
+verify="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-20210716.tar.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="linux-firmware-${vers}"
 OPT_CONFIG=""
 DOCS="LICENCE.ralink-firmware.txt LICENCE.rtlwifi_firmware.txt LICENCE.tda7706-firmware.txt LICENSE.QualcommAtheros_ar3k LICENSE.QualcommAtheros_ath10k LICENSE.amd-ucode LICENSE.amdgpu LICENSE.atmel LICENSE.dib0700 LICENSE.hfi1_firmware LICENSE.i915 LICENSE.ipu3_firmware LICENSE.nxp_mc_firmware LICENSE.qcom LICENSE.radeon LICENSE.sdma_firmware README TDA7706_OM_v2.5.1_boot.txt TDA7706_OM_v3.0.2_boot.txt"
