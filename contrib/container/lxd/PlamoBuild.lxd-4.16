@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxd"
-vers="4.15"
+vers="4.16"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -75,7 +75,7 @@ if [ $opt_build -eq 1 ] ; then
     export CGO_CFLAGS="-I$B/deps/dqlite/include/ -I$B/deps/libco/include/ -I$B/deps/raft/include/"
     export CGO_LDFLAGS="-L$B/deps/dqlite/.libs/ -L$B/deps/libco/ -L$B/deps/raft/.libs/"
     export LD_LIBRARY_PATH="$B/deps/dqlite/.libs/:$B/deps/libco/:$B/deps/raft/.libs/:${LD_LIBRARY_PATH}"
-    export CGO_LDFLAGS_ALLOW="-Wl,-wrap,pthread_create"
+    export CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
 
     make deps
     make
