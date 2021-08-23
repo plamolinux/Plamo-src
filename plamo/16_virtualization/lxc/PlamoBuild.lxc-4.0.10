@@ -4,13 +4,13 @@ pkgbase='lxc'
 vers="4.0.10"
 template_vers="3.0.4"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-template="https://linuxcontainers.org/downloads/lxc/lxc-templates-${template_vers}.tar.gz"
+template="https://github.com/lxc/lxc-templates.git"
 verify="${url}.asc"
-template_verify="${template}.asc"
+#template_verify="${template}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-template_src="lxc-templates-${template_vers}"
+template_src="lxc-templates"
 OPT_CONFIG="--enable-static --enable-shared
             --with-runtime-path=/run
 	    --enable-pam
@@ -18,7 +18,7 @@ OPT_CONFIG="--enable-static --enable-shared
 	    --without-systemdsystemunitdir"
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=""
-template_patchfiles="0001-plamo-Support-current-pkgtools.patch 0002-plamo-fix-for-current-Plamo-7.x.patch"
+template_patchfiles=""
 compress=txz
 ##############################################################
 
@@ -46,19 +46,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${template##*/} ]; then
-    wget $template
-  fi
-  if [ ! -f ${template_verify##*/} ]; then
-    wget $template_verify
-  fi
-  gpg --verify ${template_verify##*/}
-  if [ $? -eq 0 ]; then
-      rm -rf $template_src
-      tar xvf ${template##*/}
-  else
-      exit 255
-  fi
+  git clone $template
 fi
 
 if [ $opt_config -eq 1 ] ; then
