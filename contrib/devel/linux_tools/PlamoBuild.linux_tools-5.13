@@ -19,7 +19,7 @@ compress=txz
 # tools to build
 #tools="perf cpupower x86_energy_perf_policy usbip tmon cgroup_event_listener turbostat bpf"
 #tools="perf cpupower x86_energy_perf_policy usbip tmon cgroup_event_listener turbostat"
-tools="perf"
+tools="perf bpf"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
