@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='iptables'
-vers='1.8.0'
+vers='1.8.6'
 url="http://www.netfilter.org/projects/iptables/files/iptables-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-shared
 	    --enable-libipq
