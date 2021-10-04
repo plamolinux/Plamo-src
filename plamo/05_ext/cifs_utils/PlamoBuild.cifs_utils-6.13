@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='cifs_utils'
-vers='6.11'
+vers='6.13'
 url="https://www.samba.org/ftp/linux-cifs/cifs-utils/cifs-utils-${vers}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
@@ -11,8 +11,8 @@ OPT_CONFIG="--disable-pam --disable-systemd --with-libcap"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 # pldlinux patch for cifs-utils with heimdal
 # https://github.com/pld-linux/cifs-utils
-pldlinuxpatch="https://raw.githubusercontent.com/pld-linux/cifs-utils/master/cifs-utils-heimdal.patch"
-patchfiles="${pldlinuxpatch##*/}"
+#pldlinuxpatch="https://raw.githubusercontent.com/pld-linux/cifs-utils/master/cifs-utils-heimdal.patch"
+#patchfiles="${pldlinuxpatch##*/}"
 compress=txz
 ##############################################################
 
