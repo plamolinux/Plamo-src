@@ -123,6 +123,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
+  export MACH_USE_SYSTEM_PYTHON=1
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
