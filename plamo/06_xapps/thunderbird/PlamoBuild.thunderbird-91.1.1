@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="78.11.0"
+vers="91.1.1"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify=""
@@ -10,7 +10,7 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS LEGAL LICENSE README.txt sourcestamp.txt'
+DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
 patchfiles=''
 addfiles=''
 compress=txz
@@ -104,6 +104,11 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$W/path:$HOME/.cargo/bin:$PATH"
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
+  export MACH_USE_SYSTEM_PYTHON=1
+  export MOZ_ENABLE_FULL_SYMBOLS=1
+  # disable desktop notification (? maybe...)
+  export MOZ_NOSPAM=1
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
@@ -118,6 +123,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
+  export MACH_USE_SYSTEM_PYTHON=1
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
