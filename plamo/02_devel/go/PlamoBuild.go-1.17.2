@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='go'
-vers='1.16.6'
+vers='1.17.2'
 url="https://dl.google.com/go/go${vers}.src.tar.gz"
-digest="sha256sum:a3a5d4bc401b51db065e4f93b523347a4d343ae0c0b08a65c3423b05a138037d"
+digest="sha256sum:2255eb3e4e824dd7d5fcdc2e7f84534371c186312e546fb1086a34c17752f431"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="go"
 OPT_CONFIG=""
 DOCS='AUTHORS LICENSE README.md robots.txt'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 export NO_STRIP=1
