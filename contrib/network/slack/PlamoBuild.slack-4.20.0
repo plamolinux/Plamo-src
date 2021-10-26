@@ -2,8 +2,8 @@
 export NO_STRIP=1
 ##############################################################
 pkgbase='slack'
-vers='4.17.0'
-url="https://downloads.slack-edge.com/linux_releases/slack-desktop-${vers}-amd64.deb"
+vers='4.20.0'
+url="https://downloads.slack-edge.com/releases/linux/${vers}/prod/x64/slack-desktop-${vers}-amd64.deb"
 arch=`uname -m`
 src="slack-${vers}"
 verify=""
@@ -11,7 +11,7 @@ build=B1
 OPT_CONFIG=''
 DOCS=''
 #patchfiles='slack-desktop.patch'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
