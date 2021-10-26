@@ -13,7 +13,7 @@ DOCS=""
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 export NO_STRIP=1
