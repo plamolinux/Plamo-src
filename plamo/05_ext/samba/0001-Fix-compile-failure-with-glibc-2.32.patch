@@ -1,0 +1,131 @@
+From bb526ce31fbb0cf880f124aeb5913793f7001b62 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Wed, 16 Sep 2020 17:28:45 +0900
+Subject: [PATCH] Fix compile failure with glibc 2.32
+
+---
+ nsswitch/nsstest.c | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/nsswitch/nsstest.c b/nsswitch/nsstest.c
+index e8c4306..3fc60ba 100644
+--- a/nsswitch/nsstest.c
++++ b/nsswitch/nsstest.c
+@@ -137,31 +137,31 @@ static struct passwd *nss_getpwuid(uid_t uid)
+ 	return &pwd;
+ }
+ 
+-static void nss_setpwent(void)
++static void my_nss_setpwent(void)
+ {
+-	NSS_STATUS (*_nss_setpwent)(void) =
++	NSS_STATUS (*_my_nss_setpwent)(void) =
+ 		(NSS_STATUS(*)(void))find_fn("setpwent");
+ 	NSS_STATUS status;
+ 
+-	if (!_nss_setpwent)
++	if (!_my_nss_setpwent)
+ 		return;
+ 
+-	status = _nss_setpwent();
++	status = _my_nss_setpwent();
+ 	if (status != NSS_STATUS_SUCCESS) {
+ 		report_nss_error("setpwent", status);
+ 	}
+ }
+ 
+-static void nss_endpwent(void)
++static void my_nss_endpwent(void)
+ {
+-	NSS_STATUS (*_nss_endpwent)(void) =
++	NSS_STATUS (*_my_nss_endpwent)(void) =
+ 		(NSS_STATUS (*)(void))find_fn("endpwent");
+ 	NSS_STATUS status;
+ 
+-	if (!_nss_endpwent)
++	if (!_my_nss_endpwent)
+ 		return;
+ 
+-	status = _nss_endpwent();
++	status = _my_nss_endpwent();
+ 	if (status != NSS_STATUS_SUCCESS) {
+ 		report_nss_error("endpwent", status);
+ 	}
+@@ -290,31 +290,31 @@ again:
+ 	return &grp;
+ }
+ 
+-static void nss_setgrent(void)
++static void my_nss_setgrent(void)
+ {
+-	NSS_STATUS (*_nss_setgrent)(void) =
++	NSS_STATUS (*_my_nss_setgrent)(void) =
+ 		(NSS_STATUS (*)(void))find_fn("setgrent");
+ 	NSS_STATUS status;
+ 
+-	if (!_nss_setgrent)
++	if (!_my_nss_setgrent)
+ 		return;
+ 
+-	status = _nss_setgrent();
++	status = _my_nss_setgrent();
+ 	if (status != NSS_STATUS_SUCCESS) {
+ 		report_nss_error("setgrent", status);
+ 	}
+ }
+ 
+-static void nss_endgrent(void)
++static void my_nss_endgrent(void)
+ {
+-	NSS_STATUS (*_nss_endgrent)(void) =
++	NSS_STATUS (*_my_nss_endgrent)(void) =
+ 		(NSS_STATUS (*)(void))find_fn("endgrent");
+ 	NSS_STATUS status;
+ 
+-	if (!_nss_endgrent)
++	if (!_my_nss_endgrent)
+ 		return;
+ 
+-	status = _nss_endgrent();
++	status = _my_nss_endgrent();
+ 	if (status != NSS_STATUS_SUCCESS) {
+ 		report_nss_error("endgrent", status);
+ 	}
+@@ -402,7 +402,7 @@ static void nss_test_users(void)
+ {
+ 	struct passwd *pwd;
+ 
+-	nss_setpwent();
++	my_nss_setpwent();
+ 	/* loop over all users */
+ 	while ((pwd = nss_getpwent())) {
+ 		printf("Testing user %s\n", pwd->pw_name);
+@@ -424,14 +424,14 @@ static void nss_test_users(void)
+ 		printf("initgroups: "); nss_test_initgroups(pwd->pw_name, pwd->pw_gid);
+ 		printf("\n");
+ 	}
+-	nss_endpwent();
++	my_nss_endpwent();
+ }
+ 
+ static void nss_test_groups(void)
+ {
+ 	struct group *grp;
+ 
+-	nss_setgrent();
++	my_nss_setgrent();
+ 	/* loop over all groups */
+ 	while ((grp = nss_getgrent())) {
+ 		printf("Testing group %s\n", grp->gr_name);
+@@ -452,7 +452,7 @@ static void nss_test_groups(void)
+ 		printf("getgrgid: "); print_group(grp);
+ 		printf("\n");
+ 	}
+-	nss_endgrent();
++	my_nss_endgrent();
+ }
+ 
+ static void nss_test_errors(void)
+-- 
+2.26.1
+
