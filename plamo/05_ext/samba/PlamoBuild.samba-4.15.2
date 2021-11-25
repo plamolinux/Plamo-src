@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="samba"
-vers="4.12.6"
+vers="4.15.2"
 url="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.gz"
 verify="https://download.samba.org/pub/samba/stable/samba-${vers}.tar.asc"
 digest=""
@@ -9,18 +9,16 @@ arch=`uname -m`
 build=B1
 src="samba-${vers}"
 OPT_CONFIG="
-	--with-piddir=/run/samba
-	--with-pammodulesdir=/lib/security
-	--enable-fhs
-	--without-ad-dc
-	--without-systemd
-	--disable-cups
-	--enable-selftest"
-DOCS="BUILD_SYSTEMS.txt COPYING PFIF.txt README.Coding README.cifs-utils README.contributing README.md WHATSNEW.txt release-scripts"
-patchfiles="0001-Fix-compile-failure-with-glibc-2.32.patch"
+        --with-piddir=/run/samba
+        --with-pammodulesdir=/lib/security
+        --enable-fhs
+        --without-ad-dc
+        --without-systemd"
+DOCS="COPYING GPG_AA99442FB680B620_replaces_6F33915B6568B7EA.txt PFIF.txt README.Coding.md README.cifs-utils README.contributing README.md WHATSNEW.txt release-scripts"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles="samba.init samba.pam"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -60,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
 ######################################################################
-#  out of tree build. patch apply in src dir
+#  copy source build. patch apply in build dir
 ######################################################################
     if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
     cd $B
@@ -68,13 +66,13 @@ if [ $opt_config -eq 1 ] ; then
         patch -p1 < $W/$patch
     done
 
-    # Fix a test that always fails:
+    # these tests always fails
     echo "^samba4.rpc.echo.*on.*ncacn_np.*with.*object.*nt4_dc" >> selftest/knownfail
 
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-    export CFLAGS="-I/usr/include/tirpc"
-    export LDFLAGS='-Wl,--as-needed -ltirpc'
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export CFLAGS=" -I/usr/include/tirpc"
+    export LDFLAGS='-Wl,--as-needed -ltirpc' 
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -82,9 +80,9 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export CFLAGS="-I/usr/include/tirpc"
-    export LDFLAGS='-Wl,--as-needed -ltirpc'
+    cd $B 
+    export CFLAGS=" -I/usr/include/tirpc"
+    export LDFLAGS='-Wl,--as-needed -ltirpc' 
     make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
@@ -97,23 +95,26 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
+  export CFLAGS=" -I/usr/include/tirpc"
+  export LDFLAGS='-Wl,--as-needed -ltirpc' 
   make install DESTDIR=$P
 
-  # Libraries
-  mkdir -p -v $P/${libdir}
-  mv -v $P/usr/lib/libnss_win{s,bind}.so*   $P/${libdir}
-  ln -v -sf ../../${libdir}/libnss_winbind.so.2 $P/usr/${libdir}/libnss_winbind.so
-  ln -v -sf ../../${libdir}/libnss_wins.so.2    $P/usr/${libdir}/libnss_wins.so
+  # tunings from BLFS
 
-  # config
-  install -v -m644 examples/smb.conf.default $P/etc/samba/smb.conf.dist
+  mv -v $P/usr/lib/libnss_win{s,bind}.so.*  $P/lib
+  ln -v -sf ../../lib/libnss_winbind.so.2 $P/usr/lib/libnss_winbind.so
+  ln -v -sf ../../lib/libnss_wins.so.2    $P/usr/lib/libnss_wins.so
+
+  install -v -m644    examples/smb.conf.default $P/etc/samba/smb.conf.dist
   sed -i -e '/log file/s|/usr/local/samba/var|/var/log/samba|' $P/etc/samba/smb.conf.dist
 
-  # for openldap
-  mkdir -p -v $P/etc/openldap/schema
-  install -v -m644    examples/LDAP/samba* $P/etc/openldap/schema
-  install -v -m755    examples/LDAP/{get*,ol*} $P/etc/openldap/schema
+  mkdir -pv $P/etc/openldap/schema 
+  install -v -m644    examples/LDAP/README  $P/etc/openldap/schema/README.LDAP
+  install -v -m644    examples/LDAP/samba*  $P/etc/openldap/schema
+  install -v -m755    examples/LDAP/{get*,ol*}  $P/etc/openldap/schema
+
+  install -dvm 755 $P/usr/lib/cups/backend
+  ln -v -sf /usr/bin/smbspool $P/usr/lib/cups/backend/smb
 
   # pam
   install -v -m644 -D $W/samba.pam $P/etc/pam.d/samba
@@ -129,12 +130,13 @@ if [ $opt_package -eq 1 ] ; then
       esac
   done
 
-  # docdir
-  for f in samba.pam samba.init
-  do
-    install -Dm644 -v $W/$f $docdir/$src/$f
+  # change man pages with pre-formatted ones
+  for i in $S/docs/manpages/* ; do
+      num=${i##*.}
+      # echo "man:$i, num:$num"
+      install -m644 -v $i $P/usr/share/man/man${num}/`basename $i`
   done
-
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
