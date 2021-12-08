@@ -1,0 +1,293 @@
+
+# HG changeset patch
+# User Narcis Beleuzu <nbeleuzu@mozilla.com>
+# Date 1633341681 -10800
+# Node ID 417146e6ebfd8856bd8020c7fd512edd088f1840
+# Parent  a1a916b49e48ebd7d6331a42f0d9b962e3632b79
+Backed out changeset 68940497078c (bug 1723031) for causing pip setup issues (bug 1733142). a=fix-for-release-bouncer
+
+diff --git a/build/mach_initialize.py b/build/mach_initialize.py
+--- a/build/mach_initialize.py
++++ b/build/mach_initialize.py
+@@ -4,17 +4,16 @@
+ 
+ from __future__ import division, print_function, unicode_literals
+ 
+ import math
+ import os
+ import platform
+ import shutil
+ import site
+-import subprocess
+ import sys
+ 
+ if sys.version_info[0] < 3:
+     import __builtin__ as builtins
+ 
+     class MetaPathFinder(object):
+         pass
+ 
+@@ -163,21 +162,16 @@ for details.
+ INSTALL_PYTHON_GUIDANCE_OTHER = """
+ We do not have specific instructions for your platform on how to
+ install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
+ helpful, if your system package manager does not provide a way to
+ install a recent enough Python 3.
+ """.strip()
+ 
+ 
+-def _scrub_system_site_packages():
+-    site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
+-    sys.path = [path for path in sys.path if path not in site_paths]
+-
+-
+ def _activate_python_environment(topsrcdir):
+     # We need the "mach" module to access the logic to parse virtualenv
+     # requirements. Since that depends on "packaging" (and, transitively,
+     # "pyparsing"), we add those to the path too.
+     sys.path[0:0] = [
+         os.path.join(topsrcdir, module)
+         for module in (
+             os.path.join("python", "mach"),
+@@ -194,75 +188,16 @@ def _activate_python_environment(topsrcd
+     )
+ 
+     requirements = MachEnvRequirements.from_requirements_definition(
+         topsrcdir,
+         is_thunderbird,
+         True,
+         os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
+     )
+-
+-    if os.environ.get("MACH_USE_SYSTEM_PYTHON") or os.environ.get("MOZ_AUTOMATION"):
+-        env_var = (
+-            "MOZ_AUTOMATION"
+-            if os.environ.get("MOZ_AUTOMATION")
+-            else "MACH_USE_SYSTEM_PYTHON"
+-        )
+-
+-        has_pip = (
+-            subprocess.run(
+-                [sys.executable, "-c", "import pip"], stderr=subprocess.DEVNULL
+-            ).returncode
+-            == 0
+-        )
+-        # There are environments in CI that aren't prepared to provide any Mach dependency
+-        # packages. Changing this is a nontrivial endeavour, so guard against having
+-        # non-optional Mach requirements.
+-        assert (
+-            not requirements.pypi_requirements
+-        ), "Mach pip package requirements must be optional."
+-        if has_pip:
+-            pip = [sys.executable, "-m", "pip"]
+-            check_result = subprocess.run(
+-                pip + ["check"],
+-                stdout=subprocess.PIPE,
+-                stderr=subprocess.STDOUT,
+-                universal_newlines=True,
+-            )
+-            if check_result.returncode:
+-                print(check_result.stdout, file=sys.stderr)
+-                subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
+-                raise Exception(
+-                    'According to "pip check", the current Python '
+-                    "environment has package-compatibility issues."
+-                )
+-
+-            package_result = requirements.validate_environment_packages(pip)
+-            if not package_result.has_all_packages:
+-                print(
+-                    "Skipping automatic management of Python dependencies since "
+-                    f"the '{env_var}' environment variable is set.\n"
+-                    "The following issues were found while validating your Python "
+-                    "environment:"
+-                )
+-                print(package_result.report())
+-                sys.exit(1)
+-        else:
+-            # Pip isn't installed to the system Python environment, so we can't use
+-            # it to verify compatibility with Mach. Remove the system site-packages
+-            # from the import scope so that Mach behaves as though all of its
+-            # (optional) dependencies are not installed.
+-            _scrub_system_site_packages()
+-
+-    elif sys.prefix == sys.base_prefix:
+-        # We're in an environment where we normally use the Mach virtualenv,
+-        # but we're running a "nativecmd" such as "create-mach-environment".
+-        # Remove global site packages from sys.path to improve isolation accordingly.
+-        _scrub_system_site_packages()
+-
+     sys.path[0:0] = [
+         os.path.join(topsrcdir, pth.path)
+         for pth in requirements.pth_requirements + requirements.vendored_requirements
+     ]
+ 
+ 
+ def initialize(topsrcdir):
+     # Ensure we are running Python 3.6+. We run this check as soon as
+@@ -282,16 +217,22 @@ def initialize(topsrcdir):
+ 
+     # This directory was deleted in bug 1666345, but there may be some ignored
+     # files here. We can safely just delete it for the user so they don't have
+     # to clean the repo themselves.
+     deleted_dir = os.path.join(topsrcdir, "third_party", "python", "psutil")
+     if os.path.exists(deleted_dir):
+         shutil.rmtree(deleted_dir, ignore_errors=True)
+ 
++    if sys.prefix == sys.base_prefix:
++        # We are not in a virtualenv. Remove global site packages
++        # from sys.path.
++        site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
++        sys.path = [path for path in sys.path if path not in site_paths]
++
+     state_dir = _create_state_dir()
+     _activate_python_environment(topsrcdir)
+ 
+     import mach.base
+     import mach.main
+     from mach.util import setenv
+     from mozboot.util import get_state_dir
+ 
+diff --git a/python/mach/mach/requirements.py b/python/mach/mach/requirements.py
+--- a/python/mach/mach/requirements.py
++++ b/python/mach/mach/requirements.py
+@@ -1,44 +1,23 @@
+ # This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-import json
++
+ import os
+ from pathlib import Path
+-import subprocess
+ 
+ from packaging.requirements import Requirement
+ 
+ 
+ THUNDERBIRD_PYPI_ERROR = """
+ Thunderbird requirements definitions cannot include PyPI packages.
+ """.strip()
+ 
+ 
+-class EnvironmentPackageValidationResult:
+-    def __init__(self):
+-        self._package_discrepancies = []
+-        self.has_all_packages = True
+-
+-    def add_discrepancy(self, requirement, found):
+-        self._package_discrepancies.append((requirement, found))
+-        self.has_all_packages = False
+-
+-    def report(self):
+-        lines = []
+-        for requirement, found in self._package_discrepancies:
+-            if found:
+-                error = f'Installed with unexpected version "{found}"'
+-            else:
+-                error = "Not installed"
+-            lines.append(f"{requirement}: {error}")
+-        return "\n".join(lines)
+-
+-
+ class PthSpecifier:
+     def __init__(self, path):
+         self.path = path
+ 
+ 
+ class PypiSpecifier:
+     def __init__(self, requirement):
+         self.requirement = requirement
+@@ -77,45 +56,16 @@ class MachEnvRequirements:
+ 
+     def __init__(self):
+         self.requirements_paths = []
+         self.pth_requirements = []
+         self.pypi_requirements = []
+         self.pypi_optional_requirements = []
+         self.vendored_requirements = []
+ 
+-    def validate_environment_packages(self, pip_command):
+-        result = EnvironmentPackageValidationResult()
+-        if not self.pypi_requirements and not self.pypi_optional_requirements:
+-            return result
+-
+-        pip_json = subprocess.check_output(
+-            pip_command + ["list", "--format", "json"], universal_newlines=True
+-        )
+-
+-        installed_packages = json.loads(pip_json)
+-        installed_packages = {
+-            package["name"]: package["version"] for package in installed_packages
+-        }
+-        for pkg in self.pypi_requirements:
+-            installed_version = installed_packages.get(pkg.requirement.name)
+-            if not installed_version or not pkg.requirement.specifier.contains(
+-                installed_version
+-            ):
+-                result.add_discrepancy(pkg.requirement, installed_version)
+-
+-        for pkg in self.pypi_optional_requirements:
+-            installed_version = installed_packages.get(pkg.requirement.name)
+-            if installed_version and not pkg.requirement.specifier.contains(
+-                installed_version
+-            ):
+-                result.add_discrepancy(pkg.requirement, installed_version)
+-
+-        return result
+-
+     @classmethod
+     def from_requirements_definition(
+         cls,
+         topsrcdir,
+         is_thunderbird,
+         is_mach_or_build_virtualenv,
+         requirements_definition,
+     ):
+diff --git a/python/mozbuild/mozbuild/virtualenv.py b/python/mozbuild/mozbuild/virtualenv.py
+--- a/python/mozbuild/mozbuild/virtualenv.py
++++ b/python/mozbuild/mozbuild/virtualenv.py
+@@ -229,20 +229,39 @@ class VirtualenvManager(VirtualenvHelper
+                 )
+                 for pth in env_requirements.pth_requirements
+                 + env_requirements.vendored_requirements
+             ]
+ 
+             if current_paths != required_paths:
+                 return False
+ 
+-        pip = os.path.join(self.bin_path, "pip")
+-        package_result = env_requirements.validate_environment_packages([pip])
+-        if not package_result.has_all_packages:
+-            return False
++        if (
++            env_requirements.pypi_requirements
++            or env_requirements.pypi_optional_requirements
++        ):
++            pip_json = self._run_pip(
++                ["list", "--format", "json"], stdout=subprocess.PIPE
++            ).stdout
++            installed_packages = json.loads(pip_json)
++            installed_packages = {
++                package["name"]: package["version"] for package in installed_packages
++            }
++            for pkg in env_requirements.pypi_requirements:
++                if not pkg.requirement.specifier.contains(
++                    installed_packages.get(pkg.requirement.name, None)
++                ):
++                    return False
++
++            for pkg in env_requirements.pypi_optional_requirements:
++                installed_version = installed_packages.get(pkg.requirement.name, None)
++                if installed_version and not pkg.requirement.specifier.contains(
++                    installed_packages.get(pkg.requirement.name, None)
++                ):
++                    return False
+ 
+         return True
+ 
+     def ensure(self):
+         """Ensure the virtualenv is present and up to date.
+ 
+         If the virtualenv is up to date, this does nothing. Otherwise, it
+         creates and populates the virtualenv as necessary.
+
