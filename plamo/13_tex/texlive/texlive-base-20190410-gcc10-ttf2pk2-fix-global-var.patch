@@ -1,0 +1,13 @@
+diff -up source/texk/ttf2pk2/ftlib.c.externfix source/texk/ttf2pk2/ftlib.c
+diff -up source/texk/ttf2pk2/pklib.c.externfix source/texk/ttf2pk2/pklib.c
+--- source/texk/ttf2pk2/pklib.c.externfix	2020-01-23 15:56:27.041072021 -0500
++++ source/texk/ttf2pk2/pklib.c	2020-01-23 16:02:05.585252609 -0500
+@@ -64,7 +64,7 @@
+ #define PK_POST (char)245
+ #define PK_NOP  (char)246
+ 
+-int dpi;
++extern int dpi;
+ 
+ FILE *pk_file;
+ 
