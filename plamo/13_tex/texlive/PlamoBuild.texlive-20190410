@@ -44,7 +44,8 @@ blfspatches=(texlive-20190410-source-upstream_fixes-1.patch)
 # + Arch linux patch (texlive-poppler-0.71.patch luatex-poppler-0.70-const-fixes.patch)
 # + generate by "find texk/web2c/{lua,pdf}texdir -type f | xargs sed -e 's|gTrue|true|g' -e 's|gFalse|false|g' -e 's|GBool|bool|g' -e 's|getCString|c_str|g' -i"
 # + https://github.com/TeX-Live/texlive-source/commit/729755bcb60695221cb368202822fc3181197ef7.patch (0001-cast-types-to-support-new-poppler.patch)
-patchfiles="${blfspatches[@]} texlive-base-20190410-gcc10-autosp-fix-global-vars.patch texlive-base-20190410-gcc10-luatex-fix-global-vars.patch texlive-base-20190410-gcc10-mp-fix-global-var.patch texlive-base-20190410-gcc10-ttf2pk2-fix-global-var.patch https://raw.githubusercontent.com/NixOS/nixpkgs/fc7e4c926755f47edcda488eaea0c7fb82ff5af9/pkgs/tools/typesetting/tex/texlive/poppler84.patch poppler84.patch"
+# + https://raw.githubusercontent.com/NixOS/nixpkgs/fc7e4c926755f47edcda488eaea0c7fb82ff5af9/pkgs/tools/typesetting/tex/texlive/poppler84.patch
+patchfiles="${blfspatches[@]} texlive-base-20190410-gcc10-autosp-fix-global-vars.patch texlive-base-20190410-gcc10-luatex-fix-global-vars.patch texlive-base-20190410-gcc10-mp-fix-global-var.patch texlive-base-20190410-gcc10-ttf2pk2-fix-global-var.patch  poppler84.patch"
 additional_src="pdftoepdf-poppler0.76.0.cc pdftosrc-poppler0.76.0.cc"
 compress=txz
 ##############################################################
@@ -131,7 +132,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
