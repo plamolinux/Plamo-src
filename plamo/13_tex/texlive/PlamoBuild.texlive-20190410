@@ -5,7 +5,7 @@ vers="20190410"
 url="ftp://tug.org/texlive/historic/2019/texlive-${vers}-source.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
-build=B4
+build=B5
 src="texlive-${vers}-source"
 
 PREFIX=/opt/texlive/2019
@@ -44,7 +44,7 @@ blfspatches=(texlive-20190410-source-upstream_fixes-1.patch)
 # + Arch linux patch (texlive-poppler-0.71.patch luatex-poppler-0.70-const-fixes.patch)
 # + generate by "find texk/web2c/{lua,pdf}texdir -type f | xargs sed -e 's|gTrue|true|g' -e 's|gFalse|false|g' -e 's|GBool|bool|g' -e 's|getCString|c_str|g' -i"
 # + https://github.com/TeX-Live/texlive-source/commit/729755bcb60695221cb368202822fc3181197ef7.patch (0001-cast-types-to-support-new-poppler.patch)
-patchfiles="${blfspatches[@]}"
+patchfiles="${blfspatches[@]} texlive-base-20190410-gcc10-autosp-fix-global-vars.patch texlive-base-20190410-gcc10-luatex-fix-global-vars.patch texlive-base-20190410-gcc10-mp-fix-global-var.patch texlive-base-20190410-gcc10-ttf2pk2-fix-global-var.patch https://raw.githubusercontent.com/NixOS/nixpkgs/fc7e4c926755f47edcda488eaea0c7fb82ff5af9/pkgs/tools/typesetting/tex/texlive/poppler84.patch poppler84.patch"
 additional_src="pdftoepdf-poppler0.76.0.cc pdftosrc-poppler0.76.0.cc"
 compress=txz
 ##############################################################
@@ -77,7 +77,7 @@ if [ $opt_download -eq 1 ] ; then
   for p in ${blfspatches[@]}
   do
     if [ ! -f $p ]; then
-      wget http://www.linuxfromscratch.org/patches/blfs/svn/$p
+      wget http://www.linuxfromscratch.org/patches/blfs/9.1/$p
     fi
   done
 
@@ -85,7 +85,9 @@ if [ $opt_download -eq 1 ] ; then
   add_url="https://raw.githubusercontent.com/TeX-Live/texlive-source/trunk/texk/web2c/pdftexdir/"
   for f in $additional_src
   do
-      wget -O $f $add_url/$f
+      if [ ! -f $f ]; then
+          wget -O $f $add_url/$f
+      fi
   done
   echo "done."
 fi
