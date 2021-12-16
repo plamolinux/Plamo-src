@@ -1,0 +1,63 @@
+diff -up source/texk/web2c/luatexdir/font/luatexfont.h.externfix source/texk/web2c/luatexdir/font/luatexfont.h
+--- source/texk/web2c/luatexdir/font/luatexfont.h.externfix	2020-01-23 14:39:03.317389393 -0500
++++ source/texk/web2c/luatexdir/font/luatexfont.h	2020-01-23 14:39:24.282963661 -0500
+@@ -128,8 +128,8 @@ int write_tounicode(PDF, char **, char *
+ void replace_packet_fonts(internal_font_number f, int *old_fontid, int *new_fontid, int count);
+ int *packet_local_fonts(internal_font_number f, int *num);
+ 
+-int packet_cur_s;               /* current |do_vf_packet()| recursion level */
+-int packet_stack_ptr;           /* pointer into |packet_stack| */
++extern int packet_cur_s;               /* current |do_vf_packet()| recursion level */
++extern int packet_stack_ptr;           /* pointer into |packet_stack| */
+ vf_struct *new_vfstruct(void);
+ 
+ /* writecff.c */
+diff -up source/texk/web2c/luatexdir/font/vfpacket.c.externfix source/texk/web2c/luatexdir/font/vfpacket.c
+diff -up source/texk/web2c/luatexdir/image/writeimg.h.externfix source/texk/web2c/luatexdir/image/writeimg.h
+--- source/texk/web2c/luatexdir/image/writeimg.h.externfix	2020-01-23 14:44:11.720101536 -0500
++++ source/texk/web2c/luatexdir/image/writeimg.h	2020-01-23 14:44:27.964767014 -0500
+@@ -26,7 +26,7 @@
+ #  include "pdf/pdfpage.h"
+ 
+ typedef image_dict *idict_entry;
+-idict_entry *idict_array;
++extern idict_entry *idict_array;
+ 
+ void new_img_pdfstream_struct(image_dict *);
+ image *new_image(void);
+diff -up source/texk/web2c/luatexdir/pdf/pdftables.h.externfix source/texk/web2c/luatexdir/pdf/pdftables.h
+--- source/texk/web2c/luatexdir/pdf/pdftables.h.externfix	2020-01-23 14:35:18.313067342 -0500
++++ source/texk/web2c/luatexdir/pdf/pdftables.h	2020-01-23 14:35:27.367878245 -0500
+@@ -21,7 +21,7 @@
+ #ifndef PDFTABLES_H
+ #  define PDFTABLES_H
+ 
+-const char *pdf_obj_typenames[PDF_OBJ_TYPE_MAX + 1];
++extern const char *pdf_obj_typenames[PDF_OBJ_TYPE_MAX + 1];
+ 
+ typedef enum {
+     union_type_int,
+diff -up source/texk/web2c/luatexdir/pdf/pdfxform.c.externfix source/texk/web2c/luatexdir/pdf/pdfxform.c
+--- source/texk/web2c/luatexdir/pdf/pdfxform.c.externfix	2020-01-23 14:51:41.427758029 -0500
++++ source/texk/web2c/luatexdir/pdf/pdfxform.c	2020-01-23 14:51:50.676561145 -0500
+@@ -24,8 +24,6 @@ with LuaTeX; if not, see <http://www.gnu
+ 
+ /*tex The form being output: */
+ 
+-int pdf_cur_form;
+-
+ void pdf_place_form(PDF pdf, halfword p)
+ {
+     scaled_whd nat, tex;
+diff -up source/texk/web2c/luatexdir/tex/textoken.c.externfix source/texk/web2c/luatexdir/tex/textoken.c
+--- source/texk/web2c/luatexdir/tex/textoken.c.externfix	2020-01-23 14:50:52.078796620 -0500
++++ source/texk/web2c/luatexdir/tex/textoken.c	2020-01-23 14:50:57.659680238 -0500
+@@ -76,7 +76,7 @@ unsigned fix_mem_max;
+ 
+ /*tex how much memory is in use */
+ 
+-int var_used, dyn_used;
++int dyn_used;
+ 
+ /*tex head of the list of available one-word nodes */
+ 
