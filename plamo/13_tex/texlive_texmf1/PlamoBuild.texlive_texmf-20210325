@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/sh -x
 ##############################################################
 pkgbase='texlive_texmf'
-vers='20190410'
-url="ftp://tug.org/texlive/historic/2019/texlive-${vers}-texmf.tar.xz"
+vers='20210325'
+url="ftp://tug.org/texlive/historic/2021/texlive-${vers}-texmf.tar.xz"
 verify=""
 arch=noarch
 build=B1
@@ -11,8 +11,8 @@ OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
 blfspatch=""
 patchfiles=""
-compress=txz
-PREFIX=/opt/texlive/2019
+compress=tzst
+PREFIX=/opt/texlive/2021
 ##############################################################
 PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
         dvips hbf2gf makeindex metafont metapost mft omega pbibtex
@@ -22,9 +22,9 @@ PKG[2]="fonts"
 PKG[3]="doc/latex"
 PKG[4]="doc/aleph doc/amstex doc/asymptote doc/bibtex doc/bibtex8 doc/bibtexu doc/chktex
 	doc/context doc/cstex doc/dvipdfm doc/dvipdfmx doc/dvipng doc/dvips doc/eplain
-	doc/etex doc/fonts doc/generic doc/info doc/kpathsea doc/lualatex
+	doc/etex doc/fonts doc/generic doc/info doc/kpathsea doc/latex-dev doc/lualatex
 	doc/luatex doc/man doc/metapost doc/mex doc/omega doc/otherformats doc/pdftex
-	doc/plain doc/platex doc/pmxchords doc/ptex doc/support doc/tetex doc/texdoc
+	doc/plain doc/platex doc/pmxchords doc/ptex doc/support
 	doc/texlive doc/texworks doc/tpic2pdftex doc/ttf2pk doc/uplatex doc/upmendex
 	doc/uptex doc/vlna doc/web2c doc/xelatex doc/xetex doc/xindy"
 
