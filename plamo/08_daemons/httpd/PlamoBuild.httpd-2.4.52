@@ -17,7 +17,7 @@ OPT_CONFIG=(--enable-layout=Plamo-FHS
 	    --with-apr-util=/usr/bin/apu-1-config)
 DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.cmake README.platforms'
 patchfiles='httpdlogrotate_plamo.patch'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
