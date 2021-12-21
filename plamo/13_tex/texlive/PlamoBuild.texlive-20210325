@@ -39,7 +39,7 @@ DOCS='ChangeLog README README.0overview README.1prerequisites README.2building R
 blfspatches=(texlive-20210325-upstream_fixes-1.patch)
 patchfiles="${blfspatches[@]}"
 additional_src=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
