@@ -1,0 +1,239 @@
+Submitted By: Ken Moffat <ken at linuxfromscratch dot org>
+Date: 2021-04-24
+Initial Package Version: 20210325
+Upstream Status: Applied
+Origin: https://github.com/TeX-Live/texlive-source (trunk)
+Description: In https://tug.org/pipermail/tlbuild/2021q2/004885.html
+the builders of the binaries were asked to make a rebuild for a fix.
+when I extracted these from the github mirror the 2021 branch was
+not up to date.
+
+commit e8aff674e892f11ab2cbad967e5c10f195bb9e4d
+Author: Luigi Scarso <luigi.scarso@gmail.com>
+Date:   Fri Apr 2 07:44:39 2021 +0000
+
+    Revert the patch in mpx_copy_mpto, it was wrong in tex mode. Added a check if in troff mode.
+    
+    git-svn-id: svn://tug.org/texlive/trunk/Build/source@58698 c570f23f-e606-0410-a88d-b1316a301751
+
+diff --git a/texk/web2c/mplibdir/ChangeLog b/texk/web2c/mplibdir/ChangeLog
+index 8085a9db2966..1f6949d76aab 100644
+--- a/texk/web2c/mplibdir/ChangeLog
++++ b/texk/web2c/mplibdir/ChangeLog
+@@ -1,10 +1,12 @@
++2021-04-02  Luigi Scarso  <luigi.scarso@gmail.com>
++	* Revert the patch in mpx_copy_mpto, it was wrong in tex mode. Added a check if in troff mode.
++
+ 2021-03-23 Karl Berry <karl@tug.org>
+     * TL'21.
+ 
+ 2020-12-28  Luigi Scarso  <luigi.scarso@gmail.com>
+ 	* Temp, fix in mpx_copy_mpto, changed || with && to avoid a wrong final %
+ 
+-
+ 2020-12-27  Luigi Scarso  <luigi.scarso@gmail.com>
+ 	* Fixed some typos in manual (thank to 胡亚捷 (Hu Yajie) )
+ 	* Added the undocumented -T option
+diff --git a/texk/web2c/mplibdir/mpxout.w b/texk/web2c/mplibdir/mpxout.w
+index f08645a28f0a..96a1f3d776e4 100644
+--- a/texk/web2c/mplibdir/mpxout.w
++++ b/texk/web2c/mplibdir/mpxout.w
+@@ -564,7 +564,7 @@ static void mpx_copy_mpto (MPX mpx, FILE *outfile, int textype) {
+     if (textype == B_TEX) {
+       /* put no |%| at end if it's only 1 line total, starting with |%|;
+        * this covers the special case |%&format| in a single line. */
+-      if (t != s && *t != '%')
++      if ((t != s || *t != '%') && mpx->mode == mpx_tex_mode)
+         fprintf(outfile,"%%");
+     }
+     free(res);
+commit f4db8b0f9396a5a2dec3522ce7ceae0646aabea7
+Author: Luigi Scarso <luigi.scarso@gmail.com>
+Date:   Fri Apr 2 16:10:06 2021 +0000
+
+    LuaTeX 1.13.1
+    
+    git-svn-id: svn://tug.org/texlive/trunk/Build/source@58701 c570f23f-e606-0410-a88d-b1316a301751
+
+diff --git a/texk/web2c/luatexdir/NEWS b/texk/web2c/luatexdir/NEWS
+index 42f85aeb511e..b6a77b39f101 100644
+--- a/texk/web2c/luatexdir/NEWS
++++ b/texk/web2c/luatexdir/NEWS
+@@ -1,3 +1,13 @@
++==============================================================
++LuaTeX 1.13.1 2021-04-02
++==============================================================
++
++Fixed an unwanted space in btex etex in metapost, introduced 
++after a patch for troff.
++
++
++
++
+ ==============================================================
+ LuaTeX 1.13.0 2021-03-12
+ ==============================================================
+diff --git a/texk/web2c/luatexdir/luatex.c b/texk/web2c/luatexdir/luatex.c
+index d7414ef3fd9b..9f2f18c1878d 100644
+--- a/texk/web2c/luatexdir/luatex.c
++++ b/texk/web2c/luatexdir/luatex.c
+@@ -33,8 +33,8 @@
+ */
+ 
+ int luatex_version = 113;
+-int luatex_revision = '0';
+-const char *luatex_version_string = "1.13.0";
++int luatex_revision = '1';
++const char *luatex_version_string = "1.13.1";
+ const char *engine_name = my_name;
+ 
+ #include <kpathsea/c-ctype.h>
+diff --git a/texk/web2c/luatexdir/luatex_svnversion.h b/texk/web2c/luatexdir/luatex_svnversion.h
+index 221a98b0b4e9..c1c2e210e002 100644
+--- a/texk/web2c/luatexdir/luatex_svnversion.h
++++ b/texk/web2c/luatexdir/luatex_svnversion.h
+@@ -1 +1 @@
+-#define luatex_svn_revision 7418
++#define luatex_svn_revision 7428
+commit 52c34c08a13289c1c6194476d177ebf8f08dea06
+Author: Luigi Scarso <luigi.scarso@gmail.com>
+Date:   Sat Apr 10 23:42:21 2021 +0000
+
+    LuaTeX 1.13.2 and MetaPost 2.01
+    
+    git-svn-id: svn://tug.org/texlive/trunk/Build/source@58822 c570f23f-e606-0410-a88d-b1316a301751
+
+diff --git a/texk/web2c/luatexdir/ChangeLog b/texk/web2c/luatexdir/ChangeLog
+index e1b905d81475..2cfba66d2192 100644
+--- a/texk/web2c/luatexdir/ChangeLog
++++ b/texk/web2c/luatexdir/ChangeLog
+@@ -1,3 +1,12 @@
++2021-04-10 Luigi Scarso <luigi.scarso@gmail.com>
++    * LuaTeX version 1.13.2  with MetaPost 2.01. 
++      The version change in MetaPost 
++      is due solely to the bug fix in btex .. etex 
++
++2021-04-02 Luigi Scarso <luigi.scarso@gmail.com>
++    * LuaTeX version 1.13.1,  
++      The version change is due solely to the bug fix in btex .. etex 
++
+ 2021-03-23 Karl Berry <karl@tug.org>
+     * TL'21.
+ 
+diff --git a/texk/web2c/luatexdir/NEWS b/texk/web2c/luatexdir/NEWS
+index b6a77b39f101..2b39dd75db52 100644
+--- a/texk/web2c/luatexdir/NEWS
++++ b/texk/web2c/luatexdir/NEWS
+@@ -1,3 +1,12 @@
++==============================================================
++LuaTeX 1.13.2 2021-04-10
++==============================================================
++
++MetaPost 2.01 (to mark the patch on the unwanted space in 
++btex etex).
++
++
++
+ ==============================================================
+ LuaTeX 1.13.1 2021-04-02
+ ==============================================================
+diff --git a/texk/web2c/luatexdir/luatex.c b/texk/web2c/luatexdir/luatex.c
+index 9f2f18c1878d..32be034a474d 100644
+--- a/texk/web2c/luatexdir/luatex.c
++++ b/texk/web2c/luatexdir/luatex.c
+@@ -33,8 +33,8 @@
+ */
+ 
+ int luatex_version = 113;
+-int luatex_revision = '1';
+-const char *luatex_version_string = "1.13.1";
++int luatex_revision = '2';
++const char *luatex_version_string = "1.13.2";
+ const char *engine_name = my_name;
+ 
+ #include <kpathsea/c-ctype.h>
+diff --git a/texk/web2c/luatexdir/luatex_svnversion.h b/texk/web2c/luatexdir/luatex_svnversion.h
+index c1c2e210e002..05a5731b53d8 100644
+--- a/texk/web2c/luatexdir/luatex_svnversion.h
++++ b/texk/web2c/luatexdir/luatex_svnversion.h
+@@ -1 +1 @@
+-#define luatex_svn_revision 7428
++#define luatex_svn_revision 7430
+diff --git a/texk/web2c/mplibdir/ChangeLog b/texk/web2c/mplibdir/ChangeLog
+index 1f6949d76aab..3a421c779070 100644
+--- a/texk/web2c/mplibdir/ChangeLog
++++ b/texk/web2c/mplibdir/ChangeLog
+@@ -1,3 +1,6 @@
++2021-04-10  Luigi Scarso  <luigi.scarso@gmail.com>
++	* Metapost version 2.01 (needed to mark the patch mpx_copy_mpto).
++
+ 2021-04-02  Luigi Scarso  <luigi.scarso@gmail.com>
+ 	* Revert the patch in mpx_copy_mpto, it was wrong in tex mode. Added a check if in troff mode.
+ 
+diff --git a/texk/web2c/mplibdir/mp.w b/texk/web2c/mplibdir/mp.w
+index dcbd01b31ea0..2a28640c215f 100644
+--- a/texk/web2c/mplibdir/mp.w
++++ b/texk/web2c/mplibdir/mp.w
+@@ -71,12 +71,12 @@ undergoes any modifications, so that it will be clear which version of
+ @^extensions to \MP@>
+ @^system dependencies@>
+ 
+-@d default_banner "This is MetaPost, Version 2.00" /* printed when \MP\ starts */
++@d default_banner "This is MetaPost, Version 2.01" /* printed when \MP\ starts */
+ @d true 1
+ @d false 0
+ 
+ @<Metapost version header@>=
+-#define metapost_version "2.00"
++#define metapost_version "2.01"
+ 
+ @ The external library header for \MP\ is |mplib.h|. It contains a
+ few typedefs and the header defintions for the externally used
+commit b1ae05defa236646421045b523a3017812cd6e14
+Author: Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+Date:   Sun Apr 11 01:28:16 2021 +0000
+
+    sync with the version 2.01 mp.w
+    
+    git-svn-id: svn://tug.org/texlive/trunk/Build/source@58826 c570f23f-e606-0410-a88d-b1316a301751
+
+diff --git a/texk/web2c/pmpostdir/ChangeLog b/texk/web2c/pmpostdir/ChangeLog
+index e32c4f32e40a..0af9fe1dcc24 100644
+--- a/texk/web2c/pmpostdir/ChangeLog
++++ b/texk/web2c/pmpostdir/ChangeLog
+@@ -1,3 +1,7 @@
++2021-04-11  Akira Kakuto  <kakuto@w32tex.org>
++
++	* pmp.ch: Sync with the version 2.01 mp.w.
++
+ 2021-03-23  Karl Berry  <karl@tug.org>
+ 
+ 	* TL'21.
+diff --git a/texk/web2c/pmpostdir/pmp.ch b/texk/web2c/pmpostdir/pmp.ch
+index edab992e8ec5..9702ff89e382 100644
+--- a/texk/web2c/pmpostdir/pmp.ch
++++ b/texk/web2c/pmpostdir/pmp.ch
+@@ -13,19 +13,19 @@
+ %
+ 
+ @x
+-@d default_banner "This is MetaPost, Version 2.00" /* printed when \MP\ starts */
++@d default_banner "This is MetaPost, Version 2.01" /* printed when \MP\ starts */
+ @y
+ @z
+ 
+ @x
+-#define metapost_version "2.00"
++#define metapost_version "2.01"
+ @y
+ #ifdef UPMP
+ #define P_UP "up"
+-#define metapost_version "2.00-0.04-u1.27"
++#define metapost_version "2.01-0.04-u1.27"
+ #else
+ #define P_UP "p"
+-#define metapost_version "2.00-0.04"
++#define metapost_version "2.01-0.04"
+ #endif
+ #define default_banner "This is " P_UP "MetaPost, Version " metapost_version /* printed when \MP\ starts */
+ @z
