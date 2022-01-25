@@ -3,8 +3,9 @@
 pkgbase="ca_certificate"
 script_vers="1.10"
 vers="${script_vers}_$(date +%Y%m%d)"
-url="https://github.com/djlucas/make-ca/releases/download/v${script_vers}/make-ca-${script_vers}.tar.xz"
+url="https://github.com/lfs-book/make-ca/releases/download/v${script_vers}/make-ca-${script_vers}.tar.xz"
 digest="md5sum:74f1ad16d7a086ac76e0424fd4dfe67b"
+cert_url="https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt"
 cacert_url=("http://www.cacert.org/certs/root.crt"
 	    "http://www.cacert.org/certs/class3.crt")
 # See http://www.cacert.org/index.php?id=3
@@ -13,7 +14,7 @@ cacert_fp=("13:5C:EC:36:F4:9C:B8:E9:3B:1A:B2:70:CD:80:88:46:76:CE:8F:33"
 cacert_class=("1" "3")
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src=""
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
@@ -46,6 +47,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+
+  if [ ! -f ${cert_url##*/} ]; then
+      wget $cert_url
+  fi
 
   # CACert Certs (Class 1, Class 3)
   i=0
@@ -100,6 +105,7 @@ if [ $opt_package -eq 1 ] ; then
   rm -rf -v $P/usr/lib/systemd
 
   # docdir
+  install -v -m644 $W/${cert_url##*/} $P/usr/share/doc/"$pkgbase"-"$vers"/
   install -v -m755 $W/$myname $P/usr/share/doc/"$pkgbase"-"$vers"/
   for ca in ${cacert_url[@]}
   do
@@ -108,7 +114,7 @@ if [ $opt_package -eq 1 ] ; then
 
   mkdir -p $P/install
   cat <<EOF >> $P/install/initpkg
-/usr/sbin/make-ca -g
+/usr/sbin/make-ca -C /usr/share/doc/${pkgbase}-${vers}/certdata.txt
 ( cd /etc/ssl ; ln -sf /etc/pki/tls/certs/ca-bundle.crt ca-bundle.crt )
 ( cd /etc/ssl/certs ; ln -sf /etc/pki/tls/certs/ca-bundle.crt ca-certificates.crt )
 ( cd /etc/ssl/certs ; ln -sf /etc/pki/tls/certs/ca-bundle.crt ca-bundle.crt )
