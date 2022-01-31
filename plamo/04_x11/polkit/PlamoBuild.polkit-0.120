@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='polkit'
-vers="0.119"
+pkgbase="polkit"
+vers="0.120"
 url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared  --with-polkitd-user=polkituser --enable-introspection  --enable-libsystemd-login=no --enable-libelogind=yes'
-DOCS="AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/polkit-0.119-fix_elogind_detection-1.patch"
-patchfiles="${blfspatch##*/} pkexec-local-privilege-escalation.patch"
+build=B1
+src="polkit-${vers}"
+OPT_CONFIG="-Dman=true -Dsession_tracking=libelogind -Dsystemdsystemunitdir=/tmp -Dpolkitd_user=polkituser --buildtype=release"
+DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README docs gtk-doc.make meson_options.txt meson_post_install.py"
+patchfiles="pkexec-local-privilege-escalation.patch"
+# specifies files that are not in source archive and patchfiles
 addfiles="polkit.pam"
 compress=tzst
 ##############################################################
@@ -19,12 +19,11 @@ compress=tzst
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -41,10 +40,8 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    if [ ! -f ${blfspatch##*/} ]; then
-        wget $blfspatch
-    fi
 fi
+
 
 if [ $opt_config -eq 1 ] ; then
 
@@ -56,10 +53,10 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-######################################################################
-#  don't copy sources, so need patch in the src dir
-######################################################################
     cd $S
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
@@ -67,26 +64,27 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    autoreconf -fi
+
+    sed '/0,/s/^/#/' -i meson_post_install.py
+    sed '/policy,/d' -i actions/meson.build \
+        -i src/examples/meson.build
 
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    cd $B 
+    ninja
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -94,8 +92,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+
+  DESTDIR=$P ninja install
 
   install -v -d $P/etc/pam.d
   install -v -m 0644 $W/polkit.pam $P/etc/pam.d/polkit-1
@@ -107,13 +105,13 @@ if [ $opt_package -eq 1 ] ; then
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
