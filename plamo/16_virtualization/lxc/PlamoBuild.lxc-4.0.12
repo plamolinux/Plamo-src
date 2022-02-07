@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers="4.0.10"
+vers="4.0.12"
 template_vers="3.0.4"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://github.com/lxc/lxc-templates.git"
 verify="${url}.asc"
 #template_verify="${template}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 template_src="lxc-templates"
 OPT_CONFIG="--enable-static --enable-shared
@@ -19,7 +19,7 @@ OPT_CONFIG="--enable-static --enable-shared
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=""
 template_patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
