@@ -100,7 +100,7 @@ DOCS="{4}"
 patchfiles="{5}"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 '''.format(self.url, self.basename, self.version, self.srcdir, self.readmes, self.patches, opt_config)
 
