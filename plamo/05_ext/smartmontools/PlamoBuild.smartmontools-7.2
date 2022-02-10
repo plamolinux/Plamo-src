@@ -10,7 +10,7 @@ build=B1
 src="smartmontools-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-initscriptdir=no --with-libsystemd=no --docdir=/usr/share/doc/${src}"
 DOCS="AUTHORS COPYING ChangeLog ChangeLog-5.0-6.0 ChangeLog-6.0-7.0 INSTALL NEWS README TODO"
-patchfiles=""
+patchfiles="smartd.init"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=txz
@@ -94,6 +94,17 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -v -Dm644 $W/smartd.init $P/etc/rc.d/init.d/smartd
+  install -v -Dm644 $W/smartd.init $docdir/$src/smartd.init
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+          0|1|2|6) ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/K70smartd ;;
+          3|4|5)   ln -sf ../init.d/samba $P/etc/rc.d/rc"$i".d/S21smartd ;;
+      esac
+  done
 
 ################################
 #      install tweaks
