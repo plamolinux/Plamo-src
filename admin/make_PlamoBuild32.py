@@ -25,10 +25,10 @@ class Package():
         else:
             files = os.listdir(self.srcdir)
             ''' 
-            configure と CMakeLists.txt の双方がある場合，configure を
-            優先した方が安全っぽい(多分，cmake への移行中)
+            最近では meson/cmake をイジって configure は置き去りにされがちなので，
+            複数の設定方法がある場合，meson > cmake > configure の順にする．
             '''
-            types = {'configure':'config', 'CMakeLists.txt':'cmake', 'meson.build':'meson', 'setup.py':'python', 'Makefile.PL':'perl'}
+            types = {'meson.build':'meson', 'CMakeLists.txt':'cmake', 'configure':'config', 'setup.py':'python', 'Makefile.PL':'perl'}
 
             for i in types.keys():
                 for j in files:
@@ -48,6 +48,8 @@ class Package():
             opt_config = '--disable-static --enable-shared'
         elif self.method == 'cmake' :
             opt_config = '-DCMAKE_BUILD_TYPE=Release'
+        elif self.method == 'meson' :
+            opt_config = '--buildtype=release'
         else:
             opt_config = ''
         self.header = '''#!/bin/sh
@@ -65,7 +67,7 @@ DOCS="{4}"
 patchfiles="{5}"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 '''.format(self.url, self.basename, self.version, self.srcdir, self.readmes, self.patches, opt_config)
 
