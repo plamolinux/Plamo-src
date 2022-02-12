@@ -294,16 +294,16 @@ install_tweak() {
     done
   fi
 
-  # ja 以外のlocaleファイルを削除
-  for loc_dir in `find $P/usr/share -type d -name locale` ; do
-    pushd $loc_dir
-    for loc in * ; do
-      if [ "$loc" != "ja" ]; then
-        rm -rf $loc
-      fi
-    done
-    popd
-  done
+#  # ja 以外のlocaleファイルを削除
+#  for loc_dir in `find $P/usr/share -type d -name locale` ; do
+#    pushd $loc_dir
+#    for loc in * ; do
+#      if [ "$loc" != "ja" ]; then
+#        rm -rf $loc
+#      fi
+#    done
+#    popd
+#  done
 
   # /run や /var/run がある場合は削除
   if [ -d $P/run ]; then
@@ -390,7 +390,7 @@ C=$W/pivot
 
 infodir=$P/usr/share/info
 mandir=$P/usr/share/man
-xmandir=$P/usr/X11R7/share/man
+#xmandir=$P/usr/X11R7/share/man
 docdir=$P/usr/share/doc
 myname=`basename $0`
 pkg=$pkgbase-$vers-$arch-$build
