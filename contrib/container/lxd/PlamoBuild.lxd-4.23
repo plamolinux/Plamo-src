@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxd"
-vers="4.16"
+vers="4.23"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -11,7 +11,7 @@ OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
 #patchfiles="dqlite.patch"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 #source /usr/lib/setup/plamobuild_functions.sh
@@ -35,47 +35,33 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ;
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
 
-    cd $S
-    if [ ! -f .patched ]; then
-      for patch in $patchfiles ; do
+    cd $B
+    for patch in $patchfiles ; do
         patch -p1 < $W/$patch
-      done
-    fi
-    touch .patched
+    done
 
     if [ -f $W/linux-containers-lxd-ja.po ]; then
-        cp -v $W/linux-containers-lxd-ja.po $S/po/ja.po
+        cp -v $W/linux-containers-lxd-ja.po $B/po/ja.po
     fi
-
-    cd $B
-    # put in the stuff under the GOPATH under the golang rule
-    if [ -d src/github.com/lxc/lxd ]; then
-        rm -rf src/github.com/lxc/lxd
-    else
-        mkdir -p src/github.com/lxc/
-    fi
-    cp -a $W/lxd-${vers} src/github.com/lxc/lxd
-
-    # copy dependent sources including lxd source archive to src
-    rm -rf src/github.com/lxc/lxd/_dist/src/github.com/lxc
-    rsync -a src/github.com/lxc/lxd/_dist/src/ src
-    rsync -a src/github.com/lxc/lxd/_dist/deps/ deps
 
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    export GOPATH=$B
-    cd $B/src/github.com/lxc/lxd
 
-    export CGO_CFLAGS="-I$B/deps/dqlite/include/ -I$B/deps/libco/include/ -I$B/deps/raft/include/"
-    export CGO_LDFLAGS="-L$B/deps/dqlite/.libs/ -L$B/deps/libco/ -L$B/deps/raft/.libs/"
-    export LD_LIBRARY_PATH="$B/deps/dqlite/.libs/:$B/deps/libco/:$B/deps/raft/.libs/:${LD_LIBRARY_PATH}"
+    cd $B
+    mkdir -v $B/go
+    export GOPATH=$B/go
+
+    export CGO_CFLAGS="-I$B/vendor/raft/include/ -I$B/vendor/dqlite/include/"
+    export CGO_LDFLAGS="-L$B/vendor/raft/.libs -L$B/vendor/dqlite/.libs/"
+    export LD_LIBRARY_PATH="$B/vendor/raft/.libs/:$B/vendor/dqlite/.libs/"
     export CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
+    export GOFLAGS="-buildmode=pie -trimpath"
 
     make deps
     make
@@ -99,15 +85,15 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   # bin
-  for f in $(ls $B/bin/)
+  for f in $(ls go/bin/)
   do
-      install -D -m755 -v bin/$f $P/usr/bin/$f
+      install -D -m755 -v $B/go/bin/$f $P/usr/bin/$f
   done
 
   # dep libs
-  install -D -m755 -v deps/dqlite/.libs/libdqlite.so.0 $P/usr/lib/lxd/libdqlite.so.0
-  install -D -v deps/raft/.libs/libraft.so* -t $P/usr/lib/lxd/
-  install -D -v deps/libco/libco.so* -t $P/usr/lib/lxd/
+  mkdir -pv $P/usr/lib/lxd
+  cp -av vendor/dqlite/.libs/libdqlite.so* $P/usr/lib/lxd/
+  cp -av vendor/raft/.libs/libraft.so* $P/usr/lib/lxd/
 
   # message
   install -D -m644 src/github.com/lxc/lxd/po/ja.mo $P/usr/share/locale/ja/LC_MESSAGES/lxd.mo
