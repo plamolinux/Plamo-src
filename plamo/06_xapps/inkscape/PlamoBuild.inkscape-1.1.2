@@ -9,7 +9,7 @@ arch=`uname -m`
 build=B2
 src="inkscape-1.1.2_2022-02-04_0a00cf5339"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DPOPPLER_INCLUDE_DIR=/usr/include/poppler -DWITH_DBUS=TRUE -DWITH_IMAGE_MAGICK=TRUE"
-DOCS="AUTHORS COPYING INSTALL.md LICENSES NEWS.md README.md doc"
+DOCS="AUTHORS COPYING INSTALL.md LICENSES NEWS.md README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -68,7 +68,7 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/usr/${libdir}/ImageMagick-6/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
@@ -99,6 +99,9 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  cp -av $S/doc $docdir/$src/doc
+  mv -v $docdir/$src $docdir/$pkgbase-$vers
 
 #############################
 #   convert symlink to null file and
