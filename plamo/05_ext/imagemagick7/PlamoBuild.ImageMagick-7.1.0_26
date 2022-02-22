@@ -19,7 +19,7 @@ OPT_CONFIG="--disable-static --enable-shared
 	    --with-dejavu-font-dir=/usr/share/fonts/TTF"
 DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
