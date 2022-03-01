@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase='icu'
+pkgbase='icu67'
 vers='67.1'
 url="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz"
 verify="https://github.com/unicode-org/icu/releases/download/release-${vers/./-}/icu4c-${vers/./_}-src.tgz.asc"
@@ -10,7 +10,7 @@ src="icu"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='LICENSE license.html readme.html'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -53,29 +53,25 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    if [ ! -f .glibc-2.26.patch ]; then
-	sed -i 's/xlocale/locale/' source/i18n/digitlst.cpp
-	touch .glibc-2.26.patch
-    fi
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     $S/source/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -85,6 +81,14 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  find $P -name "*.so" -exec rm -vf {} \;
+  rm -vrf $P/usr/sbin
+  rm -vrf $P/usr/bin
+  rm -vrf $P/usr/lib/pkgconfig
+  rm -vrf $P/usr/include
+  rm -vrf $P/usr/share/man
+  rm -vf  $P/usr/lib/icu/*
 
 ################################
 #      install tweaks
