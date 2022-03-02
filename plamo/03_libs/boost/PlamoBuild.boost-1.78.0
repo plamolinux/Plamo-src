@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='boost'
-vers='1.74.0'
-url="https://dl.bintray.com/boostorg/release/$vers/source/boost_${vers//./_}.tar.bz2"
-verify="${url}.asc"
+vers='1.78.0'
+url="https://boostorg.jfrog.io/artifactory/main/release/${vers}/source/boost_1_78_0.tar.bz2"
+digest="md5sum:db0112a3a37a3742326471d20f1a186a"
 arch=`uname -m`
 build=B1
 src="boost_${vers//./_}"
@@ -43,7 +43,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy sources, so need patch in the build dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
@@ -52,7 +52,7 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
-  ./bootstrap.sh --prefix=/usr --libdir=/usr/${libdir} --with-python=/usr/bin/python2
+  ./bootstrap.sh --with-toolset=gcc --with-icu --prefix=/usr --libdir=/usr/${libdir} --with-python=/usr/bin/python3
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -62,7 +62,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  ./b2 stage threading=multi link=shared
+  ./b2 stage -j4 threading=multi link=shared
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -73,7 +73,11 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  ./b2 install threading=multi link=shared --prefix=$P/usr --libdir=$P/usr/${libdir}
+  ./b2 install threading=multi link=shared --prefix=$P/usr --libdir=$P/usr/${libdir} --layout=system
+
+  for _lib in python numpy; do
+     ln -srL $P/usr/lib/libboost_${_lib}3{9,}.so
+  done
 
 ################################
 #      install tweaks
