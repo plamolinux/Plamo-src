@@ -6,7 +6,7 @@ url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-s
 verify=""
 digest="md5sum:e1447db4f06c841d8947f0a6ce83a7b5"
 arch=`uname -m`
-build=B1
+build=B2
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG=(-prefix /usr
 	    -archdatadir    /usr/lib/qt5
@@ -30,7 +30,7 @@ OPT_CONFIG=(-prefix /usr
             -skip qtwebengine)
 
 DOCS='.QT-ENTERPRISE-LICENSE-AGREEMENT .QT-FOR-APPLICATION-DEVELOPMENT-LICENSE-AGREEMENT .QT-FOR-AUTOMATION-LICENSE-AGREEMENT .QT-FOR-AUTOMOTIVE-LICENSE-AGREEMENT .QT-FOR-DEVICE-CREATION-LICENSE-AGREEMENT .QT-INDIE-LICENSE-AGREEMENT .QT-PROFESSIONAL-LICENSE-AGREEMENT LGPL_EXCEPTION.txt LICENSE.FDL LICENSE.GPLv2 LICENSE.GPLv3 LICENSE.LGPLv21 LICENSE.LGPLv3 README'
-patchfiles=''
+patchfiles='qt-everywhere-src-5.15.2-kf5.15-2.patch'
 compress=txz
 ##############################################################
 
