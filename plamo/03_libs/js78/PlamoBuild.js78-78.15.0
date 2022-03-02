@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="js78"
-vers="78.4.1"
+vers="78.15.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}esr/source/firefox-${vers}esr.source.tar.xz"
 verify=""
 digest=""
@@ -9,11 +9,11 @@ arch=`uname -m`
 build=B1
 src="firefox-${vers}"
 OPT_CONFIG="--with-intl-api --with-system-zlib --with-system-icu --disable-jemalloc --disable-debug-symbols --enable-readline"
-DOCS="AUTHORS LICENSE README.txt other-licenses sourcestamp.txt"
-patchfiles=""
+DOCS="AUTHORS LICENSE README.txt sourcestamp.txt"
+patchfiles="js-78.15.0-python_3_10-1.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -122,12 +122,16 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  rm -v $P/usr/${libdir}/libjs_static.ajs
+  sed -i '/@NSPR_CFLAGS@/d' $P/usr/bin/js78-config
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+  ( cd $docdir && mv $src $pkgbase-$vers )
 
 #############################
 #   convert symlink to null file and
