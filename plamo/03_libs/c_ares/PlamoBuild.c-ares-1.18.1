@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="c_ares"
-vers="1.17.2"
+vers="1.18.1"
 url="https://c-ares.haxx.se/download/c-ares-${vers}.tar.gz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
 src="c-ares-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=None -Wno-dev"
+OPT_CONFIG=""
 DOCS="AUTHORS INSTALL.md LICENSE.md NEWS README.cares README.md README.msvc RELEASE-NOTES TODO docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
