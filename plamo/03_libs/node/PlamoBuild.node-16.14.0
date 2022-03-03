@@ -11,7 +11,7 @@ src="${pkgbase}-v${vers}"
 OPT_CONFIG="--shared-cares --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=system-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
