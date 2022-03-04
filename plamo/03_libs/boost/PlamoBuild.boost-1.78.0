@@ -10,7 +10,7 @@ src="boost_${vers//./_}"
 OPT_CONFIG=''
 DOCS='INSTALL LICENSE_1_0.txt'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
