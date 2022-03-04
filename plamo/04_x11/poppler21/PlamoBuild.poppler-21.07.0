@@ -105,6 +105,11 @@ if [ $opt_package -eq 1 ] ; then
   rm -rfv $P/usr/bin
   rm -rfv $P/usr/share/man
   rm -rfv $P/usr/share/gir-1.0
+  for f in "*.so" "libpoppler-cpp.so*" "libpoppler-glib.so*" "libpoppler-qt5.so*"
+  do
+      find $P -name $f -exec rm -v {} \;
+  done
+  rm -rfv $P/usr/lib/girepository-1.0
 
 ################################
 #      install tweaks
