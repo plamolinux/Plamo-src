@@ -6,11 +6,11 @@ url="https://inkscape.org/gallery/item/31668/inkscape-${vers}.tar.xz"
 verify=""
 digest="sha256sum:3ffe54a06d0b25a4cd8b6eb424536ef1ed205be13443a39cd437c8c7b89b96d1"
 arch=`uname -m`
-build=B3
+build=B4
 src="inkscape-1.1.2_2022-02-04_0a00cf5339"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DPOPPLER_INCLUDE_DIR=/usr/include/poppler -DWITH_DBUS=TRUE -DWITH_IMAGE_MAGICK=TRUE -DWITH_INTERNAL_2GEOM=ON"
 DOCS="AUTHORS COPYING INSTALL.md LICENSES NEWS.md README.md"
-patchfiles=""
+patchfiles="poppler-22.03.0.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
