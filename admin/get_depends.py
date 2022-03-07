@@ -69,7 +69,12 @@ def get_elfs(path):
     return elfs
 
 def check_elf(file):
-    res = magic.from_file(file)
+    try:
+        res = magic.from_file(file)
+    except magic.MagicException :
+        print("file_magic cannot determine  {}".format(file))
+        return False
+
     # res = str(subprocess.check_output(['file', file]))
     print("{}:{}".format(file,res))
     if res.find('ELF') >= 0 and res.find('dynamically linked') > 0 and res.find('32-bit') == -1: 
