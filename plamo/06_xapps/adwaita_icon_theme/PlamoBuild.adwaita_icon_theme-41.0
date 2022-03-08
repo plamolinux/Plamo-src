@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='adwaita_icon_theme'
-vers='3.26.1'
+vers='41.0'
 url="http://ftp.gnome.org/pub/gnome/sources/adwaita-icon-theme/${vers%.*}/adwaita-icon-theme-${vers}.tar.xz"
 verify=""
 arch=noarch
 build=B1
 src="adwaita-icon-theme-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=""
 DOCS='AUTHORS COPYING COPYING_CCBYSA3 COPYING_LGPL NEWS README'
 patchfiles=''
 compress=txz
