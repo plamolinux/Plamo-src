@@ -6,11 +6,11 @@ url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="polkit-${vers}"
 OPT_CONFIG="-Dman=true -Dsession_tracking=libelogind -Dsystemdsystemunitdir=/tmp -Dpolkitd_user=polkituser --buildtype=release"
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README docs gtk-doc.make meson_options.txt meson_post_install.py"
-patchfiles="pkexec-local-privilege-escalation.patch"
+patchfiles="polkit-0.120-security_fixes-1.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="polkit.pam"
 compress=tzst

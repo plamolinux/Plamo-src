@@ -1,0 +1,147 @@
+Submitted By:            Xi Ruoyao <xry111 at linuxfromscratch dot org>
+Date:                    2021-01-27
+Initial Package Version: 0.120
+Upstream Status:         Applied
+Origin:                  Upstream
+Description:             Fix CVE-2021-4034, a trivially exploitable local
+                         privilege escalation, to polkit since 0.92.
+
+                         Updated by Douglas R. Reno on 2022-03-03
+                         <renodr at linuxfromscratch dot org> to fix
+                         CVE-2021-4115, a local denial of service vulnerability
+                         in Polkit. Patch was rediffed with the commit applied.
+                         See BLFS Ticket #16151 for more details.
+
+diff -Naurp polkit-0.120.orig/src/polkit/polkitsystembusname.c polkit-0.120/src/polkit/polkitsystembusname.c
+--- polkit-0.120.orig/src/polkit/polkitsystembusname.c	2021-07-22 13:16:33.000000000 -0500
++++ polkit-0.120/src/polkit/polkitsystembusname.c	2022-03-03 11:29:36.279870827 -0600
+@@ -62,6 +62,8 @@ enum
+   PROP_NAME,
+ };
+ 
++guint8 dbus_call_respond_fails; // has to be global because of callback
++
+ static void subject_iface_init (PolkitSubjectIface *subject_iface);
+ 
+ G_DEFINE_TYPE_WITH_CODE (PolkitSystemBusName, polkit_system_bus_name, G_TYPE_OBJECT,
+@@ -364,6 +366,7 @@ on_retrieved_unix_uid_pid (GObject
+   if (!v)
+     {
+       data->caught_error = TRUE;
++      dbus_call_respond_fails += 1;
+     }
+   else
+     {
+@@ -405,6 +408,8 @@ polkit_system_bus_name_get_creds_sync (P
+   tmp_context = g_main_context_new ();
+   g_main_context_push_thread_default (tmp_context);
+ 
++  dbus_call_respond_fails = 0;
++
+   /* Do two async calls as it's basically as fast as one sync call.
+    */
+   g_dbus_connection_call (connection,
+@@ -432,11 +437,34 @@ polkit_system_bus_name_get_creds_sync (P
+ 			  on_retrieved_unix_uid_pid,
+ 			  &data);
+ 
+-  while (!((data.retrieved_uid && data.retrieved_pid) || data.caught_error))
+-    g_main_context_iteration (tmp_context, TRUE);
+-
+-  if (data.caught_error)
+-    goto out;
++  while (TRUE)
++  {
++     /* If one dbus call returns error, we must wait until the other call
++      * calls _call_finish(), otherwise fd leak is possible.
++      * Resolves: GHSL-2021-077
++      */
++
++  if ( (dbus_call_respond_fails > 1) )
++  {
++     // we got two faults, we can leave
++     goto out;
++  }
++
++  if ((data.caught_error && (data.retrieved_pid || data.retrieved_uid)))
++  {
++     // we got one fault and the other call finally finished, we can leave
++     goto out;
++  }
++
++  if ( !(data.retrieved_uid && data.retrieved_pid) )
++  {
++     g_main_context_iteration (tmp_context, TRUE);
++  }
++  else
++  {
++     break;
++  }
++  }
+ 
+   if (out_uid)
+     *out_uid = data.uid;
+diff -Naurp polkit-0.120.orig/src/programs/pkcheck.c polkit-0.120/src/programs/pkcheck.c
+--- polkit-0.120.orig/src/programs/pkcheck.c	2018-05-31 06:52:53.000000000 -0500
++++ polkit-0.120/src/programs/pkcheck.c	2022-03-03 11:26:43.863310719 -0600
+@@ -363,6 +363,11 @@ main (int argc, char *argv[])
+   local_agent_handle = NULL;
+   ret = 126;
+ 
++  if (argc < 1)
++    {
++      exit(126);
++    }
++
+   /* Disable remote file access from GIO. */
+   setenv ("GIO_USE_VFS", "local", 1);
+ 
+diff -Naurp polkit-0.120.orig/src/programs/pkexec.c polkit-0.120/src/programs/pkexec.c
+--- polkit-0.120.orig/src/programs/pkexec.c	2018-05-31 06:52:53.000000000 -0500
++++ polkit-0.120/src/programs/pkexec.c	2022-03-03 11:26:43.863310719 -0600
+@@ -488,6 +488,15 @@ main (int argc, char *argv[])
+   pid_t pid_of_caller;
+   gpointer local_agent_handle;
+ 
++
++  /*
++   * If 'pkexec' is called THIS wrong, someone's probably evil-doing. Don't be nice, just bail out.
++   */
++  if (argc<1)
++    {
++      exit(127);
++    }
++
+   ret = 127;
+   authority = NULL;
+   subject = NULL;
+@@ -614,10 +623,10 @@ main (int argc, char *argv[])
+ 
+       path = g_strdup (pwstruct.pw_shell);
+       if (!path)
+-	{
++        {
+           g_printerr ("No shell configured or error retrieving pw_shell\n");
+           goto out;
+-	}
++        }
+       /* If you change this, be sure to change the if (!command_line)
+ 	 case below too */
+       command_line = g_strdup (path);
+@@ -636,7 +645,15 @@ main (int argc, char *argv[])
+           goto out;
+         }
+       g_free (path);
+-      argv[n] = path = s;
++      path = s;
++
++      /* argc<2 and pkexec runs just shell, argv is guaranteed to be null-terminated.
++       * /-less shell shouldn't happen, but let's be defensive and don't write to null-termination
++       */
++      if (argv[n] != NULL)
++      {
++        argv[n] = path;
++      }
+     }
+   if (access (path, F_OK) != 0)
+     {
