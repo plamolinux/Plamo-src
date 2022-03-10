@@ -273,6 +273,11 @@ if [ $opt_package -eq 1 ] ; then
             self.package += '''
   DESTDIR=$P ninja install
 '''
+        elif self.method == 'perl' :
+            self.package += '''
+  export LDFLAGS='-Wl,--as-needed'
+  make pure_install DESTDIR=$P
+'''
         else:
             self.package += '''
   export LDFLAGS='-Wl,--as-needed'
