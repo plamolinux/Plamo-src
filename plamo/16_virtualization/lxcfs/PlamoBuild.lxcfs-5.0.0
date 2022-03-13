@@ -53,8 +53,9 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    if ! "python3 -c 'import jinja2' > /dev/null 2>&1"; then
-	pip3 install Jinja2
+    #python3 -c "import jinja2" > /dev/null 2>&1
+    if ! python3 -c "import jinja2" > /dev/null 2>&1; then
+	pip3 install --user Jinja2
     fi
 
 ######################################################################
