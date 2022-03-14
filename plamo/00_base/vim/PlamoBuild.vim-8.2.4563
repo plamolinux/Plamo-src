@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='vim'
-vers='8.1.1535'
+vers='8.2.4563'
 url="http://github.com/vim/vim/archive/v${vers}/vim-${vers}.tar.gz"
 digest=""
 arch=`uname -m`
