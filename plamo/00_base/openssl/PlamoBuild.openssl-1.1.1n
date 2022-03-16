@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssl'
-vers="1.1.1l"
+vers="1.1.1n"
 url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -10,7 +10,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='.travis-create-release.sh AUTHORS INSTALL LICENSE NEWS README README.ECC README.ENGINE README.FIPS'
 patchfiles="ca-dir.patch"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
