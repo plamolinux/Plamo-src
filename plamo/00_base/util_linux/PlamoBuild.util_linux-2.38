@@ -180,7 +180,7 @@ EOF
 
 
   mkdir -p $P/etc/sysconfig
-  cat > $P/etc/sysconfig/clock << "EOF"
+  cat > $P/etc/sysconfig/clock.dist << "EOF"
 # Begin /etc/sysconfig/clock
 
 UTC=1
@@ -190,6 +190,13 @@ UTC=1
 CLOCKPARAMS=
 
 # End /etc/sysconfig/clock
+EOF
+
+  mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+if [ ! -f /etc/sysconfig/clock ]; then
+  cp /etc/sysconfig/clock.original /etc/sysconfig/clock
+fi
 EOF
 
 ################################
