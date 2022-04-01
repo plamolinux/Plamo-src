@@ -195,7 +195,7 @@ EOF
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 if [ ! -f /etc/sysconfig/clock ]; then
-  cp /etc/sysconfig/clock.original /etc/sysconfig/clock
+  cp /etc/sysconfig/clock.dist /etc/sysconfig/clock
 fi
 EOF
 
