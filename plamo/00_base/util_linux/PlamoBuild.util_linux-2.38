@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='util_linux'
-vers="2.37.3"
+vers="2.38"
 url="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 verify="https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
 arch=`uname -m`
@@ -13,7 +13,8 @@ OPT_CONFIG="--disable-setpriv --disable-last
     --without-user --without-python --without-systemd --without-systemdsystemunitdir
     --docdir=/usr/share/doc/${src} runstatedir=/run"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
-patchfiles="0001-prevent-raw.8-missing-error.patch"
+patchfiles=""
+addfiles=""
 compress=tzst
 ##############################################################
 
@@ -45,6 +46,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
@@ -170,7 +180,7 @@ EOF
 
 
   mkdir -p $P/etc/sysconfig
-  cat > $P/etc/sysconfig/clock << "EOF"
+  cat > $P/etc/sysconfig/clock.dist << "EOF"
 # Begin /etc/sysconfig/clock
 
 UTC=1
@@ -180,6 +190,13 @@ UTC=1
 CLOCKPARAMS=
 
 # End /etc/sysconfig/clock
+EOF
+
+  mkdir -p $P/install
+cat <<"EOF" > $P/install/initpkg
+if [ ! -f /etc/sysconfig/clock ]; then
+  cp /etc/sysconfig/clock.dist /etc/sysconfig/clock
+fi
 EOF
 
 ################################
