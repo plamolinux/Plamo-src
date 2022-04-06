@@ -10,7 +10,7 @@ src="zlib-${vers}"
 OPT_CONFIG=
 DOCS='ChangeLog README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
