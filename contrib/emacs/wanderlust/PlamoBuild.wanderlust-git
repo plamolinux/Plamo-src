@@ -11,7 +11,7 @@ src="wanderlust"
 OPT_CONFIG=""
 DOCS='COPYING ChangeLog INSTALL INSTALL.ja NEWS NEWS.ja README.ja README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
