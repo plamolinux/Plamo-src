@@ -12,7 +12,7 @@ src="flim"
 OPT_CONFIG=""
 DOCS='ChangeLog NEWS README.en README.ja'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
