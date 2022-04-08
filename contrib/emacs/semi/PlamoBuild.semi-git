@@ -3,7 +3,8 @@
 pkgbase='semi'
 vers=""
 url="https://github.com/wanderlust/semi.git"
-commitid="13bb56eb978439957964032cc3118a8bea43d7f4"
+branch="semi-1_14-wl"
+commitid="509f6f0bc2f5d020c63e47d9ad89410dc20bcb6f"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +12,7 @@ src="semi"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ChangeLog NEWS README.en README.ja TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -43,6 +44,9 @@ fi
 ###
 if [ $opt_download -ne 1 ]; then
     pushd $S
+    if [ -n $branch ]; then
+        git checkout $branch
+    fi
     vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
     pkg=${pkgbase}-${vers}-${arch}-${build}
     popd

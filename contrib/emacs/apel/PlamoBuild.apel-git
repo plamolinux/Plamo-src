@@ -3,7 +3,8 @@
 pkgbase='apel'
 vers=""
 url="https://github.com/wanderlust/apel.git"
-commitid="d146ddbf8818e81d3577d5eee7825d377bec0c73"
+branch="apel-wl"
+commitid="4e3269b6e702db2dba48cf560563ac883e81e3bf"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +12,7 @@ src="apel"
 OPT_CONFIG=""
 DOCS='ChangeLog README.en README.ja install.el'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -43,6 +44,9 @@ fi
 ###
 if [ $opt_download -ne 1 ]; then
     pushd $S
+    if [ -n $branch ]; then
+        git checkout $branch
+    fi
     vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
     pkg=${pkgbase}-${vers}-${arch}-${build}
     popd
