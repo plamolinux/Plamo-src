@@ -1,21 +1,23 @@
 #!/bin/sh
 ##############################################################
 pkgbase='emacs'
-vers='26.2'
+vers='28.1'
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
-	--disable-static
-	--enable-shared
-	--with-x-toolkit=gtk3
+	--with-imagemagick
+	--with-cairo
+	--with-harfbuzz
 	--with-xft
+	--with-wide-int
+	--with-x-toolkit=gtk3
 	--with-modules"
-DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
-patchfiles="emacs-26.1-support-txz.patch"
-compress=txz
+DOCS='BUGS CONTRIBUTE COPYING ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 INSTALL INSTALL.REPO README'
+patchfiles="emacs-28.1-add-compresstype.patch"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -62,7 +64,7 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
-  export PKG_CONFIG_PATH="/usr/lib/imagemagick6/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig"
+  export PKG_CONFIG_PATH="/usr/lib/imagemagick6/pkgconfig:/usr/${libdir}/pkgconfig:/usr/share/pkgconfig"
   export LDFLAGS='-Wl,--as-needed'
   ac_cv_lib_gif_EGifPutExtensionLast=yes  \
 				    $S/configure --prefix=/usr \
@@ -94,16 +96,22 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   mkdir -p $P/install
+  rm -rf $P/usr/lib/systemd
 
-  chown -v -R root:root $P/usr/share/emacs/${vers}
+  chk_root=`whoami | grep root`
+  if [ "$chk_root.x" != ".x" ]; then
+      chown -v -R root:root $P/usr/share/emacs/${vers}
+  fi
 
-  cat <<EOF >> $P/install/initpkg
-if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  /usr/bin/gtk-update-icon-cache -t -f --include-image-data /usr/share/icons/hicolor
-fi
-if [ -x /usr/bin/update-desktop-database ]; then
-  /usr/bin/update-desktop-database
-fi
+  mkdir -p $P/install
+  cat <<"EOF" > $P/install/initpkg
+# remove overrided packages
+for i in emacs_bin emacs_mini emacs_lib ; do
+  if [ -f /var/log/packages/$i ]; then
+    rm -f $i
+  fi
+done
+
 EOF
 
 ################################
