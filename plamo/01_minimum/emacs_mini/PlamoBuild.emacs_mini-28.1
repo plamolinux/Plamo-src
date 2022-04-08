@@ -41,25 +41,21 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
-      touch .${patch}
-    fi
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
 
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -83,7 +79,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  find $P/usr/libexec/emacs -type f -name emacs.pdmp -exec rm -fv {} \;
 
 ################################
 #      install tweaks
