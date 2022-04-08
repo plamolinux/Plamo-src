@@ -97,6 +97,7 @@ if [ $opt_package -eq 1 ] ; then
 
   mkdir -p $P/install
   rm -rf $P/usr/lib/systemd
+  find $P/usr/libexec/emacs -type f -name emacs.pdmp -exec rm -fv {} \;
 
   chk_root=`whoami | grep root`
   if [ "$chk_root.x" != ".x" ]; then

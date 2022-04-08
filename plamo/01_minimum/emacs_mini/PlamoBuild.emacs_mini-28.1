@@ -83,6 +83,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  find $P/usr/libexec/emacs -type f -name emacs.pdmp -exec rm -fv {} \;
 
 ################################
 #      install tweaks
