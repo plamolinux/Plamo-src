@@ -1,14 +1,14 @@
-From 4db674c6036d52a6baa284e7c8e92a9091790d1c Mon Sep 17 00:00:00 2001
+From 6ccf75cf630b9313b6642ab8601f5e3cf8f4f566 Mon Sep 17 00:00:00 2001
 From: KATOH Yasufumi <karma@jazz.email.ne.jp>
-Date: Fri, 8 Apr 2022 20:30:50 +0900
-Subject: [PATCH] Add compress suffix to tzst, zst...
+Date: Mon, 11 Apr 2022 15:52:10 +0900
+Subject: [PATCH] Support xz, zstd compressed files by GNU tools
 
 ---
  lisp/eshell/esh-util.el | 2 +-
  lisp/ibuffer.el         | 2 +-
  lisp/ldefs-boot.el      | 2 +-
- lisp/pcmpl-gnu.el       | 4 ++--
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ lisp/pcmpl-gnu.el       | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/lisp/eshell/esh-util.el b/lisp/eshell/esh-util.el
 index bacb41e..3ecf201 100644
@@ -50,18 +50,9 @@ index 78d6bb5..bcef96d 100644
  An empty string means search the non-compressed file.")
  
 diff --git a/lisp/pcmpl-gnu.el b/lisp/pcmpl-gnu.el
-index d0ae939..014d210 100644
+index d0ae939..1f63182 100644
 --- a/lisp/pcmpl-gnu.el
 +++ b/lisp/pcmpl-gnu.el
-@@ -94,7 +94,7 @@
-    (lambda (entry)
-      (when (and (file-readable-p entry)
-                 (file-regular-p entry))
--       (let ((zipped (string-match "\\.\\(t?z2\\|bz2\\)\\'" entry)))
-+       (let ((zipped (string-match "\\.\\(t?z2\\|bz2\\|xz\\|zst)\\'" entry)))
-          (or (and unzip-p zipped)
-              (and (not unzip-p) (not zipped))))))))
- 
 @@ -160,7 +160,7 @@ Return the new list."
        (pcomplete-uniquify-list rules))))
  
