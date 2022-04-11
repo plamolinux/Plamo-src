@@ -1,0 +1,67 @@
+From 6ccf75cf630b9313b6642ab8601f5e3cf8f4f566 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 11 Apr 2022 15:52:10 +0900
+Subject: [PATCH] Support xz, zstd compressed files by GNU tools
+
+---
+ lisp/eshell/esh-util.el | 2 +-
+ lisp/ibuffer.el         | 2 +-
+ lisp/ldefs-boot.el      | 2 +-
+ lisp/pcmpl-gnu.el       | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lisp/eshell/esh-util.el b/lisp/eshell/esh-util.el
+index bacb41e..3ecf201 100644
+--- a/lisp/eshell/esh-util.el
++++ b/lisp/eshell/esh-util.el
+@@ -72,7 +72,7 @@ Setting this to nil is offered as an aid to debugging only."
+   :type 'integer)
+ 
+ (defcustom eshell-tar-regexp
+-  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst)\\'"
+   "Regular expression used to match tar file names."
+   :version "24.1"			; added xz
+   :type 'regexp)
+diff --git a/lisp/ibuffer.el b/lisp/ibuffer.el
+index 42576f0..276bf9d 100644
+--- a/lisp/ibuffer.el
++++ b/lisp/ibuffer.el
+@@ -321,7 +321,7 @@ directory, like `default-directory'."
+   :type '(repeat function))
+ 
+ (defcustom ibuffer-compressed-file-name-regexp
+-  "\\.\\(arj\\|bgz\\|bz2\\|gz\\|lzh\\|taz\\|tgz\\|xz\\|zip\\|z\\)$"
++  "\\.\\(arj\\|bgz\\|bz2\\|gz\\|lzh\\|taz\\|tgz\\|xz\\|zip\\|z\\|txz\\|tzst\\)$"
+   "Regexp to match compressed file names."
+   :version "24.1"                       ; added xz
+   :type 'regexp)
+diff --git a/lisp/ldefs-boot.el b/lisp/ldefs-boot.el
+index 78d6bb5..bcef96d 100644
+--- a/lisp/ldefs-boot.el
++++ b/lisp/ldefs-boot.el
+@@ -11288,7 +11288,7 @@ Use the `etags' program to make a tags table file.")
+ 
+ (custom-autoload 'tags-table-list "etags" t)
+ 
+-(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
++(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz" ".tzst")) "\
+ List of extensions tried by etags when `auto-compression-mode' is on.
+ An empty string means search the non-compressed file.")
+ 
+diff --git a/lisp/pcmpl-gnu.el b/lisp/pcmpl-gnu.el
+index d0ae939..1f63182 100644
+--- a/lisp/pcmpl-gnu.el
++++ b/lisp/pcmpl-gnu.el
+@@ -160,7 +160,7 @@ Return the new list."
+       (pcomplete-uniquify-list rules))))
+ 
+ (defcustom pcmpl-gnu-tarfile-regexp
+-  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst)\\'"
+   "A regexp which matches any tar archive."
+   :version "24.3"                       ; added xz
+   :type 'regexp)
+-- 
+2.35.0
+
