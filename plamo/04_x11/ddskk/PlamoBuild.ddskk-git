@@ -2,13 +2,15 @@
 ##############################################################
 pkgbase='ddskk'
 vers='16.2'
-url="http://openlab.ring.gr.jp/skk/maintrunk/${pkgbase}-${vers}.tar.gz"
-SKKJISYO="http://openlab.ring.gr.jp/skk/dic/SKK-JISYO.L.gz"
+url="https://github.com/skk-dev/ddskk.git"
+commitid="5c209e0306364118abf9d9440d7b8b9613183072"
+SKKJISYO="https://github.com/skk-dev/dict.git"
+jisyo_commitid="c6e6a8822b673bfe3e7182f99cdffd1f7735a61e"
 arch=`uname -m`
-build=B2
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='ChangeLog ChangeLog.0 ChangeLog.1 ChangeLog.2 ChangeLog.2.daredevil ChangeLog.3 ChangeLog.4 ChangeLog.5 README.md READMEs install-info.el install.el'
+build=B1
+src="${pkgbase}"
+OPT_CONFIG=""
+DOCS="ChangeLog ChangeLog.0 ChangeLog.1 ChangeLog.2 ChangeLog.2.daredevil ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 LICENSE README.md READMEs doc docs"
 patchfiles=''
 compress=tzst
 ##############################################################
@@ -38,11 +40,24 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    wget $SKKJISYO
+    if [ ! -d $(basename ${SKKJISYO##*/} .git) ]; then
+	git clone $SKKJISYO
+    fi
+    ( cd $(basename ${SKKJISYO##*/} .git) && git checkout master && git checkout -b build $jisyo_commitid )
+fi
+
+###
+#version = date.commitid
+###
+if [ $opt_download -ne 1 ]; then
+    pushd $S
+    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
+    pkg=${pkgbase}-${vers}-${arch}-${build}
+    popd
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
 ######################################################################
@@ -56,7 +71,7 @@ if [ $opt_config -eq 1 ] ; then
     echo "(setq SKK_INFODIR \"$P/usr/share/info\")" >> SKK-CFG 
 
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
     cd $B
     echo "no need to build. proceed to install."
@@ -70,8 +85,9 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install
   mkdir -p $P/usr/share/skk
-  cp $W/SKK-JISYO.L.gz $P/usr/share/skk/
-  gunzip $P/usr/share/skk/SKK-JISYO.L.gz
+  #cp $W/SKK-JISYO.L.gz $P/usr/share/skk/
+  #gunzip $P/usr/share/skk/SKK-JISYO.L.gz
+  cp -v $W/$(basename ${SKKJISYO##*/})/SKK-JISYO.L $P/usr/share/skk/
 
 ################################
 #      install tweaks
