@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libsndfile'
-vers='1.0.28'
-url="http://www.mega-nerd.com/${pkgbase}/files/${pkgbase}-${vers}.tar.gz"
+vers='1.1.0'
+url="https://github.com/libsndfile/libsndfile/releases/download/${vers}/libsndfile-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/libsndfile-${vers}"
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
+DOCS="AUTHORS CHANGELOG.md COPYING ChangeLog NEWS.OLD README docs"
 patchfiles=''
 compress=txz
 ##############################################################
