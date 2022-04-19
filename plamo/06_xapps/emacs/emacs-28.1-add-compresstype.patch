@@ -19,7 +19,7 @@ index bacb41e..3ecf201 100644
  
  (defcustom eshell-tar-regexp
 -  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
-+  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|xz\\|Z\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst\\)\\'"
    "Regular expression used to match tar file names."
    :version "24.1"			; added xz
    :type 'regexp)
@@ -58,7 +58,7 @@ index d0ae939..1f63182 100644
  
  (defcustom pcmpl-gnu-tarfile-regexp
 -  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\)\\'"
-+  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst)\\'"
++  "\\.t\\(ar\\(\\.\\(gz\\|bz2\\|Z\\|xz\\)\\)?\\|gz\\|a[zZ]\\|z2\\|xz\\|zst\\)\\'"
    "A regexp which matches any tar archive."
    :version "24.3"                       ; added xz
    :type 'regexp)
