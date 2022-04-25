@@ -1,18 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='noto_fonts'
-vers='2017_10_24'
-url="https://github.com/googlei18n/noto-fonts/archive/v${vers/_/-}-phase3-second-cleanup.tar.gz"
+vers='20201206_phase3'
+url="https://github.com/googlei18n/noto-fonts/archive/v${vers/_/-}.tar.gz"
 verify=""
 arch=noarch
-build=B2
-src="noto-fonts-${vers//_/-}-phase3-second-cleanup"
+build=B1
+src="noto-fonts-${vers//_/-}"
 OPT_CONFIG=''
 DOCS='LICENSE NEWS README.md'
 patchfiles=''
-compress=txz
+addfiles="46-noto-mono.conf
+        46-noto-sans.conf
+        46-noto-serif.conf
+        66-noto-mono.conf
+        66-noto-sans.conf
+        66-noto-serif.conf"
+compress=tzst
 install_fonts_families=("NotoSans" "NotoSerif" "NotoSansDisplay" "NotoSerifDisplay" "NotoSansMono"
-		      "NotoMono" "NotoSansSymbols" "NotoSansSymbols2")
+		"NotoSansSymbols" "NotoSansSymbols2")
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -43,7 +49,13 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  echo "There is nothing to do."
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
 fi
     
 if [ $opt_build -eq 1 ] ; then
@@ -57,12 +69,9 @@ if [ $opt_package -eq 1 ] ; then
 
   for font in ${install_fonts_families[@]}
   do
-    install -v -Dm644 unhinted/${font}-*.tt[fc] -t $P/usr/share/fonts/noto/
-    install -v -Dm644 hinted/${font}-*.tt[fc] -t $P/usr/share/fonts/noto/
+    install -v -Dm644 unhinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
+    install -v -Dm644 hinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
   done
-
-  # Already in NotoSans-*.ttc
-  rm -v $P/usr/share/fonts/noto/NotoSans-{Bold,BoldItalic,Italic,Regular}.ttf
 
   install -v -Dm644 $W/*.conf -t $P/etc/fonts/conf.avail/
   install -v -dm755 $P/etc/fonts/conf.d/
