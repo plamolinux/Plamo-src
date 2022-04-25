@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='noto_fonts_emoji'
-vers='2018_01_02'
-url="https://github.com/googlei18n/noto-emoji/archive/v${vers//_/-}-flag-update.tar.gz"
+pkgbase='noto_fonts_cjk'
+vers="20220126"
+url="https://github.com/googlefonts/noto-cjk.git"
+commitid="473da44c32fec739db7e5458c81a833513cb4084"
 verify=""
 arch=noarch
 build=B1
-src="noto-emoji-${vers//_/-}-flag-update"
-OPT_CONFIG=""
-DOCS='AUTHORS LICENSE README.md emoji_aliases.txt emoji_annotations.txt unknown_flag_aliases.txt'
+src="noto-cjk"
+OPT_CONFIG=''
+DOCS="LICENSE README.md"
+addfiles="70-noto-cjk.conf"
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,9 +43,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  echo "There is nothing to do."
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   echo "There is nothing to do."
 fi
@@ -53,16 +61,13 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
 
-  # Install fonts
-  install -Dm644 -v fonts/*.ttf -t $P/usr/share/fonts/noto/
-
-  # Install conf files
-  install -Dm644 -v $W/*.conf -t $P/etc/fonts/conf.avail/
-  install -dm755 -v $P/etc/fonts/conf.d/
-  for f in $P/etc/fonts/conf.avail/*
+  for d in Sans Serif
   do
-    ln -s ../conf.avail/$(basename $f) $P/etc/fonts/conf.d/$(basename $f)
+      install -Dm644 -v $d/OTC/*.ttc -t $P/usr/share/fonts/noto-cjk/
   done
+  install -Dm644 -v $W/70-noto-cjk.conf $P/etc/fonts/conf.avail/70-noto-cjk.conf
+  install -dm755 -v $P/etc/fonts/conf.d/
+  ln -vsf ../conf.avail/70-noto-cjk.conf $P/etc/fonts/conf.d/70-noto-cjk.conf
 
 ################################
 #      install tweaks
