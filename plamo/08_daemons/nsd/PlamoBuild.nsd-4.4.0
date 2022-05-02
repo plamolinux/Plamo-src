@@ -1,13 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nsd'
-vers="4.3.7"
+vers="4.4.0"
 url="https://www.nlnetlabs.nl/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-pidfile=/run/nsd/nsd.pid
+	    --disable-systemd
+	    --enable-tcp-fastopen
 	    --enable-ratelimit
 	    --enable-relro-now
 	    --enable-pie"
