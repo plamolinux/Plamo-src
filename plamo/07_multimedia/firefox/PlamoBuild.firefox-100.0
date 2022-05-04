@@ -8,7 +8,7 @@ langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/x
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
@@ -119,16 +119,25 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
+  for p in toml pysolfc
+  do
+      pip3 list | grep $p
+      if [ $? -ne 0 ]; then
+          pip3 install --user $p
+      fi
+  done
+
   # Fix a problem with certain versions of ICU
   # sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
+
 fi
 
 if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  #export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
-  export MACH_USE_SYSTEM_PYTHON=1
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
+  #export MACH_USE_SYSTEM_PYTHON=1
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
