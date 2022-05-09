@@ -61,6 +61,8 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
   done
 
+  ( cd po && intltool-update -p )
+
   sed -i 's/-lsystemd/-lelogind/' driver/Makefile.in
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
