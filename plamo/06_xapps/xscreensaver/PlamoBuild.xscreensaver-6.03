@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='INSTALL README README.VMS README.hacking'
 addfiles="xscreensaver.pam"
-patchfiles="0001-Fix-po-Makefile.in.in-to-be-built.patch"
+patchfiles="0001_xscreensaver-6.03_ja.po.diff 0001-Fix-po-Makefile.in.in-to-be-built.patch"
 compress=tzst
 ##############################################################
 
