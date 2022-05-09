@@ -12,7 +12,7 @@ OPT_CONFIG=''
 DOCS='INSTALL README README.VMS README.hacking'
 addfiles="xscreensaver.pam"
 patchfiles='0001_xscreensaver-6.03_ja.po.diff'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
