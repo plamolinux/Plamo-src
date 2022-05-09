@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='INSTALL README README.VMS README.hacking'
 addfiles="xscreensaver.pam"
-patchfiles='0001_xscreensaver-6.03_ja.po.diff'
+patchfiles="0001-Fix-po-Makefile.in.in-to-be-built.patch"
 compress=tzst
 ##############################################################
 
@@ -61,9 +61,17 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
   done
 
-  ( cd po && intltool-update -p )
-
   sed -i 's/-lsystemd/-lelogind/' driver/Makefile.in
+
+  pushd po
+  sed -i Makefile.in.in \
+      -e "\@^POFILES[ \t]*=@s@^.*@POTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " $f" ; done)@" \
+      -e "\@^GMOFILES[ \t]*=@s@^.*@GMOTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
+      -e "\@^CATALOGS[ \t]*=@s@^.*@CATALOGS\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
+      -e "\@^CATOBJEXT[ \t]*=@s@^.*@CATOBJEXT\t= .gmo@" \
+      -e "\@^INSTOBJEXT[ \t]*=@s@^.*@INSTOBJEXT\t= .mo@" \
+      -e "\@^MKINSTALLDIRS[ \t]*=@s@^.*@MKINSTALLDIRS\t= install -d@"
+  popd
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
