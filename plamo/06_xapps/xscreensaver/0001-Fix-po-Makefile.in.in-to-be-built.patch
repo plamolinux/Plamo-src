@@ -1,0 +1,50 @@
+From be50605b214bdfb49af4e9c2a03e9485ceef5844 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 9 May 2022 22:41:06 +0900
+Subject: [PATCH] Fix po/Makefile.in.in to be built
+
+manually specify ja.po, ja.gmo
+---
+ po/Makefile.in.in | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/po/Makefile.in.in b/po/Makefile.in.in
+index 03e816f..4d1ea3c 100644
+--- a/po/Makefile.in.in
++++ b/po/Makefile.in.in
+@@ -121,7 +121,7 @@ INSTALL_DATA = @INSTALL_DATA@
+ # path of the install program.  --jwz.
+ # MKINSTALLDIRS = $(top_builddir)/@MKINSTALLDIRS@
+ 
+-MKINSTALLDIRS = @MKINSTALLDIRS@
++MKINSTALLDIRS	= install -d
+ 
+ CC = @CC@
+ #GENCAT = @GENCAT@
+@@ -145,8 +145,8 @@ SOURCES =
+ # Feb 2022, jwz: now these are undefined. WTF.
+ #POFILES = @POFILES@
+ #GMOFILES = @GMOFILES@
+-POFILES = $(shell echo *.po)
+-GMOFILES = $(shell echo *.gmo)
++POTFILES	= ja.po
++GMOTFILES	= ja.gmo
+ 
+ DISTFILES_1 = ChangeLog Makefile.in.in POTFILES.in update.sh
+ DISTFILES = $(DISTFILES_1) $(GETTEXT_PACKAGE).pot \
+@@ -157,9 +157,9 @@ TARFILES = $(DISTFILES_1) $(POFILES) $(SOURCES)
+ POTFILES = \
+ # This comment gets stripped out
+ 
+-CATALOGS = @CATALOGS@
+-CATOBJEXT = @CATOBJEXT@
+-INSTOBJEXT = @INSTOBJEXT@
++CATALOGS	= ja.gmo
++CATOBJEXT	= .gmo
++INSTOBJEXT	= .mo
+ 
+ .SUFFIXES:
+ .SUFFIXES: .c .o .po .pox .gmo .mo .msg .cat
+-- 
+2.35.3
+

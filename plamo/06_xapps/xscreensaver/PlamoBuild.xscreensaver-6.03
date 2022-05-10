@@ -6,13 +6,13 @@ url="http://www.jwz.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 digest="md5sum:7b8dbef90fdbf7260ca6df13a010ff92"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=''
 DOCS='INSTALL README README.VMS README.hacking'
 addfiles="xscreensaver.pam"
-patchfiles=''
-compress=txz
+patchfiles="0001_xscreensaver-6.03_ja.po.diff 0001-Fix-po-Makefile.in.in-to-be-built.patch"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -62,6 +62,16 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   sed -i 's/-lsystemd/-lelogind/' driver/Makefile.in
+
+  pushd po
+  sed -i Makefile.in.in \
+      -e "\@^POFILES[ \t]*=@s@^.*@POTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " $f" ; done)@" \
+      -e "\@^GMOFILES[ \t]*=@s@^.*@GMOTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
+      -e "\@^CATALOGS[ \t]*=@s@^.*@CATALOGS\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
+      -e "\@^CATOBJEXT[ \t]*=@s@^.*@CATOBJEXT\t= .gmo@" \
+      -e "\@^INSTOBJEXT[ \t]*=@s@^.*@INSTOBJEXT\t= .mo@" \
+      -e "\@^MKINSTALLDIRS[ \t]*=@s@^.*@MKINSTALLDIRS\t= install -d@"
+  popd
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
