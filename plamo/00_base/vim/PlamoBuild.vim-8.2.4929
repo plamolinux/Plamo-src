@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='vim'
-vers='8.2.4563'
+vers='8.2.4929'
 url="http://github.com/vim/vim/archive/v${vers}/vim-${vers}.tar.gz"
 digest=""
 arch=`uname -m`
@@ -10,7 +10,7 @@ src="vim-${vers}"
 OPT_CONFIG='--enable-multibyte --enable-gui=no --without-x --disable-gpm'
 DOCS='README.md README.txt README_ami.txt README_amibin.txt README_amisrc.txt README_bindos.txt README_dos.txt README_extra.txt README_mac.txt README_ole.txt README_os2.txt README_os390.txt README_src.txt README_srcdos.txt README_unix.txt README_vms.txt README_w32s.txt uninstal.txt'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
