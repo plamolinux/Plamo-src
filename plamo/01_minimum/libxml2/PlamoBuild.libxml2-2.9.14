@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.9.13'
+vers='2.9.14'
 url="https://download.gnome.org/sources/libxml2/${vers%.*}/libxml2-${vers}.tar.xz"
-digest="md5sum:824470f8cc325ae6b01f174b842c321f"
+digest="md5sum:b7b3029ac6beb32a7925225515f83ca3"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -11,7 +11,7 @@ OPT_CONFIG="--disable-static --with-history --with-threads --without-icu --docdi
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
 blfspatch=""
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
