@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='btrfs_progs'
-vers='4.14'
+vers="5.15"
 url="https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="btrfs-progs-v${vers}"
-OPT_CONFIG="--bindir=/bin --disable-documentation --disable-zstd"
+OPT_CONFIG="--bindir=/bin --disable-documentation"
 DOCS='COPYING INSTALL README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
