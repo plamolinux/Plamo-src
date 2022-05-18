@@ -1,16 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsyslog'
-vers='8.37.0'
-url="http://www.rsyslog.com/files/download/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="sha256sum:295c289b4c8abd8f8f3fe35a83249b739cedabe82721702b910255f9faf147e7"
+vers='8.2204.1'
+url="https://www.rsyslog.com/files/download/rsyslog/rsyslog-${vers}.tar.gz"
+digest="sha256sum:a6d731e46ad3d64f6ad4b19bbf1bf56ca4760a44a24bb96823189dc2e71f7028"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--sbindir=/sbin --enable-mail --disable-liblogging-stdlog --disable-libcurl"
+OPT_CONFIG="--sbindir=/sbin
+	--enable-mail
+	--enable-imfile
+	--enable-imptcp"
 DOCS='AUTHORS COPYING COPYING.ASL20 COPYING.LESSER ChangeLog INSTALL NEWS README README.md'
 patchfiles=''
-compress=txz
+addfiles="rsyslog.conf rsyslog.logrotate rsyslogd.init"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,6 +45,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
