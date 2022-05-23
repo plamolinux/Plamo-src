@@ -2,13 +2,13 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="100.0"
+vers="100.0.2"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
@@ -126,9 +126,6 @@ if [ $opt_config -eq 1 ] ; then
           pip3 install --user $p
       fi
   done
-
-  # Fix a problem with certain versions of ICU
-  # sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
 
 fi
 
