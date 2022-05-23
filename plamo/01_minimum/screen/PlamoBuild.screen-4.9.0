@@ -63,9 +63,9 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+  if [ -f autogen.sh ] ; then
+    sh ./autogen.sh
+  fi
   sed -i -e "s%/usr/local/etc/screenrc%/etc/screenrc%" {etc,doc}/*
 
   cd $B
