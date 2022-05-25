@@ -6,7 +6,7 @@ url="https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.4.10/wirepl
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="wireplumber-0.4.10"
 OPT_CONFIG="
   -Dsystem-lua=true 
@@ -97,18 +97,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
-
-# Add sample configuation files:
-mkdir -p $P/etc/xdg/autostart
-cp -a $W/wireplumber.desktop.sample $P/etc/xdg/autostart
-chown root:root $P/etc/xdg/autostart/*
-chmod 644 $P/etc/xdg/autostart/*
-
-mkdir -p $P/usr/sbin
-cp -a $W/wireplumber-disable.sh $P/usr/sbin
-cp -a $W/wireplumber-enable.sh $P/usr/sbin
-chown root:root $P/usr/sbin/wireplumber-disable.sh $P/usr/sbin/wireplumber-enable.sh
-chmod 755 $P/usr/sbin/wireplumber-disable.sh $P/usr/sbin/wireplumber-enable.sh
 
 ################################
 #      install tweaks
