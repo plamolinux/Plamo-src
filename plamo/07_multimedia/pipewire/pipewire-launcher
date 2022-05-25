@@ -1,0 +1,23 @@
+# This is based on gentoo-pipewire-launcher
+# https://gitweb.gentoo.org/repo/gentoo.git/tree/media-video/pipewire/files/gentoo-pipewire-launcher.in
+
+# kill all existing processes before starting new processes
+pkill -u "${USER}" -x pipewire\|wireplumber 1>/dev/null 2>&1
+
+# core daemon
+/usr/bin/pipewire &
+
+# The so called pipewire-pulse daemon used for PulseAudio compatibility.
+# Commenting this out will stop the PA proxying daemon from starting,
+# however ALSA (with pipewire-alsa), JACK (with jack-sdk) and PW API using
+# clients will still have access to audio and may end up clashing with
+# non-PW apps over HW control (most notably, /usr/bin/pulseaudio daemon).
+/usr/bin/pipewire -c pipewire-pulse.conf &
+
+# See. https://bugs.gentoo.org/822498
+sleep 1
+
+# Finally a session manager is required for PipeWire to do anything.
+if [ -x /usr/bin/wireplumber ]; then
+  exec /usr/bin/wireplumber
+fi
