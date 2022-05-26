@@ -1,19 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase="pulseaudio"
-vers="14.1"
+vers="15.0"
 url="https://www.freedesktop.org/software/pulseaudio/releases/pulseaudio-${vers}.tar.xz"
-verify=""
-digest="${url}.sha256"
+verify="${url}.sha256sum"
+digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="pulseaudio-${vers}"
-OPT_CONFIG="-Dgstreamer=auto"
-DOCS="ABOUT-NLS LICENSE NEWS README meson_options.txt todo"
+OPT_CONFIG="--buildtype=release
+	-Ddatabase=gdbm
+	-Ddoxygen=false
+	-Dbashcompletiondir=no
+	-Dzshcompletiondir=no
+	-Delogind=enabled"
+DOCS="LICENSE NEWS README doc todo"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -42,6 +47,7 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
 
     for f in $addfiles $patchfiles
@@ -63,13 +69,22 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+
+    # for mate
+    echo "X-MATE-Autostart-Phase=Initialization" >> src/daemon/pulseaudio.desktop.in
+
+    # suspended by socket activation
+    sed -e '/autospawn/iautospawn = no' -i src/pulse/client.conf.in
+
+    # Disable cork-request module, can result in e.g. media players unpausing
+    # when there's a Skype call incoming
+    sed -e 's|@PACTL_BINARY@ load-module module-x11-cork-request|#&|' \
+	-i src/daemon/start-pulseaudio-x11.in
+
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -92,12 +107,20 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P ninja install
 
+  # Running PulseAudio as a system-wide daemon is not recommended.
+  rm -rfv $P/etc/dbus-1
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  # disable autostart on desktop environment
+  # desktop file is saved in docdir
+  mv -v $P/etc/xdg/autostart/pulseaudio.desktop $docdir/$src/pulseaudio.desktop.sample
+  rm -vrf $P/etc/xdg/autostart
 
 #############################
 #   convert symlink to null file and
