@@ -4,7 +4,7 @@ pkgbase='lsb_release'
 vers='1.4'
 url="http://sourceforge.net/projects/lsb/files/${pkgbase}/${vers}/lsb-release-${vers}.tar.gz"
 arch=`uname -m`
-build=B5
+build=B6
 src="lsb-release-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ChangeLog INSTALL README lsb-release.template lsb_release lsb_release.examples'
@@ -71,7 +71,7 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m 644 lsb_release.1 $P/usr/share/man/man1/lsb_release.1
   install -v -m 755 lsb_release $P/usr/bin/lsb_release
   cat <<EOF > $P/etc/plamo-release
-Plamo Linux release 7.4
+Plamo Linux release 8.0-dev
 EOF
 
 ################################
