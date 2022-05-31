@@ -13,7 +13,7 @@ DOCS="AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE docs meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
