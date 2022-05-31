@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B2
 src="appstream-glib-appstream_glib_0_7_18"
-OPT_CONFIG=""
+OPT_CONFIG="-Drpm=false -Dgtk-doc=false"
 DOCS="AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE docs meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
