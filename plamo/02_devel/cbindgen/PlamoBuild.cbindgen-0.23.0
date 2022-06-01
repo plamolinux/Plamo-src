@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase="cbindgen"
-vers="0.19.0"
+vers="0.23.0"
 url="https://github.com/eqrion/cbindgen/archive/v${vers}/cbindgen-${vers}.tar.gz"
 verify=""
-digest="md5sum:b707b093702d4f1995f9a97f44ed081d"
+digest="md5sum:60f7d909a91c4740af08ca5fa1f049c3"
 arch=`uname -m`
 build=B1
 src="cbindgen-${vers}"
 OPT_CONFIG=""
 DOCS="LICENSE README.md"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
