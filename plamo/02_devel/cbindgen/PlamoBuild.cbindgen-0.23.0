@@ -11,7 +11,7 @@ src="cbindgen-${vers}"
 OPT_CONFIG=""
 DOCS="LICENSE README.md"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
