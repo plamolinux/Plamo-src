@@ -6,7 +6,7 @@ url="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive
 digest=""
 verify=
 arch=`uname -m`
-build=B1
+build=B2
 src="Intel-Linux-Processor-Microcode-Data-Files-microcode-${vers}"
 OPT_CONFIG=""
 DOCS=''
@@ -59,11 +59,13 @@ if [ $opt_package -eq 1 ] ; then
 
   install -dm755 -v $P/$MICDIRINTEL
   install -m644  -v $S/intel-ucode/* $P/$MICDIRINTEL/
-  install -Dm644 -v $S/releasenote $docdir/$src/releasenote
+  install -Dm644 -v $S/releasenote.md $docdir/$src/releasenote.md
 
   mkdir -p $P/install
   cat <<"EOF" >> $P/install/initpkg
-echo 1 > /sys/devices/system/cpu/microcode/reload
+if [ -f /sys/devices/system/cpu/microcode/reload ]; then
+  echo 1 > /sys/devices/system/cpu/microcode/reload
+fi
 EOF
 
 ################################
