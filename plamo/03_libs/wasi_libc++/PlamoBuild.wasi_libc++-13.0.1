@@ -15,7 +15,9 @@ arch=`uname -m`
 build=B1
 src=
 OPT_CONFIG=
-DOCS="CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT README.txt RELEASE_TESTERS.TXT docs"
+DOCS=""
+DOCS_libcxx="CMakeLists.txt CREDITS.TXT LICENSE.TXT TODO.TXT"
+DOCS_libcxxabi="CMakeLists.txt CREDITS.TXT LICENSE.TXT"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -150,12 +152,22 @@ if [ $opt_package -eq 1 ] ; then
   DESTDIR=$P cmake --install build-libcxx -v
   DESTDIR=$P cmake --install build-libcxxabi -v
 
+  src="wasi-libc++-13.0.1"
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  for d in $DOCS_libcxx
+  do
+      install -Dm644 -v $W/libcxx/$d $docdir/$src/libcxx/$d
+  done
+  for d in $DOCS_libcxxabi
+  do
+      install -Dm644 -v $W/libcxxabi/$d $docdir/$src/libcxxabi/$d
+  done
 
 #############################
 #   convert symlink to null file and
