@@ -1,17 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gegl"
-vers="0.4.16"
-url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.bz2"
+vers="0.4.34"
+url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="gegl-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
-DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LESSER ChangeLog INSTALL NEWS README"
+OPT_CONFIG="-Ddocs=false"
+DOCS="AUTHORS COPYING COPYING.LESSER MAINTAINERS meson_options.txt"
 patchfiles=""
-compress=txz
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -40,7 +42,17 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -56,9 +68,9 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -67,8 +79,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -80,8 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
