@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libcap'
-vers='2.51'
+vers='2.54'
 url="https://kernel.org/pub/linux/libs/security/linux-privs/${pkgbase}2/${pkgbase}-${vers}.tar.xz"
-#verify="https://mirrors.edge.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${vers}.tar.sign"
+verify="https://mirrors.edge.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="libcap-${vers}"
@@ -56,7 +56,8 @@ if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
     export CFLAGS="$CFLAGS -Dlinux"
-    GO="" make KERNEL_HEADERS=/usr/include lib=/${libdir}
+    #GO="" make KERNEL_HEADERS=/usr/include lib=/${libdir}
+    GO="" make KERNEL_HEADERS=/usr/include lib=${libdir}
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -68,6 +69,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
+  #GO="" make DESTDIR=$P lib=${libdir} RAISE_SETFCAP=no install
   GO="" make DESTDIR=$P lib=${libdir} RAISE_SETFCAP=no install
 
   chmod -v 755 $P/${libdir}/libcap.so
@@ -78,6 +80,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -sv /${libdir}/$(readlink $P/${libdir}/libcap.so.2) $P/usr/${libdir}/libcap.so
 
   mv -v $P/${libdir}/pkgconfig $P/usr/lib/pkgconfig
+
+  # rewrite libdir in pkgconfig to /usr/lib
+  sed -i -e 's|/lib|/usr/lib|' $P/usr/lib/pkgconfig/*.pc
 
 ################################
 #      install tweaks
