@@ -78,6 +78,8 @@ if [ $opt_package -eq 1 ] ; then
   rm -vf $P/${libdir}/libcap.so
   mkdir -pv $P/usr/lib
   ln -sv /${libdir}/$(readlink $P/${libdir}/libcap.so.2) $P/usr/${libdir}/libcap.so
+  rm -vf $P/${libdir}/libpsx.so
+  ln -sv /${libdir}/$(readlink $P/${libdir}/libpsx.so.2) $P/usr/${libdir}/libpsx.so
 
   mv -v $P/${libdir}/pkgconfig $P/usr/lib/pkgconfig
 
