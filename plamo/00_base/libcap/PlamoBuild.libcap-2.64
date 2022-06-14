@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libcap'
-vers='2.54'
+vers='2.64'
 url="https://kernel.org/pub/linux/libs/security/linux-privs/${pkgbase}2/${pkgbase}-${vers}.tar.xz"
 verify="https://mirrors.edge.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="libcap-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=''
 DOCS='CHANGELOG License README pam_cap/capability.conf'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -49,24 +49,26 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
-    sed -i '/install -m.*STA/d' libcap/Makefile
+    # prevent installing static libraries
+    # sed -i '/install -m.*STA/d' libcap/Makefile
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
     export CFLAGS="$CFLAGS -Dlinux"
-    #GO="" make KERNEL_HEADERS=/usr/include lib=/${libdir}
-    GO="" make KERNEL_HEADERS=/usr/include lib=${libdir}
+    GO="" make DYNAMIC=yes KERNEL_HEADERS=/usr/include lib=lib
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
+  P2=$W/work_static
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  if [ -d $P2 ] ; then rm -rf $P2 ; fi ; mkdir -p $P2
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   #GO="" make DESTDIR=$P lib=${libdir} RAISE_SETFCAP=no install
@@ -75,8 +77,8 @@ if [ $opt_package -eq 1 ] ; then
   chmod -v 755 $P/${libdir}/libcap.so
 
   # create link in /usr/lib
-  rm -vf $P/${libdir}/libcap.so
   mkdir -pv $P/usr/lib
+  rm -vf $P/${libdir}/libcap.so
   ln -sv /${libdir}/$(readlink $P/${libdir}/libcap.so.2) $P/usr/${libdir}/libcap.so
   rm -vf $P/${libdir}/libpsx.so
   ln -sv /${libdir}/$(readlink $P/${libdir}/libpsx.so.2) $P/usr/${libdir}/libpsx.so
@@ -85,6 +87,15 @@ if [ $opt_package -eq 1 ] ; then
 
   # rewrite libdir in pkgconfig to /usr/lib
   sed -i -e 's|/lib|/usr/lib|' $P/usr/lib/pkgconfig/*.pc
+
+  # static lib
+  install -Dm755 -v $P/${libdir}/libcap.a $P2/usr/${libdir}/libcap.a
+  install -Dm755 -v $P/${libdir}/libpsx.a $P2/usr/${libdir}/libpsx.a
+  rm -vf $P/${libdir}/libcap.a
+  rm -vf $P/${libdir}/libpsx.a
+
+  # capability.conf
+  install -v -Dm644 $S/pam_cap/capability.conf $P/etc/security/capability.conf
 
 ################################
 #      install tweaks
@@ -105,4 +116,10 @@ y
 1
 EOF
 
+  pkg=${pkgbase}_static-$vers-$arch-$build
+  cd $P2
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
 fi
