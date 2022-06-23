@@ -99,6 +99,7 @@ if [ $opt_package -eq 1 ] ; then
   rm -rfv "$P"/usr/lib/pkgconfig
   rm -rfv "$P"/usr/include
   rm -rfv "$P"/usr/bin
+  rm -fv "$P"/usr/lib/libvpx.so
 
 ################################
 #      install tweaks
