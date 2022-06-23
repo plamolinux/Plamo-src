@@ -1,5 +1,6 @@
 #!/bin/sh
 ##############################################################
+<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
 pkgbase="pipewire"
 vers="0.3.51"
 url="https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/${vers}/pipewire-${vers}.tar.bz2"
@@ -17,17 +18,30 @@ DOCS="COPYING INSTALL.md LICENSE NEWS README.md doc meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles="pipewire-launcher pipewire.desktop"
+========
+pkgbase='vim'
+vers='8.2.5151'
+url="http://github.com/vim/vim/archive/v${vers}/vim-${vers}.tar.gz"
+digest=""
+arch=`uname -m`
+build=B1
+src="vim-${vers}"
+OPT_CONFIG='--enable-multibyte --enable-gui=no --without-x --disable-gpm'
+DOCS='README.md README.txt README_ami.txt README_amibin.txt README_amisrc.txt README_bindos.txt README_dos.txt README_extra.txt README_mac.txt README_ole.txt README_os2.txt README_os390.txt README_src.txt README_srcdos.txt README_unix.txt README_vms.txt README_w32s.txt uninstal.txt'
+patchfiles=''
+>>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
 compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-#
+# 
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -48,6 +62,7 @@ fi
 
 
 if [ $opt_config -eq 1 ] ; then
+<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
 
     for f in $addfiles $patchfiles
     do
@@ -57,17 +72,20 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+========
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+>>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
 ######################################################################
-#  out of tree build. patch apply in src dir
+#  copy sources, so need patch in the build dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-    cd $S
+    cd $B
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
             touch .${patch}
         fi
     done
+<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
@@ -75,18 +93,33 @@ if [ $opt_config -eq 1 ] ; then
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
     meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
+========
+
+    # change the default location of vimrc file
+    echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
+>>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
     if [ $? != 0 ]; then
-        echo "configure error. $0 script stop"
-        exit 255
+	echo "configure error. $0 script stop"
+	exit 255
     fi
 fi
-
+    
 if [ $opt_build -eq 1 ] ; then
     cd $B
+<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
     ninja
+========
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+>>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
     if [ $? != 0 ]; then
-        echo "build error. $0 script stop"
-        exit 255
+	echo "build error. $0 script stop"
+	exit 255
     fi
 fi
 
@@ -94,6 +127,7 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
 
   DESTDIR=$P ninja install
 
@@ -104,16 +138,33 @@ if [ $opt_package -eq 1 ] ; then
   # install launcher
   install -v -Dm755 $W/pipewire-launcher $P/usr/bin/pipewire-launcher
   install -v -Dm644 $W/pipewire-launcher $P/usr/share/doc/$src/pipewire-launcher
+========
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+>>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
+
+  # remove desktop files and icons
+  rm -rfv $P/usr/share/{applications,icons}
+
+  # fr/  fr.ISO8859-1/  fr.UTF-8/  it/  it.ISO8859-1/  it.UTF-8/  ja/  man1/  pl/  pl.ISO8859-2/  pl.UTF-8/  ru.KOI8-R/  ru.UTF-8/
+  rm -rfv $P/usr/share/man/{fr,it,pl,ru}*
+
+  ln -sfv vim $P/usr/bin/vi
+
+  for L in $P/usr/share/man/{,*/}man1/vim.1;
+  do
+      ln -sfv vim.1 $(dirname $L)/vi.1
+  done
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man,
+#  strip binaries, delete locale except ja, compress man, 
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and
+#   convert symlink to null file and 
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
