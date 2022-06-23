@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libvpx"
-vers="1.9.0"
+vers="1.11.0"
 url="https://github.com/webmproject/libvpx/archive/v${vers}.tar.gz"
 verify=""
 digest=""
@@ -13,7 +13,7 @@ DOCS="AUTHORS CHANGELOG LICENSE README"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
