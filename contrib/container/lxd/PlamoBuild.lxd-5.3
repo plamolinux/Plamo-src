@@ -9,7 +9,8 @@ build=B1
 src="lxd-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
-#patchfiles="dqlite.patch"
+# This patch needs only LXD 5.1,5.2,5.3
+patchfiles="dont-fail-apparmor.patch"
 patchfiles=""
 compress=tzst
 ##############################################################
