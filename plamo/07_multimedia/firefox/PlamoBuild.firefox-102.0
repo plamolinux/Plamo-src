@@ -119,13 +119,17 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
-  for p in toml pysolfc
-  do
-      pip3 list | grep $p
-      if [ $? -ne 0 ]; then
-          pip3 install --user $p
-      fi
-  done
+  #for p in toml pysolfc
+  #do
+  #    pip3 list | grep $p
+  #    if [ $? -ne 0 ]; then
+  #        pip3 install --user $p
+  #    fi
+  #done
+  export PATH="$HOME/.cargo/bin:$PATH"
+  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
+  ./mach configure
 
 fi
 
@@ -134,7 +138,6 @@ if [ $opt_build -eq 1 ] ; then
   export PATH="$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
-  #export MACH_USE_SYSTEM_PYTHON=1
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
@@ -157,6 +160,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $S
   export MACH_USE_SYSTEM_PYTHON=1
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
