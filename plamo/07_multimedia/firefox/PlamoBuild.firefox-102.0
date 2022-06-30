@@ -12,7 +12,7 @@ build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-patchfiles=""
+patchfiles="zstandard-0.18.0.diff"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
