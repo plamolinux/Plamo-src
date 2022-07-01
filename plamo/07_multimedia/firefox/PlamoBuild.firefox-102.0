@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="101.0"
+vers="102.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -11,8 +11,8 @@ arch=`uname -m`
 build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
-DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
-patchfiles=""
+DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
+patchfiles="zstandard-0.18.0.diff"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
@@ -127,6 +127,9 @@ if [ $opt_config -eq 1 ] ; then
       fi
   done
 
+  cd $S
+  sed -i '/ROOT_CLIP_CHAIN/d' gfx/webrender_bindings/webrender_ffi.h
+
 fi
 
 if [ $opt_build -eq 1 ] ; then
@@ -134,7 +137,6 @@ if [ $opt_build -eq 1 ] ; then
   export PATH="$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
   export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
-  #export MACH_USE_SYSTEM_PYTHON=1
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
@@ -155,9 +157,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
-  export MACH_USE_SYSTEM_PYTHON=1
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export LDFLAGS='-Wl,--as-needed'
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
   DESTDIR=$P ./mach install
 
   # plugin
