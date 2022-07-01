@@ -5,7 +5,7 @@ vers="5.3"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="lxd-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
@@ -97,17 +97,17 @@ if [ $opt_package -eq 1 ] ; then
   cp -av vendor/raft/.libs/libraft.so* $P/usr/lib/lxd/
 
   # message
-  install -D -m644 src/github.com/lxc/lxd/po/ja.mo $P/usr/share/locale/ja/LC_MESSAGES/lxd.mo
+  install -D -m644 po/ja.mo $P/usr/share/locale/ja/LC_MESSAGES/lxd.mo
 
   # directory
   install -d $P/var/log/lxd
   install -d $P/var/lib/lxd
 
   # init file
-  install -D -m755 $W/lxd.init $P/etc/rc.d/init.d/lxd
+  install -D -v -m755 $W/lxd.init $P/etc/rc.d/init.d/lxd
 
   #
-  install -D -m644 src/github.com/lxc/lxd/scripts/bash/lxd-client \
+  install -D -v -m644 scripts/bash/lxd-client \
           $P/usr/share/bash-completion/completions/lxc
 
   # initpkg
