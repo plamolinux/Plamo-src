@@ -1,17 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nss'
-vers="3.79"
+vers="3.80"
 url="https://ftp.mozilla.org/pub/security/${pkgbase}/releases/NSS_${vers//./_}_RTM/src/${pkgbase}-${vers}.tar.gz"
 verify=""
-digest="sha1sum:3719dd97c8ec9cb04aa61e6aca41b129b4adc004"
+digest="md5sum:0252ccd1d937f89745acc8fc22043498"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
-#patch_vers="$vers"
-patch_vers="3.78"
+patch_vers="$vers"
 blfs_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/nss-${patch_vers}-standalone-1.patch"
 patchfiles="${blfs_patch_url##*/}"
 compress=tzst
