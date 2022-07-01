@@ -11,7 +11,7 @@ arch=`uname -m`
 build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
-DOCS='AUTHORS LICENSE README.txt other-licenses sourcestamp.txt'
+DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
 patchfiles="zstandard-0.18.0.diff"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
@@ -126,11 +126,6 @@ if [ $opt_config -eq 1 ] ; then
   #        pip3 install --user $p
   #    fi
   #done
-  cd $S
-  export PATH="$HOME/.cargo/bin:$PATH"
-  export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
-  ./mach configure
 
 fi
 
@@ -145,9 +140,9 @@ if [ $opt_build -eq 1 ] ; then
 
   ulimit -n 4096
 
-  if [ -d $W/build ]; then
-    rm -rf $W/build
-  fi
+  #if [ -d $W/build ]; then
+  #  rm -rf $W/build
+  #fi
   ./mach build
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
