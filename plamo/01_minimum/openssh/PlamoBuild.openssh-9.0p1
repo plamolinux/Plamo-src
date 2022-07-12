@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssh'
-vers='8.8p1'
+vers='9.0p1'
 url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 #digest=""
@@ -17,6 +17,7 @@ DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
     TODO"
 #openssl_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/openssh-${vers}-openssl-1.1.0-1.patch"
 patchfiles=""
+addfiles="ssh_disconnect.sh sshd.pam"
 compress=tzst
 ##############################################################
 
@@ -51,6 +52,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
 ######################################################################
 #  copy sources into build directory, patch and make in the build dir
@@ -201,6 +211,9 @@ EOF
 
   chmod +x $P/etc/rc.d/init.d/sshd
 
+  # disconnect ssh sessions before disconnecting network
+  install -v -Dm 755 $W/ssh_disconnect.sh $P/etc/rc.d/init.d/ssh_disconnect
+
   for i in `seq 0 6` ; do
       mkdir -p $P/etc/rc.d/rc$i.d
   done
@@ -211,7 +224,9 @@ EOF
   ( cd $P/etc/rc.d/rc4.d ; ln -sf  ../init.d/sshd S30sshd )
   ( cd $P/etc/rc.d/rc5.d ; ln -sf  ../init.d/sshd S30sshd )
   ( cd $P/etc/rc.d/rc6.d ; ln -sf  ../init.d/sshd K30sshd )
-  
+  ( cd $P/etc/rc.d/rc0.d ; ln -sf  ../init.d/ssh_disconnect K29ssh_disconnect )
+  ( cd $P/etc/rc.d/rc6.d ; ln -sf  ../init.d/ssh_disconnect K29ssh_disconnect )
+
   mkdir -p $P/install
   cat << "EOF" >> $P/install/initpkg
 if [ ! -f /etc/ssh/sshd_config ]; then
