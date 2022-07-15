@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='speexdsp'
-vers='1.2rc3'
+vers='1.2.1'
 url="https://downloads.xiph.org/releases/speex/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:70d9d31184f7eb761192fd1ef0b73333"
+digest="md5sum:e6eb5ddef743a362c8018f260b91dca5"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/speexdsp-${vers}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.blackfin TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
