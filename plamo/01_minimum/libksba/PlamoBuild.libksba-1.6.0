@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libgpg_error'
-vers='1.36'
-url="ftp://ftp.gnupg.org/gcrypt/libgpg-error/libgpg-error-${vers}.tar.bz2"
+pkgbase='libksba'
+vers="1.6.0"
+url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
-src="libgpg-error-${vers}"
+src="${pkgbase}-${vers}"
 OPT_CONFIG=''
-DOCS='ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS'
+DOCS='AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv3 ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
