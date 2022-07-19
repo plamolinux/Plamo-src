@@ -1,16 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libgcrypt'
-vers='1.8.4'
-url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.sig"
+pkgbase='git'
+vers="2.37.1"
+url="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="https://www.kernel.org/pub/software/scm/${pkgbase}/${pkgbase}-${vers}.tar.sign"
+man_url="https://www.kernel.org/pub/software/scm/git/git-manpages-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=''
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-2011 INSTALL LICENSES NEWS README README.GIT THANKS TODO"
+OPT_CONFIG='--with-gitconfig=/etc/gitconfig --without-tcltk --without-python'
+DOCS='COPYING INSTALL README.md command-list.txt'
 patchfiles=''
-compress=txz
+addfiles="git-set-file-times"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -38,43 +40,52 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f ${man_url##*/} ]; then
+    wget $man_url
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
+  cd $B
   for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
+    patch -p1 < $W/$patch
   done
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
 
-  cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make -j3 perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}')
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
   fi
+  make -C contrib/subtree prefix=/usr perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}') all man
+  make -C contrib/diff-highlight prefix=/usr perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}')
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -82,14 +93,21 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
 
-  install -v -dm755 $docdir/$src/doc
+  make install DESTDIR=$P perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}')
+  make -C contrib/subtree prefix=/usr perllibdir=$(/usr/bin/perl -MConfig -wle 'print $Config{installvendorlib}') DESTDIR=$P install install-man
+  cp -v contrib/diff-highlight/diff-highlight $P/usr/libexec/git-core/
 
-  for f in gcrypt.info fips-fsm.{eps,fig,png,pdf} libgcrypt-modules.{eps,fig,png,pdf}
-  do
-    install -v -m644 $S/doc/$f $docdir/$src/doc/$f
-  done
+  # set-file-times
+  install -v -m 755 $W/git-set-file-times $P/usr/libexec/git-core/git-set-file-times
+  install -v -D -m 755 $W/git-set-file-times $docdir/$src/git-set-file-times
+
+  # install man pages
+  install -v -d $P/usr/share/man
+  tar xf $W/${man_url##*/} -C $P/usr/share/man --no-same-owner --no-overwrite-dir
+
+  # remove /usr/lib/perl5
+  rm -rfv $P/usr/lib
 
 ################################
 #      install tweaks

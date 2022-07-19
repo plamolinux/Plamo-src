@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libksba'
-vers='1.3.5'
+pkgbase='libassuan'
+vers="2.5.5"
 url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
-DOCS='AUTHORS COPYING COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv3 ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'
+DOCS='AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-2011 INSTALL NEWS README README.GIT THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
