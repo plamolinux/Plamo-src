@@ -1,17 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase="blueman"
-vers="2.1.4"
-url="https://github.com/blueman-project/blueman/releases/download/${vers}/blueman-${vers}.tar.xz"
+vers="2.3.1"
+url="https://github.com/blueman-project/blueman/releases/download/${vers}/blueman-${vers}.tar.gz"
 verify=""
-digest=""
+digest="md5sum:98852c763b2c2ac00b8c3c14e026a346"
 arch=`uname -m`
 build=B2
 src="blueman-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --with-dhcp-config=/etc/dhcp.conf  --enable-polkit --enable-caja-sendto --enable-thunar-sendto --enable-settings-integration --disable-schemas-compile --disable-appindicator"
 DOCS="CHANGELOG.md COPYING README.md"
+addfiles="ja.gmo ja.po"
 patchfiles="dont-autostart-applet-in-kde.diff"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -52,6 +53,10 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
+    cp -v $W/ja.gmo po/
+    cp -v $W/ja.po po/
+
+    # autoreconf -fi
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
@@ -62,18 +67,11 @@ if [ $opt_config -eq 1 ] ; then
     # need "pip install cython"
     export CYTHONEXEC=/usr/bin/cython
 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
     fi
-
-    # この2修正は無くてもよさそう
-    # I think there's a built-in fallback, but just in case:
-    # sed -i "s,nautilus,thunar,g" blueman/Constants.py*
-
-    # https://github.com/blueman-project/blueman/issues/435
-    # sed -i "s,#!/usr/bin/env python3,#!/usr/bin/python3.7,g" module/_blueman.pyx apps/*
 
 fi
 
@@ -95,7 +93,7 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  # Install default rules allowing users in the netdev group to make changes:
+  # Install default rules allowing users in the dialout group to make changes:
   mkdir -p $P/etc/polkit-1/rules.d
   cat <<"EOF" > $P/etc/polkit-1/rules.d/30-blueman-netdev-allow-access.rules.new
 /* Allow users in netdev group to use blueman feature requiring root without authentication */
@@ -104,7 +102,7 @@ polkit.addRule(function(action, subject) {
          action.id == "org.blueman.dhcp.client" ||
          action.id == "org.blueman.rfkill.setstate" ||
          action.id == "org.blueman.pppd.pppconnect") &&
-        subject.isInGroup("netdev")) {
+        subject.isInGroup("dialout")) {
         return polkit.Result.YES;
     }
 });
@@ -131,6 +129,9 @@ EOF
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
+
+  cp -a $W/ja_LC_MESSAGES $P/usr/share/doc/$pkgbase-$vers
+  rm -rf $P/usr/share/doc/$pkgbase
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
