@@ -8,8 +8,8 @@ digest="md5sum:98852c763b2c2ac00b8c3c14e026a346"
 arch=`uname -m`
 build=B2
 src="blueman-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --with-dhcp-config=/etc/dhcp.conf  --enable-polkit --enable-caja-sendto --enable-thunar-sendto --enable-settings-integration --disable-schemas-compile --disable-appindicator"
-DOCS="CHANGELOG.md COPYING README.md"
+OPT_CONFIG="--disable-static --enable-shared --with-dhcp-config=/etc/dhcp.conf  --enable-polkit --enable-caja-sendto --enable-thunar-sendto --enable-settings-integration --disable-schemas-compile"
+DOCS="CHANGELOG.md COPYING README.md FAQ"
 addfiles="ja.gmo ja.po"
 patchfiles="dont-autostart-applet-in-kde.diff"
 compress=tzst
@@ -53,13 +53,9 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    cp -v $W/ja.gmo po/
-    cp -v $W/ja.po po/
 
     # autoreconf -fi
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
@@ -130,8 +126,8 @@ EOF
 ################################
   convert_links
 
-  cp -a $W/ja_LC_MESSAGES $P/usr/share/doc/$pkgbase-$vers
-  rm -rf $P/usr/share/doc/$pkgbase
+#  DOCS で指定したものと同じものが /usr/share/doc/blueman/ 以下に置かれるので削除
+#  rm -rf $P/usr/share/doc/$pkgbase
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
