@@ -1,29 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='grub'
-vers='2.02'
+vers='2.06'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-unifont_vers="11.0.02"
-unifont_url="https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz"
-grubconfig_vers="7.1"
-grubconfig_url="https://github.com/plamolinux/grubconfig/archive/${grubconfig_vers}.tar.gz"
 verify=""
 arch=`uname -m`
-build=B16
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG_COMMON="
-        --sbindir=/sbin
+	--sbindir=/sbin
         --enable-device-mapper
         --enable-cache-stats
-        --enable-boot-time
         --enable-grub-mkfont
         --enable-grub-mount
-        --disable-mm-debug
+        --enable-boot-time
+        --enable-mm-debug
         --disable-werror"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2015 INSTALL NEWS README THANKS TODO'
-debianpatch="http://http.debian.net/debian/pool/main/g/grub2/grub2_2.02-2.debian.tar.xz"
-patchfiles="grub-2.02-GCC8-alignment.patch grub-2.02-XFS-sparse-inode.patch"
-compress=txz
+# https://github.com/archlinux/svntogit-packages/raw/packages/grub/trunk/0001-00_header-add-GRUB_COLOR_-variables.patch
+patchfiles="0001-00_header-add-GRUB_COLOR_-variables.patch grub-2.06_xfs_v4_inode_fix.patch"
 ## variations for build
 BUILD_VARS="common_bios efi"
 ## "1" to enable IA32-EFI build in Arch x86_64, "0" to disable
@@ -31,6 +26,9 @@ _IA32_EFI_IN_ARCH_X64=1
 if [ $arch = "x86_64" -a $_IA32_EFI_IN_ARCH_X64 -ne 0 ]; then
   BUILD_VARS="$BUILD_VARS efi-i386-in-x86_64"
 fi
+compress='tzst'
+unifont_vers='14.0.04'
+# wget https://ftp.gnu.org/gnu/unifont/unifont-14.0.01/unifont-14.0.01.bdf.gz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -57,20 +55,17 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
-  if [ ! -f ${debianpatch##*/} ]; then
-      wget $debianpatch
-      tar xvf ${debianpatch##*/}
-      rm -vf $W/debian/patches/dpkg_version_comparison.patch
-  fi
-  if [ ! -f $( basename ${unifont_url##*/} .gz ) ]; then
-      wget $unifont_url
-      gzip -d ${unifont_url##*/}
-  fi
-  if [ ! -f ${grubconfig_url##*/} ]; then
-      wget $grubconfig_url
-      tar xvf ${grubconfig_url##*/}
-  fi
+    download_sources
+    if [ ! -f unifont-${unifont_vers}.bdf.gz -o ! -f unifont-${unifont_vers}.bdf ]; then
+	wget https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz
+    fi
+	
+    #  if [ ! -f ${debianpatch##*/} ]; then
+    #      wget $debianpatch
+    #      tar xvf ${debianpatch##*/}
+    #      rm -vf $W/debian/patches/dpkg_version_comparison.patch
+    #  fi
+    
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -85,17 +80,10 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
 
-  for p in $(cat $W/debian/patches/series)
-  do
-      if [ ! -f ."$p" ]; then
-	  patch -Np1 -i $W/debian/patches/$p
-	  touch .${p}
-      fi
-  done
-
-  cp $W/$(basename ${unifont_url##*/} .gz) $S/unifont.bdf
-  sed -i -e 's|/usr/share/fonts/truetype|/usr/share/fonts/TTF|g' configure.ac
-
+  echo "Fix DejaVuSans.ttf location so that grub-mkfont can create *.pf2 files for starfield theme..."
+  sed 's|/usr/share/fonts/dejavu|/usr/share/fonts/dejavu /usr/share/fonts/TTF|g' -i "configure.ac"
+  zcat $W/unifont-${unifont_vers}.bdf.gz > unifont.bdf
+  
   for var in $BUILD_VARS
   do
     echo "Copy the source for building the ${var} part"
@@ -126,9 +114,10 @@ if [ $opt_config -eq 1 ] ; then
     unset LDFLAGS
     unset MAKEFLAGS
 
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
+    autoreconf -ivf
 
     ./configure \
         --prefix=/usr \
@@ -144,7 +133,7 @@ if [ $opt_config -eq 1 ] ; then
   done
 
 fi
-
+    
 if [ $opt_build -eq 1 ] ; then
   for var in $BUILD_VARS
   do
@@ -170,6 +159,10 @@ if [ $opt_package -eq 1 ] ; then
     make install DESTDIR=$P
   done
 
+  # grub-mkconfig がよきにはからってくれるので，
+  # ここに置いても大丈夫っぽい．
+  cp $W/plamo_bg01.png $P/usr/share/grub
+
   # これくらいは書きこんじゃう方が楽な気がする．
   mkdir -p $P/etc/default
   cat <<"EOF" > $P/etc/default/grub.dist
@@ -186,16 +179,18 @@ GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=0 quiet"
 ## default until Plamo 6.x
 ## GRUB_CMDLINE_LINUX_DEFAULT="vga16 unicon=eucjp vt.default_utf8=0 panic_output=7"
 # Command line arguments for all linux entry
-#GRUB_CMDLINE_LINUX=
+GRUB_CMDLINE_LINUX="net.ifnames=0"
 # Distributor
-GRUB_DISTRIBUTOR=Plamo
+GRUB_DISTRIBUTOR="Plamo"
 
-# if gfx mode is enabled, lets config
-# GRUB_GFXMODE=auto
-# GRUB_GFXPAYLOAD_LINUX=keep
+# enable other bootable partition check(default=off)
+# GRUB_DISABLE_OS_PROBER=false
 
 # Preload both GPT and MBR modules so that they are not missed
 GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+
+GRUB_BACKGROUND="/usr/share/grub/plamo_bg01.png"
+GRUB_FONTS="/usr/share/grub/unicode.pf2"
 
 EOF
 
@@ -214,16 +209,16 @@ EOF
       rm -v -f $P/usr/${libdir}/grub/${d}/{kernel.exec,gdb_grub,gmodule.pl}
   done
 
+  # plamo_grubconfig.tar.gz も最新版をダウンロードできるようにすべきだけど，
+  # とりあえずはこのままにしておく．
   echo "Installing plamo tools for grub"
-  cp -av $W/grubconfig-${grubconfig_vers}/{sbin,var} $P/
-  ( cd $W && tar cvf plamo_grubconfig-${grubconfig_vers}.tar grubconfig-${grubconfig_vers}/ )
+  tar  -xvf $W/plamo_grubconfig.tar.gz -C $P
   # 為念
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
       chown root.root $P/sbin/grubconfig* $P/var/log/setup/setup.bootloader
   fi
-  install -D -m 644 -v $W/${debianpatch##*/} $docdir/$src/${debianpatch##*/}
-  install -D -m 644 -v $W/plamo_grubconfig-${grubconfig_vers}.tar $docdir/$src/plamo_grubconfig-${grubconfig_vers}.tar
+  install -D -m 644 -v $W/plamo_grubconfig.tar.gz $docdir/$src/plamo_grubconfig.tar.gz
 
 ################################
 #      install tweaks
