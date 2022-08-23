@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.9.14'
+vers='2.10.0'
 url="https://download.gnome.org/sources/libxml2/${vers%.*}/libxml2-${vers}.tar.xz"
-digest="md5sum:b7b3029ac6beb32a7925225515f83ca3"
+digest="md5sum:54fdcf2404eb5c1ca59ffc82b2edff78"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
