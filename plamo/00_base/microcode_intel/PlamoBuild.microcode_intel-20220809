@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='microcode_intel'
-vers="20220510"
+vers="20220809"
 url="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/microcode-${vers}.tar.gz"
 digest=""
 verify=
 arch=`uname -m`
-build=B3
+build=B1
 src="Intel-Linux-Processor-Microcode-Data-Files-microcode-${vers}"
 OPT_CONFIG=""
 DOCS=''
