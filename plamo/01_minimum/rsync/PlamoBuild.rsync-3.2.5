@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsync'
-vers='3.1.2'
+vers='3.2.5'
 url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
 verify="$url.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--without-included-zlib'
 DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
