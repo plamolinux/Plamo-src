@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers="4.5"
+vers="4.12.3"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
-digest="md5sum:c350da50c2120de6bb29177699d89fe3"
+digest=""
 arch=`uname -m`
-build=B9
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
+build=B1
+src="shadow-${vers}"
+OPT_CONFIG='--disable-static --sysconfdir=/etc --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='disable-nls-manpages.patch'
-compress=txz
+#patchfiles='disable-nls-manpages.patch'
+compress=tzst
 ##############################################################
 # BuildRequirements:
 # plamo/05_ext/docbook.txz/libxslt
@@ -48,7 +48,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy source build, so need patch in the build dir
 ######################################################################
     cd $B
     for patch in $patchfiles ; do
@@ -125,6 +125,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  make -C man install-man DESTDIR=$P
 
   # mv passwd from /usr/bin to /bin
   mv -v $P/usr/bin/passwd $P/bin/passwd
