@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers="4.5"
+vers="4.12.2"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
-digest="md5sum:c350da50c2120de6bb29177699d89fe3"
+digest="md5sum:52637cb34c357acf85c617cf95da34a6"
 arch=`uname -m`
-build=B9
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--sysconfdir=/etc --enable-man --without-selinux --with-libcrack --with-group-name-max-length=32'
+build=B1
+src="shadow-${vers}"
+OPT_CONFIG='--sysconfdir=/etc --without-selinux --with-libcrack --with-group-name-max-length=32'
 DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-patchfiles='disable-nls-manpages.patch'
+#patchfiles='disable-nls-manpages.patch'
 compress=txz
 ##############################################################
 # BuildRequirements:
@@ -48,7 +48,7 @@ fi
 if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  don't copy sources, so need patch in the src dir
+#  copy source build, so need patch in the build dir
 ######################################################################
     cd $B
     for patch in $patchfiles ; do
@@ -147,11 +147,11 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   # mkdir man dirs
-  install -dm755 -v $mandir/ja
-  for d in $( cd man/ja ; ls -d man? )
-  do
-    cp -av man/ja/$d $P/usr/share/man/ja/$d 
-  done
+  #install -dm755 -v $mandir/ja
+  #for d in $( cd man/ja ; ls -d man? )
+  #do
+  #  cp -av man/ja/$d $P/usr/share/man/ja/$d 
+  #done
 
   # initpkg
   mkdir -p $P/install
