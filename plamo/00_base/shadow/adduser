@@ -4,7 +4,7 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
-# Time-stamp: <2022-08-30 17:22:39 karma>
+# Time-stamp: <2022-08-30 19:59:24 karma>
 # Time-stamp: <2016-01-22 19:55:16 kojima>
 # Time-stamp: <2011-12-07 00:22:20 kojima>
 # Time-stamp: <2011-10-08 13:32:46 tamuki>
@@ -460,7 +460,7 @@ if [ -d $HME ] ; then # backup old files
   find $SKELDIR/Default -maxdepth 1 -exec backup_oldfile $HME {} \;
 fi
 
-useradd $GHME -m $GEXP $GGID $GAGID $GSHL $GUID $LOGIN
+useradd $GHME -m -k $DEFAULT_DIR $GEXP $GGID $GAGID $GSHL $GUID $LOGIN
 chmod $DEFAULT_HOME_DIR_MODE $HME
 
 echo
