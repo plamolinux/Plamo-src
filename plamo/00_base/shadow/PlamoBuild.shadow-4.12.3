@@ -125,6 +125,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  make -C man install-man DESTDIR=$P
 
   # mv passwd from /usr/bin to /bin
   mv -v $P/usr/bin/passwd $P/bin/passwd
@@ -147,11 +148,11 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   # mkdir man dirs
-  #install -dm755 -v $mandir/ja
-  #for d in $( cd man/ja ; ls -d man? )
-  #do
-  #  cp -av man/ja/$d $P/usr/share/man/ja/$d 
-  #done
+  install -dm755 -v $mandir/ja
+  for d in $( cd man/ja ; ls -d man? )
+  do
+    cp -av man/ja/$d $P/usr/share/man/ja/$d 
+  done
 
   # initpkg
   mkdir -p $P/install
