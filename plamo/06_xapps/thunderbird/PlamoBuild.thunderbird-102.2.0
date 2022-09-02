@@ -96,6 +96,14 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
+  for p in toml pysolfc
+  do
+      pip3 list | grep $p
+      if [ $? -ne 0 ]; then
+          pip3 install --user $p
+      fi
+  done
+
 fi
     
 if [ $opt_build -eq 1 ] ; then
