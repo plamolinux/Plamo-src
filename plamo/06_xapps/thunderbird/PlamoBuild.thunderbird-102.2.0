@@ -104,6 +104,9 @@ if [ $opt_config -eq 1 ] ; then
       fi
   done
 
+  cd $S
+  sed -i '/ROOT_CLIP_CHAIN/d' gfx/webrender_bindings/webrender_ffi.h
+
 fi
     
 if [ $opt_build -eq 1 ] ; then
