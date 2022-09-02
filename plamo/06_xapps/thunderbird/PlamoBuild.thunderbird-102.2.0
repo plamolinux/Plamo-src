@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="91.10.0"
+vers="102.2.0"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -71,8 +71,6 @@ if [ $opt_config -eq 1 ] ; then
   done
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
-  mkdir -p path
-  ln -sf /usr/bin/python2 path/python
 
   # setup rust
   cd $W
@@ -81,7 +79,6 @@ if [ $opt_config -eq 1 ] ; then
       echo "Rustc pacakge is installed. We don't use it, so remove."
       sudo removepkg rustc
   fi
-
 
   export PATH="$PATH:$HOME/.cargo/bin"
   if [ -f ~/.cargo/bin/rustc ]; then
@@ -99,13 +96,24 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
+  for p in toml pysolfc
+  do
+      pip3 list | grep $p
+      if [ $? -ne 0 ]; then
+          pip3 install --user $p
+      fi
+  done
+
+  cd $S
+  sed -i '/ROOT_CLIP_CHAIN/d' gfx/webrender_bindings/webrender_ffi.h
+
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$W/path:$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_USE_SYSTEM_PYTHON=1
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
