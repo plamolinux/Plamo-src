@@ -7,10 +7,10 @@ ac_add_options --enable-optimize=-O2
 ac_add_options --enable-linker=gold
 
 # System Libraries
-ac_add_options --with-system-libevent
+#ac_add_options --with-system-libevent
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
-ac_add_options --with-system-icu
+#ac_add_options --with-system-icu
 ac_add_options --enable-system-ffi
 ac_add_options --enable-system-pixman
 ac_add_options --with-system-bz2
@@ -23,7 +23,9 @@ ac_add_options --with-system-zlib
 #ac_add_options --disable-necko-wifi
 #ac_add_options --enable-system-hunspell
 #ac_add_options --enable-startup-notification
+ac_add_options --disable-audio-backends
 ac_add_options --disable-pulseaudio
+ac_add_options --enable-alsa
 #ac_add_options --disable-gconf
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
@@ -31,6 +33,8 @@ ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
 ac_add_options --disable-tests
 ac_add_options --disable-elf-hack
+
+ac_add_options --without-wasm-sandboxed-libraries
 
 # Branding
 ac_add_options --disable-official-branding
