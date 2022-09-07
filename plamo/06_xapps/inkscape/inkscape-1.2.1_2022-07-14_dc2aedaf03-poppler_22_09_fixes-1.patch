@@ -1,0 +1,48 @@
+Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
+Date:                    2022-09-03
+Initial Package Version: 1.2.1
+Origin:                  Upstream (Merge Request)
+Upstream Status:         Pending
+Description:             Fixes building Inkscape-1.2.1 with poppler-22.09.0.
+                         Poppler-22.09.0 contained changes to the function
+                         definitions of getLineDash and setLineDash which
+                         were incompatible with existing programs. This patch
+                         adapts Inkscape to build with it.
+
+diff -Naurp inkscape-1.2.1_2022-07-14_9c6d41e410.orig/src/extension/internal/pdfinput/pdf-parser.cpp inkscape-1.2.1_2022-07-14_9c6d41e410/src/extension/internal/pdfinput/pdf-parser.cpp
+--- inkscape-1.2.1_2022-07-14_9c6d41e410.orig/src/extension/internal/pdfinput/pdf-parser.cpp	2022-05-07 08:43:15.000000000 -0500
++++ inkscape-1.2.1_2022-07-14_9c6d41e410/src/extension/internal/pdfinput/pdf-parser.cpp	2022-09-03 09:24:10.478076139 -0500
+@@ -697,7 +697,11 @@ void PdfParser::opSetDash(Object args[],
+       _POPPLER_FREE(obj);
+     }
+   }
++#if POPPLER_CHECK_VERSION(22, 9, 0)
++  state->setLineDash(std::vector<double> (dash, dash + length), args[1].getNum());
++#else
+   state->setLineDash(dash, length, args[1].getNum());
++#endif
+   builder->updateStyle(state);
+ }
+ 
+diff -Naurp inkscape-1.2.1_2022-07-14_9c6d41e410.orig/src/extension/internal/pdfinput/svg-builder.cpp inkscape-1.2.1_2022-07-14_9c6d41e410/src/extension/internal/pdfinput/svg-builder.cpp
+--- inkscape-1.2.1_2022-07-14_9c6d41e410.orig/src/extension/internal/pdfinput/svg-builder.cpp	2022-05-07 08:43:15.000000000 -0500
++++ inkscape-1.2.1_2022-07-14_9c6d41e410/src/extension/internal/pdfinput/svg-builder.cpp	2022-09-03 09:25:20.797204832 -0500
+@@ -388,10 +388,17 @@ void SvgBuilder::_setStrokeStyle(SPCSSAt
+     sp_repr_css_set_property(css, "stroke-miterlimit", os_ml.str().c_str());
+ 
+     // Line dash
+-    double *dash_pattern;
+     int dash_length;
+     double dash_start;
++#if POPPLER_CHECK_VERSION(22, 9, 0)
++    const double *dash_pattern;
++    const std::vector<double> &dash = state->getLineDash(&dash_start);
++    dash_pattern = dash.data();
++    dash_length = dash.size();
++#else
++    double *dash_pattern;
+     state->getLineDash(&dash_pattern, &dash_length, &dash_start);
++#endif
+     if ( dash_length > 0 ) {
+         Inkscape::CSSOStringStream os_array;
+         for ( int i = 0 ; i < dash_length ; i++ ) {
