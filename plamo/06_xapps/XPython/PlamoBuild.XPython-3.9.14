@@ -1,21 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='XPython'
-vers='3.9.6'
+vers='3.9.14'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="Python-${vers}"
-OPT_CONFIG="--enable-shared --enable-optimizations
-	--with-system-expat --with-system-ffi
+OPT_CONFIG="--enable-shared
+	--enable-optimizations
+	--with-lto
+	--with-system-expat
+	--with-system-ffi
 	--with-computed-gotos
 	--with-dbmliborder=gdbm:ndbm
 	--with-tcltk-includes=-I/usr/include --with-tcltk-libs='-L/usr/lib'
 	--enable-loadable-sqlite-extensions --without-ensurepip"
 DOCS='LICENSE README.rst'
 patchfiles='python3.no-static-library.diff python3.readline.set_pre_input_hook.diff'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -54,29 +57,19 @@ if [ $opt_config -eq 1 ] ; then
       patch -p1 < $W/$patch
   done
 
-  # https://bugs.python.org/issue41346
-  sed -i 's/-j0 //' Makefile.pre.in
-
   # Fix python3 path in cgi.py.
   sed -i '1s|^#.*/usr/local/bin/python|#!/usr/bin/python3|' Lib/cgi.py
 
-  # If system we're building on already has Python3 with pip in site-packages,
-  # ignore it and install pip anyway.
-  sed -i 's|\("install",\)|\1 "--ignore-installed",|' Lib/ensurepip/__init__.py
-
-  # Speed up LTO
-  sed -i -e "s|-flto |-flto=4 |g" configure configure.ac
-
+  # Ensure that we are using the system copy of various libraries (expat, libffi, and libmpdec),
+  # rather than copies shipped in the tarball
   rm -rf Modules/expat
   rm -rf Modules/zlib
   rm -rf Modules/_ctypes/{darwin,libffi}*
+
   # remove tests that is failed
   rm -rf Lib/test/{test_gdb,test_idle,test_ttk_guionly,test_socket,test_decimal}*
 
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed'
-  export LANG=C
-  export LDFLAGS="-ltcl8.6 -ltk8.6"
+  export LDFLAGS='-Wl,--as-needed -ltcl8.6 -ltk8.6'
 
   # PGO should be done with -O3
   # Also included the -fno-semantic-interposition optimization:
@@ -88,7 +81,7 @@ if [ $opt_config -eq 1 ] ; then
   CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
   LDFLAGS="$LDFLAGS -fno-semantic-interposition"
 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -135,7 +128,8 @@ if [ $opt_package -eq 1 ] ; then
   install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.9/Tools/i18n/
   install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.9/Tools/scripts/
 
-  cat << "EOF" > $P/initpkg
+  mkdir -p $P/install
+  cat << "EOF" > $P/install/initpkg
 rm -rf /var/log/packages/Python
 rm -rf /var/log/scripts/Python
 EOF
