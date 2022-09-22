@@ -1,22 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Python'
-vers='3.9.6'
-url="https://www.python.org/ftp/python/${vers}/${pkgbase}-${vers}.tar.xz"
+vers='3.9.14'
+url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-# pip,setuptools は無効化
-OPT_CONFIG="--disable-static --enable-shared
-	--with-system-expat --with-system-ffi
-	--with-computed-gotos --with-threads
-	--enable-ipv6 --enable-optimizations --with-lto
+src="Python-${vers}"
+OPT_CONFIG="--enable-shared
+	--enable-optimizations
+	--with-lto
+	--with-system-expat
+	--with-system-ffi
+	--with-computed-gotos
 	--with-dbmliborder=gdbm:ndbm
-	--enable-loadable-sqlite-extensions --without-ensurepip"
+	--enable-loadable-sqlite-extensions
+	--without-ensurepip"
 DOCS='LICENSE README.rst'
 patchfiles='python3.no-static-library.diff python3.readline.set_pre_input_hook.diff'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -48,12 +50,11 @@ fi
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
-#  copy source build, so need patch in the src dir
+#  copy sources build  so need patch in the build dir
 ######################################################################
   cd $B
   for patch in $patchfiles ; do
-    echo "patching with $patch.."
-    patch -p1 < $W/$patch
+      patch -p1 < $W/$patch
   done
 
   # https://bugs.python.org/issue41346
@@ -64,14 +65,10 @@ if [ $opt_config -eq 1 ] ; then
 
   # If system we're building on already has Python3 with pip in site-packages,
   # ignore it and install pip anyway.
-  sed -i 's|\("install",\)|\1 "--ignore-installed",|' Lib/ensurepip/__init__.py  
+  sed -i 's|\("install",\)|\1 "--ignore-installed",|' Lib/ensurepip/__init__.py
 
   # Speed up LTO
   sed -i -e "s|-flto |-flto=4 |g" configure configure.ac
-
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
   rm -rf Modules/expat
   rm -rf Modules/zlib
@@ -82,18 +79,33 @@ if [ $opt_config -eq 1 ] ; then
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed'
   export LANG=C
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  export LDFLAGS="-ltcl8.6 -ltk8.6"
 
+  # PGO should be done with -O3
+  # Also included the -fno-semantic-interposition optimization:
+  # https://fedoraproject.org/wiki/Changes/PythonNoSemanticInterpositionSpeedup
+  # 
+  # -fno-semantic-interposition を指定すると、libpythonXX.so に LD_PRELOAD が使えなくなる代りに
+  # 20％前後速度が向上するらしい。
+  
+  CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
+  LDFLAGS="$LDFLAGS -fno-semantic-interposition"
+
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-
+    
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   export LANG=C
+
+  CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
+  LDFLAGS="$LDFLAGS -fno-semantic-interposition"
   make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -112,15 +124,12 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  # chmod -v 755 $P/usr/${libdir}/libpython3.9m.so
-  # chmod -v 755 $P/usr/${libdir}/libpython3.so
-
   # Why are these not done by default...
   ln -s python3               "$P"/usr/bin/python
   ln -s python3-config        "$P"/usr/bin/python-config
   ln -s idle3                 "$P"/usr/bin/idle
   ln -s pydoc3                "$P"/usr/bin/pydoc
-  ln -s python${_pybasever}.1 "$P"/usr/share/man/man1/python.1
+  ln -s python${vers%%.[0-9]}.1 "$P"/usr/share/man/man1/python.1
 
   # some useful "stuff" FS#46146
   install -dm755 "$P"/usr/lib/python3.9/Tools/{i18n,scripts}
