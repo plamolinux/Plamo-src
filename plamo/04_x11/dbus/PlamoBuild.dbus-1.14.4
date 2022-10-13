@@ -1,19 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dbus'
-vers="1.12.20"
-url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+vers="1.14.4"
+url="http://dbus.freedesktop.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
+	--runstatedir=/run
 	--enable-user-session
 	--disable-doxygen-docs
 	--disable-xml-docs
 	--disable-static
-        --disable-systemd
-        --enable-elogind
 	--with-systemduserunitdir=no
 	--with-systemdsystemunitdir=no
 	--docdir=/usr/share/doc/$src
@@ -21,8 +20,8 @@ OPT_CONFIG="
 	--with-system-pid-file=/run/dbus/pid
 	--with-system-socket=/run/dbus/system_bus_socket"
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 HACKING INSTALL NEWS NEWS.pre-1-0 NEWS.pre-1-2 README README.cygwin README.launchd README.valgrind README.win README.wince'
-patchfiles='dbus-enable-elogind.patch'
-compress=txz
+patchfiles=''
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -64,7 +63,7 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    NOCONFIGURE=1 ./autogen.sh
+    #NOCONFIGURE=1 ./autogen.sh
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
@@ -112,6 +111,8 @@ if [ $opt_package -eq 1 ] ; then
   ( cd $P/etc/rc.d/rc4.d ; ln -sf ../init.d/dbus S29dbus )
   ( cd $P/etc/rc.d/rc5.d ; ln -sf ../init.d/dbus S29dbus )
   ( cd $P/etc/rc.d/rc6.d ; ln -sf ../init.d/dbus K30dbus )
+
+  ln -sv /var/lib/dbus/machine-id $P/etc
 
 ################################
 #      install tweaks
