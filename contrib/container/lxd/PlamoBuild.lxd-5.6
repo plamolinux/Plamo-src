@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxd"
-vers="5.3"
+vers="5.6"
 url="https://linuxcontainers.org/downloads/lxd/lxd-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B1
 src="lxd-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING'
 # This patch needs only LXD 5.1,5.2,5.3
-patchfiles="dont-fail-apparmor.patch"
+#patchfiles="dont-fail-apparmor.patch"
 compress=tzst
 ##############################################################
 
