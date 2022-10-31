@@ -6,11 +6,11 @@ url="http://download.osgeo.org/libtiff/tiff-${vers}.tar.gz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="tiff-${vers}"
 OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/tiff-${vers} -G Ninja"
 DOCS="ChangeLog HOWTO-RELEASE README.md RELEASE-DATE TODO"
-patchfiles=""
+patchfiles="tiff-4.4.0-upstream_fixes-1.patch"
 compress=txz
 ##############################################################
 
