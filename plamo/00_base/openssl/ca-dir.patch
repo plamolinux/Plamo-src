@@ -1,31 +1,48 @@
---- a/apps/CA.pl.in	2016-09-26 11:46:04.000000000 +0200
-+++ b/apps/CA.pl.in	2016-11-01 16:02:16.709616823 +0100
-@@ -33,7 +33,7 @@
+From 8de598d68eff33dc536a2e9ff0eed30d59bee8e4 Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Tue, 8 Nov 2022 15:37:50 +0900
+Subject: [PATCH] Change CA Top directory
+
+---
+ apps/CA.pl.in    | 2 +-
+ apps/openssl.cnf | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/apps/CA.pl.in b/apps/CA.pl.in
+index f029470..9043ad5 100644
+--- a/apps/CA.pl.in
++++ b/apps/CA.pl.in
+@@ -29,7 +29,7 @@ my $X509 = "$openssl x509";
  my $PKCS12 = "$openssl pkcs12";
  
- # default openssl.cnf file has setup as per the following
+ # Default values for various configuration settings.
 -my $CATOP = "./demoCA";
-+my $CATOP = "/etc/ssl";
++my $CATOP = "./etc/ssl";
  my $CAKEY = "cakey.pem";
  my $CAREQ = "careq.pem";
  my $CACERT = "cacert.pem";
---- a/apps/openssl.cnf	2016-09-26 11:46:04.000000000 +0200
-+++ b/apps/openssl.cnf	2016-11-01 16:02:48.378503427 +0100
-@@ -39,7 +39,7 @@
+diff --git a/apps/openssl.cnf b/apps/openssl.cnf
+index 03330e0..397c2cc 100644
+--- a/apps/openssl.cnf
++++ b/apps/openssl.cnf
+@@ -79,7 +79,7 @@ default_ca	= CA_default		# The default ca section
  ####################################################################
  [ CA_default ]
  
 -dir		= ./demoCA		# Where everything is kept
-+dir		= /etc/ssl		# Where everything is kept
++dir		= ./etc/ssl		# Where everything is kept
  certs		= $dir/certs		# Where the issued certs are kept
  crl_dir		= $dir/crl		# Where the issued crl are kept
  database	= $dir/index.txt	# database index file.
-@@ -323,7 +323,7 @@
+@@ -309,7 +309,7 @@ default_tsa = tsa_config1	# the default TSA section
  [ tsa_config1 ]
  
  # These are used by the TSA reply generation only.
 -dir		= ./demoCA		# TSA root directory
-+dir		= /etc/ssl		# TSA root directory
++dir		= ./etc/ssl		# TSA root directory
  serial		= $dir/tsaserial	# The current serial number (mandatory)
  crypto_device	= builtin		# OpenSSL engine to use for signing
  signer_cert	= $dir/tsacert.pem 	# The TSA signing certificate
+-- 
+2.37.1
+
