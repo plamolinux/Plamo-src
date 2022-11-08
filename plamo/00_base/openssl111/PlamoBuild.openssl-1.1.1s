@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase='openssl'
+pkgbase='openssl111'
 vers="1.1.1s"
 url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
@@ -9,7 +9,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='.travis-create-release.sh AUTHORS INSTALL LICENSE NEWS README README.ECC README.ENGINE README.FIPS'
-patchfiles="ca-dir.patch"
+patchfiles=""
 compress=tzst
 ##############################################################
 
@@ -50,7 +50,6 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 < $W/$patch
   done
 
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./config --prefix=/usr --libdir=${libdir} ${OPT_CONFIG}
 
@@ -77,10 +76,13 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P MANDIR=/usr/share/man MANSUFFIX=ssl
+  make install_sw DESTDIR=$P
 
-  mv -v $P/usr/share/doc/openssl{,-"$vers"}
+  rm -v -f $P/usr/${libdir}/lib{ssl,crypto}.so
   rm -v -f $P/usr/${libdir}/lib{ssl,crypto}.a
+  rm -v -rf $P/usr/${libdir}/pkgconfig
+  rm -v -rf $P/usr/include
+  rm -v -rf $P/usr/bin
 
 ################################
 #      install tweaks
