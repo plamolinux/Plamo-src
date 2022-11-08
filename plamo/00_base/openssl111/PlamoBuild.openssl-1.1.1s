@@ -2,11 +2,11 @@
 ##############################################################
 pkgbase='openssl111'
 vers="1.1.1s"
-url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
+url="https://openssl.org/source/openssl-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="openssl-${vers}"
 OPT_CONFIG="--openssldir=/etc/ssl shared zlib-dynamic"
 DOCS='.travis-create-release.sh AUTHORS INSTALL LICENSE NEWS README README.ECC README.ENGINE README.FIPS'
 patchfiles=""
