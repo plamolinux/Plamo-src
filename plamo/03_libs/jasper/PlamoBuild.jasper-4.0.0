@@ -1,18 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='jasper'
-vers='2.0.14'
-url="http://www.ece.uvic.ca/~frodo/${pkgbase}/software/${pkgbase}-${vers}.tar.gz"
+vers='4.0.0'
+url="https://github.com/jasper-software/jasper/archive/version-${vers}/jasper-${vers}.tar.gz"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="jasper-version-${vers}"
 OPT_CONFIG="
 	-DCMAKE_BUILD_TYPE=Release
 	-DCMAKE_SKIP_INSTALL_RPATH=YES
 	-DJAS_ENABLE_DOC=NO
 	-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/${src}"
-DOCS='ChangeLog INSTALL LICENSE README'
+DOCS="COPYRIGHT.txt INSTALL.txt LICENSE.txt NEWS.txt README.md"
 patchfiles=''
 compress=txz
 ##############################################################
@@ -90,6 +90,7 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+  mv -v $P/usr/share/doc/jasper-version-"$vers" $P/usr/share/doc/jasper-"$vers"
 
 #############################
 #   convert symlink to null file and 

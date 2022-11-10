@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='zlib'
-vers='1.2.12'
+vers='1.2.13'
 url="http://zlib.net/zlib-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
