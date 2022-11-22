@@ -1,0 +1,26 @@
+--- ./operations/common/introspect.c.orig	2020-12-20 06:16:48.799965900 -0600
++++ ./operations/common/introspect.c	2020-12-21 15:41:14.459774463 -0600
+@@ -48,7 +48,7 @@
+ 
+   dot = g_find_program_in_path ("dot");
+ 
+-  if (! dot || op_introspect->user_data || op_introspect->node == NULL)
++  if (op_introspect->user_data || op_introspect->node == NULL)
+     return;
+ 
+   /* Construct temp filenames */
+@@ -175,12 +175,9 @@
+ gegl_introspect_is_available (void)
+ {
+   gchar    *dot;
+-  gboolean  found = FALSE;
+-
+-  dot = g_find_program_in_path ("dot");
+-  found = (dot != NULL);
+-  g_free (dot);
++  gboolean  found = TRUE;
+ 
++  /* always return TRUE to avoid a runtime check on dot */
+   return found;
+ }
+ 
