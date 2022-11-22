@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="krb5"
-vers="1.19.1"
-url="http://web.mit.edu/kerberos/dist/krb5/1.19/krb5-1.19.1.tar.gz"
+vers="1.19.4"
+url="http://web.mit.edu/kerberos/dist/krb5/1.19/krb5-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="krb5-1.19.1"
+build=B1
+src="krb5-${vers}"
 OPT_CONFIG="
 	--sbindir=/usr/bin
 	--enable-shared
