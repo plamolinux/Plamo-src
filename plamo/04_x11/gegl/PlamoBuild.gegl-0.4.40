@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gegl"
-vers="0.4.34"
+vers="0.4.40"
 url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B2
 src="gegl-${vers}"
-OPT_CONFIG="-Ddocs=false"
-DOCS="AUTHORS COPYING COPYING.LESSER MAINTAINERS meson_options.txt"
-patchfiles=""
+OPT_CONFIG="--buildtype=release"
+DOCS="AUTHORS COPYING COPYING.LESSER MAINTAINERS NEWS README docs"
+patchfiles="gegl.no.runtime.dot.check.diff"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
