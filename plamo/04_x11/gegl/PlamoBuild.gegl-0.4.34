@@ -6,7 +6,7 @@ url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="gegl-${vers}"
 OPT_CONFIG="-Ddocs=false"
 DOCS="AUTHORS COPYING COPYING.LESSER MAINTAINERS meson_options.txt"
