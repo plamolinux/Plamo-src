@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="krb5"
-vers="1.19.1"
-url="http://web.mit.edu/kerberos/dist/krb5/1.19/krb5-1.19.1.tar.gz"
+vers="1.19.4"
+url="http://web.mit.edu/kerberos/dist/krb5/1.19/krb5-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="krb5-1.19.1"
+build=B1
+src="krb5-${vers}"
 OPT_CONFIG="
 	--sbindir=/usr/bin
 	--enable-shared
@@ -81,9 +81,12 @@ if [ $opt_config -eq 1 ] ; then
     cd $B/src
     # BLFS でやってるテスト用コードの修正
     # make check でテストしないなら必要ない．
+    sed -i -e 's|kdc kadmin kprop clients appl tests|kdc kadmin kprop clients appl|' Makefile.in
     sed -i -e 's@\^u}@^u cols 300}@' tests/dejagnu/config/default.exp
     sed -i -e '/eq 0/{N;s/12 //}'    plugins/kdb/db2/libdb2/test/run.test
-    sed -i '/t_iprop.py/d'           tests/Makefile.in                   
+    sed -i '/t_iprop.py/d'           tests/Makefile.in
+
+    autoreconf -i
     
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
