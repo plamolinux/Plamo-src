@@ -81,7 +81,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B/src
     # BLFS でやってるテスト用コードの修正
     # make check でテストしないなら必要ない．
-    sed -e 's|kdc kadmin kprop clients appl tests|kdc kadmin kprop clients appl|' Makefile.in
+    sed -i -e 's|kdc kadmin kprop clients appl tests|kdc kadmin kprop clients appl|' Makefile.in
     sed -i -e 's@\^u}@^u cols 300}@' tests/dejagnu/config/default.exp
     sed -i -e '/eq 0/{N;s/12 //}'    plugins/kdb/db2/libdb2/test/run.test
     sed -i '/t_iprop.py/d'           tests/Makefile.in
