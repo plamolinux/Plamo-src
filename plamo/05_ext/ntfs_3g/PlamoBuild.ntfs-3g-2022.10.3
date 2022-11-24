@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ntfs_3g"
-vers="2022.5.17"
+vers="2022.10.3"
 url="https://tuxera.com/opensource/ntfs-3g_ntfsprogs-${vers}.tgz"
 verify=""
-digest="md5sum:18a97a9a9e08f02f46fe447f611f16cb"
+digest="md5sum:a038af61be7584b79f8922ff11244090"
 arch=`uname -m`
 build=B1
 src="ntfs-3g_ntfsprogs-${vers}"
@@ -96,8 +96,15 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install -i DESTDIR=$P
 
-  ln -s -v ../bin/ntfs-3g $P/sbin/mount.ntfs
   ln -s -v ntfs-3g.8 $P/usr/share/man/man8/mount.ntfs.8
+
+  # mount.ntfs
+  mkdir -pv $P/usr/sbin
+  cat > $P/sbin/mount.ntfs <<"EOF"
+#!/bin/sh
+exec mount -t ntfs3 "$@"
+EOF
+  chmod -v 755 $P/sbin/mount.ntfs
 
   src=${pkgbase}-${vers}
 
