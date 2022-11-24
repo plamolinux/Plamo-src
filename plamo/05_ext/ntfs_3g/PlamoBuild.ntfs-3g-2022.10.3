@@ -100,11 +100,11 @@ if [ $opt_package -eq 1 ] ; then
 
   # mount.ntfs
   mkdir -pv $P/usr/sbin
-  cat > $P/usr/sbin/mount.ntfs <<"EOF"
+  cat > $P/sbin/mount.ntfs <<"EOF"
 #!/bin/sh
 exec mount -t ntfs3 "$@"
 EOF
-  chmod -v 755 $P/usr/sbin/mount.ntfs
+  chmod -v 755 $P/sbin/mount.ntfs
 
   src=${pkgbase}-${vers}
 
