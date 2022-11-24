@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ntfs_3g"
-vers="2022.5.17"
+vers="2022.10.3"
 url="https://tuxera.com/opensource/ntfs-3g_ntfsprogs-${vers}.tgz"
 verify=""
-digest="md5sum:18a97a9a9e08f02f46fe447f611f16cb"
+digest="md5sum:a038af61be7584b79f8922ff11244090"
 arch=`uname -m`
 build=B1
 src="ntfs-3g_ntfsprogs-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/ntfs-3g-${vers}"
+OPT_CONFIG="--disable-static --enable-shared --with-fuse=internal --docdir=/usr/share/doc/ntfs-3g-${vers}"
 DOCS="AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO.ntfsprogs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
