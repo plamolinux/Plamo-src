@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bind_tools'
-vers='9.12.3'
-url="ftp://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.gz"
+vers="9.18.9"
+url="ftp://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
@@ -60,22 +60,24 @@ if [ $opt_config -eq 1 ] ; then
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -C lib/dns
   make -C lib/isc
-  make -C lib/bind9
+  make -C lib/dns
+  make -C lib/ns
   make -C lib/isccfg
+  make -C lib/bind9
   make -C lib/irs
   make -C bin/dig
+  make -C doc
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -87,7 +89,17 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -C bin/dig install DESTDIR=$P
+  make -C lib/isc    install DESTDIR=$P
+  make -C lib/dns    install DESTDIR=$P
+  make -C lib/ns     install DESTDIR=$P
+  make -C lib/isccfg install DESTDIR=$P
+  make -C lib/bind9  install DESTDIR=$P
+  make -C lib/irs    install DESTDIR=$P
+  make -C bin/dig    install DESTDIR=$P
+  mkdir -p $P/usr/share/man/man1
+  cp -v doc/man/{dig.1,host.1,nslookup.1} $P/usr/share/man/man1
+
+  rm -rfv $P/usr/include
 
 ################################
 #      install tweaks
