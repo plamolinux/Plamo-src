@@ -6,7 +6,7 @@ url="https://ftp.gnu.org/gnu/bash/bash-${vers}.tar.gz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="bash-${vers}"
 OPT_CONFIG="
 	--with-curses
@@ -99,6 +99,10 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mkdir -pv $P/bin
+  mv -vf $P/usr/bin/bash $P/bin/bash
+  ln -s bash $P/bin/sh
 
 ################################
 #      install tweaks
