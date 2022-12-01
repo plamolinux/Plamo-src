@@ -19,7 +19,7 @@ OPT_CONFIG="
 	--disable-caca
 	--enable-mfx"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
-patchfiles=""
+patchfiles='patch-dvdread-503.diff patch-dvdnav-503.diff patch_vlc_cache_gen.diff'
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -70,6 +70,7 @@ if [ $opt_config -eq 1 ] ; then
        patch -p1 < $W/$patch
     done
     sed -e 's:truetype/ttf-dejavu:TTF:g' -i modules/visualization/projectm.cpp
+    sed -i '/DEPRECATED/s:^://:' modules/text_renderer/freetype/text_layout.c
 
     export LUAC=/usr/bin/luac5.2
     export LUA_LIBS="$(pkg-config --libs lua5.2)"
