@@ -8,16 +8,7 @@ digest=""
 arch=`uname -m`
 build=B1
 src="vlc-${vers}"
-OPT_CONFIG="
-	--disable-static
-	--enable-shared
-	--disable-opencv
-	--enable-libbluray
-	--enable-wayland
-	--enable-qt=5
-	--disable-upnp
-	--disable-caca
-	--enable-mfx"
+OPT_CONFIG="--disable-static --enable-shared"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
