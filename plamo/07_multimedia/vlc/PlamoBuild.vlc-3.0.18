@@ -93,7 +93,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make install DESTDIR=$P docdir=$P/usr/share/doc/${src}
   mkdir -p $P/install
   cat <<"EOF" > $P/install/initpkg
 /usr/lib/vlc/vlc-cache-gen /usr/lib/vlc/plugins
