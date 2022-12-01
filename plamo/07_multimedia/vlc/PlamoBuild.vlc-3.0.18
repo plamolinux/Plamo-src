@@ -10,7 +10,7 @@ build=B1
 src="vlc-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
-patchfiles=""
+patchfiles="vlc-live-media-2021.patch vlc-3.0.11.1-srt_1.4.2.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
