@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="vlc"
-vers="3.0.18"
+vers="3.0.16"
 url="https://vlc.letterboxdelivery.org/vlc/${vers}/vlc-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="vlc-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
