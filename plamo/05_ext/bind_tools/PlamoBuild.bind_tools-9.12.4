@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bind_tools'
-vers='9.12.3'
+vers='9.12.4'
 url="ftp://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="bind-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-libxml2'
+OPT_CONFIG='--disable-static --enable-shared --without-libxml2 --without-python'
 DOCS='HISTORY HISTORY.md LICENSE README README.md'
 patchfiles=''
 compress=txz
