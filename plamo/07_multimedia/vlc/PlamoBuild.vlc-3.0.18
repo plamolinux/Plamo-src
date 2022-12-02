@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="vlc"
-vers="3.0.16"
+vers="3.0.18"
 url="https://vlc.letterboxdelivery.org/vlc/${vers}/vlc-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="vlc-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
-patchfiles="vlc-live-media-2021.patch vlc-3.0.11.1-srt_1.4.2.patch"
+patchfiles="patch-dvdnav-503.diff patch-dvdread-503.diff patch_vlc_cache_gen.diff libplacebo-5.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -93,7 +93,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make install DESTDIR=$P docdir=$P/usr/share/doc/${src}
   mkdir -p $P/install
   cat <<"EOF" > $P/install/initpkg
 /usr/lib/vlc/vlc-cache-gen /usr/lib/vlc/plugins
