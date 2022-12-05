@@ -5,7 +5,7 @@ vers='2.49'
 url="https://ftp.gnu.org/gnu/${pkgbase}/latest/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--with-libsigsegv-prefix=/usr --docdir=/usr/share/doc/$src"
 DOCS='INSTALL'
