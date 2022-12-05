@@ -1,36 +1,34 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pcre'
-vers='8.45'
+pkgbase="pcre"
+vers="8.45"
 url="https://downloads.sourceforge.net/pcre/pcre-${vers}.tar.bz2"
 verify="${url}.sig"
+digest=""
 arch=`uname -m`
 build=B1
 src="pcre-${vers}"
-OPT_CONFIG=" \
-	--docdir=/usr/share/doc/$src \
-	--disable-static \
-	--enable-utf8 \
-	--enable-unicode-properties \
-	--enable-pcre16 \
-	--enable-pcre32 \
-	--enable-pcregrep-libz \
-	--enable-pcregrep-libbz2 \
-	--enable-pcretest-libreadline"
-DOCS='AUTHORS COPYING ChangeLog CleanTxt HACKING INSTALL NEWS PrepareRelease README makevp_c.txt makevp_l.txt'
-patchfiles=''
+OPT_CONFIG="--disable-static --enable-shared
+            --docdir=/usr/share/doc/pcre-${vers}
+            --enable-unicode-properties
+            --enable-pcre16
+            --enable-pcre32
+            --enable-pcregrep-libz
+            --enable-pcregrep-libbz2
+            --enable-pcretest-libreadline  "
+DOCS="AUTHORS COPYING ChangeLog CleanTxt HACKING INSTALL NEWS PrepareRelease README makevp_c.txt makevp_l.txt"
+patchfiles=""
 compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -50,35 +48,37 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B  
 ######################################################################
-#  copy sources into build directory, patch and make in the build dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
     done
-
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-    cd $B
+    cd $B 
     export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -86,19 +86,19 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
+
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  ( cd $P/usr/lib ; ln -sf libpcre.so.1 libpcre.so.0 )
 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
