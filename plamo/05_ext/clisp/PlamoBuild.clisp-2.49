@@ -11,7 +11,7 @@ OPT_CONFIG="--with-libsigsegv-prefix=/usr --docdir=/usr/share/doc/$src"
 DOCS='INSTALL'
 blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/clisp-${vers}-readline7_fixes-1.patch"
 patchfiles="${blfspatch##*/}"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
