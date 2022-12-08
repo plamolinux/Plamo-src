@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Python'
-vers='3.9.15'
+vers='3.9.16'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
