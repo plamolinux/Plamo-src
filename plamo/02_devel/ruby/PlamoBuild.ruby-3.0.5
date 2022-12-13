@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ruby'
-vers='3.0.4'
+vers='3.0.5'
 url="https://cache.ruby-lang.org/pub/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.gz"
-digest="sha256sum:70b47c207af04bce9acea262308fb42893d3e244f39a4abc586920a1c723722b"
+digest="sha256sum:9afc6380a027a4fe1ae1a3e2eccb6b497b9c5ac0631c12ca56f9b7beb4848776"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/$src"
 DOCS='COPYING COPYING.ja ChangeLog NEWS README.EXT README.EXT.ja README.ja.md README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
