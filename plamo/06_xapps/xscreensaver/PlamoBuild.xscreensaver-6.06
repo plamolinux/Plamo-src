@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xscreensaver'
-vers='6.03'
+vers='6.06'
 url="http://www.jwz.org/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-digest="md5sum:7b8dbef90fdbf7260ca6df13a010ff92"
+digest="md5sum:7e9437089cc8162a3cf9ff335633faed"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG=''
+OPT_CONFIG='--with-elogind --with-gtk --datadir=/usr/share --localedir=/usr/share/locale'
 DOCS='INSTALL README README.VMS README.hacking'
 addfiles="xscreensaver.pam"
-patchfiles="0001_xscreensaver-6.03_ja.po.diff 0001-Fix-po-Makefile.in.in-to-be-built.patch"
+patchfiles="0003-xscreensaver-6.05_driver_xscreensaver.ui.patch"
 compress=tzst
 ##############################################################
 
@@ -63,15 +63,26 @@ if [ $opt_config -eq 1 ] ; then
 
   sed -i 's/-lsystemd/-lelogind/' driver/Makefile.in
 
-  pushd po
-  sed -i Makefile.in.in \
-      -e "\@^POFILES[ \t]*=@s@^.*@POTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " $f" ; done)@" \
-      -e "\@^GMOFILES[ \t]*=@s@^.*@GMOTFILES\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
-      -e "\@^CATALOGS[ \t]*=@s@^.*@CATALOGS\t=$(ls -1 *po | grep -v ca.po | while read f ; do echo -n -e " ${f%.po}.gmo" ; done)@" \
-      -e "\@^CATOBJEXT[ \t]*=@s@^.*@CATOBJEXT\t= .gmo@" \
-      -e "\@^INSTOBJEXT[ \t]*=@s@^.*@INSTOBJEXT\t= .mo@" \
-      -e "\@^MKINSTALLDIRS[ \t]*=@s@^.*@MKINSTALLDIRS\t= install -d@"
-  popd
+  # Generate POT file for translators
+  cd po && intltool-update --verbose -p && cd ..
+
+  # prepare po
+  # Fix man pages header:
+  find hacks -name '*.man' -print0 | xargs -0 sed -ie 's/TH XScreenSaver 1/TH XScreenSaver 6/'
+  # Modify hack list to fit our needs:
+  # Modify hack list to fit our needs:
+  sed -re '
+  s/^([[:space:]]*(rorschach|greynetic|noseguy|deco|moire|spiral|laser|sierpinski|flag|sphere|mountain|triangle|worm|xlyap|cynosure|bsod|t3d|wander"Wander|critical|phosphor|blaster|nerverot|"SpeedMine"|poluominoes|fluidballs|barcode|bubbles))/-\1/;
+  s/^-([[:space:]]*(juggle))/\1/;
+  s/^@GL_KLUDGE@([[:space:]]*GL:[[:space:]]*(sproingies|"Molecule \(lumpy\)"|circuit|atunnel|glmatrix|stairs|pulsar|starwars|"GLText|boxed|"GLForestFire"|sballs|cubenetic|queens|endgame))/-\1/;
+  s/^-([[:space:]]*GL:[[:space:]]*(fireflies))/\1/;
+  /.*vidwhacker -stdin -stdout/D;
+  ' driver/XScreenSaver.ad.in > driver/XScreenSaver.ad.in.tmp && mv -f driver/XScreenSaver.ad.in.tmp driver/XScreenSaver.ad.in
+  intltoolize --copy --force
+
+  chmod +x install-sh
+
+  autoreconf -fi
 
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
@@ -85,8 +96,11 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
+  # Fix xscreensaver po Makefile
+  sed -i "s|@install_sh@|../install-sh -c|" po/Makefile
+
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make all
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -99,6 +113,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install install_prefix=$P
+  cd po
+  make install-data DESTDIR=$P
+  cd ..
 
   install -v -Dm644 $W/xscreensaver.pam $P/etc/pam.d/xscreensaver
   install -v -Dm644 $W/xscreensaver.pam $docdir/$src/xscreensaver.pam
