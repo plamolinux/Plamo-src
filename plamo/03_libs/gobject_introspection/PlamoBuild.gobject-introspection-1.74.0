@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gobject_introspection"
-vers="1.66.1"
-url="https://github.com/GNOME/gobject-introspection/archive/${vers}.tar.gz"
+vers="1.74.0"
+url="https://download.gnome.org/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:ed4e290c5ca8737a62c9a7f5347ae10d"
 arch=`uname -m`
-build=B2
+build=B1
 src="gobject-introspection-${vers}"
-OPT_CONFIG=""
-DOCS="COPYING COPYING.GPL COPYING.LGPL HACKING MSVC.README.rst NEWS README.rst TODO docs meson_options.txt"
+OPT_CONFIG="--buildtype=release"
+DOCS="COPYING COPYING.GPL COPYING.LGPL HACKING MSVC.README.rst NEWS README.rst TODO docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -93,11 +93,6 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P ninja install
 
-  # Arch Linux でやってるのをマネしたが、pre-compile + 最適化 で、多少速くなるのかな？
-  python -m compileall -d $P/usr/lib/gobject-instrospection $P/usr/lib/gobject-introspection
-  python -O -m compileall -d $P/usr/lib/gobject-introspection $P/usr/lib/gobject-introspection
-
-  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
