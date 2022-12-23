@@ -1,16 +1,22 @@
 #!/bin/sh
 ##############################################################
 pkgbase="polkit"
-vers="0.120"
-url="https://www.freedesktop.org/software/polkit/releases/polkit-${vers}.tar.gz"
-verify="${url}.sign"
+vers="122"
+url="https://gitlab.freedesktop.org/polkit/polkit/-/archive/${vers}/polkit-${vers}.tar.gz"
+verify=""
 digest=""
 arch=`uname -m`
-build=B3
+build=B1
 src="polkit-${vers}"
-OPT_CONFIG="-Dman=true -Dsession_tracking=libelogind -Dsystemdsystemunitdir=/tmp -Dpolkitd_user=polkituser --buildtype=release"
+OPT_CONFIG="
+	-Dman=true
+	-Dsession_tracking=libelogind
+	-Dsystemdsystemunitdir=/tmp
+	-Dpolkitd_user=polkituser
+	-Djs_engine=duktape
+	--buildtype=release"
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README docs gtk-doc.make meson_options.txt"
-patchfiles="polkit-0.120-security_fixes-1.patch polkit-0.120-js91-1.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles="polkit.pam"
 compress=tzst
