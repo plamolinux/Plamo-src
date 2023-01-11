@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openjpeg2'
-vers='2.4.0'
+vers='2.5.0'
 url="https://github.com/uclouvain/openjpeg/archive/v${vers}/openjpeg-${vers}.tar.gz"
-digest="md5sum:4d388298335947367e91f1d100468af1"
+digest="md5sum:5cbb822a1203dd75b85639da4f4ecaab"
 verify=""
 arch=`uname -m`
 build=B1
