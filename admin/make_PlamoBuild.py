@@ -63,7 +63,7 @@ class Package():
             最近では meson/cmake をイジって configure は置き去りにされがちなので，
             複数の設定方法がある場合，meson > cmake > configure の順にする．
             '''
-            types = {'meson.build':'meson', 'CMakeLists.txt':'cmake', 'configure':'config', 'setup.py':'python', 'Makefile.PL':'perl'}
+            types = {'meson.build':'meson', 'CMakeLists.txt':'cmake', 'configure':'config', 'pyproject.toml':'python_new', 'setup.py':'python', 'Makefile.PL':'perl'}
 
             for i in types.keys():
                 for j in files:
@@ -219,6 +219,12 @@ if [ $opt_config -eq 1 ] ; then
             self.config += '''
     python setup.py config    '''  # setup.py はinstall時にprefixを指定する
 
+        elif self.method == 'python_new' :
+            self.copy_source()
+            self.config += '''
+    echo "no need to config, proceed to build."
+    opt_build=1
+    '''
         elif self.method == 'perl' :
             self.copy_source()
             self.config += '''
@@ -241,6 +247,9 @@ if [ $opt_build -eq 1 ] ; then
             self.build += '''
     python setup.py build'''
 
+        elif self.method == 'python_new' :
+            self.build += '''
+    python -m build --wheel --no-isolation --skip-dependency-check  '''
         elif self.method == 'cmake' or self.method == 'meson' :
             self.build += '''
     ninja'''
@@ -269,6 +278,10 @@ if [ $opt_package -eq 1 ] ; then
             self.package += '''
   python setup.py install --root $P --prefix={}'''.format(self.prefix)
 
+        elif self.method == 'python_new' :
+            self.package += '''
+  python -m installer --destdir=$P dist/*.whl '''
+            
         elif self.method == 'cmake' or self.method == 'meson' :
             self.package += '''
   DESTDIR=$P ninja install
