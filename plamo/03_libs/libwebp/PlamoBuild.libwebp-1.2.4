@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libwebp"
-vers="1.1.0"
-url="https://github.com/webmproject/libwebp/archive/v${vers}.tar.gz"
-verify=""
+vers="1.2.4"
+url="http://downloads.webmproject.org/releases/webp/libwebp-${vers}.tar.gz"
+verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="libwebp-${vers}"
 OPT_CONFIG="--enable-libwebpmux --enable-libwebpdemux --enable-libwebpdecoder --enable-libwebpextras --enable-swap-16bit-csp --disable-static --enable-shared"
 DOCS="AUTHORS COPYING ChangeLog NEWS README README.mux README.webp_js"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -52,9 +52,9 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    if [ -f autogen.sh ] ; then
-      sh ./autogen.sh
-    fi
+    #if [ -f autogen.sh ] ; then
+    #  sh ./autogen.sh
+    #fi
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
