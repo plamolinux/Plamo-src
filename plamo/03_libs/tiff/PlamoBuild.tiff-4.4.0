@@ -6,14 +6,21 @@ url="http://download.osgeo.org/libtiff/tiff-${vers}.tar.gz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B3
+build=B4
 src="tiff-${vers}"
 OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/tiff-${vers} -G Ninja"
 DOCS="ChangeLog HOWTO-RELEASE README.md RELEASE-DATE TODO"
-patchfiles="tiff-4.4.0-upstream_fixes-1.patch CVE-2022-3970.patch"
+patchfiles="
+	tiff-4.4.0-upstream_fixes-1.patch
+	CVE-2022-3597_CVE-2022-3626_CVE-2022-3627.patch
+	CVE-2022-3570.patch
+	CVE-2022-3599.patch
+	CVE-2022-3598.patch
+	CVE-2022-2519_CVE-2022-2520_CVE-2022-2521_CVE-2022-2953_part1.patch
+	CVE-2022-2519_CVE-2022-2520_CVE-2022-2521_CVE-2022-2953_part2.patch
+	CVE-2022-3970.patch"
 compress=tzst
 ##############################################################
-
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
