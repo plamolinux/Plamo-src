@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
-pkgbase="tiff"
+pkgbase="tiff5"
 vers="4.4.0"
 url="http://download.osgeo.org/libtiff/tiff-${vers}.tar.gz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B3
+build=B4
 src="tiff-${vers}"
 OPT_CONFIG="-DCMAKE_INSTALL_DOCDIR=/usr/share/doc/tiff-${vers} -G Ninja"
 DOCS="ChangeLog HOWTO-RELEASE README.md RELEASE-DATE TODO"
@@ -80,6 +80,9 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ninja install
+  rm -rfv $P/usr/{bin,include,share}
+  rm -rfv $P/usr/lib/{cmake,pkgconfig}
+  rm -rfv $P/usr/lib/libtiff{,xx}.so
 
 ################################
 #      install tweaks
