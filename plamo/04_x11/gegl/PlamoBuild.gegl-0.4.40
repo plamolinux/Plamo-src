@@ -64,8 +64,11 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    sed -e '/shot_select/s/params/raw&/' \
-            -i operations/external/raw-load.c
+    
+    # This needs if we use libraw 0.21.0+
+    #sed -e '/shot_select/s/params/raw&/' \
+    #        -i operations/external/raw-load.c
+
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
