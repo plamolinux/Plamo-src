@@ -5,7 +5,7 @@ vers="6.9.12_72"
 url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="ImageMagick-${vers/_/-}"
 OPT_CONFIG='--disable-static --enable-shared --enable-hdri --with-modules --disable-docs --with-rsvg --with-dejavu-font-dir=/usr/share/fonts/TTF'
 DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
