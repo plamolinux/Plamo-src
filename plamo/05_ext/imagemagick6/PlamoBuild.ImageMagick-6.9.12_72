@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='imagemagick6'
-vers="6.9.12-72"
+vers="6.9.12_72"
 url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
