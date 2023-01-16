@@ -6,7 +6,7 @@ url="https://gitlab.com/sane-project/backends/-/archive/${vers}/backends-${vers}
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="sane-backends-${vers}"
 OPT_CONFIG="--disable-static --enable-shared
     --sbindir=/usr/bin
@@ -22,7 +22,7 @@ DOCS="AUTHORS COPYING ChangeLog ChangeLogs INSTALL.linux LICENSE NEWS PROBLEMS P
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
