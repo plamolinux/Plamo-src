@@ -2,9 +2,9 @@
 ##############################################################
 pkgbase='xsane'
 vers='0.999'
-url="http://www.${pkgbase}.org/download/${pkgbase}-${vers}.tar.gz"
+url="https://anduin.linuxfromscratch.org/BLFS/xsane/xsane-${vers}.tar.gz"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='ICM.TODO xsane-WIN32-README.txt xsane-WIN32-compilation.txt xsane-WIN32-compilation.txt.old xsane.AUTHOR xsane.COPYING xsane.INSTALL xsane.NEWS xsane.TODO'
