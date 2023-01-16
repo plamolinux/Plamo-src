@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="inkscape"
-vers="1.2.1"
-url="https://inkscape.org/gallery/item/34673/inkscape-${vers}.tar.xz"
+vers="1.2.2"
+url="https://inkscape.org/gallery/item/37360/inkscape-${vers}.tar.xz"
 verify=""
-digest="md5sum:9e0acbb3dfe8c62953c788134d208dc2"
+digest="md5sum:490c40bbb3ce3441ceee88e61775bbf4"
 arch=`uname -m`
 build=B1
-src="inkscape-1.2.1_2022-07-14_9c6d41e410"
+src="inkscape-1.2.2_2022-12-01_b0a8486541"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DPOPPLER_INCLUDE_DIR=/usr/include/poppler -DWITH_DBUS=TRUE -DWITH_IMAGE_MAGICK=TRUE -DWITH_INTERNAL_2GEOM=ON"
 DOCS="AUTHORS COPYING INSTALL.md LICENSES NEWS.md README.md"
-patchfiles="inkscape-1.2.1_2022-07-14_dc2aedaf03-poppler_22_09_fixes-1.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
