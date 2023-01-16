@@ -2,12 +2,12 @@
 ##############################################################
 pkgbase="xsane"
 vers="0.999"
-url="https://gitlab.com/sane-project/frontend/xsane/-/archive/0.999/xsane-0.999.tar.bz2"
+url="https://gitlab.com/sane-project/frontend/xsane/-/archive/${vers}/xsane-${vers}.tar.bz2"
 verify=""
 digest=""
 arch=`uname -m`
 build=B3
-src="xsane-0.999"
+src="xsane-${vers}"
 OPT_CONFIG="--enable-gimp"
 DOCS="ICM.TODO doc xsane-WIN32-README.txt xsane-WIN32-compilation.txt xsane.AUTHOR xsane.COPYING xsane.INSTALL xsane.NEWS xsane.TODO"
 
