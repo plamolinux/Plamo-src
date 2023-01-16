@@ -1,17 +1,25 @@
 #!/bin/sh
 ##############################################################
-pkgbase='imagemagick6'
-vers='6.9.10_74'
+pkgbase="imagemagick7"
+vers="7.1.0_57"
 url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="ImageMagick-${vers/_/-}"
-OPT_CONFIG='--disable-static --enable-shared --enable-hdri --with-modules --disable-docs --with-rsvg --with-dejavu-font-dir=/usr/share/fonts/TTF'
+OPT_CONFIG="--disable-static --enable-shared
+            --enable-hdri
+	    --with-modules
+	    --with-gslib
+	    --with-rsvg
+	    --enable-hdri
+	    --with-gvc
+	    --with-perl
+	    --with-perl-options=INSTALLDIRS=vendor
+	    --with-dejavu-font-dir=/usr/share/fonts/TTF"
 DOCS='AUTHORS.txt ChangeLog Install-mac.txt Install-unix.txt Install-vms.txt Install-windows.txt LICENSE NEWS.txt Platforms.txt QuickStart.txt README.txt'
-#blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/ImageMagick-6.9.10-27-libs_only-1.patch"
-#patchfiles="${blfspatch##*/}"
-compress=txz
+patchfiles=''
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -39,9 +47,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
-  if [ ! -f ${blfspatch##*/} ]; then
-    wget $blfspatch
-  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -61,17 +66,16 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure \
-      PKG_CONFIG="/usr/bin/env PKG_CONFIG_PATH=/usr/lib/$pkgbase/pkgconfig pkg-config" \
-      --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
-
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-
+    
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
@@ -87,11 +91,9 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P pkgconfigdir="/usr/lib/$pkgbase/pkgconfig"
+  make install DESTDIR=$P DOCUMENTATION_PATH=/usr/share/doc/${src}
 
-  rm -rv $P/usr/bin/
-  rm -rv $P/usr/${libdir}/perl5
-  rm -rf $P/usr/share/man
+  rm -fv $P/usr/lib/perl5/perllocal.pod
 
 ################################
 #      install tweaks
