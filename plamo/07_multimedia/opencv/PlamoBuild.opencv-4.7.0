@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='opencv'
-vers="4.6.0"
+vers="4.7.0"
 url="https://github.com/opencv/opencv/archive/${vers}/opencv-${vers}.tar.gz"
 contrib_url="https://github.com/opencv/opencv_contrib/archive/${vers}/opencv_contrib-${vers}.tar.gz"
-digest="md5sum:2f52df67b255fcc2c36632a9e9f723f6"
+digest="md5sum:13e13244cb0cc6ec4f01eacd38d05d17"
 verify=""
 arch=`uname -m`
 build=B1
