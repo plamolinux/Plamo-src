@@ -16,7 +16,7 @@ OPT_CONFIG=('--with-pam'
 DOCS='ABOUT-NLS ChangeLog INSTALL INSTALL.configure NEWS README README.LDAP'
 patchfiles=''
 addfiles="pam.sudo"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
