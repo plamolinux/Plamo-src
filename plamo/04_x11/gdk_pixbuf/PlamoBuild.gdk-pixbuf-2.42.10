@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gdk_pixbuf"
-vers="2.42.2"
+vers="2.42.10"
 url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${vers%.*}/gdk-pixbuf-${vers}.tar.xz"
 verify=""
-digest="md5sum:7d7617db8dae8ce313160384ab0a71db"
+digest="md5sum:4a62f339cb1424693fba9bb7ffef8150"
 arch=`uname -m`
 build=B1
 src="gdk-pixbuf-${vers}"
