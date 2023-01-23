@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_plugins_bad"
-vers="1.20.3"
+vers="1.20.5"
 url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B3
 src="gst-plugins-bad-${vers}"
 OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
