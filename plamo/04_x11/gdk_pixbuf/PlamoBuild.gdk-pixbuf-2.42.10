@@ -11,7 +11,7 @@ src="gdk-pixbuf-${vers}"
 OPT_CONFIG="-Dinstalled_tests=false -Ddocs=false"
 DOCS="COPYING NEWS README.md README.msvc meson_options.txt"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
