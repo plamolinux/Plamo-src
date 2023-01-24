@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='osinfo_db'
-vers="20200325"
+vers="20221130"
 url="https://releases.pagure.org/libosinfo/osinfo-db-${vers}.tar.xz"
 verify="${url}.asc"
 arch=noarch
 build=B1
 src="osinfo-db-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG=""
 DOCS='LICENSE install-script'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
