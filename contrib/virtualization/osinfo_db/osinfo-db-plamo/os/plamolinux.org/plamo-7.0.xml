@@ -43,7 +43,7 @@
     <media arch="x86_64">
       <url>http://repository.plamolinux.org/isos/plamo-7.0_x86_64_2018-02-20_dvd.iso</url>
       <iso>
-        <volume-id>Plamo 7.0</volume-id>
+        <volume-id>Plamo-7.0</volume-id>
       </iso>
       <kernel>isolinux/vmlinuz</kernel>
       <initrd>isolinux/initrd.gz</initrd>
