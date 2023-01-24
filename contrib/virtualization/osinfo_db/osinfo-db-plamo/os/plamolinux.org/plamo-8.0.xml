@@ -41,9 +41,8 @@
     </resources>
 
     <media arch="x86_64">
-      <url>https://repository.plamolinux.org/isos/plamo-8.0_x86_64_2022-10-06_usb.iso</url>
       <iso>
-        <volume-id>Plamo 8.0</volume-id>
+        <volume-id>Plamo-8.0</volume-id>
       </iso>
       <kernel>isolinux/vmlinuz</kernel>
       <initrd>isolinux/initrd.gz</initrd>
