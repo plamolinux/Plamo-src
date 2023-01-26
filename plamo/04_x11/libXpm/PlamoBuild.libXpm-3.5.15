@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase="libXpm"
 vers="3.5.15"
-url="https://www.x.org/pub/individual/lib/libXpm-${vers}.tar.bz2"
+url="https://www.x.org/pub/individual/lib/libXpm-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
