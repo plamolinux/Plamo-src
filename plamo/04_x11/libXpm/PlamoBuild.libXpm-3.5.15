@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B1
 src="libXpm-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
+OPT_CONFIG="--disable-static --enable-shared --disable-open-zfile"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS.old README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
