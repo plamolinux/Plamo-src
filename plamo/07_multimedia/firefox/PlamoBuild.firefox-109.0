@@ -8,11 +8,11 @@ langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/x
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles="0001-libwebrtc-screen-cast-sync.patch"
+patchfiles="0001-libwebrtc-screen-cast-sync.patch 0002-Bug-1804973-Wayland-Check-size-for-valid-EGLWindows-.patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
