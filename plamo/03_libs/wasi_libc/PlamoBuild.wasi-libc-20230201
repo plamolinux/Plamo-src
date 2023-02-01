@@ -7,7 +7,7 @@ commitid="a1c7c2c7a4b2813c6f67bd2ef6e0f430d31cebad"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="wasi-libc"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="LICENSE LICENSE-APACHE LICENSE-APACHE-LLVM LICENSE-MIT README.md"
@@ -70,7 +70,8 @@ if [ $opt_build -eq 1 ] ; then
     make -j $(nproc) \
         WASM_CC=/usr/bin/clang \
         WASM_AR=/usr/bin/llvm-ar \
-        WASM_NM=/usr/bin/llvm-nm
+        WASM_NM=/usr/bin/llvm-nm \
+        BULK_MEMORY_SOURCES=
 
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
