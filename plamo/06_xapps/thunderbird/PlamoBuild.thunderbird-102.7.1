@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="102.6.1"
+vers="102.7.1"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -113,7 +113,7 @@ if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$W/path:$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
