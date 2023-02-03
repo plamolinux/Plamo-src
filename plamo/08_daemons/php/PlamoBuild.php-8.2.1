@@ -185,6 +185,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 -v $W/php8.conf $P/etc/httpd/extra.dist/php8.conf
   install -Dm644 -v $W/php8.conf $docdir/$src/php8.conf
+  install -Dm644 -v $W/php-fpm.init $docdir/$src/php-fpm.init
 
   # php-fpm init
   install -Dm644 -v $W/php-fpm.init $P/etc/rc.d/init.d/php-fpm
