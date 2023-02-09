@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="imagemagick7"
-vers="7.1.0_26"
+vers="7.1.0_61"
 url="https://www.imagemagick.org/download/releases/ImageMagick-${vers/_/-}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
