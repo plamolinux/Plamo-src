@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxcfs"
-vers="5.0.0"
-url="https://linuxcontainers.org/downloads/lxcfs/lxcfs-5.0.0.tar.gz"
+vers="5.0.3"
+url="https://linuxcontainers.org/downloads/lxcfs/lxcfs-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="lxcfs-5.0.0"
+src="lxcfs-${vers}"
 OPT_CONFIG="--buildtype=release -Dinit-script=sysvinit"
 DOCS="AUTHORS COPYING ChangeLog LICENSE.LGPL2.1 NEWS README README.md doc"
 patchfiles=""
