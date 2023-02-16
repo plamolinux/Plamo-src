@@ -12,7 +12,7 @@ build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles="0001-libwebrtc-screen-cast-sync.patch 0002-Bug-1804973-Wayland-Check-size-for-valid-EGLWindows-.patch"
+patchfiles="0001-libwebrtc-screen-cast-sync.patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
