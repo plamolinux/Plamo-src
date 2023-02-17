@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="less"
-vers="590"
-url="http://www.greenwoodsoftware.com/less/less-590.tar.gz"
+vers="608"
+url="http://www.greenwoodsoftware.com/less/less-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="less-590"
+src="less-${vers}"
 OPT_CONFIG=""
 DOCS="COPYING INSTALL LICENSE NEWS README"
 patchfiles=""
@@ -94,7 +94,8 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-  install $W/lesspipe.sh $P/usr/bin
+  install -Dm755 -v $W/lesspipe.sh $P/usr/bin/lesspipe.sh
+  install -Dm644 -v $W/lesspipe.sh $docdir/$src/lesspipe.sh
 
 ################################
 #      install tweaks
