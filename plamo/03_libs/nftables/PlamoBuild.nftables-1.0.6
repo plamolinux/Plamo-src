@@ -7,7 +7,13 @@ verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --sysconfdir=/usr/share/doc/nftables-${vers}/examples --with-json --with-cli=readline --disable-debug"
+OPT_CONFIG="
+	--disable-static
+	--enable-shared
+	--sysconfdir=/usr/share/doc/nftables-${vers}/examples
+	--with-json
+	--with-cli=readline
+	--disable-debug"
 DOCS='COPYING INSTALL'
 patchfiles=''
 compress=txz
