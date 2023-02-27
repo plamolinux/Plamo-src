@@ -1,0 +1,21 @@
+From cb79a9f84e2e0c49f6e90074907e98997967015e Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Mon, 27 Feb 2023 17:32:48 +0900
+Subject: [PATCH] Changed to correct format in dillon's cron and commented out
+
+---
+ scrub/e2scrub_all.cron.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scrub/e2scrub_all.cron.in b/scrub/e2scrub_all.cron.in
+index 395fb2a..e7cffd3 100644
+--- a/scrub/e2scrub_all.cron.in
++++ b/scrub/e2scrub_all.cron.in
+@@ -1,2 +1,2 @@
+-30 3 * * 0 root test -e /run/systemd/system || SERVICE_MODE=1 @pkglibdir@/e2scrub_all_cron
+-10 3 * * * root test -e /run/systemd/system || SERVICE_MODE=1 @root_sbindir@/e2scrub_all -A -r
++#30 3 * * 0 test -e /run/systemd/system || SERVICE_MODE=1 @pkglibdir@/e2scrub_all_cron
++#10 3 * * * test -e /run/systemd/system || SERVICE_MODE=1 @root_sbindir@/e2scrub_all -A -r
+-- 
+2.39.1
+
