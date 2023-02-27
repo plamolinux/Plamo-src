@@ -6,12 +6,12 @@ url="https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v${
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="e2fsprogs-${vers}"
 OPT_CONFIG="--enable-elf-shlibs --disable-libuuid --disable-libblkid
 	--disable-fsck --disable-uuidd --with-root-prefix=\"\" --bindir=/bin"
 DOCS="ABOUT-NLS INSTALL INSTALL.elfbin NOTICE README RELEASE-NOTES SUBMITTING-PATCHED doc e2fsprogs.lsm"
-patchfiles=""
+patchfiles="0001-Changed-to-correct-format-in-dillon-s-cron-and-comme.patch"
 compress=tzst
 ##############################################################
 
