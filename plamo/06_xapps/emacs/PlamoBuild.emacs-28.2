@@ -5,7 +5,7 @@ vers="28.2"
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--with-imagemagick
@@ -16,7 +16,10 @@ OPT_CONFIG="
 	--with-x-toolkit=gtk3
 	--with-modules"
 DOCS='BUGS CONTRIBUTE COPYING ChangeLog ChangeLog.1 ChangeLog.2 ChangeLog.3 INSTALL INSTALL.REPO README'
-patchfiles="emacs-28.1-add-compresstype.patch"
+patchfiles="emacs-28.1-add-compresstype.patch
+0001-CVE-2022-48337.patch
+0002-CVE-2022-48338.patch
+0003-CVE-2022-48339.patch"
 compress=tzst
 ##############################################################
 
