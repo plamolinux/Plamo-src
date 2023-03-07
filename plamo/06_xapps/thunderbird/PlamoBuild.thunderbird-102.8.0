@@ -131,9 +131,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
+  export MACH_USE_SYSTEM_PYTHON=1
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
-  export MOZ_ENABLE_FULL_SYMBOLS=1
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
