@@ -1,16 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase='acl'
-vers='2.2.52'
-url="http://download.savannah.gnu.org/releases/${pkgbase}/${pkgbase}-${vers}.src.tar.gz"
+vers="2.3.1"
+url="http://download.savannah.gnu.org/releases/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--bindir=/bin --disable-static --libexecdir=/usr/lib --enable-gettext=yes --enable-lib64=no"
+OPT_CONFIG="
+	--disable-static
+	--libexecdir=/usr/lib
+	--docdir=/usr/share/doc/acl-${vers}"
 DOCS='README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -53,15 +56,14 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
-    export INSTALL_USER=root INSTALL_GROUP=root
     ./configure --prefix=/usr \
                 --sysconfdir=/etc \
                 --localstatedir=/var \
                 --mandir='${prefix}'/share/man \
                 ${OPT_CONFIG[$i]}
-    
+    sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
 	exit 255
@@ -83,9 +85,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install install-lib install-dev DIST_ROOT=$P PKG_DOC_DIR='${prefix}'/share/doc/${src}
+  make DESTDIR=$P install
 
-  chmod -v 755 $P/usr/${libdir}/libacl.so
   install -v -d $P/${libdir}
   mv -v $P/usr/${libdir}/libacl.so.* $P/${libdir}/
   ln -sfv ../../lib/$(readlink $P/usr/lib/libacl.so) $P/usr/lib/libacl.so
