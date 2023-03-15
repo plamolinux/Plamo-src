@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="110.0"
+vers="111.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -12,7 +12,7 @@ build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles="0001-libwebrtc-screen-cast-sync.patch"
+patchfiles="0001-Bug-1819374-Squashed-ffmpeg-6.0-update.patch 0002-Bug-1820416-Use-correct-FFVPX-headers-from-ffmpeg-6..patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
