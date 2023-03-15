@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nss'
-vers="3.88.1"
+vers="3.89"
 url="https://ftp.mozilla.org/pub/security/${pkgbase}/releases/NSS_${vers//./_}_RTM/src/${pkgbase}-${vers}.tar.gz"
 verify=""
-digest="md5sum:7ca8ff8ed672d82290c3122f38708579"
+digest="md5sum:9d5b910dcec7ef8aeb88b53803454f63"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
