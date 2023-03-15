@@ -12,7 +12,7 @@ build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles="0001-libwebrtc-screen-cast-sync.patch"
+patchfiles="0001-Bug-1819374-Squashed-ffmpeg-6.0-update.patch 0002-Bug-1820416-Use-correct-FFVPX-headers-from-ffmpeg-6..patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
