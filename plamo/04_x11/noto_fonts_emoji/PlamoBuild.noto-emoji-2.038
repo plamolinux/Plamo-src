@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="noto_fonts_emoji"
-vers="2.034"
+vers="2.038"
 url="https://github.com/googlefonts/noto-emoji/archive/refs/tags/v${vers}.tar.gz"
 verify=""
 digest=""
@@ -12,7 +12,7 @@ OPT_CONFIG=""
 DOCS="AUTHORS LICENSE README.md annotations_u11.txt emoji_aliases.txt emoji_annotations.txt requirements.txt unknown_flag_aliases.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="66-noto-color-emoji.conf"
 compress=tzst
 ##############################################################
 
@@ -63,6 +63,10 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
 
   install -Dm644 $S/fonts/NotoColorEmoji.ttf -t $P/usr/share/fonts/noto/
+
+  install -Dm644 $W/66-noto-color-emoji.conf $P/etc/fonts/conf.avail/66-noto-color-emoji.conf
+  install -dm755 -v $P/etc/fonts/conf.d/
+  ln -vsf ../conf.avail/66-noto-color-emoji.conf $P/etc/fonts/conf.d/66-noto-color-emoji.conf
 
 ################################
 #      install tweaks
