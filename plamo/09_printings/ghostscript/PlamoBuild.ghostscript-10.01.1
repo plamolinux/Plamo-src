@@ -3,10 +3,9 @@
 pkgbase='ghostscript'
 vers="10.01.1"
 GS_DOT_VERSION="10.01.1"
-url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs1011/ghostscript-10.01.1.tar.xz"
-digest=""
-fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.bz2"
-verify="md5sum:9e2d94ab40c4580d04b3221c3f78934a"
+url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers//\./}/ghostscript-${vers}.tar.xz"
+digest="md5sum:6545afd94a2983683b30f611cf6bc7ca"
+fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
 arch=`uname -m`
 build=B1
 src="ghostscript-${vers}"
