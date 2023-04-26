@@ -27,7 +27,8 @@ if [ $arch = "x86_64" -a $_IA32_EFI_IN_ARCH_X64 -ne 0 ]; then
   BUILD_VARS="$BUILD_VARS efi-i386-in-x86_64"
 fi
 compress='tzst'
-unifont_vers='14.0.04'
+addfiles="plamo_bg01.png"
+unifont_vers='15.0.01'
 # wget https://ftp.gnu.org/gnu/unifont/unifont-14.0.01/unifont-14.0.01.bdf.gz
 ##############################################################
 
@@ -56,7 +57,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    if [ ! -f unifont-${unifont_vers}.bdf.gz -o ! -f unifont-${unifont_vers}.bdf ]; then
+    if [ ! -f unifont-${unifont_vers}.bdf.gz ]; then
 	wget https://ftp.gnu.org/gnu/unifont/unifont-${unifont_vers}/unifont-${unifont_vers}.bdf.gz
     fi
 	
@@ -69,6 +70,13 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+    for f in $addfiles $patchfiles
+    do
+      if [ ! -f $f ]; then
+        echo "Required file ($f) is missing."
+        exit 255
+      fi
+    done
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
@@ -114,11 +122,10 @@ if [ $opt_config -eq 1 ] ; then
     unset LDFLAGS
     unset MAKEFLAGS
 
-    #if [ -f autogen.sh ] ; then
-    #  sh ./autogen.sh
-    #fi
-    autoreconf -ivf
-
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
+    
     ./configure \
         --prefix=/usr \
         --sysconfdir=/etc \
@@ -161,11 +168,12 @@ if [ $opt_package -eq 1 ] ; then
 
   # grub-mkconfig がよきにはからってくれるので，
   # ここに置いても大丈夫っぽい．
-  cp $W/plamo_bg01.png $P/usr/share/grub
+  cp -v $W/plamo_bg01.png $P/usr/share/grub
+  cp -v $W/plamo_bg01.png $P/usr/share/doc/"$src"/
 
   # これくらいは書きこんじゃう方が楽な気がする．
   mkdir -p $P/etc/default
-  cat <<"EOF" > $P/etc/default/grub.dist
+  cat <<"EOF" > $P/etc/default/grub
 # Default menu entry
 GRUB_DEFAULT=0
 # Time after the menu displayed
@@ -192,13 +200,6 @@ GRUB_PRELOAD_MODULES="part_gpt part_msdos"
 GRUB_BACKGROUND="/usr/share/grub/plamo_bg01.png"
 GRUB_FONTS="/usr/share/grub/unicode.pf2"
 
-EOF
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-if [ ! -f /etc/default/grub ]; then
-   cp -v /etc/default/grub.dist /etc/default/grub
-fi
 EOF
 
   echo "Remove debug related files"
