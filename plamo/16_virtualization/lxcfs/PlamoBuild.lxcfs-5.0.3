@@ -6,9 +6,9 @@ url="https://linuxcontainers.org/downloads/lxcfs/lxcfs-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="lxcfs-${vers}"
-OPT_CONFIG="--buildtype=release -Dinit-script=sysvinit"
+OPT_CONFIG="--buildtype=release -Dinit-script=sysvinit -Dfuse-version=3"
 DOCS="AUTHORS COPYING ChangeLog LICENSE.LGPL2.1 NEWS README README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
