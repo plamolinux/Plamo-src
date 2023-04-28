@@ -1,18 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase="glib"
-vers="2.66.4"
-url="http://ftp.gnome.org/pub/gnome/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
-verify=""
-digest="md5sum:2df4576b1e4acfd118867eebb41d9956"
+pkgbase="psmisc"
+vers="23.6"
+url="https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-${vers}.tar.xz"
+verify="${url}.asc"
+digest=""
 arch=`uname -m`
 build=B1
-src="glib-${vers}"
-OPT_CONFIG="-Dman=true -Dselinux=disabled"
-DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 meson_options.txt"
-blfspatch="http://www.linuxfromscratch.org/patches/blfs/svn/glib-${vers}-skip_warnings-1.patch"
-patchfiles="${blfspatch##*/}"
-compress=txz
+src="psmisc-${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.md doc"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -39,12 +40,19 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    if [ ! -f ${blfspatch##*/} ]; then
-	wget $blfspatch
-    fi
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -56,11 +64,13 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -69,7 +79,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -81,7 +92,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  DESTDIR=$P ninja install
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -d -v $P/bin
+  mv -v $P/usr/bin/fuser $P/bin/fuser
+  mv -v $P/usr/bin/killall $P/bin/killall
 
 ################################
 #      install tweaks
