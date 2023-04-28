@@ -1,21 +1,23 @@
 #!/bin/sh
 ##############################################################
 pkgbase='coreutils'
-vers='9.0'
+vers='9.3'
 url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-install-program=arch
-	--enable-no-install-program=uptime,kill
-	--without-gmp"
+	--enable-no-install-program=uptime,kill"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2005 ChangeLog-2006 ChangeLog-2007 ChangeLog-2008 INSTALL NEWS README THANKS THANKS-to-translators TODO thanks-gen'
-# savedir-sort.patch: ref.
+# 0003-No-Savedir-sort.patch:
 #    https://lists.gnu.org/archive/html/coreutils/2015-01/msg00098.html
-# sysinfo.patch
+# 0001-for-uname-to-make-p-and-i-work-on-Linux.patch:
 #    patch for uname to make -p and -i work on Linux
-patchfiles='savedir-sort.patch disable-extra_locale_cat.patch sysinfo.patch'
-compress=txz
+patchfiles="
+	0001-for-uname-to-make-p-and-i-work-on-Linux.patch
+	0002-disable-extra-locale-cat.patch
+	0003-No-Savedir-sort.patch"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
