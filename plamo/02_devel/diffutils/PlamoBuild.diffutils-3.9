@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='diffutils'
-vers='3.7'
+vers='3.9'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2008 INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
