@@ -1,0 +1,25 @@
+From 75b8fe5360e7a0a1393ab1d4a0a2daa06571197a Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Fri, 28 Apr 2023 21:14:41 +0900
+Subject: [PATCH 2/3] disable extra locale cat
+
+---
+ po/Makevars | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/po/Makevars b/po/Makevars
+index e0330ff..1fa0855 100644
+--- a/po/Makevars
++++ b/po/Makevars
+@@ -67,7 +67,7 @@ MSGID_BUGS_ADDRESS = bug-coreutils@gnu.org
+ 
+ # This is the list of locale categories, beyond LC_MESSAGES, for which the
+ # message catalogs shall be used.  It is usually empty.
+-EXTRA_LOCALE_CATEGORIES = LC_TIME
++#EXTRA_LOCALE_CATEGORIES = LC_TIME
+ 
+ # This tells whether the $(DOMAIN).pot file contains messages with an 'msgctxt'
+ # context.  Possible values are "yes" and "no".  Set this to yes if the
+-- 
+2.40.1
+
