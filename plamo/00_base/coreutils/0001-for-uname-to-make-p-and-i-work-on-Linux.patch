@@ -11,15 +11,6 @@ diff --git a/src/uname.c b/src/uname.c
 index 921a881..9b50711 100644
 --- a/src/uname.c
 +++ b/src/uname.c
-@@ -21,7 +21,7 @@
- #include <stdio.h>
- #include <sys/types.h>
- #include <sys/utsname.h>
--#include <getopt.h>
-+
- 
- #if HAVE_SYSINFO && HAVE_SYS_SYSTEMINFO_H
- # include <sys/systeminfo.h>
 @@ -272,7 +272,7 @@ decode_switches (int argc, char **argv)
  int
  main (int argc, char **argv)
