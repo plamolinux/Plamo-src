@@ -104,8 +104,7 @@ if [ $opt_package -eq 1 ] ; then
   install -d -v $P/install
   cat <<EOF >> $P/install/initpkg
 echo \$(hostname) >> /usr/share/dict/cracklib-extra-words
-create-cracklib-dict     /usr/share/dict/cracklib-words \
-                         /usr/share/dict/cracklib-extra-words
+create-cracklib-dict /usr/share/dict/cracklib-words /usr/share/dict/cracklib-extra-words
 EOF
 
 ################################
