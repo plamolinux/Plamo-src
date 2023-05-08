@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='cracklib'
-vers='2.9.7'
-url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-${vers}.tar.bz2"
-digest="md5sum:0d68de25332cee5660850528a385427f"
-w_url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-words-${vers}.bz2"
+vers='2.9.11'
+url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-${vers}.tar.xz"
+digest="md5sum:a6dfb1766aab43a54e1cbd78abf0a20a"
+w_url="https://github.com/cracklib/cracklib/releases/download/v${vers}/cracklib-words-${vers}.xz"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --without-python --with-default-dict=/lib/cracklib/pw_dict'
 DOCS='ABOUT-NLS AUTHORS COPYING.LIB ChangeLog INSTALL NEWS README README-DAWG README-LICENSE README-WORDS'
 #patchfiles='cracklib-2.8.15-heimdal-1.patch'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -94,17 +94,17 @@ if [ $opt_package -eq 1 ] ; then
   ln -sfv ../../$libdir/$(readlink $P/usr/lib/libcrack.so) $P/usr/lib/libcrack.so
 
   # dict
-  install -Dm644 -v $W/${w_url##*/} $P/usr/share/dict/cracklib-words.bz2
-  bunzip2 -v $P/usr/share/dict/cracklib-words.bz2
+  install -Dm644 -v $W/${w_url##*/} $P/usr/share/dict/cracklib-words.xz
+  unxz -v $P/usr/share/dict/cracklib-words.xz
   ln -sfv cracklib-words $P/usr/share/dict/words
 
-  echo $(hostname) >> $P/usr/share/dict/cracklib-extra-words
+
   install -v -m755 -d $P/$libdir/cracklib
 
   install -d -v $P/install
   cat <<EOF >> $P/install/initpkg
-create-cracklib-dict     /usr/share/dict/cracklib-words \
-                         /usr/share/dict/cracklib-extra-words
+echo \$(hostname) >> /usr/share/dict/cracklib-extra-words
+PATH="/bin:/usr/bin:/usr/sbin:/sbin" create-cracklib-dict /usr/share/dict/cracklib-words /usr/share/dict/cracklib-extra-words
 EOF
 
 ################################
