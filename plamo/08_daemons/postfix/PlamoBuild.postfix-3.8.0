@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='postfix'
-vers='3.7.0'
-url="http://mirror.${pkgbase}.jp/${pkgbase}-release/official/${pkgbase}-${vers}.tar.gz"
+vers='3.8.0'
+url="http://cdn.postfix.johnriley.me/mirrors/postfix-release/official/postfix-${vers}.tar.gz"
 #verify="${url}.sig"
 arch=`uname -m`
 build=B1
