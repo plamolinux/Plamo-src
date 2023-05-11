@@ -192,7 +192,7 @@ if [ $opt_package -eq 1 ] ; then
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
-  ( cd $P/usr/share/doc && mv $src $pkgbase-$vers
+  ( cd $P/usr/share/doc && mv $src $pkgbase-$vers )
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
