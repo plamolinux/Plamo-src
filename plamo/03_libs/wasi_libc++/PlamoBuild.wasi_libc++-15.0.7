@@ -1,0 +1,203 @@
+#!/bin/sh
+##############################################################
+pkgbase="wasi_libc++"
+vers="15.0.7"
+url="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/llvm-project-${vers}.src.tar.xz"
+verify="${url}.sig"
+digest=""
+arch=`uname -m`
+build=B1
+src="llvm-project-${vers}.src"
+OPT_CONFIG=(
+    -DCMAKE_C_COMPILER_WORKS=ON
+    -DCMAKE_CXX_COMPILER_WORKS=ON
+    -DCMAKE_AR=/usr/bin/ar
+    -DCMAKE_MODULE_PATH=llvm/cmake
+    -DCMAKE_STAGING_PREFIX=/usr/share/wasi-sysroot
+    -DLIBCXX_ENABLE_THREADS:BOOL=OFF
+    -DLIBCXX_HAS_PTHREAD_API:BOOL=OFF
+    -DLIBCXX_HAS_EXTERNAL_THREAD_API:BOOL=OFF
+    -DLIBCXX_BUILD_EXTERNAL_THREAD_LIBRARY:BOOL=OFF
+    -DLIBCXX_HAS_WIN32_THREAD_API:BOOL=OFF
+    -DLLVM_COMPILER_CHECKED:BOOL=ON
+    -DLLVM_RUNTIMES_LINKING_WORKS:BOOL=ON
+    -DCMAKE_BUILD_TYPE=Release
+    -DLIBCXX_ENABLE_SHARED:BOOL=OFF
+    -DLIBCXX_ENABLE_EXCEPTIONS:BOOL=OFF
+    -DLIBCXX_ENABLE_FILESYSTEM:BOOL=OFF
+    -DLIBCXX_CXX_ABI=libcxxabi
+    -DLIBCXX_HAS_MUSL_LIBC:BOOL=ON
+    -DLIBCXX_ABI_VERSION=2
+    -DLIBCXXABI_ENABLE_EXCEPTIONS:BOOL=OFF
+    -DLIBCXXABI_ENABLE_SHARED:BOOL=OFF
+    -DLIBCXXABI_SILENT_TERMINATE:BOOL=ON
+    -DLIBCXXABI_ENABLE_THREADS:BOOL=OFF
+    -DLIBCXXABI_HAS_PTHREAD_API:BOOL=OFF
+    -DLIBCXXABI_HAS_EXTERNAL_THREAD_API:BOOL=OFF
+    -DLIBCXXABI_BUILD_EXTERNAL_THREAD_LIBRARY:BOOL=OFF
+    -DLIBCXXABI_HAS_WIN32_THREAD_API:BOOL=OFF
+    -DWASI_SDK_PREFIX=/usr
+    -DUNIX:BOOL=ON
+    -DCMAKE_SYSROOT=/usr/share/wasi-sysroot
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
+    -DLIBCXX_LIBDIR_SUFFIX=/wasm32-wasi
+    -DLIBCXXABI_LIBDIR_SUFFIX=/wasm32-wasi
+    -DCXX_SUPPORTS_CLASS_MEMACCESS_FLAG:BOOL=OFF
+    -DCXX_SUPPORTS_COVERED_SWITCH_DEFAULT_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_EHA_FLAG:BOOL=OFF
+    -DCXX_SUPPORTS_EHS_FLAG:BOOL=OFF
+    -DCXX_SUPPORTS_FALIGNED_ALLOCATION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_FDATA_SECTIONS:BOOL=ON
+    -DCXX_SUPPORTS_FNO_EXCEPTIONS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_FSTRICT_ALIASING_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_FVISIBILITY_EQ_HIDDEN_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_FVISIBILITY_INLINES_HIDDEN_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_IMPLICIT_FALLTHROUGH_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_MISLEADING_INDENTATION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_MISSING_FIELD_INITIALIZERS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_NOEXCEPT_TYPE_FLAG:BOOL=OFF
+    -DCXX_SUPPORTS_NOSTDINCXX_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_NOSTDLIBXX_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_PEDANTIC_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_STRING_CONVERSION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_SUGGEST_OVERRIDE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_UNWINDLIB_EQ_NONE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WALL_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WCHAR_SUBSCRIPTS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WCONVERSION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WERROR_DATE_TIME:BOOL=ON
+    -DCXX_SUPPORTS_WERROR_EQ_RETURN_TYPE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WERROR_UNGUARDED_AVAILABILITY_NEW:BOOL=ON
+    -DCXX_SUPPORTS_WEXTRA_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WEXTRA_SEMI_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WFORMAT_NONLITERAL_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WMISMATCHED_TAGS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WMISSING_BRACES_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNEWLINE_EOF_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_COVERED_SWITCH_DEFAULT_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_ERROR_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_LONG_LONG_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_SUGGEST_OVERRIDE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_UNUSED_PARAMETER_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WNO_USER_DEFINED_LITERALS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSHADOW_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSHORTEN_64_TO_32_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSIGN_COMPARE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSIGN_CONVERSION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSTRICT_ALIASING_EQ_2_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WSTRICT_OVERFLOW_EQ_4_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WUNDEF_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WUNUSED_FUNCTION_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WUNUSED_PARAMETER_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WUNUSED_VARIABLE_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WWRITE_STRINGS_FLAG:BOOL=ON
+    -DCXX_SUPPORTS_WX_FLAG:BOOL=OFF
+    -DCXX_SUPPORTS_W_FLAG:BOOL=ON
+    -DCXX_WONT_WARN_ON_FINAL_NONVIRTUALDTOR:BOOL=ON
+    -DCXX_WSUGGEST_OVERRIDE_ALLOWS_ONLY_FINAL:BOOL=ON
+    -DLINKER_SUPPORTS_COLOR_DIAGNOSTICS:BOOL=ON
+    -DSUPPORTS_FVISIBILITY_INLINES_HIDDEN_FLAG:BOOL=ON)
+DOCS="README.md"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  source copy build. patch apply in build dir
+######################################################################
+    cd $W
+
+    if [ -d llvm ]; then
+        rm -rf llvm
+    fi
+    if [ -d build ]; then
+        rm -rf build
+    fi
+
+    cp -av $S llvm
+    mkdir -pv llvm/cmake/Platform
+    cp WASI.cmake llvm/cmake/Platform
+
+    cmake -B build -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE=$W/wasi-toolchain.cmake \
+          ${OPT_CONFIG[@]} llvm/runtimes
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $W
+
+    ninja -C build
+
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $W
+
+  DESTDIR=$P ninja -C build install-cxx
+  DESTDIR=$P ninja -C build install-cxxabi
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+  ( cd $P/usr/share/doc && mv $src $pkgbase-$vers )
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
