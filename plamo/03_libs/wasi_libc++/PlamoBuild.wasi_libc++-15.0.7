@@ -175,10 +175,10 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
+  cd $W
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja -C build install-cxx
+  DESTDIR=$P ninja -C build install-cxxabi
 
 ################################
 #      install tweaks
