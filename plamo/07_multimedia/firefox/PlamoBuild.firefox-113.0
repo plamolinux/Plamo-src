@@ -119,7 +119,7 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
-  for p in toml pysolfc
+  for p in toml pysolfc tomli-w
   do
       pip3 list | grep $p
       if [ $? -ne 0 ]; then
