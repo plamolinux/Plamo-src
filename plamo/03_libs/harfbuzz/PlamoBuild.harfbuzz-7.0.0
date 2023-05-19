@@ -1,21 +1,20 @@
 #!/bin/sh
 ##############################################################
 pkgbase="harfbuzz"
-vers="2.8.0"
+vers="7.0.0"
 url="https://github.com/harfbuzz/harfbuzz/releases/download/${vers}/harfbuzz-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="harfbuzz-${vers}"
-OPT_CONFIG="-Dgraphite=enabled -Dbenchmark=disabled"
-DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README README.md README.python.md THANKS TODO docs gtk-doc.make meson_options.txt"
+OPT_CONFIG="--buildtype=release -Dgraphite2=enabled -Ddocs=disabled"
+DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README README.md README.python.md THANKS docs gtk-doc.make"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
-# graphite2 -> harfbuzz -> graphite2 の順でビルド
 
 source /usr/share/plamobuild_functions.sh
 
