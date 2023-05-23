@@ -1,18 +1,21 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive'
-vers="20210325"
-url="ftp://tug.org/texlive/historic/2021/texlive-${vers}-source.tar.xz"
+vers="20230313"
+url="ftp://tug.org/texlive/historic/2023/texlive-${vers}-source.tar.xz"
+
+tlpdb_url="ftp://tug.org/texlive/historic/2023/texlive-20230311-tlpdb-full.tar.gz"
 verify="${url}.sha512"
 arch=`uname -m`
 build=B1
 src="texlive-${vers}-source"
 
-PREFIX=/opt/texlive/2021
+PREFIX=/opt/texlive/2023
 TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
 
 OPT_CONFIG=(--prefix=${PREFIX}
 	    --bindir=${PREFIX}/bin/$TEXARCH
+	    --datarootdir=${PREFIX}
 	    --includedir=${PREFIX}/include
 	    --infodir=${PREFIX}/texmf-dist/doc/info
 	    --libdir=${PREFIX}/lib
@@ -36,7 +39,7 @@ OPT_CONFIG=(--prefix=${PREFIX}
 	    --with-system-zlib
 	    --with-banner-add=' - Plamo')
 DOCS='ChangeLog README README.0overview README.1prerequisites README.2building README.3installing README.4layout README.5configure README.6cross README.7coding'
-blfspatches=(texlive-20210325-upstream_fixes-1.patch)
+blfspatches=(texlive-20230313-source-security_fix-1.patch)
 patchfiles="${blfspatches[@]}"
 additional_src=""
 compress=tzst
@@ -74,15 +77,9 @@ if [ $opt_download -eq 1 ] ; then
     fi
   done
 
-  echo -n "Get additional source from github repository of texlive: "
-  add_url="https://raw.githubusercontent.com/TeX-Live/texlive-source/trunk/texk/web2c/pdftexdir/"
-  for f in $additional_src
-  do
-      if [ ! -f $f ]; then
-          wget -O $f $add_url/$f
-      fi
-  done
-  echo "done."
+  if [ ! -f ${tlpdb_url##*/} ]; then
+      wget $tlpdb_url
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -143,6 +140,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -dm755 -v $P/$PREFIX/tlpkg/TeXLive
   install -m644  -v $S/texk/tests/TeXLive/* -t $P/$PREFIX/tlpkg/TeXLive/
+  tar xf $W/${tlpdb_url##*/} -C $P/$PREFIX/tlpkg
 
   # xbb
   ln -s dvipdfmx $P/$PREFIX/bin/$TEXARCH/xbb
