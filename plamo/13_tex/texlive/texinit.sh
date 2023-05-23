@@ -2,7 +2,7 @@
 
 SAVEPATH=$PATH
 
-PREFIX=/opt/texlive/2021
+PREFIX=/opt/texlive/2023
 TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
 
 PATH=$PREFIX/bin/$TEXARCH:$PATH
@@ -26,7 +26,9 @@ sed -i -e 's|^OSFONTDIR.*$|OSFONTDIR = /usr/share/fonts|' $PREFIX/texmf-dist/web
 # initialize
 mktexlsr
 fmtutil-sys --all
-mtxrun --generate
+
+# To allow evince or dvisvgm to link to libkpathsea.so
+ln -svf $PREFIX/lib/libkpathsea.so /usr/lib
 
 # setup Japanese fonts
 kanji-config-updmap-sys ipaex
