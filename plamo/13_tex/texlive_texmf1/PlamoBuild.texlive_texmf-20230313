@@ -1,7 +1,7 @@
-#!/bin/sh -x
+#!/bin/sh
 ##############################################################
 pkgbase='texlive_texmf'
-vers='20210325'
+vers="20230313"
 url="ftp://tug.org/texlive/historic/2021/texlive-${vers}-texmf.tar.xz"
 verify=""
 arch=noarch
@@ -12,7 +12,7 @@ DOCS=''
 blfspatch=""
 patchfiles=""
 compress=tzst
-PREFIX=/opt/texlive/2021
+PREFIX=/opt/texlive/2023
 ##############################################################
 PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
         dvips hbf2gf makeindex metafont metapost mft omega pbibtex
@@ -22,10 +22,10 @@ PKG[2]="fonts"
 PKG[3]="doc/latex"
 PKG[4]="doc/aleph doc/amstex doc/asymptote doc/bibtex doc/bibtex8 doc/bibtexu doc/chktex
 	doc/context doc/cstex doc/dvipdfm doc/dvipdfmx doc/dvipng doc/dvips doc/eplain
-	doc/etex doc/fonts doc/generic doc/info doc/kpathsea doc/latex-dev doc/lualatex
-	doc/luatex doc/man doc/metapost doc/mex doc/omega doc/otherformats doc/pdftex
+	doc/etex doc/fonts doc/generic doc/hitex doc/info doc/kpathsea doc/latex-dev doc/lualatex
+	doc/luatex doc/man doc/metapost doc/mex doc/omega doc/optex doc/otherformats doc/pdftex
 	doc/plain doc/platex doc/pmxchords doc/ptex doc/support
-	doc/texlive doc/texworks doc/tpic2pdftex doc/ttf2pk doc/uplatex doc/upmendex
+	doc/texlive doc/texworks doc/tpic2pdftex doc/ttf2pk doc/uplatex
 	doc/uptex doc/vlna doc/web2c doc/xelatex doc/xetex doc/xindy"
 
 source /usr/share/plamobuild_functions.sh
