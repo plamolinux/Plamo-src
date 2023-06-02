@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='eudev'
-vers='3.2.7'
-url="http://dev.gentoo.org/~blueness/${pkgbase}/${pkgbase}-${vers}.tar.gz"
-verify="http://dev.gentoo.org/~blueness/eudev/eudev-${vers}.tar.gz.asc"
+vers="3.2.12"
+url="https://github.com/eudev-project/eudev/releases/download/v${vers}/eudev-${vers}.tar.gz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -12,18 +12,18 @@ OPT_CONFIG="--bindir=/sbin --sbindir=/sbin
 	--enable-manpages --disable-static --config-cache"
 DOCS='COPYING'
 patchfiles=''
-compress=txz
+compress=tzst
 lfsfiles="http://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.bz2"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
-# ¤³¤Î¥¹¥¯¥ê¥×¥È¤Ç»È¤¦1Ê¸»úÊÑ¿ô¤Î°ÕÌ£
+# ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ä½¿ã†1æ–‡å­—å¤‰æ•°ã®æ„å‘³
 #
-# $W : ¤³¤Î¥¹¥¯¥ê¥×¥È¤òÆ°¤«¤¹¥«¥ì¥ó¥È¥Ç¥£¥ì¥¯¥È¥ê
-# $S : ¥½¡¼¥¹¥³¡¼¥É¤Î¤¢¤ë¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: $W/${src})
-# $B : ¥Ó¥ë¥ÉÍÑ¥Ç¥£¥ì¥¯¥È¥ê(¥Ç¥Õ¥©¥ë¥È: /tmp/build{,32})
-# $P : ¥Ó¥ë¥É¤·¤¿¥Õ¥¡¥¤¥ë¤ò¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¥Ç¥£¥ì¥¯¥È¥ê¡Ê¥Ç¥Õ¥©¥ë¥È: $W/work)
+# $W : ã“ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å‹•ã‹ã™ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
+# $S : ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/${src})
+# $B : ãƒ“ãƒ«ãƒ‰ç”¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª(ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: /tmp/build{,32})
+# $P : ãƒ“ãƒ«ãƒ‰ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ: $W/work)
 
 
 if [ $# -eq 0 ] ; then
@@ -56,21 +56,16 @@ if [ $opt_config -eq 1 ] ; then
   for patch in $patchfiles ; do
     patch -p1 < $W/$patch
   done
-  sed -r -i 's|/usr(/bin/test)|\1|' test/udev-test.pl
+  sed -i -e 's/GROUP="sgx", //' rules/50-udev-default.rules
 
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-  
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig
+  export LDFLAGS='-Wl,--as-needed'
   ./configure --prefix=/usr \
               --sysconfdir=/etc \
               --localstatedir=/var \
               --libdir=/usr/$libdir \
-              --libexecdir=/$libdir \
-              --mandir='${prefix}'/share/man ${OPT_CONFIG}
-    
+              --mandir=/usr/share/man ${OPT_CONFIG}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
@@ -93,7 +88,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -dm755 -v /lib/udev/rules.d
   install -dm755 -v /etc/udev/rules.d
-  
+
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
@@ -105,8 +100,6 @@ if [ $opt_package -eq 1 ] ; then
   rm -rfv $P/usr/share/doc/udev-*/
 
   rm -fv $P/etc/udev/rules.d/55-lfs.rules
-  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/README
-  #install -Dm644 $(basename ${lfsfiles##*/} .tar.bz2)/lfs/README $docdir/$src/lfs/55-lfs.txt
 
   # init scripts
   install -v -d $P/etc/rc.d/init.d
