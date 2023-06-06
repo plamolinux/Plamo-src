@@ -10,7 +10,7 @@ build=B1
 src="iputils-${vers}"
 OPT_CONFIG="--buildtype=release -DUSE_IDN=false -DINSTALL_SYSTEMD_UNITS=false"
 DOCS="Documentation LICENSE README.md doc"
-patchfiles="xsltproc-nonet.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
