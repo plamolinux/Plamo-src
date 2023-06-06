@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gawk"
-vers="5.1.0"
-url="https://ftp.gnu.org/gnu/gawk/gawk-5.1.0.tar.xz"
+vers="5.2.2"
+url="https://ftp.gnu.org/gnu/gawk/gawk-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B2
-src="gawk-5.1.0"
+build=B1
+src="gawk-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --without-libsigsegv-prefix"
 DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog.0 ChangeLog.1 INSTALL NEWS NEWS.0 NEWS.1 README README_d TODO"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
