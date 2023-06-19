@@ -4,12 +4,12 @@ pkgbase='lsb_release'
 vers='1.4'
 url="http://sourceforge.net/projects/lsb/files/${pkgbase}/${vers}/lsb-release-${vers}.tar.gz"
 arch=`uname -m`
-build=B6
+build=B10
 src="lsb-release-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='ChangeLog INSTALL README lsb-release.template lsb_release lsb_release.examples'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -70,9 +70,18 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/etc
   install -v -m 644 lsb_release.1 $P/usr/share/man/man1/lsb_release.1
   install -v -m 755 lsb_release $P/usr/bin/lsb_release
-  cat <<EOF > $P/etc/plamo-release
-Plamo Linux release 8.0-dev
-EOF
+  cat <<__EOF > $P/etc/plamo-release
+Plamo Linux release 8.1
+__EOF
+
+  cat <<__EOF > $P/etc/os-release
+NAME="Plamo Linux"
+ID=plamo
+PRETTY_NAME="Plamo Linux 8.1"
+VERSION="8.1"
+VERSION_ID="8.1"
+HOME_URL="https://plamolinux.org"
+__EOF
 
 ################################
 #      install tweaks
