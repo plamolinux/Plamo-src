@@ -11,7 +11,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+patchfiles='thunderbird-102.12.0-consolidated-1.patch'
 addfiles='langpack.sh mozconfig thunderbird.desktop vendor.js'
 compress=tzst
 
