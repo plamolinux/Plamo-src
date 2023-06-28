@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='XPython'
-vers='3.9.16'
+vers='3.11.4'
 url="https://www.python.org/ftp/python/${vers}/Python-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -17,7 +17,7 @@ OPT_CONFIG="--enable-shared
 	--with-tcltk-includes=-I/usr/include --with-tcltk-libs='-L/usr/lib'
 	--enable-loadable-sqlite-extensions --without-ensurepip"
 DOCS='LICENSE README.rst'
-patchfiles='python3.no-static-library.diff python3.readline.set_pre_input_hook.diff'
+patchfiles=''
 compress=tzst
 ##############################################################
 
@@ -78,8 +78,8 @@ if [ $opt_config -eq 1 ] ; then
   # -fno-semantic-interposition を指定すると、libpythonXX.so に LD_PRELOAD が使えなくなる代りに
   # 20％前後速度が向上するらしい。
   
-  CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
-  LDFLAGS="$LDFLAGS -fno-semantic-interposition"
+  export CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
+  export LDFLAGS="$LDFLAGS -fno-semantic-interposition"
 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
@@ -94,8 +94,8 @@ if [ $opt_build -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   export LANG=C
 
-  CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
-  LDFLAGS="$LDFLAGS -fno-semantic-interposition"
+  export CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
+  export LDFLAGS="$LDFLAGS -fno-semantic-interposition -fuse-ld=mold"
   make
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
@@ -111,7 +111,7 @@ if [ $opt_package -eq 1 ] ; then
   # Hack to avoid building again
   sed -i 's/^all:.*$/all: build_all/' Makefile
 
-  export LDFLAGS='-Wl,--as-needed'
+  export LDFLAGS="$LDFLAGS -fno-semantic-interposition -fuse-ld=mold"
   make install DESTDIR=$P
 
   chmod -v 755 $P/usr/${libdir}/libpython3.so
@@ -124,9 +124,9 @@ if [ $opt_package -eq 1 ] ; then
   ln -s python${vers%%.[0-9]}.1 "$P"/usr/share/man/man1/python.1
 
   # some useful "stuff" FS#46146
-  install -dm755 "$P"/usr/lib/python3.9/Tools/{i18n,scripts}
-  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python3.9/Tools/i18n/
-  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python3.9/Tools/scripts/
+  install -dm755 "$P"/usr/lib/python${vers%.*}/Tools/{i18n,scripts}
+  install -m755 Tools/i18n/{msgfmt,pygettext}.py "$P"/usr/lib/python${vers%.*}/Tools/i18n/
+  install -m755 Tools/scripts/{README,*py} "$P"/usr/lib/python${vers%.*}/Tools/scripts/
 
   mkdir -p $P/install
   cat << "EOF" > $P/install/initpkg
