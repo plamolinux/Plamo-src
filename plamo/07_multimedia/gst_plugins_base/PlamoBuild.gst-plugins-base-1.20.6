@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_plugins_bad"
-vers="1.20.3"
-url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
-verify="${url}.asc"
+pkgbase="gst_plugins_base"
+vers="1.20.6"
+url="https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-${vers}.tar.xz"
+#verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B2
-src="gst-plugins-bad-${vers}"
-OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
+src="gst-plugins-base-${vers}"
+OPT_CONFIG=(--buildtype release -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo" --wrap-mode=nodownload -Dtremor=disabled -Dgobject-cast-checks=disabled)
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
-# 4896.patch is https://gstreamer.freedesktop.org/security/sa-2023-0003.html
-patchfiles="4896.patch"
+# 4895.patch is https://gstreamer.freedesktop.org/security/sa-2023-0002.html
+patchfiles="4895.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
