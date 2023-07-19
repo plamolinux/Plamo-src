@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libpng'
-vers='1.6.37'
+vers='1.6.40'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:015e8e15db1eecde5f2eb9eb5b6e59e9"
+digest="md5sum:6c7fe9dbb80c89c3579bedad9722e559"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
-apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
+apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-1.6.39-apng.patch.gz"
 #apng_digest="1760dbaa13c2569fdda6d83f6483701e"
 patchfiles="$(basename ${apng_patch_url##*/} .gz)"
 compress=txz
