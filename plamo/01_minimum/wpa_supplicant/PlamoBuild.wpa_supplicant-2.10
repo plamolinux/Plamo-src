@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wpa_supplicant'
-vers='2.9'
+vers='2.10'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -11,9 +11,18 @@ OPT_CONFIG=''
 DOCS='COPYING README'
 blfspatch=""
 # https://w1.fi/security/2019-7/ap-mode-pmf-disconnection-protection-bypass.txt
-patchfiles="0001-AP-Silently-ignore-management-frame-from-unexpected-.patch"
+patchfiles="
+	wpa_supplicant_tls.patch
+	wpa_supplicant_dbus_service_syslog.patch
+	wpa_supplicant_service_ignore-on-isolate.patch
+	wpa_supplicant-legacy-server-connect.patch
+	lower_security_level_for_tls_1.patch
+	disable-eapol-werror.patch
+	0001-nl80211-add-extra-ies-only-if-allowed-by-driver.patch
+	0002-AP-guard-FT-SAE-code-with-CONFIG_IEEE80211R_AP.patch
+"
 addfiles="config ifconfig_wlan0-sample wpa.service"
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -71,6 +80,7 @@ if [ $opt_build -eq 1 ] ; then
   cd $B/wpa_supplicant
   export LDFLAGS='-Wl,--as-needed'
   make BINDIR=/sbin LIBDIR=/${libdir}
+  make BINDIR=/usr/bin LIBDIR=/${libdir} eapol_test
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
@@ -83,6 +93,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B/wpa_supplicant
   export LDFLAGS='-Wl,--as-needed'
   make LIBDIR=/${libdir} BINDIR=/sbin DESTDIR=$P install
+  install -v -Dm755 eapol_test $P/usr/bin/eapol_test
+
   install -v -Dm644 doc/docbook/wpa_supplicant.conf.5 $P/usr/share/man/man5/
   install -v -Dm644 doc/docbook/wpa_{cli,passphrase,supplicant}.8 $P/usr/share/man/man8/
 
