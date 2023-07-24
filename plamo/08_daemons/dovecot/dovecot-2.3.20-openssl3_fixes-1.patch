@@ -1,0 +1,45 @@
+Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
+Date:                    2022-02-12
+Initial Package Version: 2.3.18
+Upstream Status:         Not Applied
+Origin:                  Red Hat (https://bugzilla-attachments.redhat.com/attachment.cgi?id=1788877)
+Description:             Fixes a runtime issue with OpenSSL-3 when exchanging
+                         certificates with another system during the initial
+                         connection phase by implementing OpenSSL-3 compatible
+                         versions of the EVP_PKEY_get0_EC_KEY and
+                         EVP_PKEY_get1_EC_KEY functions.
+
+diff -Naurp dovecot-2.3.18.orig/src/lib-dcrypt/dcrypt-openssl.c dovecot-2.3.18/src/lib-dcrypt/dcrypt-openssl.c
+--- dovecot-2.3.18.orig/src/lib-dcrypt/dcrypt-openssl.c	2022-02-02 05:42:23.000000000 -0600
++++ dovecot-2.3.18/src/lib-dcrypt/dcrypt-openssl.c	2022-02-12 21:20:13.766911113 -0600
+@@ -73,10 +73,30 @@
+   2<tab>key algo oid<tab>1<tab>symmetric algo name<tab>salt<tab>hash algo<tab>rounds<tab>E(RSA = i2d_PrivateKey, EC=Private Point)<tab>key id
+ **/
+ 
++#if OPENSSL_VERSION_MAJOR == 3
++static EC_KEY *EVP_PKEY_get0_EC_KEYv3(EVP_PKEY *key)
++{
++   EC_KEY *eck = EVP_PKEY_get1_EC_KEY(key);
++   EVP_PKEY_set1_EC_KEY(key, eck);
++   EC_KEY_free(eck);
++   return eck;
++}
++
++static EC_KEY *EVP_PKEY_get1_EC_KEYv3(EVP_PKEY *key)
++{
++   EC_KEY *eck = EVP_PKEY_get1_EC_KEY(key);
++   EVP_PKEY_set1_EC_KEY(key, eck);
++   return eck;
++}
++
++#define EVP_PKEY_get0_EC_KEY EVP_PKEY_get0_EC_KEYv3
++#define EVP_PKEY_get1_EC_KEY EVP_PKEY_get1_EC_KEYv3
++#else
+ #ifndef HAVE_EVP_PKEY_get0
+ #define EVP_PKEY_get0_EC_KEY(x) x->pkey.ec
+ #define EVP_PKEY_get0_RSA(x) x->pkey.rsa
+ #endif
++#endif
+ 
+ #ifndef HAVE_OBJ_LENGTH
+ #define OBJ_length(o) ((o)->length)
