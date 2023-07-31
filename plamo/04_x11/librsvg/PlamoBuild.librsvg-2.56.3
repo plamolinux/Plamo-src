@@ -95,7 +95,8 @@ if [ $opt_config -eq 1 ] ; then
 
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
+    export LDFLAGS='-Wl,--as-needed'
+    export PATH="$HOME/.cargo/bin:$PATH"
     $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
@@ -104,7 +105,8 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
+    cd $B
+    export PATH="$HOME/.cargo/bin:$PATH"
     export LDFLAGS='-Wl,--as-needed'
     make -j3
     if [ $? != 0 ]; then
