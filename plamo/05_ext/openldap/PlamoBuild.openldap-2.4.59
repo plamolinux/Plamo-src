@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openldap'
-vers='2.4.45'
-url="ftp://ftp.${pkgbase}.org/pub/OpenLDAP/${pkgbase}-release/${pkgbase}-${vers}.tgz"
-verify="ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-${vers}.sha1"
+vers="2.4.59"
+url="https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-${vers}.tgz"
+verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --enable-dynamic --disable-debug --disable-slapd"
 DOCS='INSTALL LICENSE README'
 patchfiles='openldap-2.4.45-consolidated-1.patch'
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
