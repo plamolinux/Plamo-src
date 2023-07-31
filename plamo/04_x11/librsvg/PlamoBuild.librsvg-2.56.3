@@ -121,6 +121,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
+  export PATH="$HOME/.cargo/bin:$PATH"
   make install DESTDIR=$P
   mkdir -p $P/install
   cat <<EOF > $P/install/initpkg
