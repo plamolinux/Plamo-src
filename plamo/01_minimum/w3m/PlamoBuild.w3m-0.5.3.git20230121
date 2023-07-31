@@ -11,7 +11,7 @@ src=w3m
 OPT_CONFIG="--with-termlib=ncurses --disable-w3mmailer"
 DOCS='ABOUT-NLS ChangeLog NEWS README TODO history.c history.h news.c'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
