@@ -15,7 +15,7 @@ OPT_CONFIG="--with-pidfile=/run/nsd/nsd.pid
 	    --enable-pie"
 DOCS='LICENSE'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
