@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='w3m'
-vers='0.5.3.git20170102'
-url="https://anonscm.debian.org/git/collab-maint/w3m.git"
-commitid="1ac245bdcd803f69c7793ecccc090a80b1137d35"
+vers='0.5.3.git20230121'
+url="https://salsa.debian.org/debian/w3m.git"
+commitid="fee038d7180e3d69276f55167a0d1da5233bc9c2"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src=w3m
 OPT_CONFIG="--with-termlib=ncurses --disable-w3mmailer"
 DOCS='ABOUT-NLS ChangeLog NEWS README TODO history.c history.h news.c'
