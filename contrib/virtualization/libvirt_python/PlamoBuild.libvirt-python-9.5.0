@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libvirt_python"
-vers="7.3.0"
+vers="9.5.0"
 url="https://libvirt.org/sources/python/libvirt-python-${vers}.tar.gz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="libvirt-python-${vers}"
 OPT_CONFIG=""
 DOCS="AUTHORS COPYING COPYING.LESSER ChangeLog README"
@@ -87,7 +87,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr
+  python setup.py install --root $P --prefix=/usr --optimize=1
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
