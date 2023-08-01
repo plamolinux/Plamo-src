@@ -14,7 +14,7 @@ patchfiles=""
 oldlibs="libevent-2.1.so.6.0.2 libevent_core-2.1.so.6.0.2 libevent_extra-2.1.so.6.0.2 libevent_openssl-2.1.so.6.0.2 libevent_pthreads-2.1.so.6.0.2"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
