@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libssh2'
-vers='1.9.0'
+vers="1.11.0"
 url="https://www.${pkgbase}.org/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+OPT_CONFIG="--disable-docker-tests --disable-static"
 DOCS='COPYING ChangeLog NEWS README RELEASE-NOTES'
-patchfiles='CVE-2019-17498.patch'
+patchfiles=''
 addfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
