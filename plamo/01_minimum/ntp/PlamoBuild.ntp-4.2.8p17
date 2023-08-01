@@ -10,7 +10,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-linuxcaps --with-lineeditlibs=readline --docdir=/usr/share/doc/${src}"
 DOCS='ChangeLog INSTALL NEWS README README.bk README.hackers README.leapsmear README.patches README.pullrequests README.refclocks README.versions TODO readme.y2kfixes'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
