@@ -10,7 +10,7 @@ src="files"
 OPT_CONFIG=''
 DOCS=''
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
