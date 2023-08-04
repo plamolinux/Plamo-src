@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gvfs'
-vers='1.46.2'
+vers="1.50.5"
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:852fff7ae3215012f3e143d0b13a81ff"
+digest="md5sum:d0724181d20985a23c61d88e3a36a56e"
 verify=""
 arch=`uname -m`
 build=B1
@@ -18,12 +18,11 @@ OPT_CONFIG="-Dfuse=true
 	-Dmtp=true
 	-Dsmb=true
 	-Dtmpfilesdir=no
-	-Dlogind=false
 	-Ddnssd=true
 	-Dcdda=true
 	-Dgoa=false
 	-Dgoogle=false
-	-Dsystemduserunitdir=false"
+	-Dsystemduserunitdir=no"
 DOCS='AUTHORS COPYING ChangeLog.pre-1-2 MAINTAINERS NEWS README README.commits meson_options.txt meson_post_install.py txt'
 patchfiles=''
 compress=txz
