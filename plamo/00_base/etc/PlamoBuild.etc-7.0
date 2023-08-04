@@ -5,12 +5,12 @@ vers='7.0'
 url=""
 verify=""
 arch=noarch
-build=B23
+build=B24
 src="files"
 OPT_CONFIG=''
 DOCS=''
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
