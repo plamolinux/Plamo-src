@@ -1,7 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2021-02-09 17:43:58 karma>
+#                           Time-stamp: <2023-08-04 16:32:18 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
@@ -34,6 +34,9 @@ QT_IM_MODULE=@IM@
 GTK_IM_MODULE=@IM@
 export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
+
+# ツール"Qt5の設定"を使うための環境変数設定
+export QT_QPA_PLATFORMTHEME=qt5ct
 
 LAUNCH="dbus-launch --exit-with-session"
 
