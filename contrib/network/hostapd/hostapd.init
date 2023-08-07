@@ -1,0 +1,31 @@
+#!/bin/sh
+# Start/stop/restart the hostapd (IEEE 802.11 Wireless AP) server:
+
+start() {
+  if [ -x /usr/sbin/hostapd ] ; then
+    hostapd -B /etc/hostapd/hostapd.conf
+  fi
+}
+
+stop() {
+  killall hostapd
+}
+
+case "$1" in
+start)
+  start
+  ;;
+stop)
+  stop
+  ;;
+restart)
+  stop
+  sleep 3
+  start
+  ;;
+*)
+  echo $"Usage: $0 {start|stop|restart}"
+  exit 1
+  ;;
+esac
+exit 0
