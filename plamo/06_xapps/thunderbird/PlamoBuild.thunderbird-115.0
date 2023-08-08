@@ -61,6 +61,9 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
 
+  sed -e '/<exception>/i#include <cstdint>' \
+      -i comm/third_party/rnp/src/libsexp/include/sexp/sexp-error.h
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
