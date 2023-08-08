@@ -1,22 +1,34 @@
 ac_add_options --enable-application=comm/mail
 
 ac_add_options --prefix=/usr
-ac_add_options --enable-strip
-ac_add_options --enable-install-strip
-ac_add_options --enable-optimize=-O2
-ac_add_options --enable-linker=gold
+ac_add_options --enable-release
+ac_add_options --enable-linker=lld
+ac_add_options --enable-hardening
+ac_add_options --enable-optimize
+ac_add_options --enable-rust-simd
+ac_add_options --disable-elf-hack
+ac_add_options --without-wasm-sandboxed-libraries
+
+# Branding
+ac_add_options --disable-official-branding
+ac_add_options --with-branding=comm/mail/branding/nightly
+ac_add_options --with-distribution-id=org.plamolinux
+ac_add_options --with-unsigned-addon-scopes=app,system
+ac_add_options --allow-addon-sideload
+ac_add_options --with-distribution-id=org.plamolinux
 
 # System Libraries
-#ac_add_options --with-system-libevent
+ac_add_options --with-system-zlib
+ac_add_options --with-system-bz2
+#ac_add_options --with-system-icu
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-jsonc
+ac_add_options --with-system-png
 ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
-#ac_add_options --with-system-icu
+#ac_add_options --with-system-libevent
 ac_add_options --enable-system-ffi
 ac_add_options --enable-system-pixman
-ac_add_options --with-system-bz2
-ac_add_options --with-system-jpeg
-ac_add_options --with-system-png
-ac_add_options --with-system-zlib
 
 # Features
 #ac_add_options --disable-dbus
@@ -32,15 +44,5 @@ ac_add_options --disable-updater
 ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
 ac_add_options --disable-tests
-ac_add_options --disable-elf-hack
-
-ac_add_options --without-wasm-sandboxed-libraries
-
-# Branding
-ac_add_options --disable-official-branding
-ac_add_options --with-branding=comm/mail/branding/nightly
-ac_add_options --with-distribution-id=org.plamolinux
-ac_add_options --with-unsigned-addon-scopes=app,system
-ac_add_options --allow-addon-sideload
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
