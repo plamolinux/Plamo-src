@@ -47,7 +47,7 @@ case "$1" in
 
       # Make sure the mysql user can create a socket
       mkdir -p /run/mysqld
-      chown mysql.mysql /run/mysqld
+      chown mysql:mysql /run/mysqld
 
       if [ -f "$PIDFILE" ]; then
          if /bin/ps -e | grep `cat $PIDFILE` | grep mysqld >/dev/null ; then
