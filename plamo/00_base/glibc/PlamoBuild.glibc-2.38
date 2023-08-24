@@ -1,13 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='glibc'
-vers='2.30'
+vers='2.38'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="glibc-${vers}"
 OPT_CONFIG="
+	--enable-crypt
+	--enable-nss-crypt
 	--with-headers=/usr/include
 	--enable-add-ons
 	--enable-bind-now
@@ -17,23 +19,29 @@ OPT_CONFIG="
 	--enable-static-pie
 	--disable-profile
 	--disable-werror
-	--enable-kernel=3.2
+	--enable-kernel=4.4
 	libc_cv_slibdir=/lib"
-DOCS="BUGS CONFORMANCE COPYING COPYING.LIB
-	ChangeLog ChangeLog.1 ChangeLog.10 ChangeLog.11 ChangeLog.12 ChangeLog.13 ChangeLog.14 ChangeLog.15 ChangeLog.16 ChangeLog.17
-	ChangeLog.2 ChangeLog.3 ChangeLog.4 ChangeLog.5 ChangeLog.6 ChangeLog.7 ChangeLog.8 ChangeLog.9
-	ChangeLog.old-ports ChangeLog.old-ports-aarch64 ChangeLog.old-ports-aix ChangeLog.old-ports-alpha ChangeLog.old-ports-am33
-	ChangeLog.old-ports-arm ChangeLog.old-ports-cris ChangeLog.old-ports-hppa ChangeLog.old-ports-ia64 ChangeLog.old-ports-linux-generic
-	ChangeLog.old-ports-m68k ChangeLog.old-ports-microblaze ChangeLog.old-ports-mips ChangeLog.old-ports-powerpc ChangeLog.old-ports-tile
-	INSTALL LICENSES NEWS PROJECTS README"
+#	--enable-static-nss
+# for 2.26
+#OPT_CONFIG="--enable-add-ons
+#	--enable-kernel=3.2
+#	--localedir=/usr/share/locale
+#	--enable-tls
+#	--enable-obsolete-nsl
+#	--enable-obsolete-rpc
+#	--enable-stack-protector=strong
+#	--disable-profile
+#	--disable-werror
+#	--build=${arch}-pc-linux
+#	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
+DOCS="BUGS CONFORMANCE COPYING COPYING.LIB INSTALL LICENSES MAINTAINERS NEWS  README ChangeLog.old"
 
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
-# glibc-c-utf8-locale.patch
-# https://mirrors.slackware.com/slackware/slackware64-current/source/l/glibc/glibc-c-utf8-locale.patch.gz
 fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile glibc-c-utf8-locale.patch"
-compress=txz
+patchfiles="$fhs_patchfile"
+addfiles="supported_locales.plamo nsswitch.conf.plamo nscd.conf.plamo"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -59,6 +67,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for i in $patchfiles $addfiles ; do
+	if [ ! -f $W/$i ]; then
+	    echo "need file $i doesn't find"
+	    exit
+	fi
+    done
+    
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
@@ -98,7 +114,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B
     export LDFLAGS='-Wl,--as-needed'
-    make
+    make -j6
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -120,8 +136,13 @@ if [ $opt_package -eq 1 ] ; then
   make install install_root=$P
 
   # install locale (/usr/lib/locale/locale-archives)
-  cp $W/SUPPORTED.plamo $S/localedata/SUPPORTED
+  cp $W/supported_locales.plamo $S/localedata/SUPPORTED
   make localedata/install-locales install_root=$P
+
+  mkdir -p $docdir/${pkgbase}-${vers}
+  for i in $patchfiles $addfiles ; do
+      install -m644 $W/$i $docdir/${pkgbase}-${vers}
+  done
 
 ################################
 #      install tweaks
@@ -173,9 +194,9 @@ if [ $opt_package -eq 1 ] ; then
   # lib64 を廃するための移行措置
   if [ "${arch}" == "x86_64" ]; then
     mkdir -pv $P/lib64
-    ( cd $P/lib64 ; ln -v ../lib/ld-${vers}.so ld-linux-x86-64.so.2 )
+    ( cd $P/lib64 ; ln -v ../lib/ld-linux-x86-64.so.2 ld-linux-x86-64.so.2 )
   fi
-  cat <<-EOF > $P/etc/ld.so.conf.dist
+  cat <<-EOF > $P/etc/ld.so.conf.new
 	/lib64
 	/usr/lib64
 	/lib
@@ -209,10 +230,12 @@ if [ $opt_package -eq 1 ] ; then
   mkdir -p $P/install
 cat <<"EOF" > $P/install/initpkg
 echo "glibc package initializing"
-# 既存の ld.so.conf があればそのまま
-if [ ! -f /etc/ld.so.conf ]; then
-  ( cd /etc && cp ld.so.conf.dist ld.so.conf )
+# ld.so.conf は置き換え
+echo "Replace /etc/ld.so.conf, and backup it to /etc/ld.so.conf.old"
+if [ -f /etc/ld.so.conf ]; then
+  mv -v /etc/ld.so.conf /etc/ld.so.conf.old
 fi
+mv /etc/ld.so.conf.new /etc/ld.so.conf
 ldconfig
 
 # 既存の nsswitch.conf が無ければ新しく nsswitch.conf.new を nsswitch.conf とするが
@@ -246,6 +269,10 @@ fi
 echo "glibc initialize finished"
 
 EOF
+
+# Copy patches to doc DIR
+cp $W/glibc-2.37-fhs-1.patch $W/CVE-2023-25139.patch $W/reenable_DT_HASH.patch \
+ $P/usr/share/doc/$pkgbase-$vers/
 
 # convert symlink to null file and add 'ln -sf ..' commands into
 # install/doinst.sh
