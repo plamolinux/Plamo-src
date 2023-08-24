@@ -5,41 +5,23 @@ vers='2.38'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="glibc-${vers}"
 OPT_CONFIG="
-	--enable-crypt
-	--enable-nss-crypt
 	--with-headers=/usr/include
-	--enable-add-ons
 	--enable-bind-now
-	--enable-lock-elision
+	--enable-fortify-source
 	--enable-stack-protector=strong
-	--enable-stackguard-randomization
-	--enable-static-pie
 	--disable-profile
 	--disable-werror
 	--enable-kernel=4.4
 	libc_cv_slibdir=/lib"
-#	--enable-static-nss
-# for 2.26
-#OPT_CONFIG="--enable-add-ons
-#	--enable-kernel=3.2
-#	--localedir=/usr/share/locale
-#	--enable-tls
-#	--enable-obsolete-nsl
-#	--enable-obsolete-rpc
-#	--enable-stack-protector=strong
-#	--disable-profile
-#	--disable-werror
-#	--build=${arch}-pc-linux
-#	--target=${arch}-pc-linux libc_cv_slibdir=/lib"
 DOCS="BUGS CONFORMANCE COPYING COPYING.LIB INSTALL LICENSES MAINTAINERS NEWS  README ChangeLog.old"
 
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
-fhs_patchfile="glibc-${vers}-fhs-1.patch"
-patchfiles="$fhs_patchfile"
+lfs_patchfiles=(glibc-${vers}-fhs-1.patch glibc-2.38-memalign_fix-1.patch)
+patchfiles="${lfs_patchfiles[@]} reenable_DT_HASH.patch"
 addfiles="supported_locales.plamo nsswitch.conf.plamo nscd.conf.plamo"
 compress=tzst
 ##############################################################
@@ -61,9 +43,12 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    if [ ! -f $fhs_patchfile ]; then
-      wget http://www.linuxfromscratch.org/patches/lfs/development/${fhs_patchfile}
-    fi
+    for f in ${lfs_patchfiles[@]}
+    do
+	if [ ! -f $f ]; then
+	    wget https://www.linuxfromscratch.org/patches/lfs/development/$f
+	fi
+    done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -129,8 +114,6 @@ if [ $opt_package -eq 1 ] ; then
     fi
   fi
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  if [ -d $C ] ; then rm -rf $C ; fi ; mkdir -p $C
-  touch $W/i.st ; sleep 1
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install install_root=$P
@@ -269,10 +252,6 @@ fi
 echo "glibc initialize finished"
 
 EOF
-
-# Copy patches to doc DIR
-cp $W/glibc-2.37-fhs-1.patch $W/CVE-2023-25139.patch $W/reenable_DT_HASH.patch \
- $P/usr/share/doc/$pkgbase-$vers/
 
 # convert symlink to null file and add 'ln -sf ..' commands into
 # install/doinst.sh
