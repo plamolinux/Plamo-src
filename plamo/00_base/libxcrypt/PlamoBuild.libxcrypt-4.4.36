@@ -6,7 +6,7 @@ url="https://github.com/besser82/libxcrypt/releases/download/v${vers}/libxcrypt-
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="libxcrypt-${vers}"
 OPT_CONFIG="
 	--enable-hashes=strong,glibc
@@ -127,8 +127,16 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  cp -v $B2/.libs/libcrypt.so.1.* $P/usr/lib
-  ( cd $P/usr/lib && ln -sv $(readlink $B2/.libs/libcrypt.so.1) $P/usr/lib/libcrypt.so.1 )
+  mkdir $P/lib
+
+  # move libraries to /lib
+  mv -v $P/usr/lib/libcrypt.so.2* $P/lib/
+  #( cd $P/lib && ln -sv $(readlink $P/usr/lib/libcrypt.so.2) libcrypt.so.2 )
+  ( cd $P/usr/lib && ln -sfv ../../lib/$(readlink libcrypt.so) libcrypt.so )
+
+  # glibc compat lib
+  cp -v $B2/.libs/libcrypt.so.1.* $P/lib/
+  ( cd $P/lib && ln -sv $(readlink $B2/.libs/libcrypt.so.1) $P/lib/libcrypt.so.1 )
 
 ################################
 #      install tweaks
@@ -137,6 +145,7 @@ if [ $opt_package -eq 1 ] ; then
 ################################
   install_tweak
 
+  exit 0
 #############################
 #   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
