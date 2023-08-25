@@ -145,7 +145,6 @@ if [ $opt_package -eq 1 ] ; then
 ################################
   install_tweak
 
-  exit 0
 #############################
 #   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
