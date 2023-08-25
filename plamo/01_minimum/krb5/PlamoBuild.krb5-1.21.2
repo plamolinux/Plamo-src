@@ -1,26 +1,26 @@
 #!/bin/sh
 ##############################################################
 pkgbase="krb5"
-vers="1.19.4"
-url="http://web.mit.edu/kerberos/dist/krb5/1.19/krb5-${vers}.tar.gz"
+vers="1.21.2"
+url="https://kerberos.org/dist/krb5/${vers%.*}/krb5-${vers}.tar.gz"
 verify=""
-digest=""
+digest="md5sum:97d5f3a48235c53f6d537c877290d2af"
 arch=`uname -m`
-build=B1
+build=B2
 src="krb5-${vers}"
 OPT_CONFIG="
 	--sbindir=/usr/bin
+	--runstatedir=/run
 	--enable-shared
 	--with-system-et
 	--with-system-ss
 	--disable-rpath
-	--without-tcl
 	--enable-dns-for-realm
 	--without-system-verto
 	--without-keyutils"
 DOCS="NOTICE README doc"
 # https://raw.githubusercontent.com/archlinux/svntogit-packages/packages/krb5/trunk/krb5-config_LDFLAGS.patch
-patchfiles="krb5-config_LDFLAGS.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -81,10 +81,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B/src
     # BLFS でやってるテスト用コードの修正
     # make check でテストしないなら必要ない．
-    sed -i -e 's|kdc kadmin kprop clients appl tests|kdc kadmin kprop clients appl|' Makefile.in
-    sed -i -e 's@\^u}@^u cols 300}@' tests/dejagnu/config/default.exp
     sed -i -e '/eq 0/{N;s/12 //}'    plugins/kdb/db2/libdb2/test/run.test
-    sed -i '/t_iprop.py/d'           tests/Makefile.in
 
     autoreconf -i
     
