@@ -6,13 +6,13 @@ url="https://www.mupdf.com/downloads/archive/mupdf-${vers}-source.tar.gz"
 verify=""
 digest="sha256sum:de4140692e693142c311e030ac156e38ee175d7ab6c1be10c5c9ae963846164e"
 arch=`uname -m`
-build=B1
+build=B2
 src="mupdf-${vers}-source"
 OPT_CONFIG=""
 DOCS=".readthedocs.yaml COPYING README docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="mupdf.desktop mupdf.xpm"
 compress=tzst
 ##############################################################
 
@@ -107,6 +107,9 @@ if [ $opt_package -eq 1 ] ; then
   make prefix=$P/usr shared=yes docdir=$P/usr/share/doc/mupdf-${vers}-source install
   chmod 755 $P/usr/lib/libmupdf.so
   ( cd $P/usr/bin && ln -sfv mupdf-x11 mupdf )
+
+  install -Dm644 -v $W/mupdf.desktop $P/usr/share/applications/mupdf.desktop
+  install -Dm644 -v $W/mupdf.xpm $P/usr/share/pixmaps/mupdf.xpm
 
 ################################
 #      install tweaks
