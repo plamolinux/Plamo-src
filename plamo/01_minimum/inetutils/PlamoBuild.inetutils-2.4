@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='inetutils'
-vers='1.9.4'
+vers='2.4'
 url="http://ftp.jaist.ac.jp/pub/GNU/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:87fef1fa3f603aef11c41dcc097af75e"
+verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--libexecdir=\${prefix}/sbin
@@ -24,8 +24,8 @@ OPT_CONFIG="
 	--disable-ifconfig
 "
 DOCS='AUTHORS COPYING ChangeLog ChangeLog.0 INSTALL NEWS README THANKS TODO'
-patchfiles=''
-compress=txz
+patchfiles='CVE-2023-40303.patch'
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
