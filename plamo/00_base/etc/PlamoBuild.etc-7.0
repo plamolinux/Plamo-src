@@ -3,9 +3,11 @@
 pkgbase='etc'
 vers='7.0'
 url=""
+iana_vers="20230810"
+iana_url="https://github.com/Mic92/iana-etc/releases/download/${iana_vers}/iana-etc-${iana_vers}.tar.gz"
 verify=""
 arch=noarch
-build=B24
+build=B25
 src="files"
 OPT_CONFIG=''
 DOCS=''
@@ -37,11 +39,18 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-  download_sources
+    download_sources
+    if [ ! -f ${iana_url##*/} ]; then
+	wget $iana_url
+    fi
+    tar xvf ${iana_url##*/}
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  echo "There is nothing to do."
+    echo "Copy Iana-Etc files to \$src"
+    # IANA etc (protocol, services)
+    cp -v "$( basename ${iana_url##*/} .tar.gz )"/{protocols,services} $S/etc/
+    echo "You should commit changes under \$src, if change."
 fi
 
 if [ $opt_build -eq 1 ] ; then
