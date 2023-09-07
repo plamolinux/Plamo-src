@@ -73,8 +73,6 @@ if [ $opt_package -eq 1 ] ; then
 ( cd etc ; ln -sf issue issue.net )
 ( cd etc ; rm -rf skel )
 ( cd etc ; ln -sf template/Default skel )
-( cd etc ; rm -rf HOSTNAME )
-( cd etc ; ln -sf hostname HOSTNAME )
 ( cd var/log ; rm -rf utmp )
 ( cd var/log ; ln -sf /var/run/utmp utmp)
 if [ ! -r etc/passwd ] ; then
@@ -105,6 +103,13 @@ if [ ! -r etc/networks ] ; then
 else
   rm -f etc/networks-incoming
 fi
+if [ ! -r etc/hostname ]; then
+  mv etc/hostname-incoming etc/hostname
+else
+  rm -f etc/hostname-incoming
+fi
+( cd etc ; rm -rf HOSTNAME )
+( cd etc ; ln -sf hostname HOSTNAME )
 EOF
 
 ################################
