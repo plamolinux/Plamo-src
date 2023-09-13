@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libwebp"
-vers="1.3.0"
+vers="1.3.1"
 url="http://downloads.webmproject.org/releases/webp/libwebp-${vers}.tar.gz"
 verify="${url}.asc"
 digest=""
@@ -10,7 +10,7 @@ build=B1
 src="libwebp-${vers}"
 OPT_CONFIG="--enable-libwebpmux --enable-libwebpdemux --enable-libwebpdecoder --enable-libwebpextras --enable-swap-16bit-csp --disable-static --enable-shared"
 DOCS="AUTHORS COPYING ChangeLog NEWS README README.mux README.webp_js"
-patchfiles="libwebp-1.3.0-upstream_fix-1.patch"
+patchfiles="libwebp-1.3.1-security_update-1.patch"
 compress=tzst
 ##############################################################
 
