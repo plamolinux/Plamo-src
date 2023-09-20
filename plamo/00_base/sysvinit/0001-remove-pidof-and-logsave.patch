@@ -1,0 +1,60 @@
+From 5c2fbac5f8293859a5b2419cb8ca616ff219b84f Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Wed, 20 Sep 2023 15:59:37 +0900
+Subject: [PATCH] remove pidof and logsave
+
+---
+ src/Makefile | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index 21cbb2e..31bd062 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -23,13 +23,13 @@ MNTPOINT=
+ 
+ # For some known distributions we do not build all programs, otherwise we do.
+ BIN	=
+-SBIN	= init halt shutdown runlevel killall5 fstab-decode logsave
++SBIN	= init halt shutdown runlevel killall5 fstab-decode
+ USRBIN	= last mesg readbootlog
+ 
+ MAN1	= last.1 lastb.1 mesg.1 readbootlog.1
+ MAN5	= initscript.5 inittab.5 initctl.5
+-MAN8	= halt.8 init.8 killall5.8 pidof.8 poweroff.8 reboot.8 runlevel.8
+-MAN8	+= shutdown.8 telinit.8 fstab-decode.8 logsave.8
++MAN8	= halt.8 init.8 killall5.8 poweroff.8 reboot.8 runlevel.8
++MAN8	+= shutdown.8 telinit.8 fstab-decode.8
+ 
+ ifeq ($(DISTRO),)
+ SBIN	+= sulogin bootlogd
+@@ -122,9 +122,6 @@ halt:		halt.o ifdown.o hddown.o utmp.o runlevellog.o
+ last:		LDLIBS += $(STATIC)
+ last:		last.o
+ 
+-logsave:	LDLIBS += $(STATIC)
+-logsave:	logsave.o
+-
+ mesg:		LDLIBS += $(STATIC)
+ mesg:		mesg.o
+ 
+@@ -181,8 +178,6 @@ halt.o:		halt.c reboot.h paths.h runlevellog.c runlevellog.h
+ 
+ last.o:		last.c oldutmp.h
+ 
+-logsave.o:	logsave.c
+-
+ consoles.o:	consoles.c consoles.h
+ 
+ cleanobjs:
+@@ -213,7 +208,6 @@ install:	all
+ 		ln -sf halt $(ROOT)/sbin/reboot
+ 		ln -sf halt $(ROOT)/sbin/poweroff
+ 		ln -sf init $(ROOT)/sbin/telinit
+-		ln -sf ../sbin/killall5 $(ROOT)/bin/pidof
+ 		if [ ! -f $(ROOT)/usr/bin/lastb ]; then \
+ 			ln -sf last $(ROOT)/usr/bin/lastb; \
+ 		fi
+-- 
+2.41.0
+
