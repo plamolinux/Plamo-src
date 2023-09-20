@@ -1,0 +1,38 @@
+#!/bin/sh
+export PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
+
+# initialize package with newly installed environment.
+# echo "ldconfig to new libraries"
+#if [ ! -r /etc/ld.so.conf ]; then
+#    /sbin/ldconfig -r "`/bin/pwd`"
+#else
+#    /sbin/ldconfig
+#fi
+# Set the hostname.
+#echo -n "Set the hostname: "
+if [ ! -r /etc/HOSTNAME ]; then
+    # If there's no /etc/HOSTNAME, fall back on this default.
+    HOST='darkstar.frop.org'
+else
+    HOST=`cat /etc/HOSTNAME`
+fi
+HOST=${HOST%%.*}
+/bin/hostname "$HOST"
+
+if [ ! -d /var/log/initpkg.log ]; then
+    mkdir -p /var/log/initpkg.log
+fi
+
+while true; do
+    DO_INIT=no
+    for p in `ls -1tr ./var/log/initpkg`; do
+      sh ./var/log/initpkg/$p && (ldconfig 2>/dev/null ; mv ./var/log/initpkg/$p ./var/log/initpkg.log/$p ; DO_INIT=yes)
+# for debugging
+#       echo "initpkg:$p" >> ./var/log/packages/initpkg.log
+#       sh ./var/log/initpkg/$p 2>&1 | tee -a ./var/log/packages/initpkg.log && (rm ./var/log/initpkg/$p; DO_INIT=yes)
+    done
+    if [ "$DO_INIT" = "no" ]; then
+      break
+    fi
+done
+
