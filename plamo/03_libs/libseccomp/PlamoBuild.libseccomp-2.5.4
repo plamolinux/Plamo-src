@@ -1,18 +1,18 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libseccomp'
-vers=""
-url="https://github.com/seccomp/libseccomp.git"
-commitid="ff2a538cfcfbd1d10c4b460d74d725ac866136f4"
+vers="2.5.4"
+url="https://github.com/seccomp/libseccomp/releases/download/v${vers}/libseccomp-${vers}.tar.gz"
+commitid=""
 digest=""
-verify=""
+verify="https://github.com/seccomp/libseccomp/releases/download/v${vers}/libseccomp-${vers}.tar.gz.asc"
 arch=`uname -m`
 build=B1
-src="libseccomp"
+src="libseccomp-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='CHANGELOG LICENSE README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -37,16 +37,6 @@ else
     package) opt_package=1 ;;
     esac
   done
-fi
-
-###
-#version = date.commitid
-###
-if [ $opt_download -ne 1 ]; then
-    pushd $S
-    vers=$(TZ=UTC git show -s --pretty=%cd --date=format-local:%Y%m%d HEAD).$(git rev-parse --short HEAD)
-    pkg=${pkgbase}-${vers}-${arch}-${build}
-    popd
 fi
 
 if [ $opt_download -eq 1 ] ; then
