@@ -5,7 +5,7 @@ vers='2.38'
 url="http://ftp.jaist.ac.jp/pub/GNU/glibc/glibc-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B3
 src="glibc-${vers}"
 OPT_CONFIG="
 	--with-headers=/usr/include
@@ -20,7 +20,7 @@ DOCS="BUGS CONFORMANCE COPYING COPYING.LIB INSTALL LICENSES MAINTAINERS NEWS  RE
 
 # LFS's patch
 # http://www.linuxfromscratch.org/patches/lfs/development/glibc-2.24-fhs-1.patch
-lfs_patchfiles=(glibc-${vers}-fhs-1.patch glibc-2.38-memalign_fix-1.patch)
+lfs_patchfiles=(glibc-${vers}-fhs-1.patch glibc-2.38-upstream_fixes-3.patch)
 patchfiles="${lfs_patchfiles[@]} reenable_DT_HASH.patch"
 addfiles="supported_locales.plamo nsswitch.conf.plamo nscd.conf.plamo"
 compress=tzst

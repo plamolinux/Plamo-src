@@ -1,14 +1,25 @@
 Submitted By:            Xi Ruoyao <xry111 at xry111.site>
-Date:                    2023-08-13
+Date:                    2023-10-03
 Initial Package Version: 2.38
-Upstream Status:         Under review
+Upstream Status:         Applied
 Origin:                  Upstream & Self
-  - 1/3: https://sourceware.org/git/?p=glibc.git;a=patch;h=542b11058525
-  - 2/3: https://sourceware.org/pipermail/libc-alpha/2023-August/150857.html
-  - 3/3: Trivial unused code removal
+  - 1/8: https://sourceware.org/git/?p=glibc.git;a=patch;h=542b11058525
+  - 2/8: https://sourceware.org/pipermail/libc-alpha/2023-August/150857.html
+  - 3/8: Trivial unused code removal
+  - 4/8: https://sourceware.org/pipermail/libc-alpha/2023-September/151522.html
+  - 5/8: https://sourceware.org/pipermail/libc-alpha/2023-September/151548.html
+  - 6/8: https://sourceware.org/git/gitweb.cgi?p=glibc.git;h=ec6b95c3303c
+  - 7/8: https://sourceware.org/git/gitweb.cgi?p=glibc.git;h=73e3fcd1a552
+  - 8/8: https://sourceware.org/git/gitweb.cgi?p=glibc.git;h=750a45a78390
 Description:             Fixes a regression causing posix_memalign()
                          very slow in certain conditions to avoid
-                         breaking ffmpeg-based applications.
+                         breaking ffmpeg-based applications;
+                         fixes three security vulnerabilities:
+                         CVE-2023-4527, CVE-2023-4806, and CVE-2023-4911.
+                         (There is also a fix for CVE-2023-5156, but this
+                         CVE is actually a memory leak introduced by the
+                         CVE-2023-4806 fix so I'll not say "fixed it for
+                         Glibc-2.38".)
 
 From fc01478d06658ace8d57e5328c1e717275acfe84 Mon Sep 17 00:00:00 2001
 From: Florian Weimer <fweimer@redhat.com>
@@ -583,3 +594,181 @@ index 9c2cab7a59..d0bbbf3710 100644
 -- 
 2.41.0
 
+diff --git a/resolv/nss_dns/dns-host.c b/resolv/nss_dns/dns-host.c
+index c8b77bbc35..119dc9f00f 100644
+--- a/resolv/nss_dns/dns-host.c
++++ b/resolv/nss_dns/dns-host.c
+@@ -427,7 +427,7 @@ _nss_dns_gethostbyname4_r (const char *name, struct gaih_addrtuple **pat,
+     {
+       n = __res_context_search (ctx, name, C_IN, T_A,
+ 				dns_packet_buffer, sizeof (dns_packet_buffer),
+-				NULL, NULL, NULL, NULL, NULL);
++				&alt_dns_packet_buffer, NULL, NULL, NULL, NULL);
+       if (n >= 0)
+ 	status = gaih_getanswer_noaaaa (alt_dns_packet_buffer, n,
+ 					&abuf, pat, errnop, herrnop, ttlp);
+
+diff --git a/sysdeps/posix/getaddrinfo.c b/sysdeps/posix/getaddrinfo.c
+index 6ae6744fe4..eb5ba59dac 100644
+--- a/sysdeps/posix/getaddrinfo.c
++++ b/sysdeps/posix/getaddrinfo.c
+@@ -120,6 +120,7 @@ struct gaih_result
+ {
+   struct gaih_addrtuple *at;
+   char *canon;
++  char *hname;
+   bool free_at;
+   bool got_ipv6;
+ };
+@@ -165,6 +166,7 @@ gaih_result_reset (struct gaih_result *res)
+   if (res->free_at)
+     free (res->at);
+   free (res->canon);
++  free (res->hname);
+   memset (res, 0, sizeof (*res));
+ }
+ 
+@@ -203,9 +205,8 @@ gaih_inet_serv (const char *servicename, const struct gaih_typeproto *tp,
+   return 0;
+ }
+ 
+-/* Convert struct hostent to a list of struct gaih_addrtuple objects.  h_name
+-   is not copied, and the struct hostent object must not be deallocated
+-   prematurely.  The new addresses are appended to the tuple array in RES.  */
++/* Convert struct hostent to a list of struct gaih_addrtuple objects.  The new
++   addresses are appended to the tuple array in RES.  */
+ static bool
+ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
+ 				   struct hostent *h, struct gaih_result *res)
+@@ -238,6 +239,15 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
+   res->at = array;
+   res->free_at = true;
+ 
++  /* Duplicate h_name because it may get reclaimed when the underlying storage
++     is freed.  */
++  if (res->hname == NULL)
++    {
++      res->hname = __strdup (h->h_name);
++      if (res->hname == NULL)
++	return false;
++    }
++
+   /* Update the next pointers on reallocation.  */
+   for (size_t i = 0; i < old; i++)
+     array[i].next = array + i + 1;
+@@ -262,7 +272,6 @@ convert_hostent_to_gaih_addrtuple (const struct addrinfo *req, int family,
+ 	}
+       array[i].next = array + i + 1;
+     }
+-  array[0].name = h->h_name;
+   array[count - 1].next = NULL;
+ 
+   return true;
+@@ -324,15 +333,15 @@ gethosts (nss_gethostbyname3_r fct, int family, const char *name,
+    memory allocation failure.  The returned string is allocated on the
+    heap; the caller has to free it.  */
+ static char *
+-getcanonname (nss_action_list nip, struct gaih_addrtuple *at, const char *name)
++getcanonname (nss_action_list nip, const char *hname, const char *name)
+ {
+   nss_getcanonname_r *cfct = __nss_lookup_function (nip, "getcanonname_r");
+   char *s = (char *) name;
+   if (cfct != NULL)
+     {
+       char buf[256];
+-      if (DL_CALL_FCT (cfct, (at->name ?: name, buf, sizeof (buf),
+-			      &s, &errno, &h_errno)) != NSS_STATUS_SUCCESS)
++      if (DL_CALL_FCT (cfct, (hname ?: name, buf, sizeof (buf), &s, &errno,
++			      &h_errno)) != NSS_STATUS_SUCCESS)
+ 	/* If the canonical name cannot be determined, use the passed
+ 	   string.  */
+ 	s = (char *) name;
+@@ -740,6 +749,7 @@ get_nss_addresses (const char *name, const struct addrinfo *req,
+ 		    }
+ 		  no_inet6_data = no_data;
+ 		  inet6_status = status;
++
+ 		}
+ 	      if (req->ai_family == AF_INET
+ 		  || req->ai_family == AF_UNSPEC
+@@ -771,7 +781,7 @@ get_nss_addresses (const char *name, const struct addrinfo *req,
+ 		  if ((req->ai_flags & AI_CANONNAME) != 0
+ 		      && res->canon == NULL)
+ 		    {
+-		      char *canonbuf = getcanonname (nip, res->at, name);
++		      char *canonbuf = getcanonname (nip, res->hname, name);
+ 		      if (canonbuf == NULL)
+ 			{
+ 			  __resolv_context_put (res_ctx);
+
+X-Git-Url: https://sourceware.org/git/?p=glibc.git;a=blobdiff_plain;f=sysdeps%2Fposix%2Fgetaddrinfo.c;h=531124958d037733ccee13bf59f97ab4a36ffdd4;hp=47f421fddf7e1aff732763ea333b2469f241091a;hb=ec6b95c3303c700eb89eebeda2d7264cc184a796;hpb=5d00c201b9a2da768a79ea8d5311f257871c0b43
+
+diff --git a/sysdeps/posix/getaddrinfo.c b/sysdeps/posix/getaddrinfo.c
+index 47f421fddf..531124958d 100644
+--- a/sysdeps/posix/getaddrinfo.c
++++ b/sysdeps/posix/getaddrinfo.c
+@@ -1196,9 +1196,7 @@ free_and_return:
+   if (malloc_name)
+     free ((char *) name);
+   free (addrmem);
+-  if (res.free_at)
+-    free (res.at);
+-  free (res.canon);
++  gaih_result_reset (&res);
+ 
+   return result;
+ }
+
+X-Git-Url: https://sourceware.org/git/?p=glibc.git;a=blobdiff_plain;f=sysdeps%2Fgeneric%2Funsecvars.h;h=8278c50a84ffda18e28c178d390f1899d8306e26;hp=81397fb90ba48d7e0e4c2ba99c8efb5daf1d6c5b;hb=73e3fcd1a552783e66ff1f65c5f322e2f17a81d1;hpb=f6445dc94da185b3d1ee283f0ca0a34c4e1986cc
+
+diff --git a/sysdeps/generic/unsecvars.h b/sysdeps/generic/unsecvars.h
+index 81397fb90b..8278c50a84 100644
+--- a/sysdeps/generic/unsecvars.h
++++ b/sysdeps/generic/unsecvars.h
+@@ -4,7 +4,6 @@
+ #define UNSECURE_ENVVARS \
+   "GCONV_PATH\0"							      \
+   "GETCONF_DIR\0"							      \
+-  "GLIBC_TUNABLES\0"							      \
+   "HOSTALIASES\0"							      \
+   "LD_AUDIT\0"								      \
+   "LD_DEBUG\0"								      \
+
+X-Git-Url: https://sourceware.org/git/?p=glibc.git;a=blobdiff_plain;f=elf%2Fdl-tunables.c;h=cae67efa0aacb9984c49874dcb95f170ecd1d86d;hp=62b7332d95b61ce3428040522271f6e93e9d53ed;hb=750a45a783906a19591fb8ff6b7841470f1f5701;hpb=73e3fcd1a552783e66ff1f65c5f322e2f17a81d1
+
+diff --git a/elf/dl-tunables.c b/elf/dl-tunables.c
+index 62b7332d95..cae67efa0a 100644
+--- a/elf/dl-tunables.c
++++ b/elf/dl-tunables.c
+@@ -180,11 +180,7 @@ parse_tunables (char *tunestr, char *valstring)
+       /* If we reach the end of the string before getting a valid name-value
+ 	 pair, bail out.  */
+       if (p[len] == '\0')
+-	{
+-	  if (__libc_enable_secure)
+-	    tunestr[off] = '\0';
+-	  return;
+-	}
++	break;
+
+       /* We did not find a valid name-value pair before encountering the
+ 	 colon.  */
+@@ -244,9 +240,16 @@ parse_tunables (char *tunestr, char *valstring)
+ 	    }
+ 	}
+
+-      if (p[len] != '\0')
+-	p += len + 1;
++      /* We reached the end while processing the tunable string.  */
++      if (p[len] == '\0')
++	break;
++
++      p += len + 1;
+     }
++
++  /* Terminate tunestr before we leave.  */
++  if (__libc_enable_secure)
++    tunestr[off] = '\0';
+ }
+
+ /* Enable the glibc.malloc.check tunable in SETUID/SETGID programs only when
