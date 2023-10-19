@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libXpm"
-vers="3.5.15"
+vers="3.5.17"
 url="https://www.x.org/pub/individual/lib/libXpm-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:05b5667aadd476d77e9b5ba1a1de213e"
 arch=`uname -m`
 build=B1
 src="libXpm-${vers}"
