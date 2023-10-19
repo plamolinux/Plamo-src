@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libnotify"
-vers="0.7.8"
+vers="0.8.3"
 url="http://ftp.gnome.org/pub/gnome/sources/libnotify/${vers%.*}/libnotify-${vers}.tar.xz"
 verify=""
-digest="md5sum:babb4b07b5f21bef42a386d3d7019599"
+digest="md5sum:952e55f45067b6a5b9eab4310c9cd658"
 arch=`uname -m`
 build=B1
 src="libnotify-${vers}"
-OPT_CONFIG="-Dgtk_doc=false"
+OPT_CONFIG="--buildtype=release -Dgtk_doc=false -Dman=false"
 DOCS="AUTHORS COPYING ChangeLog NEWS README meson_options.txt"
 patchfiles=""
 compress=txz
@@ -80,6 +80,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+  mv -v $P/usr/share/doc/libnotify $P/usr/share/doc/libnotify-${vers}
 
 ################################
 #      install tweaks
