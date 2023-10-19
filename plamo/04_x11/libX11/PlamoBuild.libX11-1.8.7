@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libX11"
-vers="1.6.10"
-url="https://xorg.freedesktop.org/releases/individual/lib/libX11-${vers}.tar.bz2"
+vers="1.8.7"
+url="https://xorg.freedesktop.org/releases/individual/lib/libX11-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
@@ -10,10 +10,10 @@ build=B1
 src="libX11-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README.md"
-patchfiles="93fce3f4e79cbc737d6468a4f68ba3de1b83953b.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
