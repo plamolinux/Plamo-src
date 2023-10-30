@@ -1,22 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xorg_server"
-vers="1.20.10"
-url="https://www.x.org/pub/individual/xserver/xorg-server-${vers}.tar.bz2"
+vers="21.1.9"
+url="https://www.x.org/pub/individual/xserver/xorg-server-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
 src="xorg-server-${vers}"
-OPT_CONFIG="--enable-glamor
-	--enable-install-setuid
-	--enable-suid-wrapper
-	--enable-listen-tcp
-	--enable-dmx
-	--with-xkb-output=/var/lib/xkb"
-DOCS="COPYING ChangeLog INSTALL README.md meson_options.txt"
+OPT_CONFIG="-Dsuid_wrapper=true  -Dxkb_output_dir=/var/lib/xkb -Dxephyr=true"
+DOCS="COPYING ChangeLog INSTALL README.md doc docbook.am meson_options.txt"
 patchfiles=""
-compress=txz
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -45,7 +42,17 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -61,9 +68,9 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -72,8 +79,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -85,9 +91,21 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
+  mkdir -pv $P/etc/X11/xorg.conf.d
+
+  mkdir -pv $P/install
+  cat >> $P/install/initpkg <<"EOF"
+chk=`grep X11-unix /etc/sysconfig/createfiles`
+if [ "$chk.x" == ".x" ] ; then
+    cat >> /etc/sysconfig/createfiles << "__EOF"
+/tmp/.ICE-unix dir 1777 root root
+/tmp/.X11-unix dir 1777 root root
+__EOF
+fi
+EOF
+  
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
