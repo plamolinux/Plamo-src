@@ -6,7 +6,7 @@ url="https://github.com/neutrinolabs/xrdp/releases/download/v${vers}/xrdp-${vers
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="xrdp-${vers}"
 OPT_CONFIG="
 	--enable-jpeg
@@ -26,7 +26,7 @@ OPT_CONFIG="
 DOCS="COPYING NEWS.md README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="45-allow-colord.rules startwm.sh.plamo xrdp.init"
 compress=tzst
 ##############################################################
 
@@ -110,8 +110,17 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   rm -rfv $P/etc/init.d
-  mkdir -p $P/etc/rc.d/init.d
-  install -v -m0755 $W/xrdp.init $P/etc/rc.d/init.d/xrdp
+  install -v -Dm0755 $W/xrdp.init $P/etc/rc.d/init.d/xrdp
+  install -v -Dm0755 $W/startwm.sh.plamo $P/etc/xrdp/startwm.sh
+  install -v -Dm0755 $W/45-allow-colord.rules $P/etc/polkit-1/rules.d/45-allow-colord.rules
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+grep -q allowed_users /etc/X11/Xwrapper.config >/dev/null 2>&1
+if [ \$? -ne 0 ]; then
+   echo "allowed_users=anybody" >> /etc/X11/Xwrapper.config
+fi
+EOF
 
 ################################
 #      install tweaks
