@@ -84,6 +84,11 @@ if [ $opt_build -eq 1 ] ; then
 	echo "make error"
 	exit 1
     fi
+    make po/ja.mo
+    if [ $? -ne 0 ]; then
+	echo "make ja.mo error"
+	exit 1
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
