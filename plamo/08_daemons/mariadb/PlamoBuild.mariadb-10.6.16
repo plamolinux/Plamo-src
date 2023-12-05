@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mariadb'
-vers='10.6.15'
+vers='10.6.16'
 #url=""https://downloads.mariadb.com/MariaDB/mariadb-${vers}/source/mariadb-${vers}.tar.gz
 url="https://mirrors.xtom.jp/mariadb/mariadb-${vers}/source/mariadb-${vers}.tar.gz"
 digest=""
