@@ -1,26 +1,7 @@
 #!/bin/sh
 ##############################################################
-<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
-pkgbase="pipewire"
-vers="0.3.51"
-url="https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/${vers}/pipewire-${vers}.tar.bz2"
-verify=""
-digest="md5sum:a63ff8c12652657f049329568756c9c3"
-arch=`uname -m`
-build=B1
-src="pipewire-${vers}"
-OPT_CONFIG="
-	--buildtype=release
-	-Dsession-managers=
-	-Djack=disabled
-"
-DOCS="COPYING INSTALL.md LICENSE NEWS README.md doc meson_options.txt"
-patchfiles=""
-# specifies files that are not in source archive and patchfiles
-addfiles="pipewire-launcher pipewire.desktop"
-========
 pkgbase='vim'
-vers='9.0.0814'
+vers='9.0.2103'
 url="https://github.com/vim/vim/archive/refs/tags/v${vers}.tar.gz"
 digest=""
 arch=`uname -m`
@@ -29,7 +10,6 @@ src="vim-${vers}"
 OPT_CONFIG='--enable-multibyte --enable-gui=no --without-x --disable-gpm --disable-libsodium'
 DOCS='README.md README.txt README_ami.txt README_amibin.txt README_amisrc.txt README_bindos.txt README_dos.txt README_extra.txt README_mac.txt README_ole.txt README_os2.txt README_os390.txt README_src.txt README_srcdos.txt README_unix.txt README_vms.txt README_w32s.txt uninstal.txt'
 patchfiles=''
->>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
 compress=tzst
 ##############################################################
 
@@ -60,21 +40,8 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
-
 if [ $opt_config -eq 1 ] ; then
-<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
-
-    for f in $addfiles $patchfiles
-    do
-        if [ ! -f $f ]; then
-            echo "Required file ($f) is missing."
-            exit 255
-        fi
-    done
-
-========
     if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
->>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
 ######################################################################
 #  copy sources, so need patch in the build dir
 ######################################################################
@@ -85,15 +52,6 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-    cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed'
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
-========
 
     # change the default location of vimrc file
     echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
@@ -102,7 +60,6 @@ if [ $opt_config -eq 1 ] ; then
     export LDFLAGS='-Wl,--as-needed' 
     $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
->>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
     if [ $? != 0 ]; then
 	echo "configure error. $0 script stop"
 	exit 255
@@ -111,12 +68,8 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
     cd $B
-<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
-    ninja
-========
     export LDFLAGS='-Wl,--as-needed'
     make -j3
->>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
     if [ $? != 0 ]; then
 	echo "build error. $0 script stop"
 	exit 255
@@ -127,21 +80,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-<<<<<<<< HEAD:plamo/07_multimedia/pipewire/PlamoBuild.pipewire-0.3.51
-
-  DESTDIR=$P ninja install
-
-  # install desktopfile
-  install -v -Dm755 $W/pipewire.desktop $P/etc/xdg/autostart/pipewire.desktop
-  install -v -Dm644 $W/pipewire.desktop $P/usr/share/doc/$src/pipewire.desktop
-
-  # install launcher
-  install -v -Dm755 $W/pipewire-launcher $P/usr/bin/pipewire-launcher
-  install -v -Dm644 $W/pipewire-launcher $P/usr/share/doc/$src/pipewire-launcher
-========
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
->>>>>>>> update-7.x:plamo/00_base/vim/PlamoBuild.vim-8.2.5151
 
   # remove desktop files and icons
   rm -rfv $P/usr/share/{applications,icons}
