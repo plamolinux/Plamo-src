@@ -6,11 +6,11 @@ url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/0.3/${pkgbase}-${vers}.ta
 digest="md5sum:235dde14742317328f0109e9866a8008"
 verify=""
 arch=`uname -m`
-build=B1
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING COPYING.GPL ChangeLog INSTALL NEWS README TODO'
-patchfiles=''
+patchfiles='audiofile-0.3.6-consolidated_patches-1.patch'
 compress=txz
 ##############################################################
 
@@ -58,10 +58,10 @@ if [ $opt_config -eq 1 ] ; then
   # fi
 
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed'
   export CXXFLAGS=-std=c++98
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
