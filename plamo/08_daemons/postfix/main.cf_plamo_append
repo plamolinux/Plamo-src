@@ -9,3 +9,10 @@ alias_maps = hash:/etc/postfix/aliases
 # smtpd_recipient_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
 # smtpd_sasl_type = dovecot
 # data_directory = /var/lib/postfix
+
+# Optionally disconnect remote SMTP clients that send bare newlines,
+# but allow local clients with non-standard SMTP implementations
+# such as netcat, fax machines, or load balancer health checks.
+#
+#smtpd_forbid_bare_newline = yes
+#smtpd_forbid_bare_newline_exclusions = $mynetworks
