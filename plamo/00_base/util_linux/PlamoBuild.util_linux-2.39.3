@@ -1,17 +1,32 @@
 #!/bin/sh
 ##############################################################
 pkgbase='util_linux'
-vers="2.38"
+vers="2.39.3"
 url="https://www.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.xz"
 verify="https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v${vers:0:4}/util-linux-${vers}.tar.sign"
 arch=`uname -m`
 build=B1
 src="util-linux-${vers}"
-OPT_CONFIG="--disable-setpriv --disable-last
-    --disable-mesg --disable-chfn-chsh --disable-login --disable-nologin
-    --disable-sulogin --disable-su --enable-write --disable-pylibmount --disable-wall
-    --without-user --without-python --without-systemd --without-systemdsystemunitdir
-    --docdir=/usr/share/doc/${src} runstatedir=/run"
+OPT_CONFIG="
+	--disable-static
+	--disable-setpriv
+	--disable-last
+	--disable-mesg
+	--disable-chfn-chsh
+	--disable-login
+	--disable-nologin
+	--disable-sulogin
+	--disable-su
+	--disable-bash-completion
+	--enable-write
+	--disable-pylibmount
+	--disable-wall
+	--without-user
+	--without-python
+	--without-systemd
+	--without-systemdsystemunitdir
+	--docdir=/usr/share/doc/${src}
+	--runstatedir=/run"
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog NEWS README README.licensing'
 patchfiles=""
 addfiles=""
