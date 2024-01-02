@@ -1,14 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase=""
-vers="bcc"
-url="https://github.com/iovisor/bcc/releases/download/v0.29.1/bcc-src-with-submodule.tar.gz"
+pkgbase="bcc"
+vers="0.29.1"
+url="https://github.com/iovisor/bcc/releases/download/v${vers}/bcc-src-with-submodule.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="bcc"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release"
+OPT_CONFIG="
+	-DREVISION=${vers}
+	-DENABLE_TESTS=OFF
+	-DRUN_LUA_TESTS=OFF
+	-DENABLE_LLVM_SHARED=1"
 DOCS=".dockerignore FAQ.txt INSTALL.md LICENSE.txt README.md docker docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -92,6 +96,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+  rm -fv $P/usr/lib/libbcc.a
+  rm -fv $P/usr/lib/libbcc_bpf.a
 
 ################################
 #      install tweaks
