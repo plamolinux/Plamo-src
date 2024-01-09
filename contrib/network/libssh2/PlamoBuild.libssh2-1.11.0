@@ -5,11 +5,11 @@ vers="1.11.0"
 url="https://www.${pkgbase}.org/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-docker-tests --disable-static"
 DOCS='COPYING ChangeLog NEWS README RELEASE-NOTES'
-patchfiles=''
+patchfiles='libssh2-1.11.0-security_fixes-1.patch'
 addfiles=''
 compress=tzst
 ##############################################################
