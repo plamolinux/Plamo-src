@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xorg_server"
-vers="21.1.10"
+vers="21.1.11"
 url="https://www.x.org/pub/individual/xserver/xorg-server-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
