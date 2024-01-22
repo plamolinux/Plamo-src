@@ -1,16 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='linux_pam'
-vers="1.5.1"
+vers="1.6.0"
 url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}.tar.xz"
-digest="md5sum:155f2a31d07077b2c63a1f135876c31b"
+digest="md5sum:41a10af5fc35a7be472ae9864338e64a"
 doc_url="https://github.com/linux-pam/linux-pam/releases/download/v${vers}/Linux-PAM-${vers}-docs.tar.xz"
 arch=`uname -m`
 build=B1
 src="Linux-PAM-${vers}"
 OPT_CONFIG="--enable-read-both-confs --disable-nis --disable-db --disable-regenerate-docu"
 DOCS='ABOUT-NLS AUTHORS CHANGELOG COPYING ChangeLog ChangeLog-CVS INSTALL NEWS README'
-patchfiles=''
+# This is Linux-PAM 1.6.0 bug.
+patchfiles='fix-enable-read-both-confs.patch'
 # specifies files that are not in source archive and patchfiles
 addfiles="console.handlers system-account system-auth system-password system-session other halt securetty"
 compress=txz
