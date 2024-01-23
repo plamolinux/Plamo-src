@@ -1,0 +1,29 @@
+From 560a1c4dd86d63640da78ab17d72b6ce24fbebfc Mon Sep 17 00:00:00 2001
+From: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date: Thu, 18 Jan 2024 08:43:31 +0100
+Subject: [PATCH] libpam: fix build with --enable-read-both-confs
+
+If configure option --enable-read-both-confs is used, the build
+fails with 1.6.0 due to missing stack level depth argument passed to
+_pam_parse_conf_file.
+
+Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+Resolves: https://github.com/linux-pam/linux-pam/issues/736
+Fixes: v1.6.0~205 ("libpam: avoid infinite recursion with includes")
+---
+ libpam/pam_handlers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libpam/pam_handlers.c b/libpam/pam_handlers.c
+index 879c45135..55d5b2fae 100644
+--- a/libpam/pam_handlers.c
++++ b/libpam/pam_handlers.c
+@@ -500,7 +500,7 @@ int _pam_init_handlers(pam_handle_t *pamh)
+ 
+ 		if (pamh->confdir == NULL
+ 		    && (f = fopen(PAM_CONFIG,"r")) != NULL) {
+-		    retval = _pam_parse_conf_file(pamh, f, NULL, PAM_T_ANY, 0, 1);
++		    retval = _pam_parse_conf_file(pamh, f, NULL, PAM_T_ANY, 0, 0, 1);
+ 		    fclose(f);
+ 		} else
+ #endif /* PAM_READ_BOTH_CONFS */
