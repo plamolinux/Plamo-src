@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='coreutils'
-vers='9.3'
+vers='9.4'
 url="http://ftp.gnu.org/gnu/coreutils/coreutils-${vers}.tar.xz"
 arch=`uname -m`
 build=B1
@@ -16,7 +16,8 @@ DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog ChangeLog-2005 ChangeLog-2006 ChangeLo
 patchfiles="
 	0001-for-uname-to-make-p-and-i-work-on-Linux.patch
 	0002-disable-extra-locale-cat.patch
-	0003-No-Savedir-sort.patch"
+	0003-No-Savedir-sort.patch
+	0004-CVE-2024-0684.patch"
 compress=tzst
 ##############################################################
 
