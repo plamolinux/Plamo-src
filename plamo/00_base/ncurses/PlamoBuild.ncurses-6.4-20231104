@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ncurses"
-vers="6.4_20230418"
+vers="6.4_20231104"
 url="https://invisible-mirror.net/archives/ncurses/current/ncurses-${vers/_/-}.tgz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="ncurses-${vers/_/-}"
 OPT_CONFIG="
 	--mandir=/usr/share/man
@@ -19,6 +19,7 @@ OPT_CONFIG="
 	--disable-stripping
 	--enable-widec
 	--enable-pc-files
+	--with-termlib
 "
 DOCS="AUTHORS COPYING INSTALL NEWS README README.MinGW README.emx doc"
 patchfiles=""
@@ -116,9 +117,15 @@ if [ $opt_package -eq 1 ] ; then
     ln -sfv ${lib}w.pc        $P/usr/lib/pkgconfig/${lib}.pc
   done
 
-  rm -vf                     $P/usr/lib/libcursesw.so
-  echo "INPUT(-lncursesw)" > $P/usr/lib/libcursesw.so
+  for lib in ncurses cursesw ; do
+      rm -vf                     $P/usr/lib/lib${lib}.so
+      echo "INPUT(-lncursesw -ltinfow)" > $P/usr/lib/lib${lib}.so
+  done
   ln -sfv libncurses.so      $P/usr/lib/libcurses.so
+
+  ( cd $P/usr/lib ; ln -sf libtinfow.so.6.4 libtinfo.so.6.4 )
+  ( cd $P/usr/lib ; ln -sf libtinfow.so.6.4 libtinfo.so.6 )
+  ( cd $P/usr/lib ; ln -sf libtinfow.so.6 libtinfo.so )
 
 ################################
 #      install tweaks
