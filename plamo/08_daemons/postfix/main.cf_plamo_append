@@ -14,5 +14,5 @@ alias_maps = hash:/etc/postfix/aliases
 # but allow local clients with non-standard SMTP implementations
 # such as netcat, fax machines, or load balancer health checks.
 #
-#smtpd_forbid_bare_newline = yes
+#smtpd_forbid_bare_newline = normalize
 #smtpd_forbid_bare_newline_exclusions = $mynetworks
