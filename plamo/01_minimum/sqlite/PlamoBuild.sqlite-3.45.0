@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='sqlite'
-vers='3.39.4'
+vers='3.45.0'
 url="https://github.com/sqlite/sqlite/archive/refs/tags/version-${vers}.tar.gz"
 verify=""
 arch=$(uname -m)
 build=B1
 src="sqlite-version-${vers}"
 OPT_CONFIG='--disable-static --enable-fts3 --enable-fts4 --enable-fts5 --enable-rtree --disable-tcl'
-DOCS='INSTALL README.txt'
+DOCS='LICENSE.md README.md'
 patchfiles=''
 compress=tzst
 ##############################################################
