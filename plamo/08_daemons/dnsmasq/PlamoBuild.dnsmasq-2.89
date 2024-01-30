@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dnsmasq'
-vers='2.84'
+vers='2.89'
 url="http://www.thekelleys.org.uk/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='-DHAVE_IDN -DHAVE_DNSSEC'
+OPT_CONFIG='-DHAVE_IDN2 -DHAVE_DNSSEC -DHAVE_NFTSET'
 DOCS='CHANGELOG CHANGELOG.archive COPYING COPYING-v3'
 patchfiles=''
 compress=txz
