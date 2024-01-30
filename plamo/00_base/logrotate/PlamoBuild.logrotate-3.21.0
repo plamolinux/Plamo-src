@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='logrotate'
-vers="3.20.1"
+vers="3.21.0"
 url="https://github.com/logrotate/logrotate/releases/download/${vers}/logrotate-${vers}.tar.xz"
-digest="md5sum:24704642e1e6c7889edbe2b639636caf"
+digest="md5sum:6c15f45efc3475a576c4f7e6cc481b2c"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -11,7 +11,7 @@ OPT_CONFIG=''
 DOCS='COPYING ChangeLog.md INSTALL README.md examples'
 addfiles="logrotate.conf"
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
