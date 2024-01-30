@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gnupg'
-vers="2.3.7"
+vers="2.4.4"
 url="https://${pkgbase}.org/ftp/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-symcryptrun --enable-maintainer-mode --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="--enable-maintainer-mode --docdir=/usr/share/doc/${src}"
 DOCS='ABOUT-NLS AUTHORS COPYING COPYING.CC0 COPYING.LIB COPYING.other ChangeLog ChangeLog-2011 INSTALL NEWS README README.GIT THANKS TODO'
 patchfiles=''
 compress=tzst
