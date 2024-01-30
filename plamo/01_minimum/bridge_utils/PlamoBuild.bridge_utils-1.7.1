@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bridge_utils'
-vers='1.6'
+vers='1.7.1'
 url="https://www.kernel.org/pub/linux/utils/net/bridge-utils/bridge-utils-${vers}.tar.xz"
 verify="https://www.kernel.org/pub/linux/utils/net/bridge-utils/bridge-utils-${vers}.tar.sign"
 arch=`uname -m`
-build=B3
+build=B1
 src="bridge-utils-${vers}"
 OPT_CONFIG=''
 DOCS='AUTHORS COPYING ChangeLog README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -55,7 +55,7 @@ if [ $opt_config -eq 1 ] ; then
   # fi
   autoconf
 
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
