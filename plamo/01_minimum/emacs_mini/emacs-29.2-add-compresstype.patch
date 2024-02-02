@@ -1,7 +1,7 @@
-From 6ccf75cf630b9313b6642ab8601f5e3cf8f4f566 Mon Sep 17 00:00:00 2001
+From 9c05ff7658f7df2ea648410b02479df4bfa1d9e1 Mon Sep 17 00:00:00 2001
 From: KATOH Yasufumi <karma@jazz.email.ne.jp>
-Date: Mon, 11 Apr 2022 15:52:10 +0900
-Subject: [PATCH] Support xz, zstd compressed files by GNU tools
+Date: Fri, 2 Feb 2024 21:51:49 +0900
+Subject: [PATCH] Add compress type for Plamo Linux
 
 ---
  lisp/eshell/esh-util.el | 2 +-
@@ -11,7 +11,7 @@ Subject: [PATCH] Support xz, zstd compressed files by GNU tools
  4 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/lisp/eshell/esh-util.el b/lisp/eshell/esh-util.el
-index bacb41e..3ecf201 100644
+index 163577f..c9f0ef8 100644
 --- a/lisp/eshell/esh-util.el
 +++ b/lisp/eshell/esh-util.el
 @@ -72,7 +72,7 @@ Setting this to nil is offered as an aid to debugging only."
@@ -24,7 +24,7 @@ index bacb41e..3ecf201 100644
    :version "24.1"			; added xz
    :type 'regexp)
 diff --git a/lisp/ibuffer.el b/lisp/ibuffer.el
-index 42576f0..276bf9d 100644
+index 26358bd..bf7833d 100644
 --- a/lisp/ibuffer.el
 +++ b/lisp/ibuffer.el
 @@ -321,7 +321,7 @@ directory, like `default-directory'."
@@ -37,20 +37,20 @@ index 42576f0..276bf9d 100644
    :version "24.1"                       ; added xz
    :type 'regexp)
 diff --git a/lisp/ldefs-boot.el b/lisp/ldefs-boot.el
-index 78d6bb5..bcef96d 100644
+index 16a9df2..5785c38 100644
 --- a/lisp/ldefs-boot.el
 +++ b/lisp/ldefs-boot.el
-@@ -11288,7 +11288,7 @@ Use the `etags' program to make a tags table file.")
- 
+@@ -10714,7 +10714,7 @@ To switch to a new list of tags tables, setting this variable is sufficient.
+ If you set this variable, do not also set `tags-file-name'.
+ Use the `etags' program to make a tags table file.")
  (custom-autoload 'tags-table-list "etags" t)
- 
 -(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz")) "\
 +(defvar tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".xz" ".tgz" ".txz" ".tzst")) "\
  List of extensions tried by etags when `auto-compression-mode' is on.
  An empty string means search the non-compressed file.")
- 
+ (custom-autoload 'tags-compression-info-list "etags" t)
 diff --git a/lisp/pcmpl-gnu.el b/lisp/pcmpl-gnu.el
-index d0ae939..1f63182 100644
+index fcc4ab4..2816d0b 100644
 --- a/lisp/pcmpl-gnu.el
 +++ b/lisp/pcmpl-gnu.el
 @@ -160,7 +160,7 @@ Return the new list."
@@ -63,5 +63,5 @@ index d0ae939..1f63182 100644
    :version "24.3"                       ; added xz
    :type 'regexp)
 -- 
-2.35.0
+2.41.0
 
