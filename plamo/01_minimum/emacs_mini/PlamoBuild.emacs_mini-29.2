@@ -1,18 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='emacs'
-vers='28.2'
+vers='29.2'
 url="http://ftp.jaist.ac.jp/pub/GNU/emacs/emacs-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--without-all --without-x --with-pdumper=no --with-dumping=none'
 DOCS='COPYING ChangeLog ChangeLog.1 ChangeLog.2 INSTALL README'
-patchfiles="emacs-28.1-add-compresstype.patch
-0001-CVE-2022-48337.patch
-0002-CVE-2022-48338.patch
-0003-CVE-2022-48339.patch"
+patchfiles="emacs-29.2-add-compresstype.patch"
 compress=tzst
 ##############################################################
 
