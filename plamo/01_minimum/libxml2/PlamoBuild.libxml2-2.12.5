@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.10.4'
+vers='2.12.5'
 url="https://download.gnome.org/sources/libxml2/${vers%.*}/libxml2-${vers}.tar.xz"
-digest="md5sum:76808c467a58c31e2dbd511e71d5fd13"
+digest="sha256sum:a972796696afd38073e0f59c283c3a2f5a560b5268b4babc391b286166526b21"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --with-history --with-threads --without-icu --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="--disable-static --sysconfdir=/etc --with-history --with-threads --without-icu --with-python --with-legacy --with-ftp --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
 blfspatch=""
 patchfiles=""
