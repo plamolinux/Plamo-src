@@ -1,15 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openldap'
-vers="2.4.59"
+vers="2.6.7"
 url="https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-${vers}.tgz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-dynamic --disable-debug --disable-slapd"
+OPT_CONFIG="--disable-static --enable-dynamic --disable-debug --disable-slapd --without-cyrus-sasl"
 DOCS='INSTALL LICENSE README'
-patchfiles='openldap-2.4.45-consolidated-1.patch'
+# https://www.linuxfromscratch.org/patches/blfs/svn/openldap-2.6.7-consolidated-1.patch
+patchfiles='openldap-2.6.7-consolidated-1.patch'
+oldlibs=''
 compress=tzst
 ##############################################################
 
@@ -85,6 +87,11 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  for i in $oldlibs ; do
+      install $W/$i $P/usr/lib
+      pushd $P/usr/lib ; ln -sf $i ${i%.11.7} ; popd
+  done
 
 ################################
 #      install tweaks
