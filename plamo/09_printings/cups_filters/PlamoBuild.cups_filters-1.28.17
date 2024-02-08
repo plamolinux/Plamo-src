@@ -3,8 +3,8 @@
 pkgbase='cups_filters'
 vers='1.28.17'
 url="https://github.com/OpenPrinting/cups-filters/releases/download/$vers/cups-filters-${vers}.tar.xz"
-digest=""
-verify="md5sum:74741eb5ba32331676f88be468259d1f"
+digest="md5sum:74741eb5ba32331676f88be468259d1f"
+verify=""
 arch=`uname -m`
 build=B3
 src="cups-filters-${vers}"
