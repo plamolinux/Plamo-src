@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='perl_XML_Parser'
-vers='2.44'
+vers='2.47'
 url="http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-${vers}.tar.gz"
-digest="md5sum:af4813fe3952362451201ced6fbce379"
+digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="XML-Parser-${vers}"
 OPT_CONFIG=''
 DOCS='README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
