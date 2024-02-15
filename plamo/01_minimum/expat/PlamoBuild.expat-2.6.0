@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="expat"
-vers="2.4.9"
+vers="2.6.0"
 url="https://github.com/libexpat/libexpat/releases/download/R_${vers//./_}/expat-${vers}.tar.gz"
 verify="https://github.com/libexpat/libexpat/releases/download/R_${vers//./_}/expat-${vers}.tar.gz.asc"
 digest=""
