@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='file'
-vers="5.44"
+vers="5.45"
 url="ftp://ftp.astron.com/pub/file/file-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
