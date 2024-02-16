@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xdg_utils'
-vers='1.1.2'
-url="https://portland.freedesktop.org/download/xdg-utils-${vers}.tar.gz"
+vers='1.2.1'
+url="https://gitlab.freedesktop.org/xdg/xdg-utils/-/archive/v${vers}/xdg-utils-v${vers}.tar.gz"
 arch=`uname -m`
 build=B1
-src="xdg-utils-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
+src="xdg-utils-v${vers}"
+OPT_CONFIG=""
 DOCS='ChangeLog LICENSE README RELEASE_NOTES TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -52,7 +52,7 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
     
