@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libuv"
-vers="1.44.2"
+vers="1.48.0"
 url="https://dist.libuv.org/dist/v${vers}/libuv-v${vers}.tar.gz"
 verify="${url}.sign"
 digest=""
