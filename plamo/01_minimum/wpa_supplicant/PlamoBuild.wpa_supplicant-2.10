@@ -5,7 +5,7 @@ vers='2.10'
 url="https://w1.fi/releases/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B2
+build=B3
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='COPYING README'
@@ -20,6 +20,7 @@ patchfiles="
 	disable-eapol-werror.patch
 	0001-nl80211-add-extra-ies-only-if-allowed-by-driver.patch
 	0002-AP-guard-FT-SAE-code-with-CONFIG_IEEE80211R_AP.patch
+	wpa_supplicant-2.10-security_fix-1.patch
 "
 addfiles="config ifconfig_wlan0-sample wpa.service"
 compress=tzst
