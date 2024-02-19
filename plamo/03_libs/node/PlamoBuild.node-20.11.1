@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='node'
-vers="18.17.1"
+vers="20.11.1"
 url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
-digest="md5sum:cfadecca2649bb74daba89d60fbd02e5"
+digest="md5sum:3b2fe4d7a4c8dadb58563d822de6c4f4"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-v${vers}"
-OPT_CONFIG="--shared-cares --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=system-icu"
+OPT_CONFIG="--shared-brotli --shared-cares --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
 patchfiles=''
 compress=tzst
