@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase='bind_tools'
 vers="9.18.24"
-url="ftp://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.gz"
+url="https://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
