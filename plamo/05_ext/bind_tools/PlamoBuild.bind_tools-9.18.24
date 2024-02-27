@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='bind_tools'
-vers='9.12.4'
-url="ftp://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.gz"
+vers="9.18.24"
+url="https://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="bind-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --without-libxml2 --without-python'
+OPT_CONFIG="--disable-static --enable-shared --without-libxml2 --without-python"
 DOCS='HISTORY HISTORY.md LICENSE README README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -70,10 +70,11 @@ fi
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -C lib/dns
   make -C lib/isc
-  make -C lib/bind9
+  make -C lib/dns
+  make -C lib/ns
   make -C lib/isccfg
+  make -C lib/bind9
   make -C lib/irs
   make -C bin/dig
   if [ $? != 0 ]; then
@@ -87,6 +88,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
+  make -C lib/isc install DESTDIR=$P
+  make -C lib/dns install DESTDIR=$P
+  make -C lib/ns install DESTDIR=$P
+  make -C lib/isccfg install DESTDIR=$P
+  make -C lib/bind9 install DESTDIR=$P
+  make -C lib/irs install DESTDIR=$P
   make -C bin/dig install DESTDIR=$P
 
 ################################
