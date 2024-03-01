@@ -2,8 +2,9 @@
 ##############################################################
 pkgbase='postfix'
 vers='3.8.5'
-url="https://ghostarchive.org/postfix/postfix-release/official/postfix-${vers}.tar.gz"
-#verify="${url}.sig"
+#url="https://ghostarchive.org/postfix/postfix-release/official/postfix-${vers}.tar.gz"
+url="http://ftp.porcupine.org/mirrors/postfix-release/official/postfix-3.8.5.tar.gz"
+verify="${url}.sig"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
