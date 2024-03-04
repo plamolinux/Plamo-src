@@ -90,7 +90,7 @@ if [ $opt_package -eq 1 ] ; then
   export LD_LIBRARY_PATH="$P/usr/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH"
   export CAMLIBS="$PWD/$vers"
   ./print-camera-list hwdb \
-      | install -Dm644 /dev/stdin "$P/usr/lib/udev/hwdb.d/20-gphoto.hwdb"
+      | install -Dm644 /dev/stdin "$P/etc/udev/hwdb.d/20-gphoto.hwdb"
   ./print-camera-list udev-rules version 201 \
       | install -Dm644 /dev/stdin "$P/usr/lib/udev/rules.d/40-gphoto.rules"
 
