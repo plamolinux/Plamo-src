@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wget'
-vers='1.21.4'
-url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.gz"
+vers='1.24.5'
+url="https://ftp.jaist.ac.jp/pub/GNU/wget/wget-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --with-ssl=openssl'
+OPT_CONFIG='--disable-static --enable-shared --with-ssl=openssl --disable-pcre2'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
 compress=tzst
