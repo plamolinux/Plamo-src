@@ -6,12 +6,11 @@ url="https://github.com/libevent/libevent/archive/release-${vers}-stable.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="libevent-release-${vers}-stable"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DEVENT__LIBRARY_TYPE=SHARED"
 DOCS="ChangeLog ChangeLog-1.4 ChangeLog-2.0 LICENSE README.md whatsnew-2.0.txt whatsnew-2.1.txt"
 patchfiles=""
-oldlibs="libevent-2.1.so.6.0.2 libevent_core-2.1.so.6.0.2 libevent_extra-2.1.so.6.0.2 libevent_openssl-2.1.so.6.0.2 libevent_pthreads-2.1.so.6.0.2"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -93,13 +92,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
-  echo "install old libs"
-  for i in $oldlibs ; do
-      install -v /usr/lib/$i $P/usr/lib
-      #install $W/$i $P/usr/lib
-      ( cd $P/usr/lib ; ln -sf $i ${i%%.0.2} )
-  done
-      
 
 ################################
 #      install tweaks
