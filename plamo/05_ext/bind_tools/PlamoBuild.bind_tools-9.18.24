@@ -5,9 +5,13 @@ vers="9.18.24"
 url="https://ftp.isc.org/isc/bind9/${vers}/bind-${vers}.tar.xz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="bind-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --without-libxml2 --without-python"
+OPT_CONFIG="--disable-static
+	--enable-shared
+	--without-libxml2
+	--disable-doh
+	--without-python"
 DOCS='HISTORY HISTORY.md LICENSE README README.md'
 patchfiles=''
 compress=tzst
