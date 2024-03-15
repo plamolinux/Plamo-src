@@ -1,0 +1,24 @@
+From 0df2e820b7cf9f8194a7e686faf80fb1fb2259ae Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Fri, 15 Mar 2024 22:22:39 +0900
+Subject: [PATCH] fix for libxml2-2.12.0
+
+---
+ src/object/uri.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/object/uri.h b/src/object/uri.h
+index 381adec..d5b211f 100644
+--- a/src/object/uri.h
++++ b/src/object/uri.h
+@@ -13,6 +13,7 @@
+ #define INKSCAPE_URI_H
+ 
+ #include <libxml/uri.h>
++#include <libxml/xmlmemory.h>
+ #include <memory>
+ #include <string>
+ 
+-- 
+2.44.0
+
