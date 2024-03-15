@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='boost'
-vers='1.78.0'
-url="https://boostorg.jfrog.io/artifactory/main/release/${vers}/source/boost_1_78_0.tar.bz2"
-digest="md5sum:db0112a3a37a3742326471d20f1a186a"
+vers='1.84.0'
+url="https://github.com/boostorg/boost/releases/download/boost-${vers}/boost-${vers}.tar.xz"
+digest="md5sum:893b5203b862eb9bbd08553e24ff146a"
 arch=`uname -m`
 build=B1
-src="boost_${vers//./_}"
+src="boost-${vers}"
 OPT_CONFIG=''
 DOCS='INSTALL LICENSE_1_0.txt'
 patchfiles=''
@@ -74,10 +74,6 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   ./b2 install threading=multi link=shared --prefix=$P/usr --libdir=$P/usr/${libdir} --layout=system
-
-  for _lib in python numpy; do
-     ln -srL $P/usr/lib/libboost_${_lib}3{9,}.so
-  done
 
 ################################
 #      install tweaks
