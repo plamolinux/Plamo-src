@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gdb'
-vers='8.0'
-url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+vers="14.2"
+url="http://ftp.jaist.ac.jp/pub/GNU/gdb/gdb-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-system-readline --enable-host-shared --without-guile"
+OPT_CONFIG="--with-system-readline --enable-host-shared --without-guile --with-python=/usr/bin/python3"
 DOCS='COPYING COPYING.LIB COPYING3 COPYING3.LIB ChangeLog MAINTAINERS README README-maintainer-mode src-release.sh'
-patchfiles='gdb-remote.patch'
+patchfiles=''
 compress=txz
 ##############################################################
 
