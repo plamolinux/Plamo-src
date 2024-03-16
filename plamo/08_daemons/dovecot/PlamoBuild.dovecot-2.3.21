@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dovecot'
-vers="2.3.20"
+vers="2.3.21"
 url="https://${pkgbase}.org/releases/2.3/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -12,7 +12,7 @@ OPT_CONFIG="--disable-static --enable-shared --with-rundir=/run/dovecot
 	    --without-gssapi --without-lua --without-ldap
 	    --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING COPYING.LGPL COPYING.MIT ChangeLog INSTALL INSTALL.md NEWS README README.md TODO'
-patchfiles='dovecot-2.3.20-openssl3_fixes-1.patch dovecot-2.3.20-security_fix-1.patch'
+patchfiles="dovecot-2.3.21-openssl3_fixes-1.patch dovecot-2.3.21-security_fix-1.patch"
 compress=tzst
 ##############################################################
 
