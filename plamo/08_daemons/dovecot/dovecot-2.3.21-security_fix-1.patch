@@ -1,0 +1,132 @@
+Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
+Date:                    2022-07-13
+Updated Date:            2023-09-16 
+Initial Package Version: 2.3.19.1
+Origin:                  Upstream (see https://seclists.org/oss-sec/2022/q3/33)
+Upstream Status:         Applied
+Description:             Fixes CVE-2022-30550 in Dovecot, where privilege
+                         escalation is possible when similar master and
+                         non-master password databases are used. This occurs
+                         when an administrator has inadvertently set multiple
+                         configuration entries pointing towards the same files
+                         for password databases, with identical settings.
+                         Updated on 2023-09-16 to remove the .orig files.
+
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/auth.c dovecot-2.3.19.1/src/auth/auth.c
+--- dovecot-2.3.19.1.orig/src/auth/auth.c	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/auth.c	2022-07-13 14:53:21.307278772 -0500
+@@ -93,6 +93,24 @@ auth_passdb_preinit(struct auth *auth, c
+ 	auth_passdb->override_fields_tmpl =
+ 		passdb_template_build(auth->pool, set->override_fields);
+ 
++	if (*set->mechanisms == '\0') {
++		auth_passdb->mechanisms = NULL;
++	} else if (strcasecmp(set->mechanisms, "none") == 0) {
++		auth_passdb->mechanisms = (const char *const[]){ NULL };
++	} else {
++		auth_passdb->mechanisms =
++			(const char *const *)p_strsplit_spaces(auth->pool,
++				set->mechanisms, " ,");
++	}
++
++	if (*set->username_filter == '\0') {
++		auth_passdb->username_filter = NULL;
++	} else {
++		auth_passdb->username_filter =
++			(const char *const *)p_strsplit_spaces(auth->pool,
++				set->username_filter, " ,");
++	}
++
+ 	/* for backwards compatibility: */
+ 	if (set->pass)
+ 		auth_passdb->result_success = AUTH_DB_RULE_CONTINUE;
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/auth.h dovecot-2.3.19.1/src/auth/auth.h
+--- dovecot-2.3.19.1.orig/src/auth/auth.h	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/auth.h	2022-07-13 14:53:21.307278772 -0500
+@@ -41,6 +41,11 @@ struct auth_passdb {
+ 	struct passdb_template *default_fields_tmpl;
+ 	struct passdb_template *override_fields_tmpl;
+ 
++	/* Supported authentication mechanisms, NULL is all, {NULL} is none */
++	const char *const *mechanisms;
++	/* Username filter, NULL is no filter */
++	const char *const *username_filter;
++
+ 	enum auth_passdb_skip skip;
+ 	enum auth_db_rule result_success;
+ 	enum auth_db_rule result_failure;
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/auth-request.c dovecot-2.3.19.1/src/auth/auth-request.c
+--- dovecot-2.3.19.1.orig/src/auth/auth-request.c	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/auth-request.c	2022-07-13 14:53:21.307278772 -0500
+@@ -553,8 +553,8 @@ auth_request_want_skip_passdb(struct aut
+ 			      struct auth_passdb *passdb)
+ {
+ 	/* if mechanism is not supported, skip */
+-	const char *const *mechs = passdb->passdb->mechanisms;
+-	const char *const *username_filter = passdb->passdb->username_filter;
++	const char *const *mechs = passdb->mechanisms;
++	const char *const *username_filter = passdb->username_filter;
+ 	const char *username;
+ 
+ 	username = request->fields.user;
+@@ -567,7 +567,7 @@ auth_request_want_skip_passdb(struct aut
+ 		return TRUE;
+ 	}
+ 
+-	if (passdb->passdb->username_filter != NULL &&
++	if (passdb->username_filter != NULL &&
+ 	    !auth_request_username_accepted(username_filter, username)) {
+ 		auth_request_log_debug(request,
+ 				       request->mech != NULL ? AUTH_SUBSYS_MECH
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/passdb.c dovecot-2.3.19.1/src/auth/passdb.c
+--- dovecot-2.3.19.1.orig/src/auth/passdb.c	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/passdb.c	2022-07-13 14:53:21.307278772 -0500
+@@ -224,19 +224,8 @@ passdb_preinit(pool_t pool, const struct
+ 	passdb->id = ++auth_passdb_id;
+ 	passdb->iface = *iface;
+ 	passdb->args = p_strdup(pool, set->args);
+-	if (*set->mechanisms == '\0') {
+-		passdb->mechanisms = NULL;
+-	} else if (strcasecmp(set->mechanisms, "none") == 0) {
+-		passdb->mechanisms = (const char *const[]){NULL};
+-	} else {
+-		passdb->mechanisms = (const char* const*)p_strsplit_spaces(pool, set->mechanisms, " ,");
+-	}
+-
+-	if (*set->username_filter == '\0') {
+-		passdb->username_filter = NULL;
+-	} else {
+-		passdb->username_filter = (const char* const*)p_strsplit_spaces(pool, set->username_filter, " ,");
+-	}
++	/* NOTE: if anything else than driver & args are added here,
++	   passdb_find() also needs to be updated. */
+ 	array_push_back(&passdb_modules, &passdb);
+ 	return passdb;
+ }
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/passdb.h dovecot-2.3.19.1/src/auth/passdb.h
+--- dovecot-2.3.19.1.orig/src/auth/passdb.h	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/passdb.h	2022-07-13 14:53:21.307278772 -0500
+@@ -63,10 +63,6 @@ struct passdb_module {
+ 	/* Default password scheme for this module.
+ 	   If default_cache_key is set, must not be NULL. */
+ 	const char *default_pass_scheme;
+-	/* Supported authentication mechanisms, NULL is all, [NULL] is none*/
+-	const char *const *mechanisms;
+-	/* Username filter, NULL is no filter */
+-	const char *const *username_filter;
+ 
+ 	/* If blocking is set to TRUE, use child processes to access
+ 	   this passdb. */
+diff -Naurp dovecot-2.3.19.1.orig/src/auth/userdb.c dovecot-2.3.19.1/src/auth/userdb.c
+--- dovecot-2.3.19.1.orig/src/auth/userdb.c	2022-06-14 01:55:03.000000000 -0500
++++ dovecot-2.3.19.1/src/auth/userdb.c	2022-07-13 14:53:21.307278772 -0500
+@@ -158,7 +158,8 @@ userdb_preinit(pool_t pool, const struct
+ 	userdb->id = ++auth_userdb_id;
+ 	userdb->iface = iface;
+ 	userdb->args = p_strdup(pool, set->args);
+-
++	/* NOTE: if anything else than driver & args are added here,
++	   userdb_find() also needs to be updated. */
+ 	array_push_back(&userdb_modules, &userdb);
+ 	return userdb;
+ }
