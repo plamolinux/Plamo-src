@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='emacs'
-vers="29.2"
+vers="29.3"
 url="https://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="
 	--with-imagemagick
