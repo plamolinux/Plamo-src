@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive_texmf'
-vers="20230313"
-url="ftp://tug.org/texlive/historic/2021/texlive-${vers}-texmf.tar.xz"
-verify=""
+vers="20240312"
+url="https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2024/texlive-20240312-texmf.tar.xz"
+verify="${url}.sha512"
 arch=noarch
 build=B1
 src="texlive-${vers}-texmf"
@@ -12,7 +12,7 @@ DOCS=''
 blfspatch=""
 patchfiles=""
 compress=tzst
-PREFIX=/opt/texlive/2023
+PREFIX=/opt/texlive/2024
 ##############################################################
 PKG[1]="README asymptote bibtex chktex context dvipdfmx ls-R 
         dvips hbf2gf makeindex metafont metapost mft omega pbibtex
@@ -128,7 +128,7 @@ EOF
 
   chk_me=`whoami | grep root`
   if [ "$chk_me.x" != ".x" ]; then
-    chown -R root.root $P/1/usr/share/doc
+    chown -R root.root $P/
   fi
 
 #############################
