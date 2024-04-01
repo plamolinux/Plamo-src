@@ -5,9 +5,9 @@ vers="14.2"
 url="http://ftp.jaist.ac.jp/pub/GNU/gdb/gdb-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-system-readline --enable-host-shared --without-guile --with-python=/usr/bin/python3"
+OPT_CONFIG="--with-system-readline --enable-host-shared --without-guile --with-python=/usr/bin/python3 --disable-source-highlight"
 DOCS='COPYING COPYING.LIB COPYING3 COPYING3.LIB ChangeLog MAINTAINERS README README-maintainer-mode src-release.sh'
 patchfiles=''
 compress=tzst
