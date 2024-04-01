@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='texlive'
-vers="20230313"
-url="ftp://tug.org/texlive/historic/2023/texlive-${vers}-source.tar.xz"
+vers="20240312"
+url="https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2024/texlive-20240312-source.tar.xz"
 
-tlpdb_url="ftp://tug.org/texlive/historic/2023/texlive-20230311-tlpdb-full.tar.gz"
+tlpdb_url="https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2024/texlive-20240312-extra.tar.xz"
 verify="${url}.sha512"
 arch=`uname -m`
 build=B1
 src="texlive-${vers}-source"
 
-PREFIX=/opt/texlive/2023
+PREFIX=/opt/texlive/2024
 TEXARCH=$(uname -m | sed -e 's/i.86/i386/' -e 's/$/-linux/')
 
 OPT_CONFIG=(--prefix=${PREFIX}
@@ -39,7 +39,7 @@ OPT_CONFIG=(--prefix=${PREFIX}
 	    --with-system-zlib
 	    --with-banner-add=' - Plamo')
 DOCS='ChangeLog README README.0overview README.1prerequisites README.2building README.3installing README.4layout README.5configure README.6cross README.7coding'
-blfspatches=(texlive-20230313-source-security_fix-1.patch)
+#blfspatches=()
 patchfiles="${blfspatches[@]}"
 additional_src=""
 compress=tzst
@@ -100,17 +100,17 @@ if [ $opt_config -eq 1 ] ; then
 
   # These files are from https://github.com/TeX-Live/texlive-source/tree/f028afd033686b61f214847e84e4ae093f41d233
   # for poppler 0.76.0
-  for f in $additional_src
-  do
-      echo -n "copy $f to $S/texk/web2c/pdftexdir/${f%-*}.cc for using current poppler: "
-      cp -v $W/$f $S/texk/web2c/pdftexdir/${f%-*}.cc
-      echo "done."
-  done
+  #for f in $additional_src
+  #do
+  #    echo -n "copy $f to $S/texk/web2c/pdftexdir/${f%-*}.cc for using current poppler: "
+  #    cp -v $W/$f $S/texk/web2c/pdftexdir/${f%-*}.cc
+  #    echo "done."
+  #done
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure "${OPT_CONFIG[@]}"
+  $S/configure -C "${OPT_CONFIG[@]}"
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -140,7 +140,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -dm755 -v $P/$PREFIX/tlpkg/TeXLive
   install -m644  -v $S/texk/tests/TeXLive/* -t $P/$PREFIX/tlpkg/TeXLive/
-  tar xf $W/${tlpdb_url##*/} -C $P/$PREFIX/tlpkg
+  tar xf $W/${tlpdb_url##*/} -C $P/$PREFIX/tlpkg --strip-components=2
 
   # xbb
   ln -s dvipdfmx $P/$PREFIX/bin/$TEXARCH/xbb
