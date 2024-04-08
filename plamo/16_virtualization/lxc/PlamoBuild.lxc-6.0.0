@@ -14,6 +14,7 @@ template_src="lxc-templates"
 OPT_CONFIG=(
 	--buildtype=release
 	-Dpam-cgroup=true
+	-Ddbus=false
 	-Ddoc-path=/usr/share/doc/"$src"
 	-Dinit-script=sysvinit
 )
