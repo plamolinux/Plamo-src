@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers="5.0.3"
+vers="6.0.0"
 template_vers="3.0.4"
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://github.com/lxc/lxc-templates.git"
@@ -14,6 +14,7 @@ template_src="lxc-templates"
 OPT_CONFIG=(
 	--buildtype=release
 	-Dpam-cgroup=true
+	-Ddbus=false
 	-Ddoc-path=/usr/share/doc/"$src"
 	-Dinit-script=sysvinit
 )
