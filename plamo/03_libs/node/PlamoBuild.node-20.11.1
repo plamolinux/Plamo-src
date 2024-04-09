@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='node'
-vers="20.12.1"
+vers="20.11.1"
 url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
-digest="md5sum:e28ae384aa614e715e9c828e7668aad3"
+digest="md5sum:3b2fe4d7a4c8dadb58563d822de6c4f4"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-v${vers}"
 OPT_CONFIG="--shared-brotli --shared-libuv --shared-cares --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
