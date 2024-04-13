@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wasi_libc"
-vers="20230413"
+vers="20230324"
 url="https://github.com/WebAssembly/wasi-libc.git"
-commitid="c5264e2bbe532994d06b039005f2af91bedcc1a6"
+commitid="a6f871343313220b76009827ed0153586361c0d5"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="wasi-libc"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="LICENSE LICENSE-APACHE LICENSE-APACHE-LLVM LICENSE-MIT README.md"
