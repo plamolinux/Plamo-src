@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wasi_libc++"
-vers="15.0.7"
+vers="18.1.2"
 url="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/llvm-project-${vers}.src.tar.xz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
 src="llvm-project-${vers}.src"
+# 
 OPT_CONFIG=(
     -DCMAKE_C_COMPILER_WORKS=ON
     -DCMAKE_CXX_COMPILER_WORKS=ON
@@ -36,6 +37,7 @@ OPT_CONFIG=(
     -DLIBCXXABI_HAS_EXTERNAL_THREAD_API:BOOL=OFF
     -DLIBCXXABI_BUILD_EXTERNAL_THREAD_LIBRARY:BOOL=OFF
     -DLIBCXXABI_HAS_WIN32_THREAD_API:BOOL=OFF
+    -DLIBCXXABI_USE_LLVM_UNWINDER:BOOL=OFF
     -DWASI_SDK_PREFIX=/usr
     -DUNIX:BOOL=ON
     -DCMAKE_SYSROOT=/usr/share/wasi-sysroot
