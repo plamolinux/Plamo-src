@@ -1,0 +1,11 @@
+--- llvm-18.1.2.src/tools/lld/MachO/CMakeLists.txt~	2024-03-20 06:06:42.000000000 +0900
++++ llvm-18.1.2.src/tools/lld/MachO/CMakeLists.txt	2024-04-12 11:16:31.087531450 +0900
+@@ -2,7 +2,7 @@ set(LLVM_TARGET_DEFINITIONS Options.td)
+ tablegen(LLVM Options.inc -gen-opt-parser-defs)
+ add_public_tablegen_target(MachOOptionsTableGen)
+ 
+-include_directories(${LLVM_MAIN_SRC_DIR}/../libunwind/include)
++include_directories(${LLVM_MAIN_SRC_DIR}/libunwind/include)
+ 
+ add_lld_library(lldMachO
+   Arch/ARM64.cpp
