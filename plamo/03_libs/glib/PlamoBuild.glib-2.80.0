@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.76.2"
+vers="2.80.0"
 url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="md5sum:455b94549f2056957fa370a1f14c1662"
+digest="md5sum:3a51e2803ecd22c2dadcd07d9475ebe3"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
-OPT_CONFIG="--buildtype=release -Dselinux=disabled -Dman=true"
+OPT_CONFIG="--buildtype=release -Dselinux=disabled -Dman-pages=true"
 DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 README.win32.md docs"
-patchfiles="glib-2.76.2-skip_warnings-1.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
