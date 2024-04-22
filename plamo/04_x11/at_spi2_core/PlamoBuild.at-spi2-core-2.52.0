@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase="at_spi2_core"
-vers="2.32.1"
+vers="2.52.0"
 url="http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/${vers%.*}/at-spi2-core-${vers}.tar.xz"
 verify=""
-digest="md5sum:998fd9d858f8fa22c4c8c15567bf6254"
+digest="md5sum:e6591545b2bf204fe9a58f777bd0b78a"
 arch=`uname -m`
-build=B1
+build=B2
 src="at-spi2-core-${vers}"
 OPT_CONFIG="-Dsystemd_user_dir=no"
 DOCS="AUTHORS COPYING INSTALL MAINTAINERS NEWS README meson_options.txt"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
