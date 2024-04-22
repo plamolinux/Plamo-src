@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gvfs'
-vers="1.50.5"
-url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:d0724181d20985a23c61d88e3a36a56e"
+vers="1.54.0"
+url="https://download.gnome.org/sources/gvfs/${vers%.*}/gvfs-${vers}.tar.xz"
+digest="md5sum:f2c1db236533c19cb3c3e0a468aac59a"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 # multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
-OPT_CONFIG="-Dfuse=true
+OPT_CONFIG="
+	-Dfuse=true
 	-Dgphoto2=true
 	-Dafc=false
 	-Dafp=true
@@ -20,6 +21,7 @@ OPT_CONFIG="-Dfuse=true
 	-Dtmpfilesdir=no
 	-Ddnssd=true
 	-Dcdda=true
+	-Donedrive=false
 	-Dgoa=false
 	-Dgoogle=false
 	-Dsystemduserunitdir=no"
