@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="libsigc++"
+pkgbase="libsigc++3"
 vers="3.6.0"
 url="https://download.gnome.org/sources/libsigc++/${vers%.*}/libsigc++-${vers}.tar.xz"
 verify=""
