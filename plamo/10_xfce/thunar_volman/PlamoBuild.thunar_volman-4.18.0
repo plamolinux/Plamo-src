@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='thunar_volman'
-vers='0.9.5'
+vers='4.18.0'
 url="http://archive.xfce.org/src/xfce/thunar-volman/${vers%.*}/thunar-volman-${vers}.tar.bz2"
-digest="md5sum:f9ef39ed4bbff05eb74058dfff24dd84"
+digest="md5sum:a0965931e78fe662ad134e63b1ab33b9"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="thunar-volman-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
