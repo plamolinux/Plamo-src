@@ -9,7 +9,8 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 # multimedia, printing のパッケージが必要だと思う（dnssd, cddaあたり）
-OPT_CONFIG="-Dfuse=true
+OPT_CONFIG="
+	-Dfuse=true
 	-Dgphoto2=true
 	-Dafc=false
 	-Dafp=true
@@ -20,6 +21,7 @@ OPT_CONFIG="-Dfuse=true
 	-Dtmpfilesdir=no
 	-Ddnssd=true
 	-Dcdda=true
+	-Donedrive=false
 	-Dgoa=false
 	-Dgoogle=false
 	-Dsystemduserunitdir=no"
