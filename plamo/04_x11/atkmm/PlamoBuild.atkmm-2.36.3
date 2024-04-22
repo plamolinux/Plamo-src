@@ -70,10 +70,10 @@ if [ $opt_config -eq 1 ] ; then
 	touch doc/.Makefile.in
     fi
     
-     if [ -f autogen.sh ] ; then
-       sh ./autogen.sh
-     fi
-make distclean
+     #if [ -f autogen.sh ] ; then
+     #  sh ./autogen.sh
+     #fi
+
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
