@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gcr"
+pkgbase="gcr4"
 vers="4.3.0"
 url="https://download.gnome.org/sources/gcr/4.3/gcr-4.3.0.tar.xz"
 verify=""
