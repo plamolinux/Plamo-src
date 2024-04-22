@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="glibmm"
-vers="2.80.0"
-url="https://download.gnome.org/sources/glibmm/${vers%.*}/glibmm-${vers}.tar.xz"
+pkgbase="libsigc++3"
+vers="3.6.0"
+url="https://download.gnome.org/sources/libsigc++/${vers%.*}/libsigc++-${vers}.tar.xz"
 verify=""
-digest="md5sum:7e58344303cec7cd5f1e812f4c70cb43"
+digest="md5sum:b7205d5465ac15fbc0c781d39b4011be"
 arch=`uname -m`
-build=B4
-src="glibmm-${vers}"
-OPT_CONFIG="--buildtype=release -Dbuild-documentation=false"
-DOCS="AUTHORS COPYING COPYING.tools ChangeLog ChangeLog.pre-2-36-2 HACKING NEWS README README.SUN README.win32 docs"
+build=B1
+src="libsigc++-${vers}"
+OPT_CONFIG="--buildtype=release"
+DOCS="COPYING ChangeLog ChangeLog.pre-2-3-1 NEWS README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -64,9 +64,9 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-#     if [ -f autogen.sh ] ; then
-#       sh ./autogen.sh
-#     fi
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
