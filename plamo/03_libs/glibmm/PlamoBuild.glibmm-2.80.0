@@ -8,7 +8,8 @@ digest="md5sum:1a5778ea6c3ef1f9f09b65450fb4464f"
 arch=`uname -m`
 build=B2
 src="glibmm-${vers}"
-OPT_CONFIG="--buildtype=release -Dmaintainer-mode=true -Dbuild-documentation=true"
+#OPT_CONFIG="--buildtype=release -Dmaintainer-mode=true -Dbuild-documentation=true"
+OPT_CONFIG="--buildtype=release"
 DOCS="AUTHORS COPYING COPYING.tools ChangeLog ChangeLog.pre-2-36-2 HACKING NEWS README README.SUN README.win32 docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
