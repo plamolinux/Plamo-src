@@ -8,7 +8,7 @@ digest=""
 arch=`uname -m`
 build=B1
 src="gcr-4.3.0"
-OPT_CONFIG="--buildtype=release"
+OPT_CONFIG="--buildtype=release -Dgtk_doc=false"
 DOCS="COPYING NEWS README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
