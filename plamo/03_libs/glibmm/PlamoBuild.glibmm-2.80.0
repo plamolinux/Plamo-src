@@ -2,15 +2,13 @@
 ##############################################################
 pkgbase="glibmm"
 vers="2.80.0"
-#url="https://gitlab.gnome.org/GNOME/glibmm/-/archive/${vers}/glibmm-${vers}.tar.bz2"
 url="https://download.gnome.org/sources/glibmm/${vers%.*}/glibmm-${vers}.tar.xz"
 verify=""
 digest="md5sum:7e58344303cec7cd5f1e812f4c70cb43"
 arch=`uname -m`
 build=B2
 src="glibmm-${vers}"
-#OPT_CONFIG="--buildtype=release -Dmaintainer-mode=true -Dbuild-documentation=true"
-OPT_CONFIG="--buildtype=release"
+OPT_CONFIG="--buildtype=release -Dbuild-documentation=false"
 DOCS="AUTHORS COPYING COPYING.tools ChangeLog ChangeLog.pre-2-36-2 HACKING NEWS README README.SUN README.win32 docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
