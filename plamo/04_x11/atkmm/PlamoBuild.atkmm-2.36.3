@@ -2,14 +2,14 @@
 ##############################################################
 pkgbase="atkmm"
 vers="2.36.3"
-url="http://ftp.gnome.org/pub/gnome/sources/atkmm/2.36/atkmm-${vers}.tar.xz"
+url="https://download.gnome.org/sources/atkmm/${vers%.*}/atkmm-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:8b03a39a5e3dd0d3c040ece345f7a786"
 arch=`uname -m`
 build=B2
 src="atkmm-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-maintainer-mode"
-DOCS="AUTHORS COPYING COPYING.tools ChangeLog INSTALL NEWS README"
+OPT_CONFIG="--buildtype=release -Dmaintainer-mode=false -Dbuild-documentation=false"
+DOCS="COPYING COPYING.tools ChangeLog NEWS README.md README.win32.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -64,20 +64,13 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-
-    if [ ! -f doc/.Makefile.in ]; then
-	sed -e '/^libdocdir =/ s/$(book_name)/atkmm-2.28.0/'  -i doc/Makefile.in
-	touch doc/.Makefile.in
-    fi
-    
-     #if [ -f autogen.sh ] ; then
-     #  sh ./autogen.sh
-     #fi
-
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -86,8 +79,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -99,8 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
