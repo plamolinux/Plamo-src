@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libbytesize"
-vers="2.5"
-url="https://github.com/storaged-project/libbytesize/releases/download/2.5/libbytesize-2.5.tar.gz"
+vers="2.10"
+url="https://github.com/storaged-project/libbytesize/releases/download/${vers}/libbytesize-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="libbytesize-2.5"
+src="libbytesize-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="ABOUT-NLS LICENSE README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
