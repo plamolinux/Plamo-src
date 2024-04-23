@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libgudev"
-vers="237"
+vers="238"
 url="https://download.gnome.org/sources/libgudev/${vers}/libgudev-${vers}.tar.xz"
 verify=""
 digest="md5sum:a7783083cd74957d3a727ddc4737ee84"
