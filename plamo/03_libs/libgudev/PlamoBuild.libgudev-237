@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase="cryptsetup"
-vers="2.4.3"
-url="https://www.kernel.org/pub/linux/utils/cryptsetup/v${vers%.*}/cryptsetup-${vers}.tar.xz"
-verify="https://mirrors.edge.kernel.org/pub/linux/utils/cryptsetup/v${vers%.*}/cryptsetup-${vers}.tar.sign"
-digest=""
+pkgbase="libgudev"
+vers="237"
+url="https://download.gnome.org/sources/libgudev/${vers}/libgudev-${vers}.tar.xz"
+verify=""
+digest="sha256sum:0d06b21170d20c93e4f0534dbb9b0a8b4f1119ffb00b4031aaeb5b9148b686aa"
 arch=`uname -m`
-build=B1
-src="cryptsetup-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-ssh-token"
-DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LGPL ChangeLog INSTALL NEWS README TODO docs"
+build=B2
+src="libgudev-${vers}"
+OPT_CONFIG="--buildtype=release -Dgtk_doc=false"
+DOCS="COPYING NEWS README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -70,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +79,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -92,8 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
