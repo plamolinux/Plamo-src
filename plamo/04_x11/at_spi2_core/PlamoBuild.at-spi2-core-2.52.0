@@ -6,7 +6,7 @@ url="http://ftp.gnome.org/pub/gnome/sources/at-spi2-core/${vers%.*}/at-spi2-core
 verify=""
 digest="md5sum:e6591545b2bf204fe9a58f777bd0b78a"
 arch=`uname -m`
-build=B2
+build=B3
 src="at-spi2-core-${vers}"
 OPT_CONFIG="-Dsystemd_user_dir=no"
 DOCS="AUTHORS COPYING INSTALL MAINTAINERS NEWS README meson_options.txt"
