@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='keyutils'
-vers='1.5.10'
-url="http://people.redhat.com/~dhowells/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:3771676319bc7b84b1549b5c63ff5243"
+vers="1.6.3"
+url="https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git/snapshot/keyutils-${vers}.tar.gz"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
