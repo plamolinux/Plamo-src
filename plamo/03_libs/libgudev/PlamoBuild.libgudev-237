@@ -6,7 +6,7 @@ url="https://download.gnome.org/sources/libgudev/${vers}/libgudev-${vers}.tar.xz
 verify=""
 digest="sha256sum:0d06b21170d20c93e4f0534dbb9b0a8b4f1119ffb00b4031aaeb5b9148b686aa"
 arch=`uname -m`
-build=B1
+build=B2
 src="libgudev-${vers}"
 OPT_CONFIG="--buildtype=release -Dgtk_doc=false"
 DOCS="COPYING NEWS README.md docs"
