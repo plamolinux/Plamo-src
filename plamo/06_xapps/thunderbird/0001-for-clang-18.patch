@@ -1,0 +1,67 @@
+From b2862f62e0300e1860292f62f5dec59117607e9f Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Fri, 17 May 2024 21:49:27 +0900
+Subject: [PATCH] for clang-18
+
+---
+ dom/media/gmp-plugin-openh264/gmp-fake-openh264.cpp    | 2 +-
+ dom/media/gtest/TestGMPRemoveAndDelete.cpp             | 2 +-
+ dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.cpp | 2 +-
+ dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.h   | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/dom/media/gmp-plugin-openh264/gmp-fake-openh264.cpp b/dom/media/gmp-plugin-openh264/gmp-fake-openh264.cpp
+index 4c5e956..a2ca4f7 100644
+--- a/dom/media/gmp-plugin-openh264/gmp-fake-openh264.cpp
++++ b/dom/media/gmp-plugin-openh264/gmp-fake-openh264.cpp
+@@ -99,7 +99,7 @@ struct EncodedFrame {
+     uint8_t y_;
+     uint8_t u_;
+     uint8_t v_;
+-    uint32_t timestamp_;
++    uint64_t timestamp_;
+   } idr_nalu;
+ };
+ #pragma pack(pop)
+diff --git a/dom/media/gtest/TestGMPRemoveAndDelete.cpp b/dom/media/gtest/TestGMPRemoveAndDelete.cpp
+index b969027..9f2118e 100644
+--- a/dom/media/gtest/TestGMPRemoveAndDelete.cpp
++++ b/dom/media/gtest/TestGMPRemoveAndDelete.cpp
+@@ -361,7 +361,7 @@ void GMPRemoveTest::gmp_Decode() {
+       uint8_t y_;
+       uint8_t u_;
+       uint8_t v_;
+-      uint32_t timestamp_;
++      uint64_t timestamp_;
+     } idr_nalu;
+   };
+ #pragma pack(pop)
+diff --git a/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.cpp b/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.cpp
+index 50e39b2..7200cf1 100644
+--- a/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.cpp
++++ b/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.cpp
+@@ -540,7 +540,7 @@ void WebrtcGmpVideoEncoder::Encoded(
+ 
+   webrtc::VideoFrameType ft;
+   GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
+-  uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
++  uint64_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
+ 
+   GMP_LOG_DEBUG("GMP Encoded: %" PRIu64 ", type %d, len %d",
+                 aEncodedFrame->TimeStamp(), aEncodedFrame->BufferType(),
+diff --git a/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.h b/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.h
+index ef3e1bd..865f9af 100644
+--- a/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.h
++++ b/dom/media/webrtc/libwebrtcglue/WebrtcGmpVideoCodec.h
+@@ -302,7 +302,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
+     int64_t timestamp_us;
+   };
+   // Map rtp time -> input image data
+-  DataMutex<std::map<uint32_t, InputImageData>> mInputImageMap;
++  DataMutex<std::map<uint64_t, InputImageData>> mInputImageMap;
+ 
+   MediaEventProducer<uint64_t> mInitPluginEvent;
+   MediaEventProducer<uint64_t> mReleasePluginEvent;
+-- 
+2.45.1
+
