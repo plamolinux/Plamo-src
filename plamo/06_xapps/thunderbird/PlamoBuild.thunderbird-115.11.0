@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="115.8.1"
+vers="115.11.0"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -11,11 +11,11 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+patchfiles='0001-for-clang-18.patch'
 addfiles='langpack.sh mozconfig thunderbird.desktop vendor.js'
 compress=tzst
 
-rustver=""
+rustver="1.74.0"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -70,11 +70,22 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 < $W/$patch
   done
 
-  sed -e '/<exception>/i#include <cstdint>' \
-      -i comm/third_party/rnp/src/libsexp/include/sexp/sexp-error.h
-
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
+
+  ### for 115.11.0
+  sed -e "/match cursor.kind()/a CXCursor_LinkageSpec => return Err(ParseError::Recurse)," \
+      -i third_party/rust/bindgen/ir/item.rs
+
+  cat >> Cargo.toml <<EOF
+[patch.crates-io.bindgen_0_64_0]
+package = "bindgen"
+version = "0.64.0"
+path = "third_party/rust/bindgen"
+EOF
+
+  sed -r '/name = "bindgen"/,+5 s/^source|^checksum/#&/' -i Cargo.lock
+  ### end 115.11.0
 
   # setup rust
   cd $W
@@ -109,7 +120,6 @@ if [ $opt_config -eq 1 ] ; then
   done
 
   cd $S
-  sed -i '/ROOT_CLIP_CHAIN/d' gfx/webrender_bindings/webrender_ffi.h
 
 fi
     
@@ -117,10 +127,7 @@ if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$W/path:$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
-  export MOZ_ENABLE_FULL_SYMBOLS=1
-  # disable desktop notification (? maybe...)
-  export MOZ_NOSPAM=1
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
@@ -135,8 +142,8 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
-  export MACH_USE_SYSTEM_PYTHON=1
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
