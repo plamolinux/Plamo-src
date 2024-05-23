@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.80.2"
+vers="2.80.0"
 url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="sha256sum:b9cfb6f7a5bd5b31238fd5d56df226b2dda5ea37611475bf89f6a0f9400fe8bd"
+digest="md5sum:3a51e2803ecd22c2dadcd07d9475ebe3"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
@@ -70,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
