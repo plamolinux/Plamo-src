@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gdk_pixbuf"
-vers="2.42.10"
-url="http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${vers%.*}/gdk-pixbuf-${vers}.tar.xz"
+vers="2.42.12"
+url="https://download.gnome.org/sources/gdk-pixbuf/${vers%.*}/gdk-pixbuf-${vers}.tar.xz"
 verify=""
-digest="md5sum:4a62f339cb1424693fba9bb7ffef8150"
+digest="md5sum:f986fdbba5ec6233c96f8b6535811780"
 arch=`uname -m`
 build=B1
 src="gdk-pixbuf-${vers}"
-OPT_CONFIG="-Dinstalled_tests=false -Ddocs=false"
+OPT_CONFIG="--buildtype=release -Dinstalled_tests=false -Ddocs=false --wrap-mode=nofallback"
 DOCS="COPYING NEWS README.md README.msvc meson_options.txt"
 patchfiles=""
 compress=tzst
@@ -58,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
+    meson setup --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
