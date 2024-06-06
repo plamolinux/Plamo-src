@@ -6,9 +6,9 @@ url="https://download.gnome.org/sources/gdk-pixbuf/${vers%.*}/gdk-pixbuf-${vers}
 verify=""
 digest="md5sum:f986fdbba5ec6233c96f8b6535811780"
 arch=`uname -m`
-build=B1
+build=B2
 src="gdk-pixbuf-${vers}"
-OPT_CONFIG="--buildtype=release -Dinstalled_tests=false -Ddocs=false --wrap-mode=nofallback"
+OPT_CONFIG="--buildtype=release -Dinstalled_tests=false -Ddocs=false --wrap-mode=nofallback -Dothers=enabled"
 DOCS="COPYING NEWS README.md README.msvc meson_options.txt"
 patchfiles=""
 compress=tzst
