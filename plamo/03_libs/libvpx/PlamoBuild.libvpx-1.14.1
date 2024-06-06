@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libvpx"
-vers="1.13.0"
+vers="1.14.1"
 url="https://github.com/webmproject/libvpx/archive/v${vers}.tar.gz"
 verify=""
-digest="md5sum:d5fd45a806a65a57d6635f9e7a98a1b2"
+digest="md5sum:1d2a1c594587ee1f26a4f017becddcd5"
 arch=`uname -m`
-build=B2
+build=B1
 src="libvpx-${vers}"
 OPT_CONFIG="--enable-pic --enable-shared --disable-static"
 DOCS="AUTHORS CHANGELOG LICENSE README"
-patchfiles="libvpx-1.13.0-security_fix-1.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
