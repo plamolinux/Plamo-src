@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssl'
-vers="3.0.13"
+vers="3.0.14"
 url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
