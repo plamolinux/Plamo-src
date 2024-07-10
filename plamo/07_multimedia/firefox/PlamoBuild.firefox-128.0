@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="127.0"
+vers="128.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -16,7 +16,7 @@ patchfiles=""
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
-rustver="1.77.2"
+rustver=""
 ##############################################################
 
 ulimit -n 4096
