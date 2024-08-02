@@ -1,3 +1,5 @@
+#!/bin/sh
+#
 # This is based on gentoo-pipewire-launcher
 # https://gitweb.gentoo.org/repo/gentoo.git/tree/media-video/pipewire/files/gentoo-pipewire-launcher.in
 
