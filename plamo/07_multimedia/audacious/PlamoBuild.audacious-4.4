@@ -1,34 +1,31 @@
 #!/bin/sh
 ##############################################################
-pkgbase="pipewire"
-vers="0.3.51"
-url="https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/${vers}/pipewire-${vers}.tar.bz2"
+pkgbase="audacious"
+vers="4.4"
+url="https://distfiles.audacious-media-player.org/audacious-4.4.tar.bz2"
 verify=""
-digest="md5sum:a63ff8c12652657f049329568756c9c3"
+digest=""
 arch=`uname -m`
-build=B1
-src="pipewire-${vers}"
-OPT_CONFIG="
-	--buildtype=release
-	-Dsession-managers=
-	-Djack=disabled
-"
-DOCS="COPYING INSTALL.md LICENSE NEWS README.md doc meson_options.txt"
+build=B3
+src="audacious-4.4"
+OPT_CONFIG="--buildtype=release -Dqt5=true"
+DOCS="AUTHORS COPYING INSTALL"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles="pipewire-launcher pipewire.desktop"
+addfiles=""
 compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
+B=$S/build
+
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -58,37 +55,36 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B
 ######################################################################
-#  copy sources, so need patch in the build dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
             touch .${patch}
         fi
     done
-
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed'
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
+    export LDFLAGS='-Wl,--as-needed' 
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-    cd $B
+    cd $B 
     ninja
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -99,36 +95,15 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P ninja install
 
-  # install desktopfile
-  install -v -Dm755 $W/pipewire.desktop $P/etc/xdg/autostart/pipewire.desktop
-  install -v -Dm644 $W/pipewire.desktop $P/usr/share/doc/$src/pipewire.desktop
-
-  # install launcher
-  install -v -Dm755 $W/pipewire-launcher $P/usr/bin/pipewire-launcher
-  install -v -Dm644 $W/pipewire-launcher $P/usr/share/doc/$src/pipewire-launcher
-
-  # remove desktop files and icons
-  rm -rfv $P/usr/share/{applications,icons}
-
-  # fr/  fr.ISO8859-1/  fr.UTF-8/  it/  it.ISO8859-1/  it.UTF-8/  ja/  man1/  pl/  pl.ISO8859-2/  pl.UTF-8/  ru.KOI8-R/  ru.UTF-8/
-  rm -rfv $P/usr/share/man/{fr,it,pl,ru}*
-
-  ln -sfv vim $P/usr/bin/vi
-
-  for L in $P/usr/share/man/{,*/}man1/vim.1;
-  do
-      ln -sfv vim.1 $(dirname $L)/vi.1
-  done
-
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
