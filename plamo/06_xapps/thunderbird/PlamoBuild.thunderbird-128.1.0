@@ -2,20 +2,20 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="115.11.0"
-url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}/source/${pkgbase}-${vers}.source.tar.xz"
-langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}/linux-x86_64/xpi/ja.xpi"
+vers="128.1.0"
+url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}esr/source/${pkgbase}-${vers}esr.source.tar.xz"
+langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}esr/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles='0001-for-clang-18.patch'
+patchfiles=''
 addfiles='langpack.sh mozconfig thunderbird.desktop vendor.js'
 compress=tzst
 
-rustver="1.74.0"
+rustver=""
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -73,19 +73,8 @@ if [ $opt_config -eq 1 ] ; then
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
 
-  ### for 115.11.0
-  sed -e "/match cursor.kind()/a CXCursor_LinkageSpec => return Err(ParseError::Recurse)," \
-      -i third_party/rust/bindgen/ir/item.rs
-
-  cat >> Cargo.toml <<EOF
-[patch.crates-io.bindgen_0_64_0]
-package = "bindgen"
-version = "0.64.0"
-path = "third_party/rust/bindgen"
-EOF
-
-  sed -r '/name = "bindgen"/,+5 s/^source|^checksum/#&/' -i Cargo.lock
-  ### end 115.11.0
+  # for current ICU
+  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
 
   # setup rust
   cd $W
@@ -111,7 +100,7 @@ EOF
       fi
   fi
 
-  for p in toml pysolfc
+  for p in toml pysolfc tomli-w
   do
       pip3 list | grep $p
       if [ $? -ne 0 ]; then
@@ -125,9 +114,15 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $S
-  export PATH="$W/path:$HOME/.cargo/bin:$PATH"
+  export PATH="$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
+  export MOZ_ENABLE_FULL_SYMBOLS=1
+  # disable desktop notification (? maybe...)
+  export MOZ_NOSPAM=1
+
+  ulimit -n 4096
+
   if [ -d $W/build ]; then
     rm -rf $W/build
   fi
@@ -143,7 +138,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
   export LDFLAGS='-Wl,--as-needed'
   DESTDIR=$P ./mach install
 
