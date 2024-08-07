@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wasi_libc"
-vers="20230413"
+vers="20240725"
 url="https://github.com/WebAssembly/wasi-libc.git"
-commitid="c5264e2bbe532994d06b039005f2af91bedcc1a6"
+commitid="b9ef79d7dbd47c6c5bafdae760823467c2f60b70"
 verify=""
 digest=""
 arch=`uname -m`
