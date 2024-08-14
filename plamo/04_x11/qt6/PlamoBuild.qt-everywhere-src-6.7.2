@@ -1,0 +1,260 @@
+#!/bin/sh
+##############################################################
+pkgbase="qt6"
+vers="6.7.2"
+url="https://download.qt.io/archive/qt/6.7/6.7.2/single/qt-everywhere-src-6.7.2.tar.xz"
+verify=""
+digest="md5sum:06d35b47349c7c0a45710daad359e07b"
+arch=`uname -m`
+build=B3
+src="qt-everywhere-src-6.7.2"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release 
+-DCMAKE_INSTALL_PREFIX=/usr 
+-DINSTALL_BINDIR=lib/qt6/bin
+-DINSTALL_PUBLICBINDIR=usr/bin 
+-DINSTALL_LIBEXECDIR=libexec/qt6 
+-DINSTALL_DOCDIR=share/doc/qt6 
+-DINSTALL_ARCHDATADIR=lib/qt6 
+-DINSTALL_DATADIR=share/qt6 
+-DINSTALL_INCLUDEDIR=include/qt6 
+-DINSTALL_MKSPECSDIR=lib/qt6/mkspecs 
+-DINSTALL_EXAMPLESDIR=share/doc/qt6/examples 
+-DFEATURE_journald=ON 
+-DFEATURE_libproxy=ON 
+-DFEATURE_openssl_linked=ON 
+-DFEATURE_system_sqlite=ON 
+-DFEATURE_system_xcb_xinput=ON 
+-DFEATURE_no_direct_extern_access=ON 
+-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON 
+-DCMAKE_MESSAGE_LOG_LEVEL=STATUS
+"
+DOCS=".QT-ENTERPRISE-LICENSE-AGREEMENT LICENSES README.md README.md.template qtdoc"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+B=$W/build
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    ninja -j `nproc`
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  set -e
+  DESTDIR=$P ninja install
+
+# Install symlinks for user-facing tools
+  cd "$P"
+
+## Ensure 'usr/bin' directory exists
+#  mkdir -p usr/bin
+
+## Find all 'user_facing_tool_links.txt' files in the '../build' directory
+#  txts=$(find ../build -name user_facing_tool_links.txt)
+
+## Iterate over each 'user_facing_tool_links.txt' file
+#  for t in $txts; do
+#      # Read each line in the 'user_facing_tool_links.txt' file
+#      while IFS= read -r line; do
+#          # Extract source and target paths
+#          src=$(echo $line | cut -d' ' -f1)
+#          target=$(echo $line | cut -d' ' -f2)
+#          
+#          # Create the full target path under 'usr/bin'
+#          full_target="usr/bin/$(basename $target)"
+#          
+#          # Remove existing link if it exists
+#          if [ -L "$full_target" ] || [ -e "$full_target" ]; then
+#              rm -f "$full_target"
+#          fi
+#
+#          # Create the symbolic link
+#          ln -s "$src" "$full_target"
+#        
+#      done < "$t"
+#  done
+
+  set +e
+  cd $P/usr/lib/qt6/bin
+  strip *
+  set -e
+
+  mkdir -p $P/usr/bin
+  cd $P/usr/bin
+  for i in $P/usr/lib/qt6/bin/*; do
+	  if [[ $i == *6 ]]; then
+		  continue
+	  fi
+	  ln -s ../lib/qt6/bin/$(basename "$i") $(basename "${i}")6
+  done
+
+  cd $S/qtbase
+  install -d -m755 "$P"/usr/include/qt6xcb-private/{gl_integrations,nativepainting}
+  cp -r src/plugins/platforms/xcb/*.h "$P"/usr/include/qt6xcb-private/
+  cp -r src/plugins/platforms/xcb/gl_integrations/*.h "$P"/usr/include/qt6xcb-private/gl_integrations/
+  cp -r src/plugins/platforms/xcb/nativepainting/*.h "$P"/usr/include/qt6xcb-private/nativepainting/
+
+  cd $S
+  # Add menu entries for all those hidden but great Qt applications:
+  # Qt6 logo:
+  mkdir -p $P/usr/share/icons/hicolor/{48x48,128x128}/apps
+  convert qtdoc/doc/src/images/qt-logo.png  -resize 48x48 $P/usr/share/icons/hicolor/48x48/apps/qt6-logo.png
+  convert qtdoc/doc/src/images/qt-logo.png  -resize 128x128 $P/usr/share/icons/hicolor/128x128/apps/qt6-logo.png
+  # Assistant icons
+  install -p -m644 -D qttools/src/assistant/assistant/images/assistant.png $P/usr/share/icons/hicolor/32x32/apps/qt6-assistant.png
+  install -p -m644 -D qttools/src/assistant/assistant/images/assistant-128.png $P/usr/share/icons/hicolor/128x128/apps/qt6-assistant.png
+  # Designer icon
+  install -p -m644 -D qttools/src/designer/src/designer/images/designer.png $P/usr/share/icons/hicolor/128x128/apps/qt6-designer.png
+  # QDbusViewer icons
+  install -p -m644 qttools/src/qdbus/qdbusviewer/images/qdbusviewer.png $P/usr/share/icons/hicolor/32x32/apps/qt6-qdbusviewer.png
+  install -p -m644 qttools/src/qdbus/qdbusviewer/images/qdbusviewer-128.png $P/usr/share/icons/hicolor/128x128/apps/qt6-qdbusviewer.png
+  # Linguist icons
+  for icon in qttools/src/linguist/linguist/images/icons/linguist-*-32.png ; do
+    size=$(echo $(basename ${icon}) | cut -d- -f2)
+    install -p -m644 -D ${icon} $P/usr/share/icons/hicolor/${size}x${size}/apps/qt6-linguist.png
+  done
+
+  set +e
+  
+  # And the .desktop files too:
+  mkdir -p $P/usr/share/applications
+  cat <<EOF > $P/usr/share/applications/qt6-designer.desktop
+[Desktop Entry]
+Name=Qt6 Designer
+GenericName=Interface Designer
+Comment=Design GUIs for Qt6 applications
+Exec=designer6
+Icon=qt6-designer
+MimeType=application/x-designer;
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;
+EOF
+  cat <<EOF > $P/usr/share/applications/qt6-assistant.desktop
+[Desktop Entry]
+Name=Qt6 Assistant 
+Comment=Shows Qt6 documentation and examples
+Exec=assistant6
+Icon=qt6-assistant
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;Documentation;
+EOF
+  cat <<EOF > $P/usr/share/applications/qt6-linguist.desktop
+[Desktop Entry]
+Name=Qt6 Linguist 
+Comment=Add translations to Qt6 applications
+Exec=linguist6
+Icon=qt6-linguist
+MimeType=text/vnd.trolltech.linguist;application/x-linguist;
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;
+EOF
+  cat <<EOF > $P/usr/share/applications/qt6-qdbusviewer.desktop
+[Desktop Entry]
+Name=Qt6 QDbusViewer 
+GenericName=Qt6 D-Bus Debugger
+Comment=Debug D-Bus applications
+Exec=qdbusviewer6
+Icon=qt6-qdbusviewer
+Terminal=false
+Type=Application
+Categories=Qt;Development;Debugger;
+EOF
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
