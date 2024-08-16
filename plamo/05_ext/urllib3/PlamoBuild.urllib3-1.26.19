@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="urllib3"
-vers="1.26.5"
-url="https://github.com/urllib3/urllib3/archive/${vers}.tar.gz"
+vers="1.26.19"
+url="https://github.com/urllib3/urllib3/releases/download/${vers}/urllib3-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="urllib3-${vers}"
 OPT_CONFIG=""
-DOCS=".readthedocs.yml CONTRIBUTORS.txt LICENSE.txt README.rst dev-requirements.txt docs"
+DOCS="LICENSE.txt README.rst dev-requirements.txt docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -55,41 +55,39 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ;  mkdir $B
-    for i in 2 3 ; do
-	cp -a $S $B/$i  
-	cd $B/$i
-	for patch in $patchfiles ; do
-	    patch -p1 < $W/$patch
-	done
-
-	python${i} setup.py config    
-	if [ $? != 0 ]; then
-            echo "configure error. $0 script stop"
-            exit 255
-	fi
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    python setup.py config    
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    for i in 2 3 ; do
-	cd $B/$i
-	python${i} setup.py build
-	if [ $? != 0 ]; then
-            echo "build error. $0 script stop"
-            exit 255
-	fi
-    done
+    cd $B 
+    python setup.py build
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
-    check_root
-    if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-    for i in 2 3 ; do
-	cd $B/$i
-	python${i} setup.py install --root $P --prefix=/usr
-    done
-    
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  python setup.py install --root $P --prefix=/usr
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
