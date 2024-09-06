@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssl'
-vers="3.0.14"
-url="https://openssl.org/source/${pkgbase}-${vers}.tar.gz"
+vers="3.0.15"
+url="https://github.com/openssl/openssl/releases/download/openssl-${vers}/openssl-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
