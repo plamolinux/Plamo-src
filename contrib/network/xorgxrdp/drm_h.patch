@@ -1,0 +1,12 @@
+diff -ur xorgxrdp-0.10.2.orig/xrdpdev/xrdpdev.c xorgxrdp-0.10.2/xrdpdev/xrdpdev.c
+--- xorgxrdp-0.10.2.orig/xrdpdev/xrdpdev.c	2024-07-30 21:54:53.000000000 +0900
++++ xorgxrdp-0.10.2/xrdpdev/xrdpdev.c	2024-09-12 22:46:31.337573422 +0900
+@@ -46,7 +46,7 @@
+ #include <xf86Modes.h>
+ 
+ #include <sys/ioctl.h>
+-#include <drm.h>
++#include <drm/drm.h>
+ 
+ #include "rdp.h"
+ #include "rdpPri.h"
