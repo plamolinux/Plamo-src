@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xorgxrdp"
-vers="0.9.19"
-url="https://github.com/neutrinolabs/xorgxrdp/releases/download/v0.9.19/xorgxrdp-0.9.19.tar.gz"
+vers="0.10.2"
+url="https://github.com/neutrinolabs/xorgxrdp/releases/download/v${vers}/xorgxrdp-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="xorgxrdp-0.9.19"
+src="xorgxrdp-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="COPYING README.md"
-patchfiles=""
+patchfiles="drm_h.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
