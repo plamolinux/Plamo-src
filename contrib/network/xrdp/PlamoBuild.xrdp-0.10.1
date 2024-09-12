@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xrdp"
-vers="0.9.23.1"
+vers="0.10.1"
 url="https://github.com/neutrinolabs/xrdp/releases/download/v${vers}/xrdp-${vers}.tar.gz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="xrdp-${vers}"
 OPT_CONFIG="
 	--enable-jpeg
