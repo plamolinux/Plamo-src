@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gimp"
-vers="2.10.32"
-url="http://www.ring.gr.jp/pub/graphics/gimp/v${vers%.*}/gimp-${vers}.tar.bz2"
+vers="2.10.38"
+url="https://download.gimp.org/gimp/v2.10/gimp-${vers}.tar.bz2"
 verify=""
-digest=""
+digest="md5sum:b5e37c9570a8ee723debe6d3728555ae"
 arch=`uname -m`
-build=B3
+build=B2
 src="gimp-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-check-update --with-bug-report-url=http://plamo.linet.gr.jp/"
+OPT_CONFIG="--disable-static --enable-shared --disable-check-update --disable-python --with-bug-report-url=http://plamo.linet.gr.jp/"
 DOCS="AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl po-windows-installer"
-patchfiles=""
+patchfiles="plamo.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -80,7 +80,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    make -j$(nproc)
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
