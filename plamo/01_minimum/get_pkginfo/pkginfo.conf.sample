@@ -1,0 +1,40 @@
+# configuration file for get_pkginfo
+
+# URL
+# Download URL
+#URL = http://repository.plamolinux.org/pub/linux/Plamo/
+
+# DOWNLOAD
+# Specify whether downloaded packages will be stored in a single
+# directory (linear) or subdir (subdir) for subdirectories per
+# category.
+#DOWNLOAD = linear
+
+# DOWNTODIR
+# Where to put downloaded packages (write permissions required)
+#DOWNTODIR = /somewhere/to/put
+
+# CATEGORY
+# Specifies the category you want to check regardless of which
+# categories are installed. If you specify "all", all categories will
+# be checked.
+#CATEGORY = 00_base 03_libs
+
+# LOCALBLOCK
+# Package names you want to block. Write the base names on one line,
+# separated by spaces.
+#LOCALBLOCK = man man_db ffmpeg mplayer
+
+# INSTALL
+# Sets the automatic installation mode to auto or manual. If manual,
+# you will be asked before installing each package. If auto, the
+# installation will proceed without asking.
+#INSTALL = auto
+
+# BLOCKLIST
+# Whether to use the block list feature or not.
+#BLOCKLIST = True
+
+# REVERSE
+# Show packages that are not installed locally.
+#REVERSE = False
