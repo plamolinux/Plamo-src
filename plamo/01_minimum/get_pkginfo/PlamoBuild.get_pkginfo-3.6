@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='get_pkginfo'
-vers='3.4'
+vers='3.6'
 url="https://github.com/plamolinux/get_pkginfo/archive/${vers}.tar.gz"
 arch="noarch"
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='README.md'
@@ -69,8 +69,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $S
   install get_pkginfo.py $P/usr/bin/get_pkginfo
   install $W/$0 $P/usr/share/doc/${pkgbase}-${vers}
-  install $W/pkginfo.conf.sample $P/etc/pkginfo.conf.sample
-  install $W/pkginfo.conf.sample $P/usr/share/doc/${pkgbase}-${vers}/pkginfo.conf.sample
+  install pkginfo.conf.sample $P/etc/pkginfo.conf.sample
+  install pkginfo.conf.sample $P/usr/share/doc/${pkgbase}-${vers}/pkginfo.conf.sample
 
 ################################
 #      install tweaks
