@@ -1,0 +1,26 @@
+diff -uprN gimp-2.10.38/plug-ins/file-tiff/file-tiff-load.c gimp-2.10.38.new/plug-ins/file-tiff/file-tiff-load.c
+--- gimp-2.10.38/plug-ins/file-tiff/file-tiff-load.c	2024-05-03 09:33:35.000000000 +0900
++++ gimp-2.10.38.new/plug-ins/file-tiff/file-tiff-load.c	2024-09-14 06:49:07.228016889 +0900
+@@ -1301,8 +1301,8 @@ load_image (GFile        *file,
+ 
+       /* any resolution info in the file? */
+       {
+-        gfloat   xres = 72.0;
+-        gfloat   yres = 72.0;
++        gdouble   xres = 72.0;
++        gdouble   yres = 72.0;
+         gushort  read_unit;
+         GimpUnit unit = GIMP_UNIT_PIXEL; /* invalid unit */
+ 
+diff -uprN gimp-2.10.38/plug-ins/metadata/metadata-editor.c gimp-2.10.38.new/plug-ins/metadata/metadata-editor.c
+--- gimp-2.10.38/plug-ins/metadata/metadata-editor.c	2024-05-03 09:33:35.000000000 +0900
++++ gimp-2.10.38.new/plug-ins/metadata/metadata-editor.c	2024-09-14 07:25:59.199944055 +0900
+@@ -2140,7 +2140,7 @@ metadata_dialog_editor_set_metadata (GEx
+                             }
+                           else
+                             {
+-                              if (! g_strv_contains (values, equiv_values[evi]))
++                              if (! g_strv_contains ((const gchar * const *)values, equiv_values[evi]))
+                                 {
+                                   gchar *tmpvalue;
+ 
