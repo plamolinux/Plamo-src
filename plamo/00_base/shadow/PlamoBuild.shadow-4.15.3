@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='shadow'
-vers="4.12.3"
+vers="4.15.3"
 url="https://github.com/shadow-maint/shadow/releases/download/${vers}/shadow-${vers}.tar.xz"
 digest=""
 arch=`uname -m`
 build=B1
 src="shadow-${vers}"
-OPT_CONFIG='--disable-static --sysconfdir=/etc --without-selinux --with-libcrack --with-group-name-max-length=32'
-DOCS='ABOUT-NLS COPYING ChangeLog NEWS README TODO'
-#patchfiles='disable-nls-manpages.patch'
+# --without-libbsd を指定しないと、libbsd の readpassphrase() を探しに行く
+OPT_CONFIG='--disable-static --sysconfdir=/etc --without-selinux --with-libcrack --with-group-name-max-length=32 --without-libbsd'
+DOCS='AUTHORS.md COPYING ChangeLog NEWS README'
+addfiles='adduser chage.pam login.pam passwd.pam  su.pam'
 compress=tzst
 ##############################################################
 # BuildRequirements:
@@ -26,7 +27,6 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -46,6 +46,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles ; do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
     if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  copy source build, so need patch in the build dir
@@ -60,14 +68,15 @@ if [ $opt_config -eq 1 ] ; then
 
     # do not install groups.1, getspnam.3, passwd.5
     # because man_pages has those
-    find man -name Makefile.in -exec sed -i 's/groups\.1 / /'   {} \;
-    find man -name Makefile.in -exec sed -i 's/getspnam\.3 / /' {} \;
-    find man -name Makefile.in -exec sed -i 's/passwd\.5 / /'   {} \;
+    # find man -name Makefile.in -exec sed -i 's|man1/groups\.1 | |'   {} \;
+    # find man -name Makefile.in -exec sed -i 's|man3/getspnam\.3 | |' {} \;
+    # find man -name Makefile.in -exec sed -i 's|man5/passwd\.5 | |'   {} \;
 
+    # no "./etc/useradd" now
     # change default group for useradd to 100 (from 1000)
-    sed -i '/^GROUP=/s@1000@100@g' etc/useradd
+    # sed -i '/^GROUP=/s@1000@100@g' etc/useradd
     # do not create mail spool when useradd
-    sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
+    # sed -i '/^CREATE_MAIL_SPOOL=/s@yes@no@g' etc/useradd
     # set encrypt method to sha256
     sed -i 's@#ENCRYPT_METHOD DES@ENCRYPT_METHOD SHA512@' etc/login.defs
     # set dict path of cracklib to /lib/cracklib/pw_dict
@@ -132,13 +141,11 @@ if [ $opt_package -eq 1 ] ; then
 
   # install adduser command
   install -Dm755 -v $W/adduser $P/usr/sbin/adduser
-  install -Dm644 -v $W/adduser $docdir/$src/adduser
 
   # pam.d
   for f in chage login passwd su
   do
     install -Dm644 -v $W/"$f".pam $P/etc/pam.d/$f
-    install -Dm644 -v $W/"$f".pam $docdir/$src/$f
   done
   for f in chfn chgpasswd chpasswd chsh groupadd groupdel \
 	   groupmems groupmod newusers useradd userdel usermod
@@ -148,12 +155,17 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   # mkdir man dirs
-  install -dm755 -v $mandir/ja
+  install -dm755 -v $mandir/ja_JP.UTF-8
   for d in $( cd man/ja ; ls -d man? )
   do
-    cp -av man/ja/$d $P/usr/share/man/ja/$d 
+    cp -av man/ja/$d $P/usr/share/man/ja_JP.UTF-8/$d 
   done
 
+  mkdir -p $P/usr/share/doc/$src
+  for f in $addfiles $patchfiles ; do
+      cp -av $W/$f $P/usr/share/doc/$src
+  done
+  
   # initpkg
   mkdir -p $P/install
   cat <<"EOF" >> $P/install/initpkg
