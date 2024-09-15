@@ -1,7 +1,8 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
-#                           Time-stamp: <2024-09-15 15:30:24 kojima>
+#                           Time-stamp: <2024-09-15 17:54:50 kojima>
+#                           Time-stamp: <2023-08-04 16:32:18 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
 #                           Time-stamp: <2009-06-22 19:24:46 tamuki>
