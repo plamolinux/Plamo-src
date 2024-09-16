@@ -1,0 +1,18 @@
+diff -uNr shadow-4.4.orig/man/Makefile.am shadow-4.4/man/Makefile.am
+--- shadow-4.4.orig/man/Makefile.am	2014-09-01 23:36:40.000000000 +0900
++++ shadow-4.4/man/Makefile.am	2017-03-29 15:28:17.408806416 +0900
+@@ -1,10 +1,10 @@
+ 
+ # subdirectories for translated manual pages
+-if USE_NLS
+-SUBDIRS = po cs da de es fi fr hu id it ja ko pl pt_BR ru sv tr zh_CN zh_TW
+-else
++#if USE_NLS
++#SUBDIRS = po cs da de es fi fr hu id it ja ko pl pt_BR ru sv tr zh_CN zh_TW
++#else
+ SUBDIRS =
+-endif
++#endif
+ 
+ man_MANS = \
+ 	man1/chage.1 \
