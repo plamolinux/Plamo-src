@@ -1,7 +1,7 @@
 # See also protocols(5) and IANA official page :
 # https://www.iana.org/assignments/protocol-numbers
 #
-# (last updated 2024-05-02)
+# (last updated 2023-06-06)
 hopopt           0 HOPOPT         # IPv6 Hop-by-Hop Option
 icmp             1 ICMP           # Internet Control Message
 igmp             2 IGMP           # Internet Group Management
@@ -55,7 +55,7 @@ esp              50 ESP           # Encap Security Payload
 ah               51 AH            # Authentication Header
 i-nlsp           52 I-NLSP        # Integrated Net Layer Security  TUBA
 narp             54 NARP          # NBMA Address Resolution Protocol
-min-ipv4         55 Min-IPv4      # Minimal IPv4 Encapsulation
+mobile           55 MOBILE        # IP Mobility
 tlsp             56 TLSP         
 skip             57 SKIP          # SKIP
 ipv6-icmp        58 IPv6-ICMP     # ICMP for IPv6
