@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libpcap"
-vers="1.10.1"
+vers="1.10.5"
 url="https://www.tcpdump.org/release/libpcap-${vers}.tar.gz"
 verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="libpcap-${vers}"
 OPT_CONFIG="--disable-dbus"
 DOCS="INSTALL.md LICENSE README.md TODO doc"
