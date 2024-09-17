@@ -6,14 +6,14 @@ url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B5
+build=B6
 src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
 patchfiles="mozc.patch bazel.patch gen_zip_code_seed.patch"
 # specifies files that are not in source archive and patchfiles
-addfiles="BUILD.bazel"
+addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
 commitid="57e67f2a25e4c0861e0e422da0c7d4c232d89fcc"
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
@@ -35,7 +35,7 @@ protobuf_id="3836fd3"
 abseil_cpp_id="9957f27"
 mozcdict_ext_id="d072c88"
 mecab_ipadic_neologd_id="abc61e3"
-jawiki_date="20240720"
+jawiki_date="20240901"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -351,6 +351,29 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm755 bazel-bin/server/mozc_server "$P"/usr/lib/mozc/mozc_server
   install -Dm755 bazel-bin/gui/tool/mozc_tool "$P"/usr/lib/mozc/mozc_tool
+
+  # gen_zipcode-dic_
+  install -Dm755 $W/generate-zipcode-dic.sh $P/usr/lib/mozc/tools/generate-zipcode-dic.sh
+  install -Dm644 $W/jigyosyo-convert-mozc-dictionary.awk $P/usr/lib/mozc/tools/jigyosyo-convert-mozc-dictionary.awk
+  install -Dm644 $W/ken_all-convert-mozc-dictionary.awk $P/usr/lib/mozc/tools/ken_all-convert-mozc-dictionary.awk
+
+  if [ ! -d $P/usr/bin ];then
+	mkdir $P/usr/bin
+  fi
+  cd $P/usr/bin
+  ln -s ../lib/mozc/tools/generate-zipcode-dic.sh generate-zipcode-dic
+  cd $B/src
+
+  install -Dm644 $W/LICENSE.japanese-zip-code-dictionary $docdir/mozc/japanese-zip-code-dictionary
+  install -Dm644 $W/LICENSE.japanese-zip-code-dictionary $P/usr/lib/mozc/LICENSE
+
+  install -Dm644 $W/README.v2.0.generate-zipcode-dic $docdir/mozc/README.v2.0.generate-zipcode-dic
+
+  # addfiles のインストール
+  for add in $addfiles ; do
+    cp $W/$add $docdir/mozc/$add
+    gzip $docdir/mozc/$add
+  done
 
 ################################
 #      install tweaks

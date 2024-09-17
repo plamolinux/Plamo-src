@@ -1,0 +1,14 @@
+diff -uprN mozc.orig/src/dictionary/gen_zip_code_seed.py mozc/src/dictionary/gen_zip_code_seed.py
+--- mozc.orig/src/dictionary/gen_zip_code_seed.py	2024-07-18 23:51:49.688858167 +0900
++++ mozc/src/dictionary/gen_zip_code_seed.py	2024-07-19 01:52:43.507686534 +0900
+@@ -57,7 +57,9 @@ import re
+ import sys
+ import unicodedata
+ 
+-import zip_code_util
++import os
++sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
++import zip_code_util
+ 
+ 
+ ZIP_CODE_LABEL = 'ZIP_CODE'
