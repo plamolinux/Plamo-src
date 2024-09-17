@@ -1,0 +1,46 @@
+### gen_zipcode-dic_for_Mozc (version 2.0) ###
+
+Slackware64-current/Plamolinux 8.x の mozc ユーザー辞書にインポート可能な形式の
+「日本郵政郵便番号最新データ」を生成するツールです。
+
+データ生成の主スクリプトは epsilon phoenix氏作成によるものです。
+Brog Home: https://zenn.dev/phoepsilonix/articles/japanese-zip-code-dictionary
+source: https://github.com/phoepsilonix/japanese-zip-code-dictionary
+
+郵便番号データは日本郵政が提供するものを使用します。
+https://www.post.japanpost.jp/zipcode/download.html
+----------------------------------------------------
+
+【郵便番号辞書 生成方法】
+ ※ ネットワーク接続環境が必要
+
+ gen_zipcode-dic_for_Mozc-2.0.tar.xz を展開したディレクトリで
+ install.sh を実行すると/usr/lib/mozc/tools に必要なツールがインストールされ、
+ /usr/bin に辞書生成用スクリプトファイル(/usr/lib/mozc/generate-zipcode-dic.sh への
+ シンボリックリンク generate-zipcode-dic が作成されます。
+
+ コマンド generate-zipcode-dic を実行すると、/tmp ディレクトリに郵便番号データ zipcode-dic_yyyy-mm-dd.txt 
+ が生成されます。
+ 
+ （参考）日本郵政の郵便番号データは、通常毎月月末に更新されます。
+　　　　 従って、データ生成日付が 2024-09-16 または 2024-09-29等 いずれにしても 
+　　　　 2024/08/31 時点の最新データになります。
+
+         郵便番号変更案内（pdf）
+         https://www.post.japanpost.jp/zipcode/zip_info.pdf
+
+【ユーザー辞書への追加方法】
+ Step-1. 辞書ツールを起動する
+         Mozc IMEが立ち上がっている場合、Mozcトレイアイコンを右クリックして
+　　　　 辞書ツールを選択する。
+
+　　　   Mozc IMEを立ち上げていない場合、ターミナルから
+　　　   /usr/lib/mozc/mozc_tool --mode=dictionary_tool
+
+Step-2. 郵便番号辞書データをインポートする
+　　　  管理 > 新規辞書にインポート または 選択した辞書にインポート から辞書データを読み込む
+　　　　  
+---
+履歴）
+2024-09-17 : version 2.0
+
