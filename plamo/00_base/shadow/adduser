@@ -4,6 +4,7 @@
 # by Hrvoje Dogan <hdogan@student.math.hr>, Dec 1995.
 #
 # Japanese enhancements by kojima <isle@st.rim.or.jp> Aug 1997
+# Time-stamp: <2024-09-15 17:24:37 kojima>
 # Time-stamp: <2022-08-30 19:59:24 karma>
 # Time-stamp: <2016-01-22 19:55:16 kojima>
 # Time-stamp: <2011-12-07 00:22:20 kojima>
@@ -129,9 +130,6 @@ msg_w_manager() {
     if [ -x /usr/bin/startxfce4 ] ; then
       n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop(お勧め)" ; WM_NAME[$n]='xfce'
     fi
-    if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop(Gtkベースの軽めの環境)" ; WM_NAME[$n]='lxde'
-    fi
     if [ -x /usr/bin/startlxqt ] ; then
       n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXQt Desktop(Qtベースの軽めの環境)" ; WM_NAME[$n]='lxqt'
     fi
@@ -148,9 +146,6 @@ msg_w_manager() {
     if [ -x /usr/bin/startxfce4 ] ; then
       n=$((n + 1)) ; IWM[$n]=2 ; echo "$n : Xfce Desktop (recommended)" ; WM_NAME[$n]='xfce'
     fi
-    if [ -x /usr/bin/startlxde ] ; then
-      n=$((n + 1)) ; IWM[$n]=3 ; echo "$n : LXDE Desktop (Gtk based Lightweight environment)" ; WM_NAME[$n]='lxde'
-    fi
     if [ -x /usr/bin/startlxqt ] ; then
       n=$((n + 1)) ; IWM[$n]=4 ; echo "$n : LXqt Desktop (Qt based Lightweight environment)" ; WM_NAME[$n]='lxqt'
     fi
@@ -165,21 +160,21 @@ msg_w_manager() {
 msg_use_newgen_im() {
   n=0 ; echo
   if [ "$LNG" == "JAPANESE" ] ; then
-    echo "IM の選択"
+    echo "IM の選択(LXQtを使う場合はfcitx5を選んでください)"
     if [ -x /usr/bin/uim-xim ] ; then
       n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
     fi
-    if [ -x /usr/bin/fcitx -o -x /usr/bin/fcitx5 ] ; then
-      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fcitx"
+    if [ -x /usr/bin/fcitx5 ] ; then
+      n=$((n + 1)) ; echo "2 : fcitx5" ; IM[$n]="fcitx5"
     fi
     echo -n "$LOGIN が使う IM は？ [1]: "
   else
-    echo "Which IM do you use?"
+    echo "Which IM do you use?(Choose fxitx5 if you select LXQt for WM)"
     if [ -x /usr/bin/uim-xim ] ; then
       n=$((n + 1)) ;  echo "1 : uim" ; IM[$n]="uim"
     fi
-    if [ -x /usr/bin/fcitx -o -x /usr/bin/fcitx5 ] ; then
-      n=$((n + 1)) ; echo "2 : fcitx" ; IM[$n]="fcitx"
+    if [ -x /usr/bin/fcitx5 ] ; then
+      n=$((n + 1)) ; echo "2 : fcitx5" ; IM[$n]="fcitx"
     fi
     echo -n "Which IM does $LOGIN use? [1]: "
   fi

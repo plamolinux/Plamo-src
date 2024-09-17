@@ -1,6 +1,7 @@
 #!/bin/sh
 ######################################################################
 # Plamo Linux ユーザ設定ファイルサンプル for xinitrc
+#                           Time-stamp: <2024-09-15 17:54:50 kojima>
 #                           Time-stamp: <2023-08-04 16:32:18 karma>
 #                           Time-stamp: <2016-01-22 12:49:27 kojima>
 #                           Time-stamp: <2011-07-25 19:59:37 karma>
@@ -23,12 +24,6 @@ userresources=$HOME/.Xdefaults
 #usermodmap=$HOME/.Xmodmap
 #[ -f $usermodmap ] && xmodmap $usermodmap
 
-# 多言語入力メソッドフレームワーク uim の起動
-[ -x /usr/bin/uim-xim ] && uim-xim &
-[ -x /usr/bin/uim-toolbar-gtk -a $WM != "kde" -a $WM != "mate" ] && uim-toolbar-gtk &
-[ -x /usr/bin/uim-toolbar-qt4 -a $WM == "kde" ] && uim-toolbar-qt4 &
-[ -x /usr/bin/uim-toolbar-gtk-systray -a $WM == "mate" ] && uim-toolbar-gtk-systray &
-
 XMODIFIERS="@im=@IM@"
 QT_IM_MODULE=@IM@
 GTK_IM_MODULE=@IM@
@@ -36,9 +31,17 @@ export XMODIFIERS
 export QT_IM_MODULE GTK_IM_MODULE
 
 # ツール"Qt5の設定"を使うための環境変数設定
-export QT_QPA_PLATFORMTHEME=qt5ct
+# export QT_QPA_PLATFORMTHEME=qt5ct
 
 LAUNCH="dbus-launch --exit-with-session"
+
+if [ "$XMODIFIERS" == "@im=uim" ]; then
+    if [ -x /usr/bin/uim-toolbar-gtk3 ]; then
+        /usr/bin/uim-toolbar-gtk3 &
+    fi
+else
+    export IM_MODULE_CLASSNAME=fcitx::QFcitxPlatformInputContext
+fi
 
 mesg n
 
