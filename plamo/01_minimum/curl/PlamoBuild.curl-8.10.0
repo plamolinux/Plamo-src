@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='curl'
-vers="8.9.1"
+vers="8.10.0"
 url="https://curl.haxx.se/download/${pkgbase}-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --disable-rtsp --disable-ldap --disable-ldaps
+OPT_CONFIG="--disable-static --with-gssapi --without-librtmp --without-brotli
+            --disable-rtsp --disable-ldap --disable-ldaps
             --with-ca-path=/etc/ssl/certs --without-nghttp2 --enable-threaded-resolver
             --with-random=/dev/urandom --with-openssl"
 DOCS='COPYING README RELEASE-NOTES'
