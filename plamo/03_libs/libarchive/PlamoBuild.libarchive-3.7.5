@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libarchive"
-vers="3.7.2"
+vers="3.7.5"
 url="https://libarchive.org/downloads/libarchive-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="libarchive-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="COPYING INSTALL NEWS README.md"
-patchfiles="libarchive-tar-make-error-reporting-more-robust.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
