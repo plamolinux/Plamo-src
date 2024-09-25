@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.30.5544.102"
+vers="2.30.5595.102"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B6
+build=B1
 src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 OPT_CONFIG="--disable-static --enable-shared"
@@ -15,24 +15,25 @@ patchfiles="mozc.patch bazel.patch gen_zip_code_seed.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
-commitid="57e67f2a25e4c0861e0e422da0c7d4c232d89fcc"
+commitid="ce08bdfa567d1e1d7dd740f684c37344681a6b3d"
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
-merge_ui_ditionaries_id="1f1cdcf545b952f84fdad78d58c0db7a662b592d"
+merge_ut_ditionaries_id="35dfcca5c8657f2bf78bc000baa349c322ecb771"
 mozcdic_ut_alt_cannadic_id="50fee0397b87fe508f9edd45bac56f5290d8ce66"
 mozcdic_ut_edict2_id="b2112277d0d479b9218f42772356da3601b3e8cf"
-mozcdic_ut_jawiki_id="29dd6d3202119d88a2356a11300b7b338f5cb950"
+mozcdic_ut_jawiki_id="08814f70cc0cc9b0f4757fa46f40d918dfd7073d"
 mozcdic_ut_neologd_id="b7035b88db25ad1a933f05a33f193711c6c3b2db"
-mozcdic_ut_personal_names_id="5df5cedaef3b55c509cacfbf3e97ded852535a1b"
-mozcdic_ut_place_names_id="5c2167541200528d8b25214c52be7a4c3dd3b89b"
+mozcdic_ut_personal_names_id="bbf04c902d8640d0799d151272c968cea7d91de9"
+mozcdic_ut_place_names_id="4525819546a26fc994d7ca4a2e883fde14bf908c"
 mozcdic_ut_skk_jisyo_id="7300f19e6a3f27334ed7af64589de8782549a13f"
 mozcdic_ut_sudachidict_id="a754f1fff5fded62cc066aa6be0ab0169059a144"
-breakpad_id="78f7ae4"
-googletest_id="1d17ea1"
-gyp_id="1615ec3"
-japanese_usage_dictionary_id="a4a6677"
+breakpad_id="216cea7bca53fa441a3ee0d0f5fd339a3a894224"
+googletest_id="b514bdc898e2951020cbdca1304b75f5950d1f59"
+gyp_id="9ecf45e37677743503342ee4c6a76eaee80e4a7f"
+japanese_usage_dictionary_id="e5b3425575734c323e1d947009dd74709437b684"
 jsoncpp_id="69098a1"
-protobuf_id="3836fd3"
-abseil_cpp_id="9957f27"
+protobuf_id="7cc670c1809e704ebeba90fb430d50e009f36727"
+wil_id="fc5dbf55989fe20351c71d038a8d12de4b397a6d"
+abseil_cpp_id="4447c7562e3bc702ade25105912dce503f0c4010"
 mozcdict_ext_id="d072c88"
 mecab_ipadic_neologd_id="abc61e3"
 jawiki_date="20240901"
@@ -87,6 +88,7 @@ if [ $opt_download -eq 1 ] ; then
     'japanese-usage-dictionary'
     'jsoncpp'
     'protobuf'
+    'wil'
     'abseil-cpp'
     'mozcdict-ext'
     'mecab-ipadic-neologd'
@@ -127,6 +129,9 @@ if [ $opt_download -eq 1 ] ; then
         	    "mecab-ipadic-neologd")
         		    git_url="https://github.com/neologd/mecab-ipadic-neologd.git"
         		    ;;
+		    "wil")
+			    git_url="https://github.com/microsoft/wil.git"
+			    ;;
 	            *)
 			    echo "$dict: unknown dictionary"
 			    exit 1
@@ -314,7 +319,7 @@ if [ $opt_build -eq 1 ] ; then
 #    bazel build unix/emacs:mozc_emacs_helper --config oss_linux --compilation_mode opt
 
     bazel build server:mozc_server gui/tool:mozc_tool unix/fcitx5:fcitx5-mozc.so unix/icons unix/emacs:mozc_emacs_helper --config oss_linux --compilation_mode opt --verbose_failures
-    bazel build unix/uim:uim-mozc unix/icons --config oss_linux --compilation_mode opt --cxxopt=-Wno-uninitialized --host_cxxopt=-Wno-uninitialized --experimental_cc_shared_library --verbose_failures
+    bazel build unix/uim:uim-mozc unix/icons --config oss_linux --compilation_mode opt --cxxopt=-Wno-uninitialized --host_cxxopt=-Wno-uninitialized --cxxopt=-I/usr/include/uim --host_cxxopt=-Wno-uninitialized --host_cxxopt=-I/usr/include/uim --experimental_cc_shared_library --verbose_failures
     set +e
 fi
 
