@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="128.1.0"
+vers="128.2.0"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}esr/source/${pkgbase}-${vers}esr.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}esr/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
