@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libgsf'
-vers='1.14.46'
+vers='1.14.53'
 url="http://ftp.gnome.org/pub/gnome/sources/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:5bc6d1d6394f0ed5a58e8f2e5e4ead7f"
+digest="md5sum:baf36a3e89293652f67cded4b1608cc5"
 verify=""
 arch=`uname -m`
 build=B1
