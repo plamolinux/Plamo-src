@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.30.5595.102"
+vers="2.30.5618.102"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
@@ -15,14 +15,14 @@ patchfiles="mozc.patch bazel.patch gen_zip_code_seed.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
-commitid="ce08bdfa567d1e1d7dd740f684c37344681a6b3d"
+commitid="0cbb8f18e8df5eb4e110bab850cebc1f57811f16"
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
 merge_ut_ditionaries_id="35dfcca5c8657f2bf78bc000baa349c322ecb771"
 mozcdic_ut_alt_cannadic_id="50fee0397b87fe508f9edd45bac56f5290d8ce66"
 mozcdic_ut_edict2_id="b2112277d0d479b9218f42772356da3601b3e8cf"
-mozcdic_ut_jawiki_id="08814f70cc0cc9b0f4757fa46f40d918dfd7073d"
+mozcdic_ut_jawiki_id="773cc08e71c4daa3c06fc577853f715a2bb4d9aa"
 mozcdic_ut_neologd_id="b7035b88db25ad1a933f05a33f193711c6c3b2db"
-mozcdic_ut_personal_names_id="bbf04c902d8640d0799d151272c968cea7d91de9"
+mozcdic_ut_personal_names_id="b61a5af7992d6fcdc82fa08b67b1c9771bbc4449"
 mozcdic_ut_place_names_id="4525819546a26fc994d7ca4a2e883fde14bf908c"
 mozcdic_ut_skk_jisyo_id="7300f19e6a3f27334ed7af64589de8782549a13f"
 mozcdic_ut_sudachidict_id="a754f1fff5fded62cc066aa6be0ab0169059a144"
@@ -30,13 +30,12 @@ breakpad_id="216cea7bca53fa441a3ee0d0f5fd339a3a894224"
 googletest_id="b514bdc898e2951020cbdca1304b75f5950d1f59"
 gyp_id="9ecf45e37677743503342ee4c6a76eaee80e4a7f"
 japanese_usage_dictionary_id="e5b3425575734c323e1d947009dd74709437b684"
-jsoncpp_id="69098a1"
 protobuf_id="7cc670c1809e704ebeba90fb430d50e009f36727"
 wil_id="fc5dbf55989fe20351c71d038a8d12de4b397a6d"
 abseil_cpp_id="4447c7562e3bc702ade25105912dce503f0c4010"
 mozcdict_ext_id="d072c88"
 mecab_ipadic_neologd_id="abc61e3"
-jawiki_date="20240901"
+jawiki_date="20241001"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -86,7 +85,6 @@ if [ $opt_download -eq 1 ] ; then
     'googletest'
     'gyp'
     'japanese-usage-dictionary'
-    'jsoncpp'
     'protobuf'
     'wil'
     'abseil-cpp'
