@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='wget'
-vers='1.24.5'
+vers="1.25.0"
 url="https://ftp.jaist.ac.jp/pub/GNU/wget/wget-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared --with-ssl=openssl --disable-pcre2'
 DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README'
