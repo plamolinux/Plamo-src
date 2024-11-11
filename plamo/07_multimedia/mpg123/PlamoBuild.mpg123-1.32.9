@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='mpg123'
-vers='1.25.10'
+vers='1.32.9'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:ea32caa61d41d8be797f0b04a1b43ad9"
+digest="md5sum:8e2c4a7251aeb2eba89800d12218055a"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS NEWS.libmpg123 NEWS.libout123 README TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
