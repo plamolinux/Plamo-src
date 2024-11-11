@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="xwayland"
-vers="23.2.3"
-url="https://www.x.org/pub/individual/xserver/xwayland-${vers}.tar.xz"
-verify="${url}.sig"
-digest=""
+pkgbase="wayland_protocols"
+vers="1.38"
+url="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/${vers}/downloads/wayland-protocols-${vers}.tar.xz"
+verify=""
+digest="md5sum:6bc5904062daada976e8bd44dd4d2b00"
 arch=`uname -m`
 build=B1
-src="xwayland-${vers}"
-OPT_CONFIG="-Dxvfb=false -Dxkb_output_dir=/var/lib/xkb"
-DOCS="COPYING README.md doc docbook.am meson_options.txt"
+src="wayland-protocols-${vers}"
+OPT_CONFIG=""
+DOCS="COPYING README.md meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -64,14 +64,13 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    sed -i '/install_man/,$d' meson.build 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
