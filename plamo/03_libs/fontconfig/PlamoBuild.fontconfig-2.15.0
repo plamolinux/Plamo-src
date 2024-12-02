@@ -126,9 +126,9 @@ if [ $opt_package -eq 1 ] ; then
   install -v -m644 doc/*.{pdf,sgml,txt,html} \
           $P/usr/share/doc/fontconfig-${vers}
 
-  #install -v -dm755 $P/etc/template/Source/.config/fontconfig
-  #install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
-  #install -v -Dm644 $W/fonts.conf $docdir/$src/fonts.conf
+  install -v -dm755 $P/etc/template/Source/.config/fontconfig
+  install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
+  install -v -Dm644 $W/fonts.conf $docdir/$src/fonts.conf
 
   # remove installed /etc/fonts/conf.d/*.conf
   rm -vf $P/etc/fonts/conf.d/*.conf
