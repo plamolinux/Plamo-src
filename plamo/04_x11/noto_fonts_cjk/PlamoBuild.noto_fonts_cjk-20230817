@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='noto_fonts_cjk'
-vers="20220126"
+vers="20230817"
 url="https://github.com/googlefonts/noto-cjk.git"
-commitid="473da44c32fec739db7e5458c81a833513cb4084"
+commitid="4efc595762d1f4b4fa504bccfe8e59de91fda063"
 verify=""
 arch=noarch
 build=B1
 src="noto-cjk"
 OPT_CONFIG=''
-DOCS="LICENSE README.md"
+DOCS="Sans/LICENSE README.md"
 addfiles="70-noto-cjk.conf"
 patchfiles=''
 compress=tzst
@@ -65,9 +65,9 @@ if [ $opt_package -eq 1 ] ; then
   do
       install -Dm644 -v $d/OTC/*.ttc -t $P/usr/share/fonts/noto-cjk/
   done
-  install -Dm644 -v $W/70-noto-cjk.conf $P/etc/fonts/conf.avail/70-noto-cjk.conf
+  install -Dm644 -v $W/70-noto-cjk.conf $P/usr/share/fontconfig/conf.avail/70-noto-cjk.conf
   install -dm755 -v $P/etc/fonts/conf.d/
-  ln -vsf ../conf.avail/70-noto-cjk.conf $P/etc/fonts/conf.d/70-noto-cjk.conf
+  ln -vsf ../../../usr/share/fontconfig/conf.avail/70-noto-cjk.conf $P/etc/fonts/conf.d/70-noto-cjk.conf
 
 ################################
 #      install tweaks
