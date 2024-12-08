@@ -1,24 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='noto_fonts'
-vers='20201206_phase3'
-url="https://github.com/googlei18n/noto-fonts/archive/v${vers/_/-}.tar.gz"
+pkgbase='noto_fonts_cjk'
+vers="20230817"
+url="https://github.com/googlefonts/noto-cjk.git"
+commitid="4efc595762d1f4b4fa504bccfe8e59de91fda063"
 verify=""
 arch=noarch
 build=B1
-src="noto-fonts-${vers//_/-}"
+src="noto-cjk"
 OPT_CONFIG=''
-DOCS='LICENSE NEWS README.md'
+DOCS="Sans/LICENSE README.md"
+addfiles="70-noto-cjk.conf"
 patchfiles=''
-addfiles="46-noto-mono.conf
-        46-noto-sans.conf
-        46-noto-serif.conf
-        66-noto-mono.conf
-        66-noto-sans.conf
-        66-noto-serif.conf"
 compress=tzst
-install_fonts_families=("NotoSans" "NotoSerif" "NotoSansDisplay" "NotoSerifDisplay" "NotoSansMono"
-		"NotoSansSymbols" "NotoSansSymbols2")
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -57,7 +51,7 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   echo "There is nothing to do."
 fi
@@ -67,19 +61,13 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
 
-  for font in ${install_fonts_families[@]}
+  for d in Sans Serif
   do
-    install -v -Dm644 unhinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
-    install -v -Dm644 hinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
+      install -Dm644 -v $d/OTC/*.ttc -t $P/usr/share/fonts/noto-cjk/
   done
-
-  install -v -Dm644 $W/*.conf -t $P/etc/fonts/conf.avail/
-  install -v -dm755 $P/etc/fonts/conf.d/
-  ( cd $P/etc/fonts/conf.d
-    for f in ../conf.avail/*.conf
-    do
-	ln -sf $f $(basename $f)
-    done )
+  install -Dm644 -v $W/70-noto-cjk.conf $P/usr/share/fontconfig/conf.avail/70-noto-cjk.conf
+  install -dm755 -v $P/etc/fonts/conf.d/
+  ln -vsf ../../../usr/share/fontconfig/conf.avail/70-noto-cjk.conf $P/etc/fonts/conf.d/70-noto-cjk.conf
 
 ################################
 #      install tweaks
