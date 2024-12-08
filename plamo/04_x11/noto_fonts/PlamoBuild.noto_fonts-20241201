@@ -1,12 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='noto_fonts'
-vers='20201206_phase3'
-url="https://github.com/googlei18n/noto-fonts/archive/v${vers/_/-}.tar.gz"
+date='2024.12.01'
+vers=${date//./}
+url="https://github.com/notofonts/notofonts.github.io/archive/refs/tags/noto-monthly-release-${date}.tar.gz"
 verify=""
 arch=noarch
 build=B1
-src="noto-fonts-${vers//_/-}"
+src="notofonts.github.io-noto-monthly-release-${date}"
 OPT_CONFIG=''
 DOCS='LICENSE NEWS README.md'
 patchfiles=''
@@ -17,7 +18,7 @@ addfiles="46-noto-mono.conf
         66-noto-sans.conf
         66-noto-serif.conf"
 compress=tzst
-install_fonts_families=("NotoSans" "NotoSerif" "NotoSansDisplay" "NotoSerifDisplay" "NotoSansMono"
+install_fonts_families=("NotoSans" "NotoSerif" "NotoSerifDisplay" "NotoSansMono"
 		"NotoSansSymbols" "NotoSansSymbols2")
 ##############################################################
 
@@ -69,14 +70,13 @@ if [ $opt_package -eq 1 ] ; then
 
   for font in ${install_fonts_families[@]}
   do
-    install -v -Dm644 unhinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
-    install -v -Dm644 hinted/ttf/${font}/*.tt[fc] -t $P/usr/share/fonts/noto/
+    install -v -Dm644 fonts/${font}/hinted/ttf/*.tt[fc] -t $P/usr/share/fonts/noto/
   done
 
-  install -v -Dm644 $W/*.conf -t $P/etc/fonts/conf.avail/
+  install -v -Dm644 $W/*.conf -t $P/usr/share/fontconfig/conf.avail/
   install -v -dm755 $P/etc/fonts/conf.d/
   ( cd $P/etc/fonts/conf.d
-    for f in ../conf.avail/*.conf
+    for f in ../../../usr/share/fontconfig/conf.avail/*.conf
     do
 	ln -sf $f $(basename $f)
     done )
