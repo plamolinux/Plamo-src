@@ -1,23 +1,23 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gtk4"
-vers="4.8.3"
+vers="4.12.5"
 url="https://download.gnome.org/sources/gtk/${vers%.*}/gtk-${vers}.tar.xz"
 verify=""
-digest="md5sum:d735b9c2a534f034553e2e27bc5af994"
+digest="md5sum:45db1b94414e7a9f63bd32db9557edf0"
 arch=`uname -m`
 build=B2
 src="gtk-${vers}"
 OPT_CONFIG="--buildtype=release
 	-Dman-pages=true 
-	-Ddemos=true -Dgtk_doc=false 
+	-Dbuild-demos=true -Ddocumentation=false 
         -Dcloudproviders=enabled
         -Dcolord=enabled
 	-Dbroadway-backend=true 
 	-Dbuild-examples=false 
 	-Dbuild-tests=false 
-	-Dinstall-tests=false 
-	-Dwayland-backend=true"
+	-Dwayland-backend=true
+	-Dintrospection=enabled"
 DOCS="AUTHORS COPYING NEWS NEWS.pre-1.0 NEWS.pre-2.0 NEWS.pre-3.0 NEWS.pre-4.0 README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
