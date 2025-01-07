@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="128.5.0"
+vers="128.5.2"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}esr/source/${pkgbase}-${vers}esr.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}esr/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -11,7 +11,8 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+# https://www.linuxfromscratch.org/patches/blfs/svn/thunderbird-128.5.2esr-upstream_fixes-1.patch
+patchfiles='thunderbird-128.5.2esr-upstream_fixes-1.patch'
 addfiles='langpack.sh mozconfig thunderbird.desktop vendor.js'
 compress=tzst
 
