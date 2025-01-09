@@ -1,0 +1,211 @@
+#!/bin/sh
+##############################################################
+pkgbase="qt6"
+vers="6.8.1"
+url="https://download.qt.io/archive/qt/6.8/6.8.1/single/qt-everywhere-src-6.8.1.tar.xz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B2
+src="qt-everywhere-src-6.8.1"
+OPT_CONFIG="
+-bindir lib/qt6/bin
+-dbus-linked
+-openssl-linked
+-system-sqlite
+-nomake examples
+-no-rpath
+-no-sbom
+-syslog
+-skip qt3d
+-skip qtquick3dphysics
+-skip qtwebengine
+"
+DOCS=".QT-ENTERPRISE-LICENSE-AGREEMENT LICENSES README.md README.md.template qtdoc"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+B=$W/build
+export QT6PREFIX=/usr
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    $S/configure -prefix /usr -libdir /usr/${libdir} -sysconfdir /etc ${OPT_CONFIG}
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    export LDFLAGS='-Wl,--as-needed'
+    ninja -j`nproc`
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  export LDFLAGS='-Wl,--as-needed'
+  DESTDIR=$P ninja install 
+
+  mkdir -p $P/usr/bin
+  cd $P/usr/bin
+  for i in $P/usr/lib/qt6/bin/*; do
+	  if [[ $i == *6 ]]; then
+		  continue
+	  fi
+	  ln -s ../lib/qt6/bin/$(basename "$i") $(basename "${i}")6
+  done
+
+  find $P$QT6PREFIX/ -name \*.prl \
+     -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
+
+  pushd $S/qttools/src &&
+  
+  install -v -Dm644 assistant/assistant/images/assistant-128.png       \
+                    $P/usr/share/pixmaps/assistant-qt6.png               &&
+  
+  install -v -Dm644 designer/src/designer/images/designer.png          \
+                    $P/usr/share/pixmaps/designer-qt6.png                &&
+  
+  install -v -Dm644 linguist/linguist/images/icons/linguist-128-32.png \
+                    $P/usr/share/pixmaps/linguist-qt6.png                &&
+  
+  install -v -Dm644 qdbus/qdbusviewer/images/qdbusviewer-128.png       \
+                    $P/usr/share/pixmaps/qdbusviewer-qt6.png             &&
+  popd &&
+
+  mkdir -p $P/usr/share/applications/
+
+cat > $P/usr/share/applications/assistant-qt6.desktop << EOF
+[Desktop Entry]
+Name=Qt6 Assistant
+Comment=Shows Qt6 documentation and examples
+Exec=$QT6PREFIX/bin/assistant
+Icon=assistant-qt6.png
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;Documentation;
+EOF
+
+cat > $P/usr/share/applications/designer-qt6.desktop << EOF
+[Desktop Entry]
+Name=Qt6 Designer
+GenericName=Interface Designer
+Comment=Design GUIs for Qt6 applications
+Exec=$QT6PREFIX/bin/designer
+Icon=designer-qt6.png
+MimeType=application/x-designer;
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;
+EOF
+
+cat > $P/usr/share/applications/linguist-qt6.desktop << EOF
+[Desktop Entry]
+Name=Qt6 Linguist
+Comment=Add translations to Qt6 applications
+Exec=$QT6PREFIX/bin/linguist
+Icon=linguist-qt6.png
+MimeType=text/vnd.trolltech.linguist;application/x-linguist;
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;
+EOF
+
+cat > $P/usr/share/applications/qdbusviewer-qt6.desktop << EOF
+[Desktop Entry]
+Name=Qt6 QDbusViewer
+GenericName=D-Bus Debugger
+Comment=Debug D-Bus applications
+Exec=$QT6PREFIX/bin/qdbusviewer
+Icon=qdbusviewer-qt6.png
+Terminal=false
+Encoding=UTF-8
+Type=Application
+Categories=Qt;Development;Debugger;
+EOF
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
