@@ -165,35 +165,22 @@ verify_specified_sig() {
   fi
 }
 
-download_sources() {
-  case ${url##*.} in
-  git)
-    if [ ! -d $(basename ${url##*/} .git) ] ; then
-      git clone $url
+check_and_clone_git() {
+    repo_dir=$(basename ${url##*/} .git)
+    
+    if [ -d $repo_dir ]; then
+        ( cd $(basename ${url##*/} .git) ; git pull origin master )
     else
-      ( cd $(basename ${url##*/} .git) ; git pull origin master )
+        git ls-remote $url > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            git clone $url || return 1
+        else
+            echo "$url is not git repository"
+            return 1
+        fi
     fi
-    ;;
-  *)
-    if [ ! -f ${url##*/} ] ; then
-      wget $url
-    fi
-    if [ -n "$digest" ] ; then
-      check_digest
-    elif [ -n "$verify" ] ; then
-      verify_specified_sig
-    elif [ $USE_VERIFY_SIG_AUTO ] ; then
-      verify_sig_auto
-    fi
-    ;;
-  esac
-  case ${url##*/} in
-  *.tar*) tar xvf ${url##*/} ;;
-  *.zip) unzip ${url##*/} ;;
-  *git)
-    ( cd $(basename ${url##*/} .git)
-      git checkout master
-      
+
+    ( cd $repo_dir
       if git branch | grep build > /dev/null; then
 	git checkout build
       else
@@ -201,7 +188,31 @@ download_sources() {
           git checkout -b build $commitid
 	fi
       fi
-    ) ;;
+    )
+    return 0
+}
+
+download_sources() {
+
+  check_and_clone_git
+  if [ $? -eq 0 ]; then
+    return 0
+  fi
+
+  if [ ! -f ${url##*/} ] ; then
+    wget $url
+  fi
+  if [ -n "$digest" ] ; then
+    check_digest
+  elif [ -n "$verify" ] ; then
+    verify_specified_sig
+  elif [ $USE_VERIFY_SIG_AUTO ] ; then
+    verify_sig_auto
+  fi
+
+  case ${url##*/} in
+  *.tar*) tar xvf ${url##*/} ;;
+  *.zip) unzip ${url##*/} ;;
   esac
 }
 
