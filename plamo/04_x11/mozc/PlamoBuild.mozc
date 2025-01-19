@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.30.5618.102"
+vers="2.31.5712.102"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
@@ -11,31 +11,41 @@ src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
-patchfiles="mozc.patch bazel.patch gen_zip_code_seed.patch"
+patchfiles="mozc.patch mozc_yoshizawa.patch bazel.patch gen_zip_code_seed.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
-commitid="0cbb8f18e8df5eb4e110bab850cebc1f57811f16"
+commitid="9dc82478fb74ffbb5ea4ddde84350db68ee89754"
+
+# from uim-mozc(arch linux)
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
-merge_ut_ditionaries_id="35dfcca5c8657f2bf78bc000baa349c322ecb771"
-mozcdic_ut_alt_cannadic_id="50fee0397b87fe508f9edd45bac56f5290d8ce66"
-mozcdic_ut_edict2_id="b2112277d0d479b9218f42772356da3601b3e8cf"
-mozcdic_ut_jawiki_id="773cc08e71c4daa3c06fc577853f715a2bb4d9aa"
-mozcdic_ut_neologd_id="b7035b88db25ad1a933f05a33f193711c6c3b2db"
-mozcdic_ut_personal_names_id="b61a5af7992d6fcdc82fa08b67b1c9771bbc4449"
-mozcdic_ut_place_names_id="4525819546a26fc994d7ca4a2e883fde14bf908c"
-mozcdic_ut_skk_jisyo_id="7300f19e6a3f27334ed7af64589de8782549a13f"
-mozcdic_ut_sudachidict_id="a754f1fff5fded62cc066aa6be0ab0169059a144"
+
+# from mozc-ut(arch linux)
+merge_ut_ditionaries_id="c0a210388ce78ee7ebfa918810d8224e717a693e"
+mozcdic_ut_alt_cannadic_id="bf26bcbb1846f2e9cf35cbfcafcc91c015a1fb22"
+mozcdic_ut_edict2_id="520fbc99080bd2b3111440c23ca0e2edaa4c76c5"
+mozcdic_ut_jawiki_id="342b9b00c1cc58c9c124b9d7551fdac9a71ee56b"
+mozcdic_ut_neologd_id="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
+mozcdic_ut_personal_names_id="5221f96d59b797e915845a4a51b2e8a8543b47e1"
+mozcdic_ut_place_names_id="9789d69e28b7ee7176c9ea0a5826317cfdac75a5"
+mozcdic_ut_skk_jisyo_id="c52cdb15e0a014c96050ce1bd02932f50706a3f0"
+mozcdic_ut_sudachidict_id="3eb0a18fe59f9d60a558585f3f9734c66665cf9b"
+jawiki_date="20250101"
+
+#from fcitx5-mozc-ut(arch linux)
+abseil_cpp_id="4447c7562e3bc702ade25105912dce503f0c4010"
 breakpad_id="216cea7bca53fa441a3ee0d0f5fd339a3a894224"
 googletest_id="b514bdc898e2951020cbdca1304b75f5950d1f59"
 gyp_id="9ecf45e37677743503342ee4c6a76eaee80e4a7f"
 japanese_usage_dictionary_id="e5b3425575734c323e1d947009dd74709437b684"
 protobuf_id="7cc670c1809e704ebeba90fb430d50e009f36727"
 wil_id="fc5dbf55989fe20351c71d038a8d12de4b397a6d"
-abseil_cpp_id="4447c7562e3bc702ade25105912dce503f0c4010"
+
+# from fcitx5-mozc-ext-neologd(arch linux)
+jsoncpp_id="69098a1"
 mozcdict_ext_id="d072c88"
 mecab_ipadic_neologd_id="abc61e3"
-jawiki_date="20241001"
+
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -162,7 +172,7 @@ if [ $opt_download -eq 1 ] ; then
     done
 
     cd $W
-    wget --timestamping https://dumps.wikimedia.org/jawiki/${jawiki_date}/jawiki-${jawiki_date}-all-titles-in-ns0.gz
+    wget --timestamping https://dumps.wikimedia.org/jawiki/${jawiki_date}/jawiki-${jawiki_date}-pages-articles-multistream-index.txt.bz2
 
     wget --timestamping https://www.post.japanpost.jp/zipcode/dl/jigyosyo/zip/jigyosyo.zip
     wget --timestamping https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/ken_all.zip
@@ -181,15 +191,20 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     set -e
-    cd $W/merge-ut-dictionaries/src/
 
-    echo "Use our local copy of the Mozc repo"
-    sed -i -e "s|https://raw.githubusercontent.com/google/mozc/master/src|file://$S/src|" remove_duplicate_ut_entries.py
+    #from mozc-ut(arch linux)
+    cd $W/merge-ut-dictionaries/src/merge/
 
-    echo "Use a dated snapshot for the JAWiki dump data"
-    sed -i -e '/wget/d' count_word_hits.py
-    sed -i -e "s|file_name = \"jawiki-|file_name = \"$W/jawiki-|g" count_word_hits.py
-    sed -i -e "s|jawiki-[a-z0-9]\{6,8\}|jawiki-${jawiki_date}|g" count_word_hits.py apply_word_hits.py
+    echo "Use a dated snapshot for the jawiki dump data"
+    if [ ! -e .already_sed_merge_dictionaries ];then
+	sed -i -e '65,69d' merge_dictionaries.py
+	sed -i -e "s|jawiki-[a-z0-9]\{6,8\}|$W/jawiki-${jawiki_date}|g" merge_dictionaries.py
+	touch .already_sed_merge_dictionaries
+
+    	echo "Use our local copy of the Mozc repo"
+	sed -i -e "17s|'https://raw.githubusercontent.com/'.*$|'file://$W/mozc/src/data/dictionary_oss/id.def'|" merge_dictionaries.py
+    	sed -i -e '18d' merge_dictionaries.py
+    fi
 
     echo "Compile the UT dictionary"
     [[ -e mozcdic-ut.txt ]] && rm mozcdic-ut.txt
@@ -207,13 +222,12 @@ if [ $opt_config -eq 1 ] ; then
 
     for dict in "${ENABLED_DICTIONARIES[@]}"
     do
-        tar -xf "$W"/mozcdic-ut-${dict}/mozcdic-ut-${dict}.txt.tar.bz2
-        cat mozcdic-ut-${dict}.txt >> mozcdic-ut.txt
+	bzip2 -dfk $W/mozcdic-ut-${dict}/mozcdic-ut-${dict}.txt.bz2
+	cat $W/mozcdic-ut-${dict}/mozcdic-ut-${dict}.txt >> mozcdic-ut.txt
     done
 
-    python remove_duplicate_ut_entries.py mozcdic-ut.txt
-    python count_word_hits.py
-    python apply_word_hits.py mozcdic-ut.txt
+    # from mozc-ut(arch linux)
+    python merge_dictionaries.py mozcdic-ut.txt
 
     # Include NEologd
     cd $W/mozcdict-ext
@@ -228,7 +242,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B/src
 
     echo "Append the UT dictionary"
-    cat $W/merge-ut-dictionaries/src/mozcdic-ut.txt >> $B/src/data/dictionary_oss/dictionary00.txt
+    cat $W/merge-ut-dictionaries/src/merge/mozcdic-ut.txt >> $B/src/data/dictionary_oss/dictionary00.txt
 
     cd $B
     echo "config submodule"
@@ -273,9 +287,9 @@ if [ $opt_config -eq 1 ] ; then
       )
     ) | ruby .dev.utils/uniqword.rb 2> /dev/null >> "$B/src/data/dictionary_oss/dictionary09.txt"
 
-    cd $B/src
-    echo "adjust QT_BASE_PATH"
-    sed 's|path = QT_BASE_PATH|path = "/usr/include/qt"|' -i WORKSPACE.bazel
+#    cd $B/src
+#    echo "adjust QT_BASE_PATH"
+#    sed 's|path = QT_BASE_PATH|path = "/usr/include"|' -i WORKSPACE.bazel
 
     cd $B/src
     echo "prepare uim-mozc"
@@ -287,6 +301,7 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 -i $W/gen_zip_code_seed.patch
     cd $B/src
     patch -p1 -i $W/mozc.patch
+    patch -p1 -i $W/mozc_yoshizawa.patch
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
@@ -311,11 +326,6 @@ if [ $opt_build -eq 1 ] ; then
     export PATH=$JAVA_HOME/bin:$PATH
 
     set -e
-#    bazel build server:mozc_server gui/tool:mozc_tool --config oss_linux --compilation_mode opt
-#    bazel build unix/uim:uim-mozc unix/icons --config oss_linux --compilation_mode opt --cxxopt=-Wno-uninitialized --host_cxxopt=-Wno-uninitialized --experimental_cc_shared_library
-#    bazel build unix/fcitx5:fcitx5-mozc.so unix/icons --config oss_linux --compilation_mode opt
-#    bazel build unix/emacs:mozc_emacs_helper --config oss_linux --compilation_mode opt
-
     bazel build server:mozc_server gui/tool:mozc_tool unix/fcitx5:fcitx5-mozc.so unix/icons unix/emacs:mozc_emacs_helper --config oss_linux --compilation_mode opt --verbose_failures
     bazel build unix/uim:uim-mozc unix/icons --config oss_linux --compilation_mode opt --cxxopt=-Wno-uninitialized --host_cxxopt=-Wno-uninitialized --cxxopt=-I/usr/include/uim --host_cxxopt=-Wno-uninitialized --host_cxxopt=-I/usr/include/uim --experimental_cc_shared_library --verbose_failures
     set +e
