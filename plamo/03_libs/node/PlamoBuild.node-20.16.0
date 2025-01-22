@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='node'
-vers="22.13.0"
+vers="20.16.0"
 url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
-digest="md5sum:9313baec7c7be80305edb8e5b5c074c7"
+digest="md5sum:7832164e52741a743106c5aadd34cdee"
 verify=""
 arch=`uname -m`
 build=B1
