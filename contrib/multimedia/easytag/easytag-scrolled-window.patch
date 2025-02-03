@@ -1,0 +1,128 @@
+From f93ea24ec071460085c3d2602b67ef4282ae1d1e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 21 Aug 2024 11:06:52 +0200
+Subject: [PATCH 1/2] tag area: Put common grid into a scrolled window
+
+This allows to fit the main window into a standard 1024x768 sceeen.
+
+Closes: https://gitlab.gnome.org/GNOME/easytag/-/issues/76
+---
+ data/tag_area.ui | 808 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 413 insertions(+), 395 deletions(-)
+
+diff --git a/data/tag_area.ui b/data/tag_area.ui
+index a671ae55..f3475e69 100644
+--- a/data/tag_area.ui
++++ b/data/tag_area.ui
+@@ -41,6 +41,20 @@
+                     </object>
+                 </child>
+                 <child>
++                    <object class="GtkScrolledWindow">
++                        <property name="visible">True</property>
++                        <property name="can-focus">True</property>
++                        <property name="hscrollbar-policy">never</property>
++                        <property name="shadow-type">in</property>
++                        <child>
++                            <object class="GtkViewport">
++                                <property name="visible">True</property>
++                                <property name="can-focus">False</property>
++                                <property name="margin_left">6</property>
++                                <property name="margin_right">6</property>
++                                <property name="margin_top">3</property>
++                                <property name="margin_bottom">3</property>
++                                <child>
+                     <object class="GtkGrid" id="common_grid">
+                         <property name="border-width">2</property>
+                         <property name="column-spacing">2</property>
+@@ -445,6 +459,10 @@
+                                 <property name="width">8</property>
+                             </packing>
+                         </child>
++                    </object>
++                                </child>
++                            </object>
++                        </child>
+                     </object>
+                 </child>
+                 <child type="tab">
+-- 
+GitLab
+
+
+From 27afcc0c47a7ee3509c3407a67f7f9687ca46435 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 21 Aug 2024 11:07:44 +0200
+Subject: [PATCH 2/2] Reduce min-content-height
+
+This allows to fit the window into smaller screens.
+---
+ data/browser.ui     | 8 ++++----
+ data/cddb_dialog.ui | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/data/browser.ui b/data/browser.ui
+index 7ad17949..2c84ca1b 100644
+--- a/data/browser.ui
++++ b/data/browser.ui
+@@ -118,7 +118,7 @@
+                                 <child>
+                                     <object class="GtkScrolledWindow" id="directory_scrolled">
+                                         <property name="expand">True</property>
+-                                        <property name="min-content-height">225</property>
++                                        <property name="min-content-height">150</property>
+                                         <property name="min-content-width">225</property>
+                                         <property name="visible">True</property>
+                                         <child>
+@@ -164,7 +164,7 @@
+                                         <child>
+                                             <object class="GtkScrolledWindow" id="artist_scrolled">
+                                                 <property name="expand">True</property>
+-                                                <property name="min-content-height">225</property>
++                                                <property name="min-content-height">150</property>
+                                                 <property name="min-content-width">225</property>
+                                                 <property name="visible">True</property>
+                                                 <child>
+@@ -228,7 +228,7 @@
+                                         <child>
+                                             <object class="GtkScrolledWindow" id="album_scrolled">
+                                                 <property name="expand">True</property>
+-                                                <property name="min-content-height">225</property>
++                                                <property name="min-content-height">150</property>
+                                                 <property name="min-content-width">225</property>
+                                                 <property name="visible">True</property>
+                                                 <child>
+@@ -290,7 +290,7 @@
+                         <child>
+                             <object class="GtkScrolledWindow" id="files_scrolled">
+                                 <property name="expand">True</property>
+-                                <property name="min-content-height">225</property>
++                                <property name="min-content-height">150</property>
+                                 <property name="min-content-width">225</property>
+                                 <property name="visible">True</property>
+                                 <child>
+diff --git a/data/cddb_dialog.ui b/data/cddb_dialog.ui
+index ad9dde19..666d2ff4 100644
+--- a/data/cddb_dialog.ui
++++ b/data/cddb_dialog.ui
+@@ -364,7 +364,7 @@
+                                         <child>
+                                             <object class="GtkScrolledWindow" id="album_scrolled">
+                                                 <property name="expand">True</property>
+-                                                <property name="min-content-height">225</property>
++                                                <property name="min-content-height">150</property>
+                                                 <property name="min-content-width">225</property>
+                                                 <property name="visible">True</property>
+                                                 <child>
+@@ -427,7 +427,7 @@
+                                         <child>
+                                             <object class="GtkScrolledWindow" id="track_scrolled">
+                                                 <property name="expand">True</property>
+-                                                <property name="min-content-height">225</property>
++                                                <property name="min-content-height">150</property>
+                                                 <property name="min-content-width">225</property>
+                                                 <property name="visible">True</property>
+                                                 <signal name="button-press-event" handler="on_track_list_button_press_event" swapped="true"/>
+-- 
+GitLab
+
