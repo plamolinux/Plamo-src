@@ -1,0 +1,26 @@
+From 217a50907035158a4f25c5fe0508b1d83f04e927 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Wed, 21 Aug 2024 17:43:31 +0200
+Subject: [PATCH] Hide playlist dialog on save
+
+This fixes the problem that the playlist dialog remains visible when the
+user clicks on the Save button.
+---
+ src/playlist_dialog.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/playlist_dialog.c b/src/playlist_dialog.c
+index cfcb3cf1..91ca7829 100644
+--- a/src/playlist_dialog.c
++++ b/src/playlist_dialog.c
+@@ -566,6 +566,7 @@ on_response (GtkDialog *dialog, gint response_id, gpointer user_data)
+     {
+         case GTK_RESPONSE_OK:
+             write_button_clicked (ET_PLAYLIST_DIALOG (dialog));
++            gtk_widget_hide (GTK_WIDGET (dialog));
+             break;
+         case GTK_RESPONSE_CLOSE:
+             gtk_widget_hide (GTK_WIDGET (dialog));
+-- 
+GitLab
+
