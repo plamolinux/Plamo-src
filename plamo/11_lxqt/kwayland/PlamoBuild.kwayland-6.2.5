@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="solid"
-vers="6.9.1"
-url="https://download.kde.org/stable/frameworks/${vers%.[0-9]}/solid-${vers}.tar.xz"
+pkgbase="kwayland"
+vers="6.2.5"
+url="https://download.kde.org/stable/plasma/${vers}/kwayland-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B4
-src="solid-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=lib"
-DOCS="LICENSES README.md TODO docs"
+build=B2
+src="kwayland-${vers}"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=/usr/lib"
+DOCS="LICENSES README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
