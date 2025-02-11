@@ -6,7 +6,7 @@ url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-s
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG="
 -DCMAKE_MESSAGE_LOG_LEVEL=STATUS
@@ -17,6 +17,8 @@ OPT_CONFIG="
 -DQT_FEATURE_webengine_proprietary_codecs=ON
 -DQT_FEATURE_webengine_webrtc_pipewire=ON
 -DQT_BUILD_EXAMPLES_BY_DEFAULT=OFF
+-DINSTALL_DOCDIR=/usr/share/doc/qtwebengine6-${vers}
+-DINSTALL_EXAMPLESDIR=/usr/share/doc/qtwebengine6-${vers}/examples
 -G Ninja 
 "
 DOCS=".QT-ENTERPRISE-LICENSE-AGREEMENT LICENSES README.md README.md.template qtdoc"
@@ -848,6 +850,12 @@ rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportTargets-release.cmake
 rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportVersionlessAliasTargets.cmake
 rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportVersionlessTargets.cmake
 rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportAdditionalTargetInfo.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginConfig.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginConfigVersion.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginConfigVersionImpl.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginTargets.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginTargets-release.cmake
+rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6QCupsPrinterSupportPluginAdditionalTargetInfo.cmake
 rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportDependencies.cmake
 rm $P/usr/lib/cmake/Qt6PrintSupport/Qt6PrintSupportPlugins.cmake
 rm $P/usr/lib/cmake/Qt6XcbQpaPrivate/Qt6XcbQpaPrivateConfig.cmake
@@ -3363,8 +3371,8 @@ rm $P/usr/lib/libQt6EglFsKmsGbmSupport.so.6.8.2
 rm $P/usr/lib/libQt6Core.prl
 rm $P/usr/lib/libQt6DBus.prl
 rm $P/usr/lib/libQt6QmlToolingSettings.prl
-rm $P/usr/lib/libQt6Network.prl
 rm $P/usr/lib/libQt6Concurrent.prl
+rm $P/usr/lib/libQt6Network.prl
 rm $P/usr/lib/libQt6QmlTypeRegistrar.prl
 rm $P/usr/lib/libQt6Qml.prl
 rm $P/usr/lib/libQt6Positioning.prl
@@ -3385,6 +3393,7 @@ rm $P/usr/lib/libQt6InputSupport.prl
 rm $P/usr/lib/libQt6Test.prl
 rm $P/usr/lib/libQt6LabsFolderListModel.prl
 rm $P/usr/lib/libQt6Quick.prl
+rm $P/usr/lib/libQt6WebChannelQuick.prl
 rm $P/usr/lib/libQt6Quick3DUtils.prl
 rm $P/usr/lib/libQt6QuickTemplates2.prl
 rm $P/usr/lib/libQt6QuickControls2Impl.prl
@@ -3397,7 +3406,6 @@ rm $P/usr/lib/libQt6QuickControls2MaterialStyleImpl.prl
 rm $P/usr/lib/libQt6QuickControls2.prl
 rm $P/usr/lib/libQt6PrintSupport.prl
 rm $P/usr/lib/libQt6QuickWidgets.prl
-rm $P/usr/lib/libQt6WebChannelQuick.prl
 rm $P/usr/lib/libQt6QuickLayouts.prl
 rm $P/usr/lib/libQt6EglFSDeviceIntegration.prl
 rm $P/usr/lib/libQt6Quick3D.prl
@@ -4727,136 +4735,6 @@ rm $P/usr/libexec/qtattributionsscanner
 rm $P/usr/libexec/repc
 rm $P/usr/libexec/qscxmlc
 rm $P/usr/libexec/qtwaylandscanner
-rm $P/usr/doc/global/compat.qdocconf
-rm $P/usr/doc/global/config.qdocconf
-rm $P/usr/doc/global/cpp-doc-macros.qdocconf
-rm $P/usr/doc/global/externalsites/external-resources.qdoc
-rm $P/usr/doc/global/externalsites/qt-webpages.qdoc
-rm $P/usr/doc/global/externalsites/qtcreator.qdoc
-rm $P/usr/doc/global/externalsites/qtdesignstudio.qdoc
-rm $P/usr/doc/global/externalsites/rfc.qdoc
-rm $P/usr/doc/global/externalsites.qdocconf
-rm $P/usr/doc/global/fileextensions.qdocconf
-rm $P/usr/doc/global/grid.qdocconf
-rm $P/usr/doc/global/html-config.qdocconf
-rm $P/usr/doc/global/html-footer-online.qdocconf
-rm $P/usr/doc/global/html-footer.qdocconf
-rm $P/usr/doc/global/html-header-offline.qdocconf
-rm $P/usr/doc/global/html-header-online.qdocconf
-rm $P/usr/doc/global/htmltabs.qdocconf
-rm $P/usr/doc/global/includes/cli-build-cmake.qdocinc
-rm $P/usr/doc/global/includes/corelib/port-from-qregexp.qdocinc
-rm $P/usr/doc/global/includes/examples-run.qdocinc
-rm $P/usr/doc/global/includes/module-use.qdocinc
-rm $P/usr/doc/global/includes/standardpath/functiondocs.qdocinc
-rm $P/usr/doc/global/includes-online/search.qdoc
-rm $P/usr/doc/global/macros-online.qdocconf
-rm $P/usr/doc/global/macros.qdocconf
-rm $P/usr/doc/global/manifest-meta.qdocconf
-rm $P/usr/doc/global/qt-cpp-defines.qdocconf
-rm $P/usr/doc/global/qt-html-templates-offline-simple.qdocconf
-rm $P/usr/doc/global/qt-html-templates-offline.qdocconf
-rm $P/usr/doc/global/qt-html-templates-online.qdocconf
-rm $P/usr/doc/global/qt-module-defaults-offline.qdocconf
-rm $P/usr/doc/global/qt-module-defaults-online-commercial.qdocconf
-rm $P/usr/doc/global/qt-module-defaults-online.qdocconf
-rm $P/usr/doc/global/qt-module-defaults.qdocconf
-rm $P/usr/doc/global/snippets/code/doc_src_port_from_qregexp.cpp
-rm $P/usr/doc/global/template/images/Qt-dark_gradient.png
-rm $P/usr/doc/global/template/images/Qt-footer-bg.jpg
-rm $P/usr/doc/global/template/images/Qt-footer_shadow.png
-rm $P/usr/doc/global/template/images/Qt-gradient.png
-rm $P/usr/doc/global/template/images/Qt-header-bg.jpg
-rm $P/usr/doc/global/template/images/Qt-logo.png
-rm $P/usr/doc/global/template/images/arrow.png
-rm $P/usr/doc/global/template/images/arrow_bc.png
-rm $P/usr/doc/global/template/images/arrow_down.png
-rm $P/usr/doc/global/template/images/bg_l.png
-rm $P/usr/doc/global/template/images/bg_l_blank.png
-rm $P/usr/doc/global/template/images/bg_ll_blank.png
-rm $P/usr/doc/global/template/images/bg_r.png
-rm $P/usr/doc/global/template/images/bg_ul_blank.png
-rm $P/usr/doc/global/template/images/bgrContent.png
-rm $P/usr/doc/global/template/images/blu_dot.png
-rm $P/usr/doc/global/template/images/box_bg.png
-rm $P/usr/doc/global/template/images/breadcrumb.png
-rm $P/usr/doc/global/template/images/btn_next.png
-rm $P/usr/doc/global/template/images/btn_prev.png
-rm $P/usr/doc/global/template/images/bullet_dn.png
-rm $P/usr/doc/global/template/images/bullet_gt.png
-rm $P/usr/doc/global/template/images/bullet_sq.png
-rm $P/usr/doc/global/template/images/bullet_up.png
-rm $P/usr/doc/global/template/images/feedbackground.png
-rm $P/usr/doc/global/template/images/header_bg.png
-rm $P/usr/doc/global/template/images/home.png
-rm $P/usr/doc/global/template/images/horBar.png
-rm $P/usr/doc/global/template/images/ico_note.png
-rm $P/usr/doc/global/template/images/ico_note_attention.png
-rm $P/usr/doc/global/template/images/ico_out.png
-rm $P/usr/doc/global/template/images/logo.png
-rm $P/usr/doc/global/template/images/page.png
-rm $P/usr/doc/global/template/images/page_bg.png
-rm $P/usr/doc/global/template/images/spinner.gif
-rm $P/usr/doc/global/template/images/sprites-combined.png
-rm $P/usr/doc/global/template/scripts/extras.js
-rm $P/usr/doc/global/template/scripts/main.js
-rm $P/usr/doc/global/template/style/cookie-confirm.css
-rm $P/usr/doc/global/template/style/cookiebar-x.png
-rm $P/usr/doc/global/template/style/doc_search.png
-rm $P/usr/doc/global/template/style/gsc.css
-rm $P/usr/doc/global/template/style/htmltabs.css
-rm $P/usr/doc/global/template/style/icomoon.eot
-rm $P/usr/doc/global/template/style/icomoon.svg
-rm $P/usr/doc/global/template/style/icomoon.ttf
-rm $P/usr/doc/global/template/style/icomoon.woff
-rm $P/usr/doc/global/template/style/list_arrow.png
-rm $P/usr/doc/global/template/style/list_expand.png
-rm $P/usr/doc/global/template/style/offline-dark.css
-rm $P/usr/doc/global/template/style/offline-simple.css
-rm $P/usr/doc/global/template/style/offline.css
-rm $P/usr/doc/global/template/style/online.css
-rm $P/usr/doc/global/template/style/tech_preview.svg
-rm $P/usr/doc/global/template/style/theqtcompany.png
-rm $P/usr/doc/global/warninglimit.qdocconf
-rm $P/usr/doc/config/exampleurl-qt3d.qdocconf
-rm $P/usr/doc/config/exampleurl-qtactiveqt.qdocconf
-rm $P/usr/doc/config/exampleurl-qtandroidextras.qdocconf
-rm $P/usr/doc/config/exampleurl-qtbase.qdocconf
-rm $P/usr/doc/config/exampleurl-qtcharts.qdocconf
-rm $P/usr/doc/config/exampleurl-qtconnectivity.qdocconf
-rm $P/usr/doc/config/exampleurl-qtdatavis3d.qdocconf
-rm $P/usr/doc/config/exampleurl-qtdeclarative.qdocconf
-rm $P/usr/doc/config/exampleurl-qtdoc.qdocconf
-rm $P/usr/doc/config/exampleurl-qtgamepad.qdocconf
-rm $P/usr/doc/config/exampleurl-qtgraphicaleffects.qdocconf
-rm $P/usr/doc/config/exampleurl-qtimageformats.qdocconf
-rm $P/usr/doc/config/exampleurl-qtlocation.qdocconf
-rm $P/usr/doc/config/exampleurl-qtlottie.qdocconf
-rm $P/usr/doc/config/exampleurl-qtmacextras.qdocconf
-rm $P/usr/doc/config/exampleurl-qtmultimedia.qdocconf
-rm $P/usr/doc/config/exampleurl-qtnetworkauth.qdocconf
-rm $P/usr/doc/config/exampleurl-qtpositioning.qdocconf
-rm $P/usr/doc/config/exampleurl-qtpurchasing.qdocconf
-rm $P/usr/doc/config/exampleurl-qtquickcontrols.qdocconf
-rm $P/usr/doc/config/exampleurl-qtquickcontrols2.qdocconf
-rm $P/usr/doc/config/exampleurl-qtremoteobjects.qdocconf
-rm $P/usr/doc/config/exampleurl-qtscript.qdocconf
-rm $P/usr/doc/config/exampleurl-qtscxml.qdocconf
-rm $P/usr/doc/config/exampleurl-qtsensors.qdocconf
-rm $P/usr/doc/config/exampleurl-qtserialbus.qdocconf
-rm $P/usr/doc/config/exampleurl-qtserialport.qdocconf
-rm $P/usr/doc/config/exampleurl-qtspeech.qdocconf
-rm $P/usr/doc/config/exampleurl-qtsvg.qdocconf
-rm $P/usr/doc/config/exampleurl-qttools.qdocconf
-rm $P/usr/doc/config/exampleurl-qtvirtualkeyboard.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwayland.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwebchannel.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwebengine.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwebsockets.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwebview.qdocconf
-rm $P/usr/doc/config/exampleurl-qtwinextras.qdocconf
-rm $P/usr/doc/config/exampleurl-qtx11extras.qdocconf
-rm $P/usr/doc/config/exampleurl-qtxmlpatterns.qdocconf
 rm $P/usr/modules/Core.json
 rm $P/usr/modules/Concurrent.json
 rm $P/usr/modules/Sql.json
@@ -7684,6 +7562,8 @@ rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qprinterinfo_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qtprintsupportglobal_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qtprintsupport-config_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qpaintengine_preview_p.h
+rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qcups_p.h
+rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qcupsjobwidget_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qabstractprintdialog_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qpagesetupdialog_p.h
 rm $P/usr/include/QtPrintSupport/6.8.2/QtPrintSupport/private/qpagesetupdialog_unix_p.h
@@ -12522,6 +12402,7 @@ rm $P/usr/plugins/generic/libqevdevkeyboardplugin.so
 rm $P/usr/plugins/generic/libqevdevtabletplugin.so
 rm $P/usr/plugins/generic/libqtuiotouchplugin.so
 rm $P/usr/plugins/generic/libqlibinputplugin.so
+rm $P/usr/plugins/printsupport/libcupsprintersupport.so
 rm $P/usr/plugins/networkinformation/libqnetworkmanager.so
 rm $P/usr/plugins/networkinformation/libqglib.so
 rm $P/usr/plugins/tls/libqopensslbackend.so
