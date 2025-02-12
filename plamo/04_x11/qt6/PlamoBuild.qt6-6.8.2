@@ -6,8 +6,29 @@ url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-s
 verify=""
 digest=""
 arch=`uname -m`
-build=B3
+build=B6
 src="qt-everywhere-src-${vers}"
+#OPT_CONFIG="
+#-bindir lib/qt6/bin
+#-dbus-linked
+#-openssl-linked
+#-system-sqlite
+#-nomake examples
+#-no-rpath
+#-no-sbom
+#-syslog
+#-skip qt3d
+#-skip qtquick3dphysics
+#-skip qtwebengine
+#-archdatadir /usr/lib/qt6
+#-plugindir /usr/lib/qt6/plugins
+#-qmldir /usr/lib/qt6/qml
+#-datadir /usr/share/qt6
+#-docdir /usr/share/doc/$src 
+#-translationdir /usr/share/qt6/translations
+#-examplesdir /usr/share/doc/$src/examples
+#-hostdatadir /usr/lib/qt6
+#"
 OPT_CONFIG="
 -bindir lib/qt6/bin
 -dbus-linked
@@ -20,6 +41,8 @@ OPT_CONFIG="
 -skip qt3d
 -skip qtquick3dphysics
 -skip qtwebengine
+-docdir /usr/share/doc/$src 
+-examplesdir /usr/share/doc/$src/examples
 "
 DOCS=".QT-ENTERPRISE-LICENSE-AGREEMENT LICENSES README.md README.md.template qtdoc"
 patchfiles=""
