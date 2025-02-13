@@ -6,7 +6,7 @@ url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 OPT_CONFIG="--disable-static --enable-shared"
@@ -21,7 +21,7 @@ commitid="9dc82478fb74ffbb5ea4ddde84350db68ee89754"
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
 
 # from mozc-ut(arch linux)
-merge_ut_ditionaries_id="c0a210388ce78ee7ebfa918810d8224e717a693e"
+merge_ut_dictionaries_id="c0a210388ce78ee7ebfa918810d8224e717a693e"
 mozcdic_ut_alt_cannadic_id="bf26bcbb1846f2e9cf35cbfcafcc91c015a1fb22"
 mozcdic_ut_edict2_id="520fbc99080bd2b3111440c23ca0e2edaa4c76c5"
 mozcdic_ut_jawiki_id="342b9b00c1cc58c9c124b9d7551fdac9a71ee56b"
@@ -166,7 +166,8 @@ if [ $opt_download -eq 1 ] ; then
         if git branch | grep build > /dev/null; then
     	    git checkout build
         else
-	    tmp_commitid="${dict//-/_}id"
+	    tmp_commitid="${dict//-/_}_id"
+	    echo "git checkout -b build ${!tmp_commitid}"
             git checkout -b build ${!tmp_commitid}
         fi
     done
