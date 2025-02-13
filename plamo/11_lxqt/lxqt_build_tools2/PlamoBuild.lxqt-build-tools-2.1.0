@@ -6,7 +6,7 @@ url="https://github.com/lxqt/lxqt-build-tools/releases/download/${vers}/lxqt-bui
 verify=""
 digest=""
 arch=`uname -m`
-build=B4
+build=B5
 src="lxqt-build-tools-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release "
 DOCS="AUTHORS CHANGELOG README.md"
