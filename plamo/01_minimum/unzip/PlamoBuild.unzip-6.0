@@ -43,7 +43,7 @@ patchurls=(
     'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-switch.patch'
 )
 patchfiles="unzip-6.0_CVE-2021-4217.patch 28-cve-2022-0529-and-cve-2022-0530.patch"
-compress=txz
+compress=tzst
 ##############################################################
 
 patches=()
