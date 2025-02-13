@@ -2,17 +2,56 @@
 ##############################################################
 pkgbase='unzip'
 vers='6.0'
-url="ftp://ftp.info-zip.org/pub/infozip/src/unzip${vers/./}.tgz"
+#url="ftp://ftp.info-zip.org/pub/infozip/src/unzip${vers/./}.tgz"
+url="https://downloads.sourceforge.net/infozip/unzip${vers/./}.tar.gz"
 digest="md5sum:62b490407489521db863b523a7f86375"
 verify=""
 arch=`uname -m`
-build=B1
+build=B3
 src="unzip${vers/./}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='COPYING.OLD History.600 INSTALL LICENSE README ToDo funzip.txt unzip.txt unzipsfx.txt zipgrep.txt zipinfo.txt'
-patchfiles='unzip60-nls_sjis.patch CVE-2014-8139.patch CVE-2014-8140.patch CVE-2014-8141.patch CVE-2014-9636.patch heapoverflow.patch'
+
+patchurls=(
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-exec-shield.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-close.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-attribs-overflow.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-symlink.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-format-secure.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-valgrind.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-x-option.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-overflow.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-cve-2014-8139.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-cve-2014-8140.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-cve-2014-8141.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-overflow-long-fsize.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-heap-overflow-infloop.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-alt-iconv-utf8.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-alt-iconv-utf8-print.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/0001-Fix-CVE-2016-9844-rhbz-1404283.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-timestamp.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-cve-2018-1000035-heap-based-overflow.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-cve-2018-18384.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-6.0-COVSCAN-fix-unterminated-string.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part1.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part2.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part3.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-manpage.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part4.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part5.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-part6.patch'
+    'https://src.fedoraproject.org/rpms/unzip/raw/rawhide/f/unzip-zipbomb-switch.patch'
+)
+patchfiles="unzip-6.0_CVE-2021-4217.patch 28-cve-2022-0529-and-cve-2022-0530.patch"
 compress=txz
 ##############################################################
+
+patches=()
+for p in ${patchurls[@]}
+do
+    patchs+=("${p##*/}")
+done
+patchfiles="$patchfiles ${patchs[@]}"
 
 source /usr/share/plamobuild_functions.sh
 
@@ -40,6 +79,14 @@ fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
   tar xvf ${url##*/}
+
+  for purl in ${patchurls[@]}
+  do
+      p=${purl##*/}
+      if [ ! -f "$W"/"$p" ]; then
+	  wget $purl
+      fi
+  done
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -48,18 +95,29 @@ if [ $opt_config -eq 1 ] ; then
 #  don't copy sources, so need patch in the src dir
 ######################################################################
   cd $B
+
+  sed -i "/MANDIR =/s#)/#)/share/#" unix/Makefile
+  
+  
   for patch in $patchfiles ; do
     if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
+	patch -p1 < $W/$patch
+	if [ $? -ne 0 ]; then
+	    exit 1
+	fi
+	touch .${patch}
     fi
   done
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
-  export LDFLAGS='-Wl,--as-needed'
-  make -f unix/Makefile generic
+  LDFLAGS='-Wl,--as-needed'
+  DEFINES='-DACORN_FTYPE_NFS -DWILD_STOP_AT_DIR -DLARGE_FILE_SUPPORT \
+  	   -DUNICODE_SUPPORT -DUNICODE_WCHAR -DUTF8_MAYBE_NATIVE -DNO_LCHMOD \
+	   -DDATE_FORMAT=DF_YMD -DUSE_BZIP2 -DNOMEMCPY -DNO_WORKING_ISPRINT'
+  make -f unix/Makefile prefix=/usr \
+       D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$LDFLAGS" CF="$CFLAGS -I . $DEFINES" unzips
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
