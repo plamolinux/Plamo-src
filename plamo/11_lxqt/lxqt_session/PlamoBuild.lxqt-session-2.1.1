@@ -2,13 +2,13 @@
 ##############################################################
 pkgbase="lxqt_session"
 vers="2.1.1"
-url="https://github.com/lxqt/lxqt-session/releases/download/2.1.1/lxqt-session-2.1.1.tar.xz"
+url="https://github.com/lxqt/lxqt-session/releases/download/${vers}/lxqt-session-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B3
-src="lxqt-session-2.1.1"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release"
+build=B5
+src="lxqt-session-${vers}"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release "
 DOCS="AUTHORS CHANGELOG LICENSE README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
