@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="kconfig6"
-vers="6.9.0"
-url="https://download.kde.org/stable/frameworks/6.9/kconfig-6.9.0.tar.xz"
+vers="6.10.0"
+url="https://download.kde.org/stable/frameworks/${vers%.*}/kconfig-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B5
-src="kconfig-6.9.0"
+build=B1
+src="kconfig-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=lib"
 DOCS="LICENSES README.md TODO docs"
 patchfiles=""
