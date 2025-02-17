@@ -2,8 +2,8 @@
 export NO_STRIP=1
 ##############################################################
 pkgbase='slack'
-vers="4.34.121"
-url="https://downloads.slack-edge.com/releases/linux/${vers}/prod/x64/slack-desktop-${vers}-amd64.deb"
+vers="4.41.105"
+url="https://downloads.slack-edge.com/desktop-releases/linux/x64/4.41.105/slack-desktop-${vers}-amd64.deb"
 arch=`uname -m`
 src="slack-${vers}"
 verify=""
