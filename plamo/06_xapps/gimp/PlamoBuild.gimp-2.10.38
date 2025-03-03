@@ -6,7 +6,7 @@ url="https://download.gimp.org/gimp/v2.10/gimp-${vers}.tar.bz2"
 verify=""
 digest="md5sum:b5e37c9570a8ee723debe6d3728555ae"
 arch=`uname -m`
-build=B3
+build=B2
 src="gimp-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --disable-check-update --disable-python --with-bug-report-url=http://plamo.linet.gr.jp/"
 DOCS="AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl po-windows-installer"
