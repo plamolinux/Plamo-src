@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gobject_introspection"
-vers="1.80.1"
+vers="1.84.0"
 url="https://download.gnome.org/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.tar.xz"
 verify=""
-digest="sha256sum:a1df7c424e15bda1ab639c00e9051b9adf5cea1a9e512f8a603b53cd199bc6d8"
+digest="sha256sum:945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779"
 arch=`uname -m`
-build=B3
+build=B1
 src="gobject-introspection-${vers}"
 OPT_CONFIG="--buildtype=release"
 DOCS="COPYING COPYING.GPL COPYING.LGPL HACKING MSVC.README.rst NEWS README.rst TODO docs"
-patchfiles="giscanner-remove-dependency-on-distutils.msvccompiler.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
