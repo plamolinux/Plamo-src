@@ -1,16 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.80.2"
+vers="2.84.0"
 url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="sha256sum:b9cfb6f7a5bd5b31238fd5d56df226b2dda5ea37611475bf89f6a0f9400fe8bd"
+digest="sha256sum:f8823600cb85425e2815cfad82ea20fdaa538482ab74e7293d58b3f64a5aff6a"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
-OPT_CONFIG="--buildtype=release -Dselinux=disabled -Dman-pages=true"
+OPT_CONFIG="
+	--buildtype=release
+	-D glib_debug=disabled
+	-D selinux=disabled
+	-D man-pages=true"
 DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 README.win32.md docs"
-patchfiles=""
+patchfiles="
+0001-glib-compile-schemas-Remove-noisy-deprecation-warnin.patch
+0002-gdesktopappinfo-Add-more-known-terminals.patch
+0003-tests-Don-t-install-runner-scripts-without-installed.patch
+"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
