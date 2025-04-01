@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glibmm"
-vers="2.80.0"
+vers="2.84.0"
 url="https://download.gnome.org/sources/glibmm/${vers%.*}/glibmm-${vers}.tar.xz"
 verify=""
-digest="md5sum:7e58344303cec7cd5f1e812f4c70cb43"
+digest="md5sum:96ef281ceb794cf98f406612b61a9146"
 arch=`uname -m`
-build=B4
+build=B1
 src="glibmm-${vers}"
 OPT_CONFIG="--buildtype=release -Dbuild-documentation=false"
 DOCS="AUTHORS COPYING COPYING.tools ChangeLog ChangeLog.pre-2-36-2 HACKING NEWS README README.SUN README.win32 docs"
