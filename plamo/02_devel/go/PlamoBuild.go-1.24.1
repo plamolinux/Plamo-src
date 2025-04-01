@@ -6,10 +6,10 @@ url="https://dl.google.com/go/go${vers}.src.tar.gz"
 digest="sha256sum:8244ebf46c65607db10222b5806aeb31c1fcf8979c1b6b12f60c677e9a3c0656"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="go"
 OPT_CONFIG=""
-DOCS="AUTHORS  CONTRIBUTING.md  CONTRIBUTORS  LICENSE  PATENTS  README.md  SECURITY.md  VERSION"
+DOCS=""
 patchfiles=''
 compress=tzst
 ##############################################################
@@ -27,7 +27,10 @@ source /usr/share/plamobuild_functions.sh
 
 export GOOS=linux
 case "$arch" in
-    x86_64) export GOARCH=amd64 ;;
+    x86_64)
+	export GOARCH=amd64
+	export GOAMD64=v1
+	;;
 esac
 export GOROOT_FINAL=/usr/${libdir}/go
 export GOROOT_BOOTSTRAP=/usr/${libdir}/go
@@ -61,31 +64,39 @@ if [ $opt_config -eq 1 ] ; then
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  export GOPATH=$B
-  export GOROOT=$B
-  export GOBIN=$GOROOT/bin
-
-  cd $B/src
-  ./make.bash --no-clean -v
-
-  PATH="$GOBIN:$PATH" go install -v -buildmode=shared std
-  PATH="$GOBIN:$PATH" go install -v -race std
+    cd $B/src
+    ./make.bash -v
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  install -dm755 -v $P/usr/bin $P/usr/${libdir}/go $docdir/go-${vers}
-  cp -av bin pkg src lib misc $P/usr/${libdir}/go/
+  install -dm755 -v $P/usr/bin \
+	  $P/usr/${libdir}/go \
+	  $docdir/go-${vers} \
+	  $P/usr/${libdir}/go/pkg/linux_amd64_"{dynlink,race}"
+
+  cp -av bin pkg src lib misc api test $P/usr/${libdir}/go/
   cp -r doc/* $docdir/go-${vers}
 
   ln -sfv /usr/${libdir}/go/bin/go $P/usr/bin/go
   ln -sfv /usr/${libdir}/go/bin/gofmt $P/usr/bin/gofmt
-  ln -sfv /usr/share/doc/go-${vers} $P/usr/lib/go/doc
+  ln -sfv /usr/share/doc/go-${vers} $P/usr/${libdir}/go/doc
 
-  rm -rfv $P/usr/lib/go/pkg/bootstrap
-  rm -rfv $P/usr/lib/go/pkg/tool/*/api
+  install -Dm644 VERSION $P/usr/${libdir}/go/VERSION
+
+  rm -rfv "$P"/usr/${libdir}/go/pkg/obj/go-build
+  rm -rfv $P/usr/${libdir}/go/pkg/bootstrap
+  rm -rfv $P/usr/${libdir}/go/pkg/tool/*/api
+
+  install -Dm644 go.env $P/usr/${libdir}/go/go.env
+
+  docs="AUTHORS  CONTRIBUTING.md  CONTRIBUTORS  LICENSE  PATENTS  README.md  SECURITY.md  VERSION"
+  for f in $docs
+  do
+      install -Dm644 $f $docdir/go-${vers}/$f
+  done
 
 ################################
 #      install tweaks
