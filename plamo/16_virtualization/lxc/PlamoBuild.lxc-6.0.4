@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers="6.0.3"
+vers="6.0.4"
 template_vers=""
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://github.com/lxc/lxc-templates.git"
@@ -129,7 +129,7 @@ if [ $opt_package -eq 1 ] ; then
 
     DESTDIR=$P ninja install
 
-    install -Dm644 -v $W/lxc-net $P/etc/sysconfig/lxc-net
+    install -Dm644 -v $W/lxc-net.sysconfig $P/etc/sysconfig/lxc-net
 
     for i in $(seq 0 6)
     do
