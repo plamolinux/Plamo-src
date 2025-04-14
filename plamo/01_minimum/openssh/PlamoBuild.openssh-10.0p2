@@ -1,13 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='openssh'
-vers='9.9p2'
-url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
+vers='10.0p2'
+archive_vers="10.0p1"
+#url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${vers}.tar.gz"
+url="http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/${pkgbase}-${archive_ers}.tar.gz"
 verify="${url}.asc"
 #digest=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+#src="${pkgbase}-${vers}"
+src="${pkgbase}-${archive_vers}"
 OPT_CONFIG="--sysconfdir=/etc/ssh --with-pam --with-privsep-user=sshd --with-xauth=/usr/bin/xauth
     --with-privsep-path=/var/lib/sshd --with-md5-passwords --with-pid-dir=/run"
 DOCS="ChangeLog INSTALL CREDITS LICENCE OVERVIEW
