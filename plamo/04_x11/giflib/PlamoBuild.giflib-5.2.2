@@ -6,11 +6,13 @@ url="https://sourceforge.net/projects/giflib/files/giflib-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="giflib-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="COPYING ChangeLog NEWS README TODO build.adoc doc history.adoc"
-patchfiles="giflib-5.2.2-upstream_fixes-1.patch"
+blfspatch="https://www.linuxfromscratch.org/patches/blfs/svn/giflib-5.2.2-upstream_fixes-1.patch"
+# cve-2025-31344.patch: https://github.com/OpenMandrivaAssociation/giflib/
+patchfiles="${blfspatch##*/} giflib-5.2.2-cve-2025-31344.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -40,6 +42,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${blfspatch##*/} ]; then
+	wget $blfspatch
+    fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
