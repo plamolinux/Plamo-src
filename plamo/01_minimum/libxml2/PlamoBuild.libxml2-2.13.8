@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxml2'
-vers='2.13.5'
+vers='2.13.8'
 url="https://download.gnome.org/sources/libxml2/${vers%.*}/libxml2-${vers}.tar.xz"
-digest="md5sum:0b919be8edff97ade9c946e1a83bdecd"
+digest="sha256sum:277294cb33119ab71b2bc81f2f445e9bc9435b893ad15bb2cd2b0e859a0ee84a"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
@@ -74,11 +74,12 @@ if [ $opt_build -eq 1 ] ; then
   for i in 2 3
   do
     cd $B/$i
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
     export LDFLAGS='-Wl,--as-needed'
     if [ $i -eq 3 ]; then
       export PYTHONHASHSEED=0
     fi
-    make -j3
+    make $NUMJOBS
     if [ $? != 0 ]; then
       echo "build error. $0 script stop"
       exit 255
