@@ -5,14 +5,18 @@ vers="4.9.1"
 url="http://ftp.jaist.ac.jp/pub/GNU/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-colors256 --enable-pam --enable-rxvt_osc
             --with-pty-group=5 --with-sys-screenrc=/etc/screenrc
             --with-socket-dir=/run/screen"
 DOCS='COPYING ChangeLog HACKING INSTALL NEWS NEWS.3.5 NEWS.3.6 NEWS.3.7 NEWS.3.9 README TODO'
 addfiles="pam.screen"
-patchfiles=''
+# https://security.opensuse.org/2025/05/12/screen-security-issues.html
+patchfiles="
+	0001-attacher.c-prevent-temporary-0666-mode-on-PTYs-to-fi.patch
+	0002-Avoid-file-existence-test-information-leaks-to-fix-C.patch
+	0003-socket.c-don-t-send-signals-with-root-privileges-to-.patch"
 compress=tzst
 ##############################################################
 
@@ -63,15 +67,12 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  if [ -f autogen.sh ] ; then
-    sh ./autogen.sh
-  fi
   sed -i -e "s%/usr/local/etc/screenrc%/etc/screenrc%" {etc,doc}/*
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
 
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
