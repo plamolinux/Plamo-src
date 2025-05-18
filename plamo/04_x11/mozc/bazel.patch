@@ -1,11 +1,15 @@
-diff --git a/src/unix/BUILD.bazel b/src/unix/BUILD.bazel
-index b69ce0bb..c986e891 100644
---- a/src/unix/BUILD.bazel
-+++ b/src/unix/BUILD.bazel
-@@ -113,3 +113,5 @@ mozc_py_binary(
-     name = "build_package",
-     srcs = ["build_package.py"],
+--- a/src/MODULE.bazel
++++ b/src/MODULE.bazel
+@@ -137,6 +137,12 @@
+     ],
  )
+ 
++# uim
++pkg_config_repository(
++    name = "uim",
++    packages = ["uim"],
++)
 +
-+exports_files(["uim"])
-
+ # Qt for Linux
+ pkg_config_repository(
+     name = "qt_linux",
