@@ -1,36 +1,36 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.31.5712.102"
+vers="2.31.5810.102"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
-patchfiles="mozc.patch mozc_yoshizawa.patch bazel.patch gen_zip_code_seed.patch"
+patchfiles="mozc.patch bazel.patch gen_zip_code_seed.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
-commitid="9dc82478fb74ffbb5ea4ddde84350db68ee89754"
+commitid="b091429"
 
 # from uim-mozc(arch linux)
 macuim_id="7beac7ba000e0459a4dc933f3873b521664d2665"
 
 # from mozc-ut(arch linux)
-merge_ut_dictionaries_id="c0a210388ce78ee7ebfa918810d8224e717a693e"
+merge_ut_dictionaries_id="98a124f9ce6b282531fe5ca1b0fb93a3763aa9db"
 mozcdic_ut_alt_cannadic_id="bf26bcbb1846f2e9cf35cbfcafcc91c015a1fb22"
-mozcdic_ut_edict2_id="520fbc99080bd2b3111440c23ca0e2edaa4c76c5"
-mozcdic_ut_jawiki_id="342b9b00c1cc58c9c124b9d7551fdac9a71ee56b"
+mozcdic_ut_edict2_id="663f3ad0fd4c2350b655aef994e320f0756d0e14"
+mozcdic_ut_jawiki_id="02af54077293d4721d3079df03616b54cc699cb6"
 mozcdic_ut_neologd_id="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
-mozcdic_ut_personal_names_id="5221f96d59b797e915845a4a51b2e8a8543b47e1"
-mozcdic_ut_place_names_id="9789d69e28b7ee7176c9ea0a5826317cfdac75a5"
-mozcdic_ut_skk_jisyo_id="c52cdb15e0a014c96050ce1bd02932f50706a3f0"
-mozcdic_ut_sudachidict_id="3eb0a18fe59f9d60a558585f3f9734c66665cf9b"
-jawiki_date="20250101"
+mozcdic_ut_personal_names_id="db98bba0542cce073a609af468e949d26c39d3cf"
+mozcdic_ut_place_names_id="5b3f01cd3ccf0e0aa9855c48b6587cbf6e13c94c"
+mozcdic_ut_skk_jisyo_id="e5c5573cd35a62f779c391f0bb48fef79e63f384"
+mozcdic_ut_sudachidict_id="170e3704f7927ba76619e869e7047ea7ed4c8d49"
+jawiki_date="20250420"
 
 #from fcitx5-mozc-ut(arch linux)
 abseil_cpp_id="4447c7562e3bc702ade25105912dce503f0c4010"
@@ -198,13 +198,19 @@ if [ $opt_config -eq 1 ] ; then
 
     echo "Use a dated snapshot for the jawiki dump data"
     if [ ! -e .already_sed_merge_dictionaries ];then
-	sed -i -e '65,69d' merge_dictionaries.py
+	sed -i -e '124,127d' merge_dictionaries.py
 	sed -i -e "s|jawiki-[a-z0-9]\{6,8\}|$W/jawiki-${jawiki_date}|g" merge_dictionaries.py
-	touch .already_sed_merge_dictionaries
 
     	echo "Use our local copy of the Mozc repo"
-	sed -i -e "17s|'https://raw.githubusercontent.com/'.*$|'file://$W/mozc/src/data/dictionary_oss/id.def'|" merge_dictionaries.py
-    	sed -i -e '18d' merge_dictionaries.py
+        sed -i -e "65s|os\.path\.exists(f'mozc-{date}.zip')|False|" merge_dictionaries.py
+        sed -i -e '71s|zip_ref\.||' merge_dictionaries.py
+        sed -i -e "72s|mozc-master/src/data/dictionary_oss/id\.def|$W/mozc/src/data/dictionary_oss/id\.def|" merge_dictionaries.py
+        sed -i -e '74s|id_mozc\.|file\.read()\.|' merge_dictionaries.py
+        sed -i -e '80s|zip_ref\.||' merge_dictionaries.py
+        sed -i -e "81s|mozc-master/src/data/dictionary_oss/|$W/mozc/src/data/dictionary_oss/|" merge_dictionaries.py
+        sed -i -e '83s|decode()\.||' merge_dictionaries.py
+        sed -i -e '53,64d;66,69d;73d' merge_dictionaries.py
+	touch .already_sed_merge_dictionaries
     fi
 
     echo "Compile the UT dictionary"
@@ -230,6 +236,7 @@ if [ $opt_config -eq 1 ] ; then
     # from mozc-ut(arch linux)
     python merge_dictionaries.py mozcdic-ut.txt
 
+    # from fcitx5-mozc-ext-neologd(arch linux)
     # Include NEologd
     cd $W/mozcdict-ext
     git submodule init
@@ -242,22 +249,24 @@ if [ $opt_config -eq 1 ] ; then
     if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
     cd $B/src
 
+    # from mozc-ut(arch linux)
     echo "Append the UT dictionary"
     cat $W/merge-ut-dictionaries/src/merge/mozcdic-ut.txt >> $B/src/data/dictionary_oss/dictionary00.txt
 
+    # from mozc-ut(arch linux)
     cd $B
     echo "config submodule"
     git config protocol.file.allow always
     git submodule init
+    git config submodule.src/third_party/abseil-cpp.url $W/abseil-cpp
     git config submodule.src/third_party/breakpad.url $W/breakpad
     git config submodule.src/third_party/gtest.url $W/googletest
     git config submodule.src/third_party/gyp.url $W/gyp
     git config submodule.src/third_party/japanese_usage_dictionary.url $W/japanese-usage-dictionary
-    git config submodule.src/third_party/jsoncpp.url $W/jsoncpp
     git config submodule.src/third_party/protobuf.url $W/protobuf
-    git config submodule.src/third_party/abseil-cpp.url $W/abseil-cpp
     git -c protocol.file.allow=always submodule update
 
+    # from fcitx5-mozc-ext-neologd(arch linux)
     cd $B/src
     echo "Reset dictionary09"
     git checkout data/dictionary_oss/dictionary09.txt
@@ -274,6 +283,7 @@ if [ $opt_config -eq 1 ] ; then
     python $B/src/dictionary/gen_zip_code_seed.py --zip_code=KEN_ALL.CSV --jigyosyo=JIGYOSYO.CSV >> dictionary09.txt
     echo "Done."
 
+    # from fcitx5-mozc-ext-neologd(arch linux)
     export B=$B # サブシェル内でBが見えないので
     cd $W/mozcdict-ext
     echo "Generating extra dictionaries..."
@@ -302,7 +312,6 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 -i $W/gen_zip_code_seed.patch
     cd $B/src
     patch -p1 -i $W/mozc.patch
-    patch -p1 -i $W/mozc_yoshizawa.patch
 
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
