@@ -36,18 +36,9 @@ load(
     "mozc_cc_library",
 )
 
-cc_library(
-    name = "uim_system_lib",
-    srcs = [],
-    hdrs = [],
-    includes = ["/usr/include"],
-    linkopts = ["-luim", "-luim-scm"],
-    visibility = ["//visibility:public"],
-)
-
 mozc_cc_library(
     name = "uim_header",
-    deps =  [":uim_system_lib"],
+    deps =  ["@uim//:uim"],
 )
 
 mozc_cc_library(
@@ -72,6 +63,7 @@ mozc_cc_library(
     ],
 )
 
+
 cc_library(
     name = "uim_mozc_lib",
     srcs = ["mozc.cc"],
@@ -83,14 +75,16 @@ cc_library(
         "//base:version",
         "//client",
         "//protocol:commands_cc_proto",
-        ":uim_system_lib",
+        "@uim//:uim",
         "@com_google_protobuf//:protobuf",
     ],
-    linkopts = ["-shared", "-luim", "-luim-scm"],
+    linkopts = [
+        "-luim",
+        "-luim-scm"
+    ],
 )
 
 cc_shared_library(
     name = "uim-mozc",
     roots = ["uim_mozc_lib"],
 )
-
