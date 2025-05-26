@@ -1,0 +1,1384 @@
+Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
+Date:                    2025-05-19
+Initial Package Version: 2.74.3
+Upstream Status:         Not Applied (migrate to 3.0)
+Origin:                  Debian (https://sources.debian.org/patches/libsoup2.4/2.74.3-10.1/)
+Description:             Applies all of Debian's backports for the recent libsoup
+                         security issues. These issues allow for remote code
+                         execution, remotely exploitable denial of service,
+                         HTTP Request Smuggling, and for users to remotely
+                         crash some HTTP servers. The vulnerabilities include
+                         CVE-2024-52530, CVE-2024-52531, CVE-2024-52532,
+                         CVE-2025-2784, CVE-2025-32050, CVE-2025-32052,
+                         CVE-2025-32053, CVE-2025-32906, CVE-2025-32909,
+                         CVE-2025-32910, CVE-2025-32911, CVE-2025-32912,
+                         CVE-2025-32914, and CVE-2025-46420. The patch has been
+                         tested with gst-plugins-good, gst-plugins-bad,
+                         libgdata, and Abiword - but note that this package as
+                         well as Abiword and libgdata have been archived from
+                         LFS because it is unmaintained and applications should
+                         have already moved to libsoup3.
+
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-auth-digest.c libsoup-2.74.3/libsoup/soup-auth-digest.c
+--- libsoup-2.74.3.orig/libsoup/soup-auth-digest.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-auth-digest.c	2025-05-19 15:43:32.015104117 -0500
+@@ -66,6 +66,7 @@ soup_auth_digest_finalize (GObject *obje
+ 	g_free (priv->nonce);
+ 	g_free (priv->domain);
+ 	g_free (priv->cnonce);
++        g_free (priv->opaque);
+ 
+ 	memset (priv->hex_urp, 0, sizeof (priv->hex_urp));
+ 	memset (priv->hex_a1, 0, sizeof (priv->hex_a1));
+@@ -133,6 +134,19 @@ soup_auth_digest_get_qop (SoupAuthDigest
+ }
+ 
+ static gboolean
++validate_params (SoupAuthDigest *auth_digest)
++{
++        SoupAuthDigestPrivate *priv = soup_auth_digest_get_instance_private (auth_digest);
++
++        if (priv->qop || priv->algorithm == SOUP_AUTH_DIGEST_ALGORITHM_MD5_SESS) {
++                if (!priv->nonce)
++                        return FALSE;
++        }
++
++        return TRUE;
++}
++
++static gboolean
+ soup_auth_digest_update (SoupAuth *auth, SoupMessage *msg,
+ 			 GHashTable *auth_params)
+ {
+@@ -142,6 +156,9 @@ soup_auth_digest_update (SoupAuth *auth,
+ 	guint qop_options;
+ 	gboolean ok = TRUE;
+ 
++        if (!soup_auth_get_realm (auth) || !g_hash_table_lookup (auth_params, "nonce"))
++                return FALSE;
++
+ 	g_free (priv->domain);
+ 	g_free (priv->nonce);
+ 	g_free (priv->opaque);
+@@ -166,16 +183,21 @@ soup_auth_digest_update (SoupAuth *auth,
+ 	if (priv->algorithm == -1)
+ 		ok = FALSE;
+ 
+-	stale = g_hash_table_lookup (auth_params, "stale");
+-	if (stale && !g_ascii_strcasecmp (stale, "TRUE") && *priv->hex_urp)
+-		recompute_hex_a1 (priv);
+-	else {
+-		g_free (priv->user);
+-		priv->user = NULL;
+-		g_free (priv->cnonce);
+-		priv->cnonce = NULL;
+-		memset (priv->hex_urp, 0, sizeof (priv->hex_urp));
+-		memset (priv->hex_a1, 0, sizeof (priv->hex_a1));
++        if (!validate_params (auth_digest))
++                ok = FALSE;
++
++        if (ok) {
++                stale = g_hash_table_lookup (auth_params, "stale");
++                if (stale && !g_ascii_strcasecmp (stale, "TRUE") && *priv->hex_urp)
++                        recompute_hex_a1 (priv);
++                else {
++                        g_free (priv->user);
++                        priv->user = NULL;
++                        g_free (priv->cnonce);
++                        priv->cnonce = NULL;
++                        memset (priv->hex_urp, 0, sizeof (priv->hex_urp));
++                        memset (priv->hex_a1, 0, sizeof (priv->hex_a1));
++                }
+         }
+ 
+ 	return ok;
+@@ -266,6 +288,8 @@ soup_auth_digest_compute_hex_a1 (const c
+ 
+ 		/* In MD5-sess, A1 is hex_urp:nonce:cnonce */
+ 
++                g_assert (nonce && cnonce);
++
+ 		checksum = g_checksum_new (G_CHECKSUM_MD5);
+ 		g_checksum_update (checksum, (guchar *)hex_urp, strlen (hex_urp));
+ 		g_checksum_update (checksum, (guchar *)":", 1);
+@@ -356,6 +380,8 @@ soup_auth_digest_compute_response (const
+ 	if (qop) {
+ 		char tmp[9];
+ 
++                g_assert (cnonce);
++
+ 		g_snprintf (tmp, 9, "%.8x", nc);
+ 		g_checksum_update (checksum, (guchar *)tmp, strlen (tmp));
+ 		g_checksum_update (checksum, (guchar *)":", 1);
+@@ -419,6 +445,8 @@ soup_auth_digest_get_authorization (Soup
+ 	g_return_val_if_fail (uri != NULL, NULL);
+ 	url = soup_uri_to_string (uri, TRUE);
+ 
++        g_assert (priv->nonce);
++        g_assert (!priv->qop || priv->cnonce);
+ 	soup_auth_digest_compute_response (msg->method, url, priv->hex_a1,
+ 					   priv->qop, priv->nonce,
+ 					   priv->cnonce, priv->nc,
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-content-sniffer.c libsoup-2.74.3/libsoup/soup-content-sniffer.c
+--- libsoup-2.74.3.orig/libsoup/soup-content-sniffer.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-content-sniffer.c	2025-05-19 15:42:59.261346630 -0500
+@@ -227,9 +227,14 @@ sniff_mp4 (SoupContentSniffer *sniffer,
+ {
+ 	const char *resource = (const char *)buffer->data;
+ 	guint resource_length = MIN (512, buffer->length);
+-	guint32 box_size = *((guint32*)resource);
++	guint32 box_size;
+ 	guint i;
+ 
++        if (resource_length < sizeof (guint32))
++                return FALSE;
++
++	box_size = *((guint32*)resource);
++
+ #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+ 	box_size = ((box_size >> 24) |
+ 		    ((box_size << 8) & 0x00FF0000) |
+@@ -504,7 +509,7 @@ sniff_unknown (SoupContentSniffer *sniff
+ 			guint index_pattern = 0;
+ 			gboolean skip_row = FALSE;
+ 
+-			while ((index_stream < resource_length) &&
++			while ((index_stream < resource_length - 1) &&
+ 			       (index_pattern <= type_row->pattern_length)) {
+ 				/* Skip insignificant white space ("WS" in the spec) */
+ 				if (type_row->pattern[index_pattern] == ' ') {
+@@ -612,15 +617,18 @@ sniff_text_or_binary (SoupContentSniffer
+ }
+ 
+ static gboolean
+-skip_insignificant_space (const char *resource, int *pos, int resource_length)
++skip_insignificant_space (const char *resource, gsize *pos, gsize resource_length)
+ {
++        if (*pos >= resource_length)
++	        return TRUE;
++
+ 	while ((resource[*pos] == '\x09') ||
+ 	       (resource[*pos] == '\x20') ||
+ 	       (resource[*pos] == '\x0A') ||
+ 	       (resource[*pos] == '\x0D')) {
+ 		*pos = *pos + 1;
+ 
+-		if (*pos > resource_length)
++		if (*pos >= resource_length)
+ 			return TRUE;
+ 	}
+ 
+@@ -632,7 +640,7 @@ sniff_feed_or_html (SoupContentSniffer *
+ {
+ 	const char *resource = (const char *)buffer->data;
+ 	int resource_length = MIN (512, buffer->length);
+-	int pos = 0;
++	gsize pos = 0;
+ 
+ 	if (resource_length < 3)
+ 		goto text_html;
+@@ -642,9 +650,6 @@ sniff_feed_or_html (SoupContentSniffer *
+ 		pos = 3;
+ 
+  look_for_tag:
+-	if (pos > resource_length)
+-		goto text_html;
+-
+ 	if (skip_insignificant_space (resource, &pos, resource_length))
+ 		goto text_html;
+ 
+@@ -682,7 +687,7 @@ sniff_feed_or_html (SoupContentSniffer *
+ 		do {
+ 			pos++;
+ 
+-			if (pos > resource_length)
++			if ((pos + 1) > resource_length)
+ 				goto text_html;
+ 		} while (resource[pos] != '>');
+ 
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-headers.c libsoup-2.74.3/libsoup/soup-headers.c
+--- libsoup-2.74.3.orig/libsoup/soup-headers.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-headers.c	2025-05-19 15:43:46.154999461 -0500
+@@ -50,13 +50,14 @@ soup_headers_parse (const char *str, int
+ 	 * ignorable trailing whitespace.
+ 	 */
+ 
++	/* No '\0's are allowed */
++	if (memchr (str, '\0', len))
++		return FALSE;
++
+ 	/* Skip over the Request-Line / Status-Line */
+ 	headers_start = memchr (str, '\n', len);
+ 	if (!headers_start)
+ 		return FALSE;
+-	/* No '\0's in the Request-Line / Status-Line */
+-	if (memchr (str, '\0', headers_start - str))
+-		return FALSE;
+ 
+ 	/* We work on a copy of the headers, which we can write '\0's
+ 	 * into, so that we don't have to individually g_strndup and
+@@ -68,14 +69,6 @@ soup_headers_parse (const char *str, int
+ 	headers_copy[copy_len] = '\0';
+ 	value_end = headers_copy;
+ 
+-	/* There shouldn't be any '\0's in the headers already, but
+-	 * this is the web we're talking about.
+-	 */
+-	while ((p = memchr (headers_copy, '\0', copy_len))) {
+-		memmove (p, p + 1, copy_len - (p - headers_copy));
+-		copy_len--;
+-	}
+-
+ 	while (*(value_end + 1)) {
+ 		name = value_end + 1;
+ 		name_end = strchr (name, ':');
+@@ -192,7 +185,7 @@ soup_headers_parse_request (const char
+ 	/* RFC 2616 4.1 "servers SHOULD ignore any empty line(s)
+ 	 * received where a Request-Line is expected."
+ 	 */
+-	while ((*str == '\r' || *str == '\n') && len > 0) {
++	while (len > 0 && (*str == '\r' || *str == '\n')) {
+ 		str++;
+ 		len--;
+ 	}
+@@ -231,7 +224,7 @@ soup_headers_parse_request (const char
+ 	    !g_ascii_isdigit (version[5]))
+ 		return SOUP_STATUS_BAD_REQUEST;
+ 	major_version = strtoul (version + 5, &p, 10);
+-	if (*p != '.' || !g_ascii_isdigit (p[1]))
++	if (p + 1 >= str + len || *p != '.' || !g_ascii_isdigit (p[1]))
+ 		return SOUP_STATUS_BAD_REQUEST;
+ 	minor_version = strtoul (p + 1, &p, 10);
+ 	version_end = p;
+@@ -376,7 +369,7 @@ soup_headers_parse_response (const char
+ 	 * after a response, which we then see prepended to the next
+ 	 * response on that connection.
+ 	 */
+-	while ((*str == '\r' || *str == '\n') && len > 0) {
++	while (len > 0 && (*str == '\r' || *str == '\n')) {
+ 		str++;
+ 		len--;
+ 	}
+@@ -535,7 +528,7 @@ soup_header_parse_quality_list (const ch
+ 	GSList *unsorted;
+ 	QualityItem *array;
+ 	GSList *sorted, *iter;
+-	char *item, *semi;
++	char *semi;
+ 	const char *param, *equal, *value;
+ 	double qval;
+ 	int n;
+@@ -548,9 +541,8 @@ soup_header_parse_quality_list (const ch
+ 	unsorted = soup_header_parse_list (header);
+ 	array = g_new0 (QualityItem, g_slist_length (unsorted));
+ 	for (iter = unsorted, n = 0; iter; iter = iter->next) {
+-		item = iter->data;
+ 		qval = 1.0;
+-		for (semi = strchr (item, ';'); semi; semi = strchr (semi + 1, ';')) {
++		for (semi = strchr (iter->data, ';'); semi; semi = strchr (semi + 1, ';')) {
+ 			param = skip_lws (semi + 1);
+ 			if (*param != 'q')
+ 				continue;
+@@ -582,15 +574,15 @@ soup_header_parse_quality_list (const ch
+ 		if (qval == 0.0) {
+ 			if (unacceptable) {
+ 				*unacceptable = g_slist_prepend (*unacceptable,
+-								 item);
++								 g_steal_pointer (&iter->data));
+ 			}
+ 		} else {
+-			array[n].item = item;
++			array[n].item = g_steal_pointer (&iter->data);
+ 			array[n].qval = qval;
+ 			n++;
+ 		}
+ 	}
+-	g_slist_free (unsorted);
++	g_slist_free_full (unsorted, g_free);
+ 
+ 	qsort (array, n, sizeof (QualityItem), sort_by_qval);
+ 	sorted = NULL;
+@@ -650,8 +642,9 @@ soup_header_contains (const char *header
+ }
+ 
+ static void
+-decode_quoted_string (char *quoted_string)
++decode_quoted_string_inplace (GString *quoted_gstring)
+ {
++	char *quoted_string = quoted_gstring->str;
+ 	char *src, *dst;
+ 
+ 	src = quoted_string + 1;
+@@ -665,10 +658,11 @@ decode_quoted_string (char *quoted_strin
+ }
+ 
+ static gboolean
+-decode_rfc5987 (char *encoded_string)
++decode_rfc5987_inplace (GString *encoded_gstring)
+ {
+ 	char *q, *decoded;
+ 	gboolean iso_8859_1 = FALSE;
++	const char *encoded_string = encoded_gstring->str;
+ 
+ 	q = strchr (encoded_string, '\'');
+ 	if (!q)
+@@ -697,14 +691,7 @@ decode_rfc5987 (char *encoded_string)
+ 		decoded = utf8;
+ 	}
+ 
+-	/* If encoded_string was UTF-8, then each 3-character %-escape
+-	 * will be converted to a single byte, and so decoded is
+-	 * shorter than encoded_string. If encoded_string was
+-	 * iso-8859-1, then each 3-character %-escape will be
+-	 * converted into at most 2 bytes in UTF-8, and so it's still
+-	 * shorter.
+-	 */
+-	strcpy (encoded_string, decoded);
++	g_string_assign (encoded_gstring, decoded);
+ 	g_free (decoded);
+ 	return TRUE;
+ }
+@@ -714,15 +701,17 @@ parse_param_list (const char *header, ch
+ {
+ 	GHashTable *params;
+ 	GSList *list, *iter;
+-	char *item, *eq, *name_end, *value;
+-	gboolean override, duplicated;
+ 
+ 	params = g_hash_table_new_full (soup_str_case_hash, 
+ 					soup_str_case_equal,
+-					g_free, NULL);
++					g_free, g_free);
+ 
+ 	list = parse_list (header, delim);
+ 	for (iter = list; iter; iter = iter->next) {
++		char *item, *eq, *name_end;
++		gboolean override, duplicated;
++		GString *parsed_value = NULL;
++
+ 		item = iter->data;
+ 		override = FALSE;
+ 
+@@ -737,19 +726,19 @@ parse_param_list (const char *header, ch
+ 
+ 			*name_end = '\0';
+ 
+-			value = (char *)skip_lws (eq + 1);
++			parsed_value = g_string_new ((char *)skip_lws (eq + 1));
+ 
+ 			if (name_end[-1] == '*' && name_end > item + 1) {
+ 				name_end[-1] = '\0';
+-				if (!decode_rfc5987 (value)) {
++				if (!decode_rfc5987_inplace (parsed_value)) {
++					g_string_free (parsed_value, TRUE);
+ 					g_free (item);
+ 					continue;
+ 				}
+ 				override = TRUE;
+-			} else if (*value == '"')
+-				decode_quoted_string (value);
+-		} else
+-			value = NULL;
++			} else if (parsed_value->str[0] == '"')
++				decode_quoted_string_inplace (parsed_value);
++		}
+ 
+ 		duplicated = g_hash_table_lookup_extended (params, item, NULL, NULL);
+ 
+@@ -757,11 +746,16 @@ parse_param_list (const char *header, ch
+ 			soup_header_free_param_list (params);
+ 			params = NULL;
+ 			g_slist_foreach (iter, (GFunc)g_free, NULL);
++			if (parsed_value)
++				g_string_free (parsed_value, TRUE);
+ 			break;
+-		} else if (override || !duplicated)
+-			g_hash_table_replace (params, item, value);
+-		else
++		} else if (override || !duplicated) {
++			g_hash_table_replace (params, item, parsed_value ? g_string_free (parsed_value, FALSE) : NULL);
++		} else {
++			if (parsed_value)
++				g_string_free (parsed_value, TRUE);
+ 			g_free (item);
++		}
+ 	}
+ 
+ 	g_slist_free (list);
+@@ -910,7 +904,7 @@ append_param_quoted (GString    *string,
+ 		     const char *name,
+ 		     const char *value)
+ {
+-	int len;
++	gsize len;
+ 
+ 	g_string_append (string, name);
+ 	g_string_append (string, "=\"");
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-message-headers.c libsoup-2.74.3/libsoup/soup-message-headers.c
+--- libsoup-2.74.3.orig/libsoup/soup-message-headers.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-message-headers.c	2025-05-19 15:43:23.110170038 -0500
+@@ -1454,10 +1454,15 @@ soup_message_headers_get_content_disposi
+ 	 */
+ 	if (params && g_hash_table_lookup_extended (*params, "filename",
+ 						    &orig_key, &orig_value)) {
+-		char *filename = strrchr (orig_value, '/');
++                if (orig_value) {
++                        char *filename = strrchr (orig_value, '/');
+ 
+-		if (filename)
+-			g_hash_table_insert (*params, g_strdup (orig_key), filename + 1);
++                        if (filename)
++                                g_hash_table_insert (*params, g_strdup (orig_key), g_strdup (filename + 1));
++                } else {
++                        /* filename with no value isn't valid. */
++                        g_hash_table_remove (*params, "filename");
++                }
+ 	}
+ 	return TRUE;
+ }
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-multipart.c libsoup-2.74.3/libsoup/soup-multipart.c
+--- libsoup-2.74.3.orig/libsoup/soup-multipart.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-multipart.c	2025-05-19 15:43:36.231072910 -0500
+@@ -181,7 +181,7 @@ soup_multipart_new_from_message (SoupMes
+ 			return NULL;
+ 		}
+ 
+-		split = strstr (start, "\r\n\r\n");
++		split = g_strstr_len (start, body_end - start, "\r\n\r\n");
+ 		if (!split || split > end) {
+ 			soup_multipart_free (multipart);
+ 			soup_buffer_free (flattened);
+diff -Naurp libsoup-2.74.3.orig/libsoup/soup-websocket-connection.c libsoup-2.74.3/libsoup/soup-websocket-connection.c
+--- libsoup-2.74.3.orig/libsoup/soup-websocket-connection.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/libsoup/soup-websocket-connection.c	2025-05-19 15:41:57.436804738 -0500
+@@ -1140,9 +1140,9 @@ soup_websocket_connection_read (SoupWebs
+ 		}
+ 
+ 		pv->incoming->len = len + count;
+-	} while (count > 0);
+ 
+-	process_incoming (self);
++		process_incoming (self);
++	} while (count > 0 && !pv->close_sent && !pv->io_closing);
+ 
+ 	if (end) {
+ 		if (!pv->close_sent || !pv->close_received) {
+diff -Naurp libsoup-2.74.3.orig/meson.build libsoup-2.74.3/meson.build
+--- libsoup-2.74.3.orig/meson.build	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/meson.build	2025-05-19 15:41:47.012882026 -0500
+@@ -125,6 +125,9 @@ endif
+ 
+ cdata = configuration_data()
+ 
++cdata.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_70')
++cdata.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_70')
++
+ brotlidec_dep = dependency('libbrotlidec', required : get_option('brotli'))
+ if brotlidec_dep.found()
+   cdata.set('WITH_BROTLI', true)
+diff -Naurp libsoup-2.74.3.orig/tests/auth-test.c libsoup-2.74.3/tests/auth-test.c
+--- libsoup-2.74.3.orig/tests/auth-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/auth-test.c	2025-05-19 15:43:28.386130980 -0500
+@@ -1549,6 +1549,68 @@ do_cancel_after_retry_test (void)
+         soup_test_session_abort_unref (session);
+ }
+ 
++//from upstream commit 9af7d0fc751f7afcd8b03bc827a4d3af0c4556f8
++static gboolean
++on_digest_authenticate (SoupMessage *msg,
++                        SoupAuth    *auth,
++                        gboolean     retrying,
++                        gpointer     user_data)
++{
++        g_assert_false (retrying);
++        soup_auth_authenticate (auth, "user", "good");
++        return TRUE;
++}
++
++static void
++on_request_read_for_missing_params (SoupServer        *server,
++                                      SoupMessage *msg,
++                                      SoupClientContext *client,
++                                      gpointer           user_data)
++{
++        const char *auth_header = user_data;
++        soup_message_headers_replace (msg->response_headers, "WWW-Authenticate", auth_header);
++}
++
++static void
++do_missing_params_test (gconstpointer auth_header)
++{
++        SoupSession *session;
++        SoupMessage *msg;
++        SoupServer *server;
++        SoupAuthDomain *digest_auth_domain;
++        gint status;
++        SoupURI *uri;
++
++        server = soup_test_server_new (SOUP_TEST_SERVER_IN_THREAD);
++	soup_server_add_handler (server, NULL,
++				 server_callback, NULL, NULL);
++	uri = soup_test_server_get_uri (server, "http", NULL);
++
++	digest_auth_domain = soup_auth_domain_digest_new (
++		"realm", "auth-test",
++		"auth-callback", server_digest_auth_callback,
++		NULL);
++        soup_auth_domain_add_path (digest_auth_domain, "/");
++	soup_server_add_auth_domain (server, digest_auth_domain);
++        g_object_unref (digest_auth_domain);
++
++        g_signal_connect (server, "request-read",
++                          G_CALLBACK (on_request_read_for_missing_params),
++                          (gpointer)auth_header);
++
++        session = soup_test_session_new (SOUP_TYPE_SESSION_ASYNC, NULL);
++        msg = soup_message_new_from_uri ("GET", uri);
++        g_signal_connect (session, "authenticate",
++                          G_CALLBACK (on_digest_authenticate),
++                          NULL);
++
++        status = soup_session_send_message (session, msg);
++
++        g_assert_cmpint (status, ==, SOUP_STATUS_UNAUTHORIZED);
++	soup_uri_free (uri);
++	soup_test_server_quit_unref (server);
++}
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -1576,6 +1638,10 @@ main (int argc, char **argv)
+ 	g_test_add_func ("/auth/async-message-do-not-use-auth-cache", do_async_message_do_not_use_auth_cache_test);
+ 	g_test_add_func ("/auth/authorization-header-request", do_message_has_authorization_header_test);
+ 	g_test_add_func ("/auth/cancel-after-retry", do_cancel_after_retry_test);
++        g_test_add_data_func ("/auth/missing-params/realm", "Digest qop=\"auth\"", do_missing_params_test);
++        g_test_add_data_func ("/auth/missing-params/nonce", "Digest realm=\"auth-test\", qop=\"auth,auth-int\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"", do_missing_params_test);
++        g_test_add_data_func ("/auth/missing-params/nonce-md5-sess", "Digest realm=\"auth-test\", qop=\"auth,auth-int\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\" algorithm=\"MD5-sess\"", do_missing_params_test);
++        g_test_add_data_func ("/auth/missing-params/nonce-and-qop", "Digest realm=\"auth-test\"", do_missing_params_test);
+ 
+ 	ret = g_test_run ();
+ 
+diff -Naurp libsoup-2.74.3.orig/tests/header-parsing-test.c libsoup-2.74.3/tests/header-parsing-test.c
+--- libsoup-2.74.3.orig/tests/header-parsing-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/header-parsing-test.c	2025-05-19 15:43:23.111170031 -0500
+@@ -6,6 +6,15 @@ typedef struct {
+ 	const char *name, *value;
+ } Header;
+ 
++/* These are not C strings to ensure going one byte over is not safe. */
++static char unterminated_http_version[] = {
++        'G','E','T',' ','/',' ','H','T','T','P','/','1', '0', '0', '.'
++};
++
++static char only_newlines[] = {
++        '\n', '\n', '\n', '\n'
++};
++
+ static struct RequestTest {
+ 	const char *description;
+ 	const char *bugref;
+@@ -358,24 +367,6 @@ static struct RequestTest {
+ 	  }
+ 	},
+ 
+-	{ "NUL in header name", "760832",
+-	  "GET / HTTP/1.1\r\nHost\x00: example.com\r\n", 36,
+-	  SOUP_STATUS_OK,
+-	  "GET", "/", SOUP_HTTP_1_1,
+-	  { { "Host", "example.com" },
+-	    { NULL }
+-	  }
+-	},
+-
+-	{ "NUL in header value", "760832",
+-	  "GET / HTTP/1.1\r\nHost: example\x00" "com\r\n", 35,
+-	  SOUP_STATUS_OK,
+-	  "GET", "/", SOUP_HTTP_1_1,
+-	  { { "Host", "examplecom" },
+-	    { NULL }
+-	  }
+-	},
+-
+ 	/************************/
+ 	/*** INVALID REQUESTS ***/
+ 	/************************/
+@@ -401,6 +392,13 @@ static struct RequestTest {
+ 	  { { NULL } }
+ 	},
+ 
++	{ "Long HTTP version terminating at missing minor version", "https://gitlab.gnome.org/GNOME/libsoup/-/issues/404",
++	  unterminated_http_version, sizeof (unterminated_http_version),
++	  SOUP_STATUS_BAD_REQUEST,
++           NULL, NULL, -1,
++	  { { NULL } }
++	},
++
+ 	{ "Non-HTTP request", NULL,
+ 	  "GET / SOUP/1.1\r\nHost: example.com\r\n", -1,
+ 	  SOUP_STATUS_BAD_REQUEST,
+@@ -448,6 +446,28 @@ static struct RequestTest {
+ 	  SOUP_STATUS_EXPECTATION_FAILED,
+ 	  NULL, NULL, -1,
+ 	  { { NULL } }
++	},
++
++	// https://gitlab.gnome.org/GNOME/libsoup/-/issues/377
++	{ "NUL in header name", NULL,
++	  "GET / HTTP/1.1\r\nHost\x00: example.com\r\n", 36,
++	  SOUP_STATUS_BAD_REQUEST,
++	  NULL, NULL, -1,
++	  { { NULL } }
++	},
++
++	{ "NUL in header value", NULL,
++	  "HTTP/1.1 200 OK\r\nFoo: b\x00" "ar\r\n", 28,
++	  SOUP_STATUS_BAD_REQUEST,
++           NULL, NULL, -1,
++	  { { NULL } }
++	},
++
++	{ "Only newlines", NULL,
++	  only_newlines, sizeof (only_newlines),
++	  SOUP_STATUS_BAD_REQUEST,
++           NULL, NULL, -1,
++	  { { NULL } }
+ 	}
+ };
+ static const int num_reqtests = G_N_ELEMENTS (reqtests);
+@@ -620,22 +640,6 @@ static struct ResponseTest {
+ 	    { NULL } }
+ 	},
+ 
+-	{ "NUL in header name", "760832",
+-	  "HTTP/1.1 200 OK\r\nF\x00oo: bar\r\n", 28,
+-	  SOUP_HTTP_1_1, SOUP_STATUS_OK, "OK",
+-	  { { "Foo", "bar" },
+-	    { NULL }
+-	  }
+-	},
+-
+-	{ "NUL in header value", "760832",
+-	  "HTTP/1.1 200 OK\r\nFoo: b\x00" "ar\r\n", 28,
+-	  SOUP_HTTP_1_1, SOUP_STATUS_OK, "OK",
+-	  { { "Foo", "bar" },
+-	    { NULL }
+-	  }
+-	},
+-
+ 	/********************************/
+ 	/*** VALID CONTINUE RESPONSES ***/
+ 	/********************************/
+@@ -768,6 +772,19 @@ static struct ResponseTest {
+ 	  { { NULL }
+ 	  }
+ 	},
++
++	// https://gitlab.gnome.org/GNOME/libsoup/-/issues/377
++	{ "NUL in header name", NULL,
++	  "HTTP/1.1 200 OK\r\nF\x00oo: bar\r\n", 28,
++	  -1, 0, NULL,
++	  { { NULL } }
++	},
++
++	{ "NUL in header value", "760832",
++	  "HTTP/1.1 200 OK\r\nFoo: b\x00" "ar\r\n", 28,
++	  -1, 0, NULL,
++	  { { NULL } }
++	},
+ };
+ static const int num_resptests = G_N_ELEMENTS (resptests);
+ 
+@@ -1034,6 +1051,7 @@ do_param_list_tests (void)
+ #define RFC5987_TEST_HEADER_FALLBACK "attachment; filename*=Unknown''t%FF%FF%FFst.txt; filename=\"test.txt\""
+ #define RFC5987_TEST_HEADER_NO_TYPE  "filename=\"test.txt\""
+ #define RFC5987_TEST_HEADER_NO_TYPE_2  "filename=\"test.txt\"; foo=bar"
++#define RFC5987_TEST_HEADER_EMPTY_FILENAME ";filename"
+ 
+ static void
+ do_content_disposition_tests (void)
+@@ -1135,6 +1153,20 @@ do_content_disposition_tests (void)
+         g_assert_cmpstr (parameter2, ==, "bar");
+ 	g_hash_table_destroy (params);
+ 
++        /* Empty filename */
++        soup_message_headers_clear (hdrs);
++        soup_message_headers_append (hdrs, "Content-Disposition",
++				     RFC5987_TEST_HEADER_EMPTY_FILENAME);
++	if (!soup_message_headers_get_content_disposition (hdrs,
++							   &disposition,
++							   &params)) {
++		soup_test_assert (FALSE, "empty filename decoding FAILED");
++		return;
++	}
++        g_free (disposition);
++        g_assert_false (g_hash_table_contains (params, "filename"));
++	g_hash_table_destroy (params);
++
+ 	soup_message_headers_free (hdrs);
+ 
+ 	/* Ensure that soup-multipart always quotes filename */
+diff -Naurp libsoup-2.74.3.orig/tests/hsts-db-test.c libsoup-2.74.3/tests/hsts-db-test.c
+--- libsoup-2.74.3.orig/tests/hsts-db-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/hsts-db-test.c	2025-05-19 15:41:47.012882026 -0500
+@@ -1,8 +1,9 @@
++#include "test-utils.h"
++
+ #include <glib.h>
+ #include <glib/gstdio.h>
+ 
+ #include <stdio.h>
+-#include "test-utils.h"
+ 
+ #define DB_FILE "hsts-db.sqlite"
+ 
+diff -Naurp libsoup-2.74.3.orig/tests/multipart-test.c libsoup-2.74.3/tests/multipart-test.c
+--- libsoup-2.74.3.orig/tests/multipart-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/multipart-test.c	2025-05-19 15:43:52.789950360 -0500
+@@ -479,6 +479,65 @@ test_multipart (gconstpointer data)
+ 	g_main_loop_unref (loop);
+ }
+ 
++static void
++test_multipart_bounds_good (void)
++{
++	#define TEXT "line1\r\nline2"
++	SoupMultipart *multipart;
++	SoupMessageHeaders *headers, *set_headers = NULL;
++	SoupMessageBody *body = NULL;
++	SoupBuffer *set_bytes = NULL;
++	const char *raw_data = "--123\r\nContent-Type: text/plain;\r\n\r\n" TEXT "\r\n--123--\r\n";
++	gboolean success;
++
++	headers = soup_message_headers_new (SOUP_MESSAGE_HEADERS_MULTIPART);
++	soup_message_headers_append (headers, "Content-Type", "multipart/mixed; boundary=\"123\"");
++
++	body = soup_message_body_new ();
++	soup_message_body_append (body, SOUP_MEMORY_COPY,
++				  raw_data, strlen (raw_data));
++
++	multipart = soup_multipart_new_from_message (headers, body);
++
++	g_assert_nonnull (multipart);
++	g_assert_cmpint (soup_multipart_get_length (multipart), ==, 1);
++	success = soup_multipart_get_part (multipart, 0, &set_headers, &set_bytes);
++	g_assert_true (success);
++	g_assert_nonnull (set_headers);
++	g_assert_nonnull (set_bytes);
++	g_assert_cmpint (strlen (TEXT), ==, set_bytes->length);
++	g_assert_cmpstr ("text/plain", ==, soup_message_headers_get_content_type (set_headers, NULL));
++	g_assert_cmpmem (TEXT, strlen (TEXT), set_bytes->data, set_bytes->length);
++
++	soup_message_headers_free (headers);
++
++	soup_multipart_free (multipart);
++
++	#undef TEXT
++}
++
++static void
++test_multipart_bounds_bad (void)
++{
++	SoupMultipart *multipart;
++	SoupMessageHeaders *headers;
++	SoupMessageBody *body = NULL;
++	const char *raw_data = "--123\r\nContent-Type: text/plain;\r\nline1\r\nline2\r\n--123--\r\n";
++
++	headers = soup_message_headers_new (SOUP_MESSAGE_HEADERS_MULTIPART);
++	soup_message_headers_append (headers, "Content-Type", "multipart/mixed; boundary=\"123\"");
++
++	body = soup_message_body_new ();
++	soup_message_body_append (body, SOUP_MEMORY_COPY,
++				  raw_data, strlen (raw_data));
++
++	/* it did read out of raw_data/bytes bounds */
++	multipart = soup_multipart_new_from_message (headers, body);
++	g_assert_null (multipart);
++
++	soup_message_headers_free (headers);
++}
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -508,6 +567,8 @@ main (int argc, char **argv)
+ 	g_test_add_data_func ("/multipart/sync", GINT_TO_POINTER (SYNC_MULTIPART), test_multipart);
+ 	g_test_add_data_func ("/multipart/async", GINT_TO_POINTER (ASYNC_MULTIPART), test_multipart);
+ 	g_test_add_data_func ("/multipart/async-small-reads", GINT_TO_POINTER (ASYNC_MULTIPART_SMALL_READS), test_multipart);
++	g_test_add_func ("/multipart/bounds-good", test_multipart_bounds_good);
++	g_test_add_func ("/multipart/bounds-bad", test_multipart_bounds_bad);
+ 
+ 	ret = g_test_run ();
+ 
+diff -Naurp libsoup-2.74.3.orig/tests/pull-api-test.c libsoup-2.74.3/tests/pull-api-test.c
+--- libsoup-2.74.3.orig/tests/pull-api-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/pull-api-test.c	2025-05-19 15:41:07.621174231 -0500
+@@ -511,11 +511,13 @@ main (int argc, char **argv)
+ 	int ret;
+ 
+ 	test_init (argc, argv, NULL);
+-	apache_init ();
+ 
+ 	base_uri = "http://127.0.0.1:47524/";
++
+ #ifdef HAVE_APACHE
+-	get_correct_response (base_uri);
++	if (apache_init ()) {
++		get_correct_response (base_uri);
++	}
+ #endif
+ 
+ 	g_test_add_data_func ("/pull-api/async/fast", base_uri, do_fast_async_test);
+@@ -525,7 +527,9 @@ main (int argc, char **argv)
+ 	ret = g_test_run ();
+ 
+ #ifdef HAVE_APACHE
+-	soup_buffer_free (correct_response);
++	if (correct_response != NULL) {
++		soup_buffer_free (correct_response);
++	}
+ #endif
+ 
+ 	test_cleanup ();
+diff -Naurp libsoup-2.74.3.orig/tests/sniffing-test.c libsoup-2.74.3/tests/sniffing-test.c
+--- libsoup-2.74.3.orig/tests/sniffing-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/sniffing-test.c	2025-05-19 15:42:17.631655045 -0500
+@@ -436,6 +436,52 @@ test_disabled (gconstpointer data)
+ 	soup_uri_free (uri);
+ }
+ 
++static const gsize MARKUP_LENGTH = strlen ("<!--") + strlen ("-->");
++
++static void
++do_skip_whitespace_test (void)
++{
++        SoupContentSniffer *sniffer = soup_content_sniffer_new ();
++        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, "http://example.org");
++        const char *test_cases[] = {
++                "",
++                "<rdf:RDF",
++                "<rdf:RDFxmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"",
++                "<rdf:RDFxmlns=\"http://purl.org/rss/1.0/\"",
++        };
++
++        soup_message_headers_set_content_type (msg->response_headers, "text/html", NULL);
++
++        for (guint i = 0; i < G_N_ELEMENTS (test_cases); i++) {
++                const char *trailing_data = test_cases[i];
++                gsize leading_zeros = 512 - MARKUP_LENGTH - strlen (trailing_data);
++                gsize testsize = MARKUP_LENGTH + leading_zeros + strlen (trailing_data);
++                guint8 *data = g_malloc0 (testsize);
++                guint8 *p = data;
++                char *content_type;
++                GBytes *buffer;
++
++                // Format of <!--[0x00 * $leading_zeros]-->$trailing_data
++                memcpy (p, "<!--", strlen ("<!--"));
++                p += strlen ("<!--");
++                p += leading_zeros;
++                memcpy (p, "-->", strlen ("-->"));
++                p += strlen ("-->");
++                if (strlen (trailing_data))
++                        memcpy (p, trailing_data, strlen (trailing_data));
++                // Purposefully not NUL terminated.                
++
++                buffer = g_bytes_new_take (g_steal_pointer (&data), testsize);
++                content_type = soup_content_sniffer_sniff (sniffer, msg, (SoupBuffer *) buffer, NULL);
++
++                g_free (content_type);
++                g_bytes_unref (buffer);
++        }
++
++        g_object_unref (msg);
++        g_object_unref (sniffer);
++}
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -610,6 +656,8 @@ main (int argc, char **argv)
+ 			      "/text_or_binary/home.gif",
+ 			      test_disabled);
+ 
++	g_test_add_func ("/sniffing/whitespace", do_skip_whitespace_test);
++
+ 	ret = g_test_run ();
+ 
+ 	soup_uri_free (base_uri);
+diff -Naurp libsoup-2.74.3.orig/tests/ssl-test.c libsoup-2.74.3/tests/ssl-test.c
+--- libsoup-2.74.3.orig/tests/ssl-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/ssl-test.c	2025-05-19 15:40:21.519516502 -0500
+@@ -370,6 +370,11 @@ do_tls_interaction_test (void)
+ 
+ 	SOUP_TEST_SKIP_IF_NO_TLS;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable? https://gitlab.gnome.org/GNOME/libsoup/issues/120");
++		return;
++	}
++
+ 	service = g_threaded_socket_service_new (1);
+ 	address = g_inet_socket_address_new_from_string ("127.0.0.1", 0);
+ 	g_socket_listener_add_address (G_SOCKET_LISTENER (service), address,
+diff -Naurp libsoup-2.74.3.orig/tests/test-cert.pem libsoup-2.74.3/tests/test-cert.pem
+--- libsoup-2.74.3.orig/tests/test-cert.pem	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/test-cert.pem	2025-05-19 15:42:41.278479831 -0500
+@@ -1,6 +1,6 @@
+ -----BEGIN CERTIFICATE-----
+ MIIC2zCCAcOgAwIBAgIJALRbg2WnuAAqMA0GCSqGSIb3DQEBCwUAMBQxEjAQBgNV
+-BAMMCTEyNy4wLjAuMTAeFw0xNzA2MjAxNDI3MzBaFw0yNzA2MTgxNDI3MzBaMBQx
++BAMMCTEyNy4wLjAuMTAeFw0yMTAyMTgwODA3MzBaFw00OTEyMzEwODA3MzRaMBQx
+ EjAQBgNVBAMMCTEyNy4wLjAuMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ ggEBAKs4fuRuW77nORhOT9kbbU6BsjKW3GEsMc+ZSmXjINQWpfkES2hV+DQyzhm5
+ qh4OLi1vYtXoSbdQNDCbA8ybZJqR8m9F3ed8vobdSSQGxWpPdXTgz27x+TpiAc9P
+@@ -8,11 +8,11 @@ w83UuPvlu/0AxHJBFXVAg+id0yFu3wmGWYJHoAtv
+ BKTRCkGsRSmPpJyGbU2Q96fjxnVfV9oYvQXeugUcSx/pTUCM/kDgD9QZCxG2rflX
+ NWcqDFY3uO6ZR68Qwi/KouOa8rzrgAcwhFUI6Wz0Zwi1rzRtWK5WqC24aBUYz/tK
+ hl8i88UDXSMh7spChdYDBGLhZyUCAwEAAaMwMC4wLAYDVR0RBCUwI4IJbG9jYWxo
+-b3N0hwR/AAABhxAAAAAAAAAAAAAAAAAAAAABMA0GCSqGSIb3DQEBCwUAA4IBAQBj
+-+U8tebwg5/pof5Rht6TMHqeg6Fcr4OJkL2ph2g+T/AMTS7kEGeFIKJN5AZ+S/qIY
+-cdoDKHwc8+bCK/mG6DPmJ4z/2Eamb85YhplOLVrLRwfxRebTK9CtnjcjnflAiU9H
+-7vPVwXIvkwebhBSQNKTdkBlPXKaTNWXuygeFG2OVQkPf/KAxSdtg2R+owv/s802Z
+-HISk26wY9oFIQz6AiXWdrY1QqNOltZ7rlU5iofAH7X+9ryZlxPWj/gHg2YQRvvLl
+-dq6nCF+ED0ke7h0lg5nU0beKEygwli8DlLVbu0JK0PkARFp5t7wUtzC9DCjzvfOc
+-gxR44PyZX7/2oaTDm4PS
++b3N0hwR/AAABhxAAAAAAAAAAAAAAAAAAAAABMA0GCSqGSIb3DQEBCwUAA4IBAQAz
++/qYTUuBGHgp7T1cfaJPnhx6U1SMfdJRtFoWOXDx+MNCK9GYkdMEabzRGUP5uNHO+
++PiZP/bMIHlpsbRA5AyyVf9Xv8JCujvYh24qYcBbwgZrfvNTm0D52P9JJm0SalTXS
++kwwTj00DWGVfVzJR+wiwYGHRIlyXbHqQSRzv6+z9f/xY5gXw/KpCNYTuOJcXW7w6
++JfMrUnc9pphRUpcLkuuzOMKuB0dtWRc0mZIr7PZHt+0gitNZWA0bDYI3JI9tlK17
++nxBUSpGtJwDgH//b8ek/P0P9a5VzQbBC6lXtQUMdxg7ovfAI//IS8ekBoRKI0Wde
++r2IpM9hKSBU3c2gGXcJC
+ -----END CERTIFICATE-----
+diff -Naurp libsoup-2.74.3.orig/tests/test-utils.c libsoup-2.74.3/tests/test-utils.c
+--- libsoup-2.74.3.orig/tests/test-utils.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/test-utils.c	2025-05-19 15:41:23.331057670 -0500
+@@ -147,11 +147,25 @@ have_curl(void) {
+ 
+ #ifdef HAVE_APACHE
+ 
++gboolean
++check_apache (void)
++{
++	if (g_getenv ("SOUP_TESTS_ALREADY_RUNNING_APACHE"))
++		return TRUE;
++
++	if (!apache_running) {
++		g_test_skip ("Failed to start apache");
++		return FALSE;
++	}
++
++	return TRUE;
++}
++
+ static gboolean
+ apache_cmd (const char *cmd)
+ {
+ 	GPtrArray *argv;
+-	char *cwd, *pid_file;
++	char *cwd, *pid_file, *error_log;
+ #ifdef HAVE_APACHE_2_4
+ 	char *default_runtime_dir;
+ #endif
+@@ -170,6 +184,7 @@ apache_cmd (const char *cmd)
+ 	default_runtime_dir = g_strdup_printf ("DefaultRuntimeDir %s", cwd);
+ #endif
+ 	pid_file = g_strdup_printf ("PidFile %s/httpd.pid", cwd);
++	error_log = g_strdup_printf ("ErrorLog %s/error.log", cwd);
+ 
+ 	argv = g_ptr_array_new ();
+ 	g_ptr_array_add (argv, APACHE_HTTPD);
+@@ -183,6 +198,8 @@ apache_cmd (const char *cmd)
+ 	g_ptr_array_add (argv, default_runtime_dir);
+ #endif
+ 	g_ptr_array_add (argv, "-c");
++	g_ptr_array_add (argv, error_log);
++	g_ptr_array_add (argv, "-c");
+ 	g_ptr_array_add (argv, pid_file);
+ 
+ 	g_ptr_array_add (argv, "-k");
+@@ -208,6 +225,7 @@ apache_cmd (const char *cmd)
+ 
+ 	g_free (cwd);
+ 	g_free (pid_file);
++	g_free (error_log);
+ #ifdef HAVE_APACHE_2_4
+ 	g_free (default_runtime_dir);
+ #endif
+@@ -217,21 +235,25 @@ apache_cmd (const char *cmd)
+ 	return ok;
+ }
+ 
+-void
++gboolean
+ apache_init (void)
+ {
+ 	/* Set this environment variable if you are already running a
+ 	 * suitably-configured Apache server */
+ 	if (g_getenv ("SOUP_TESTS_ALREADY_RUNNING_APACHE"))
+-		return;
++		return TRUE;
+ 
+ 	server_root = soup_test_build_filename_abs (G_TEST_BUILT, "", NULL);
+ 
+ 	if (!apache_cmd ("start")) {
+ 		g_printerr ("Could not start apache\n");
+-		exit (1);
++		apache_running = FALSE;
++	}
++	else {
++		apache_running = TRUE;
+ 	}
+-	apache_running = TRUE;
++
++	return apache_running;
+ }
+ 
+ void
+@@ -255,6 +277,11 @@ apache_cleanup (void)
+ 			g_usleep (100);
+ 	}
+ 
++	if (g_file_get_contents ("error.log", &contents, NULL, NULL)) {
++		g_test_message ("error.log contents:\n%s", contents);
++		g_free (contents);
++	}
++
+ 	g_clear_pointer (&server_root, g_free);
+ }
+ 
+diff -Naurp libsoup-2.74.3.orig/tests/test-utils.h libsoup-2.74.3/tests/test-utils.h
+--- libsoup-2.74.3.orig/tests/test-utils.h	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/test-utils.h	2025-05-19 15:41:07.621174231 -0500
+@@ -29,11 +29,17 @@ void debug_printf (int level, const char
+ 	} G_STMT_END
+ 
+ #ifdef HAVE_APACHE
+-void apache_init    (void);
++gboolean apache_init (void);
+ void apache_cleanup (void);
+-#define SOUP_TEST_SKIP_IF_NO_APACHE
++gboolean check_apache (void);
++#define SOUP_TEST_SKIP_IF_NO_APACHE				\
++	G_STMT_START {						\
++		if (!check_apache ()) {				\
++			return;					\
++		}						\
++	} G_STMT_END
+ #else
+-#define apache_init()
++#define apache_init() FALSE
+ #define apache_cleanup()
+ #define SOUP_TEST_SKIP_IF_NO_APACHE				\
+ 	G_STMT_START {						\
+diff -Naurp libsoup-2.74.3.orig/tests/websocket-test.c libsoup-2.74.3/tests/websocket-test.c
+--- libsoup-2.74.3.orig/tests/websocket-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/websocket-test.c	2025-05-19 15:42:06.547737197 -0500
+@@ -1300,8 +1300,9 @@ test_receive_invalid_encode_length_16 (T
+ 	GError *error = NULL;
+ 	InvalidEncodeLengthTest context = { test, NULL };
+ 	guint i;
++	guint error_id;
+ 
+-	g_signal_connect (test->client, "error", G_CALLBACK (on_error_copy), &error);
++	error_id = g_signal_connect (test->client, "error", G_CALLBACK (on_error_copy), &error);
+ 	g_signal_connect (test->client, "message", G_CALLBACK (on_binary_message), &received);
+ 
+ 	/* We use 126(~) as payload length with 125 extended length */
+@@ -1314,6 +1315,7 @@ test_receive_invalid_encode_length_16 (T
+ 	WAIT_UNTIL (error != NULL || received != NULL);
+ 	g_assert_error (error, SOUP_WEBSOCKET_ERROR, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR);
+ 	g_clear_error (&error);
++        g_signal_handler_disconnect (test->client, error_id);
+ 	g_assert_null (received);
+ 
+ 	g_thread_join (thread);
+@@ -1331,8 +1333,9 @@ test_receive_invalid_encode_length_64 (T
+ 	GError *error = NULL;
+ 	InvalidEncodeLengthTest context = { test, NULL };
+ 	guint i;
++	guint error_id;
+ 
+-	g_signal_connect (test->client, "error", G_CALLBACK (on_error_copy), &error);
++	error_id = g_signal_connect (test->client, "error", G_CALLBACK (on_error_copy), &error);
+ 	g_signal_connect (test->client, "message", G_CALLBACK (on_binary_message), &received);
+ 
+ 	/* We use 127(\x7f) as payload length with 65535 extended length */
+@@ -1345,6 +1348,7 @@ test_receive_invalid_encode_length_64 (T
+ 	WAIT_UNTIL (error != NULL || received != NULL);
+ 	g_assert_error (error, SOUP_WEBSOCKET_ERROR, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR);
+ 	g_clear_error (&error);
++        g_signal_handler_disconnect (test->client, error_id);
+ 	g_assert_null (received);
+ 
+         g_thread_join (thread);
+diff -Naurp libsoup-2.74.3.orig/tests/xmlrpc-old-test.c libsoup-2.74.3/tests/xmlrpc-old-test.c
+--- libsoup-2.74.3.orig/tests/xmlrpc-old-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/xmlrpc-old-test.c	2025-05-19 15:41:29.451012271 -0500
+@@ -15,7 +15,12 @@ static const char *uri = NULL;
+ static gboolean server_test = FALSE;
+ 
+ #ifdef HAVE_PHP_XMLRPC
+-#define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER
++#define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER				\
++	G_STMT_START {							\
++		if (uri == default_uri) {				\
++			SOUP_TEST_SKIP_IF_NO_APACHE;			\
++		}							\
++	} G_STMT_END
+ #else
+ #define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER				\
+ 	G_STMT_START {							\
+@@ -23,6 +28,9 @@ static gboolean server_test = FALSE;
+ 			g_test_skip ("php-xmlrpc is not available");	\
+ 			return;						\
+ 		}							\
++		if (uri == default_uri) {				\
++			SOUP_TEST_SKIP_IF_NO_APACHE;			\
++		}							\
+ 	} G_STMT_END
+ #endif
+ 
+@@ -104,6 +112,11 @@ test_sum (void)
+ 	GValue retval;
+ 	gboolean ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "sum (array of double -> double): ");
+@@ -140,6 +153,11 @@ test_countBools (void)
+ 	gboolean val, ok;
+ 	GHashTable *result;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "countBools (array of boolean -> struct of ints): ");
+@@ -185,6 +203,11 @@ test_md5sum (void)
+ 	GValue retval;
+ 	gboolean ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "md5sum (base64 -> base64)\n");
+@@ -221,6 +244,11 @@ test_dateChange (void)
+ 	GValue retval;
+ 	gboolean ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "dateChange (date, struct of ints -> time)\n");
+@@ -323,6 +351,11 @@ test_echo (void)
+ 	GValue retval;
+ 	int i;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "echo (array of string -> array of string):\n");
+@@ -370,6 +403,11 @@ test_ping (gconstpointer include_params)
+ 
+ 	g_test_bug ("671661");
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "ping (void (%s) -> string)\n",
+@@ -439,6 +477,11 @@ do_bad_xmlrpc (const char *body)
+ static void
+ test_fault_malformed (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall/>");
+@@ -447,6 +490,11 @@ test_fault_malformed (void)
+ static void
+ test_fault_method (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall><methodName>no_such_method</methodName><params><param><value><int>1</int></value></param></params></methodCall>");
+@@ -455,6 +503,11 @@ test_fault_method (void)
+ static void
+ test_fault_args (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall><methodName>sum</methodName><params><param><value><int>1</int></value></param></params></methodCall>");
+diff -Naurp libsoup-2.74.3.orig/tests/xmlrpc-test.c libsoup-2.74.3/tests/xmlrpc-test.c
+--- libsoup-2.74.3.orig/tests/xmlrpc-test.c	2022-10-11 13:27:22.000000000 -0500
++++ libsoup-2.74.3/tests/xmlrpc-test.c	2025-05-19 15:41:29.451012271 -0500
+@@ -12,7 +12,12 @@ static const char *uri = NULL;
+ static gboolean server_test = FALSE;
+ 
+ #ifdef HAVE_PHP_XMLRPC
+-#define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER
++#define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER				\
++	G_STMT_START {							\
++		if (uri == default_uri) {				\
++			SOUP_TEST_SKIP_IF_NO_APACHE;			\
++		}							\
++	} G_STMT_END
+ #else
+ #define SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER				\
+ 	G_STMT_START {							\
+@@ -20,6 +25,9 @@ static gboolean server_test = FALSE;
+ 			g_test_skip ("php-xmlrpc is not available");	\
+ 			return;						\
+ 		}							\
++		if (uri == default_uri) {				\
++			SOUP_TEST_SKIP_IF_NO_APACHE;			\
++		}							\
+ 	} G_STMT_END
+ #endif
+ 
+@@ -79,6 +87,11 @@ test_sum (void)
+ 	GVariant *retval;
+ 	gboolean ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "sum (array of double -> double): ");
+@@ -115,6 +128,11 @@ test_countBools (void)
+ 	int ret_trues, ret_falses;
+ 	gboolean val, ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "countBools (array of boolean -> struct of ints): ");
+@@ -158,6 +176,11 @@ test_md5sum (void)
+ 	GVariant *retval;
+ 	gboolean ok;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "md5sum (base64 -> base64)\n");
+@@ -197,6 +220,11 @@ test_dateChange (void)
+ 	gboolean ok;
+ 	GError *error = NULL;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "dateChange (date, struct of ints -> time)\n");
+@@ -304,6 +332,11 @@ test_echo (void)
+ 	GVariant *retval;
+ 	char *str;
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "echo (array of string -> array of string):\n");
+@@ -341,6 +374,11 @@ test_ping (gconstpointer include_params)
+ 
+ 	g_test_bug ("671661");
+ 
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	debug_printf (2, "ping (void (%s) -> string)\n",
+@@ -406,6 +444,11 @@ do_bad_xmlrpc (const char *body)
+ static void
+ test_fault_malformed (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall/>");
+@@ -414,6 +457,11 @@ test_fault_malformed (void)
+ static void
+ test_fault_method (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall><methodName>no_such_method</methodName><params><param><value><int>1</int></value></param></params></methodCall>");
+@@ -422,6 +470,11 @@ test_fault_method (void)
+ static void
+ test_fault_args (void)
+ {
++	if (g_getenv ("DEB_ALLOW_FLAKY_TESTS") == NULL) {
++		g_test_skip ("Not reliable?");
++		return;
++	}
++
+ 	SOUP_TEST_SKIP_IF_NO_XMLRPC_SERVER;
+ 
+ 	do_bad_xmlrpc ("<methodCall><methodName>sum</methodName><params><param><value><int>1</int></value></param></params></methodCall>");
