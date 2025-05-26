@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libsoup"
-vers="2.66.2"
+vers="2.74.3"
 url="http://ftp.gnome.org/pub/gnome/sources/libsoup/${vers%.*}/libsoup-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:8f657fd301a213629204b3320c35d75a"
 arch=`uname -m`
-build=B2
+build=B1
 src="libsoup-${vers}"
-OPT_CONFIG=""
+OPT_CONFIG="--buildtype=release -Dsysprof=disabled -Dtests=false -Dvapi=disabled"
 DOCS="AUTHORS COPYING ChangeLog.pre-git HACKING MAINTAINERS NEWS README README.msvc meson_options.txt"
-patchfiles=""
+patchfiles="libsoup-2.74.3-security_fixes-1.patch"
 compress=tzst
 ##############################################################
 
@@ -58,7 +58,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
+    meson setup --prefix=/usr --libdir=/usr/lib ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
