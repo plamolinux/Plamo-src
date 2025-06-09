@@ -1,14 +1,14 @@
-From eead849b440c0a1a8a0ad8d14046fc56b766a9b7 Mon Sep 17 00:00:00 2001
+From 4ea297738301ed305319d0569ad160a978e1cae1 Mon Sep 17 00:00:00 2001
 From: KATOH Yasufumi <karma@jazz.email.ne.jp>
-Date: Fri, 28 Apr 2023 21:18:24 +0900
-Subject: [PATCH 3/3] No Savedir sort
+Date: Mon, 9 Jun 2025 18:59:39 +0900
+Subject: [PATCH] No Savedir sort
 
 ---
  src/copy.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/copy.c b/src/copy.c
-index 13d9332..92034ce 100644
+index 22d9830..58f6801 100644
 --- a/src/copy.c
 +++ b/src/copy.c
 @@ -832,7 +832,7 @@ copy_dir (char const *src_name_in, char const *dst_name_in,
@@ -17,9 +17,9 @@ index 13d9332..92034ce 100644
  
 -  name_space = savedir (src_name_in, SAVEDIR_SORT_FASTREAD);
 +  name_space = savedir (src_name_in, SAVEDIR_SORT_NONE);
-   if (name_space == NULL)
+   if (name_space == nullptr)
      {
        /* This diagnostic is a bit vague because savedir can fail in
 -- 
-2.40.1
+2.48.1
 
