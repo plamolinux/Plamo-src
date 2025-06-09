@@ -63,6 +63,9 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+    autoreconf -fv
+    automake -af
+
     cd $B
     # if [ -f $S/autogen.sh ] ; then
     #   sh ./autogen.sh
