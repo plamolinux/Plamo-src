@@ -6,7 +6,7 @@ url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-s
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG="
 -bindir lib/qt6/bin
@@ -150,7 +150,7 @@ cat > $P/usr/share/applications/assistant-qt6.desktop << EOF
 [Desktop Entry]
 Name=Qt6 Assistant
 Comment=Shows Qt6 documentation and examples
-Exec=$QT6PREFIX/bin/assistant
+Exec=$QT6PREFIX/bin/assistant6
 Icon=assistant-qt6.png
 Terminal=false
 Encoding=UTF-8
@@ -163,7 +163,7 @@ cat > $P/usr/share/applications/designer-qt6.desktop << EOF
 Name=Qt6 Designer
 GenericName=Interface Designer
 Comment=Design GUIs for Qt6 applications
-Exec=$QT6PREFIX/bin/designer
+Exec=$QT6PREFIX/bin/designer6
 Icon=designer-qt6.png
 MimeType=application/x-designer;
 Terminal=false
@@ -176,7 +176,7 @@ cat > $P/usr/share/applications/linguist-qt6.desktop << EOF
 [Desktop Entry]
 Name=Qt6 Linguist
 Comment=Add translations to Qt6 applications
-Exec=$QT6PREFIX/bin/linguist
+Exec=$QT6PREFIX/bin/linguist6
 Icon=linguist-qt6.png
 MimeType=text/vnd.trolltech.linguist;application/x-linguist;
 Terminal=false
@@ -190,7 +190,7 @@ cat > $P/usr/share/applications/qdbusviewer-qt6.desktop << EOF
 Name=Qt6 QDbusViewer
 GenericName=D-Bus Debugger
 Comment=Debug D-Bus applications
-Exec=$QT6PREFIX/bin/qdbusviewer
+Exec=$QT6PREFIX/bin/qdbusviewer6
 Icon=qdbusviewer-qt6.png
 Terminal=false
 Encoding=UTF-8
