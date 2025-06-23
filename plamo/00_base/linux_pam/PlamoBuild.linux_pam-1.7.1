@@ -9,7 +9,7 @@ digest="md5sum:92812d7dd414d816fba8d649e84e68ca"
 arch=`uname -m`
 build=B1
 src="Linux-PAM-${vers}"
-OPT_CONFIG="--buildtype=release -Dnis=disabled -Dread-both-confs=true -Ddocdir=/usr/share/doc/Linux-PAM-${vers}"
+OPT_CONFIG="--buildtype=release -Dnis=disabled -Dread-both-confs=true -Ddocdir=/usr/share/doc/Linux-PAM-${vers} -Dsecuredir=/lib/security"
 DOCS="AUTHORS COPYING NEWS README doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -96,7 +96,6 @@ if [ $opt_package -eq 1 ] ; then
 
   chmod -v 4755 $P/usr/sbin/unix_chkpwd
 
-  install -dm755 -v $P/$libdir
   for f in pam pam_misc pamc
   do
       mv -v $P/usr/$libdir/lib${f}.so.* $P/$libdir
