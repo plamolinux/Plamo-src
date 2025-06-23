@@ -5,11 +5,11 @@ vers='2.13.8'
 url="https://download.gnome.org/sources/libxml2/${vers%.*}/libxml2-${vers}.tar.xz"
 digest="sha256sum:277294cb33119ab71b2bc81f2f445e9bc9435b893ad15bb2cd2b0e859a0ee84a"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static --sysconfdir=/etc --with-history --with-threads --without-icu --with-python --with-legacy --with-ftp --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.tests TODO TODO_SCHEMAS'
-blfspatch=""
+blfspatch="https://linuxfromscratch.org/patches/downloads/libxml2/libxml2-2.13.8-security_fixes-1.patch"
 patchfiles=""
 compress=tzst
 ##############################################################
@@ -46,7 +46,7 @@ fi
 
 if [ $opt_config -eq 1 ] ; then
   if [ -d $B ] ; then rm -rf $B ; fi
-  for i in 2 3
+  for i in 3
   do
     OPT_CONFIG="$OPT_CONFIG --with-python=/usr/bin/python${i}"
     mkdir -p $B/$i
@@ -71,7 +71,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
     
 if [ $opt_build -eq 1 ] ; then
-  for i in 2 3
+  for i in 3
   do
     cd $B/$i
     NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
