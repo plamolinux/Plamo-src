@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="inkscape"
-vers="1.4"
-url="https://inkscape.org/gallery/item/53679/inkscape-1.4.tar.xz"
+vers="1.4.2"
+url="https://inkscape.org/gallery/item/56344/inkscape-1.4.2.tar.xz"
 verify=""
-digest="md5sum:a93f3a8eab82ef3d610f426bfe58e3df"
+digest="md5sum:0c24e84085bed3f0237d1cdf0856a855"
 arch=`uname -m`
-build=B2
-src="inkscape-1.4_2024-10-09_e7c3feb100"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DMAGICK_INCLUDEDIR=/usr/include/ImageMagick-6 -DWITH_INTERNAL_2GEOM=ON"
+build=B1
+src="inkscape-1.4.2_2025-05-08_ebf0e940d0"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DWITH_INTERNAL_2GEOM=ON -Wno-dev"
 DOCS="AUTHORS COPYING INSTALL.md LICENSES NEWS.md README.md doc"
-patchfiles="inkscape-1.4-poppler_fixes-1.patch"
+patchfiles="inkscape-1.4.2-poppler_fixes-3.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
