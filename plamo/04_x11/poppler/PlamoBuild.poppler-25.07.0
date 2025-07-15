@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="poppler"
-vers="25.01.0"
+vers="25.07.0"
 url="https://poppler.freedesktop.org/poppler-${vers}.tar.xz"
 verify=""
 digest=""
