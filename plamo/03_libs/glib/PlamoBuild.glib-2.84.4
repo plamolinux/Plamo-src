@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.84.0"
+vers="2.84.4"
 url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="sha256sum:f8823600cb85425e2815cfad82ea20fdaa538482ab74e7293d58b3f64a5aff6a"
+digest="md5sum:5655d0ff809b98dd77c02490609fadde"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
@@ -17,7 +17,6 @@ DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rational
 patchfiles="
 0001-glib-compile-schemas-Remove-noisy-deprecation-warnin.patch
 0002-gdesktopappinfo-Add-more-known-terminals.patch
-0003-tests-Don-t-install-runner-scripts-without-installed.patch
 "
 # specifies files that are not in source archive and patchfiles
 addfiles=""
