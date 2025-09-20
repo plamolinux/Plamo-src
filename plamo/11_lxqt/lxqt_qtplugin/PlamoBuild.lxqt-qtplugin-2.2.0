@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxqt_qtplugin"
-vers="2.1.0"
+vers="2.2.0"
 url="https://github.com/lxqt/lxqt-qtplugin/releases/download/${vers}/lxqt-qtplugin-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B5
+build=B1
 src="lxqt-qtplugin-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release "
 DOCS="AUTHORS CHANGELOG LICENSE README.md"
