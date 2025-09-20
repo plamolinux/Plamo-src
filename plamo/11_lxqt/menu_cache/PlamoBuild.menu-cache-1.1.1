@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="menu_cache"
-vers="1.1.0"
-url="https://github.com/lxde/menu-cache/archive/refs/tags/1.1.0.tar.gz"
+vers="1.1.1"
+url="https://github.com/lxde/menu-cache/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B6
-src="menu-cache-1.1.0"
+build=B1
+src="menu-cache-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README docs gtk-doc.make"
-patchfiles="menu-cache-1.1.0-consolidated_fixes-1.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
