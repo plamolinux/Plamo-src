@@ -6,7 +6,7 @@ url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-s
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG="
 -bindir lib/qt6/bin
@@ -20,6 +20,7 @@ OPT_CONFIG="
 -skip qt3d
 -skip qtquick3dphysics
 -skip qtwebengine
+-headerdir /usr/include/qt6
 -archdatadir /usr/lib/qt6
 -plugindir /usr/lib/qt6/plugins
 -qmldir /usr/lib/qt6/qml
