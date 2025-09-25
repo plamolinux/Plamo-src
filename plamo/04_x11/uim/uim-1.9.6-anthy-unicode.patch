@@ -1,0 +1,59 @@
+--- uim-1.8.9/configure.ac	2022-08-19 09:18:18.000000000 +0900
++++ uim-1.8.9-patched/configure.ac	2022-10-11 09:05:35.439907460 +0900
+@@ -110,20 +110,20 @@
+   [with_anthy=yes])
+ 
+ if test "x$with_anthy" != xno; then
+-  AC_CHECK_HEADERS([anthy/anthy.h],
++  AC_CHECK_HEADERS([anthy-unicode-1.0/anthy/anthy.h],
+     [
+       saved_LIBS=$LIBS
+-      LIBS="$LIBS -lanthy -lanthydic"
+-      AC_CHECK_LIB([anthy], [anthy_init], [with_anthy=yes], [with_anthy=no])
++      LIBS="$LIBS -lanthy-unicode -lanthydic-unicode"
++      AC_CHECK_LIB([anthy-unicode], [anthy_init], [with_anthy=yes], [with_anthy=no])
+       LIBS=$saved_LIBS
+     ],
+     [with_anthy=no])
+ fi
+ 
+ if test "x$with_anthy" = xyes; then
+-  ANTHY_LIBS="-lanthy -lanthydic"
++  ANTHY_LIBS="-lanthy-unicode -lanthydic-unicode"
+   ANTHY_CFLAGS=""
+-  PKG_CHECK_EXISTS(anthy >= 8622,
++  PKG_CHECK_EXISTS(anthy-unicode >= 1.0.0.20211224,
+                    [AC_DEFINE(LIBANTHY_UTF8_CAPABLE, 1,
+                     "libanthy can handle UTF-8")])
+ fi
+@@ -141,7 +141,7 @@
+   [with_anthy_utf8=no])
+ 
+ if test "x$with_anthy_utf8" != xno; then
+-  PKG_CHECK_MODULES(ANTHY_UTF8, anthy-unicode,
++  PKG_CHECK_MODULES(ANTHY_UTF8, anthy-unicode >= 1.0.0.20211224,
+                     [with_anthy_utf8=yes
+                      AC_DEFINE(LIBANTHY_UTF8_CAPABLE, 1,
+                      [libanthy can handle UTF-8])],
+--- uim-1.8.9/uim/anthy.c	2017-08-14 09:07:27.000000000 +0900
++++ uim-1.8.9-patched/uim/anthy.c	2022-10-11 09:09:10.961477632 +0900
+@@ -35,7 +35,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <ctype.h>
+-#include <anthy/anthy.h>
++#include <anthy-unicode-1.0/anthy/anthy.h>
+ 
+ #include "uim.h"
+ #include "uim-scm.h"
+--- uim-1.8.9/uim/anthy-utf8.c	2017-08-14 09:07:27.000000000 +0900
++++ uim-1.8.9-patched/uim/anthy-utf8.c	2022-10-11 09:58:37.750615950 +0900
+@@ -36,7 +36,7 @@
+ #include <string.h>
+ #include <ctype.h>
+ 
+-#include <anthy/anthy.h>
++#include <anthy-unicode-1.0/anthy/anthy.h>
+ 
+ #include "uim.h"
+ #include "uim-scm.h"
