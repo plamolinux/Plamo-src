@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="uim"
-vers="1.8.9_8414899"
-# + git commit 8414899
-url="https://github.com/uim/uim.git"
+vers="1.9.6"
+url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="uim"
+build=B1
+src="uim-${vers}"
 # Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
 # --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
 # 動作時には必要なさそう。
@@ -16,11 +15,11 @@ OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-
 # OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
 DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
 # anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
-patchfiles="uim-1.8.9-anthy-unicode.patch"
+#patchfiles="uim-1.8.9-anthy-unicode.patch"
+patchfiles="uim-1.9.6-anthy-unicode.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
-commit="8414899"
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -71,15 +70,15 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # autoreconf
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    #fi
 
-    # git 版だから必要な処理かも。> make-wc.sh
+    #autoreconf
+    if [ -f autogen.sh ] ; then
+       sh ./autogen.sh
+    fi
+
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed'
-    ./make-wc.sh --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -89,7 +88,7 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $B 
     export LDFLAGS='-Wl,--as-needed'
-    make -j1
+    make -j`nproc`
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -116,6 +115,13 @@ if [ $opt_package -eq 1 ] ; then
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
+
+  mkdir -p $P/install
+    cat <<"EOF" > $P/install/initpkg
+if [ -x /usr/bin/uim-module-manager ]; then
+	uim-module-manager --register anthy mozc
+fi
+EOF
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
