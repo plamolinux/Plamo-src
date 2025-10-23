@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wicd"
-commitid="db7214e"
+commitid="72fd6b3"
 vers="$(date +%Y%m%d)"
 url="https://git.launchpad.net/wicd"
 verify=""
