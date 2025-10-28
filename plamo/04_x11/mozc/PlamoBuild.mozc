@@ -7,12 +7,12 @@ url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="mozc"
 url2="https://github.com/e-kato/macuim.git"
 #OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
-patchfiles="mozc.patch bazel.patch"
+patchfiles="mozc.patch bazel.patch macuim_mozc_tool.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
@@ -176,6 +176,12 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     set -e
+
+    cd $W/macuim
+    if [ ! -f .macuim_mozc_tool.patch ]; then
+        patch -p1 < $W/macuim_mozc_tool.patch
+        touch .macuim_mozc_tool.patch
+    fi
 
     cd $B
 
