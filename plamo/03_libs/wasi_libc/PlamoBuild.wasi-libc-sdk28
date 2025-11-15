@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wasi_libc"
-vers="20241210"
-url="https://github.com/WebAssembly/wasi-libc.git"
-commitid="574b88da481569b65a237cb80daf9a2d5aeaf82d"
+vers="28"
+url="https://github.com/WebAssembly/wasi-libc/archive/refs/tags/wasi-sdk-${vers}.tar.gz"
+commitid=""
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="wasi-libc"
+src="wasi-libc-wasi-sdk-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
 DOCS="LICENSE LICENSE-APACHE LICENSE-APACHE-LLVM LICENSE-MIT README.md"
 patchfiles=""
