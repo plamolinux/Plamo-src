@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="lxqt_panel"
-vers="2.2.2"
+vers="2.3.0"
 url="https://github.com/lxqt/lxqt-panel/releases/download/${vers}/lxqt-panel-${vers}.tar.xz"
 verify=""
 digest=""
