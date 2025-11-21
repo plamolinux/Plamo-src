@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lightdm_gtk_greeter'
-vers='2.0.8'
+vers='2.0.9'
 url="https://github.com/Xubuntu/lightdm-gtk-greeter/releases/download/lightdm-gtk-greeter-${vers}/lightdm-gtk-greeter-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
@@ -18,7 +18,7 @@ OPT_CONFIG="--disable-static --enable-shared
 	    --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 
