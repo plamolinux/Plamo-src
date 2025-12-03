@@ -1,15 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.32.5981.102.g29e2b95"
-commitid="29e2b95"
+vers="2.32.5994.102"
+commitid="7cd777dbb"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="mozc"
-url2="https://github.com/e-kato/macuim.git"
 #OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
 patchfiles="mozc.patch bazel.patch macuim_mozc_tool.patch"
@@ -17,20 +16,31 @@ patchfiles="mozc.patch bazel.patch macuim_mozc_tool.patch"
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
 
-merge_ut_dictionaries_commit="e173cd106891d76e73263711036070c2b31d7f9d"
+# mozc-ut(arch linux)
+breakpad_commit="216cea7bca53fa441a3ee0d0f5fd339a3a894224"
+googletest_commit="b514bdc898e2951020cbdca1304b75f5950d1f59"
+gyp_commit="9ecf45e37677743503342ee4c6a76eaee80e4a7f"
+japanese_usage_dictionary_commit="e5b3425575734c323e1d947009dd74709437b684"
+wil_commit="fc5dbf55989fe20351c71d038a8d12de4b397a6d"
+protobuf_commit="7cc670c1809e704ebeba90fb430d50e009f36727"
+abseil_cpp_commit="4447c7562e3bc702ade25105912dce503f0c4010"
+merge_ut_dictionaries_commit="05942c4da7a4066882e8aa3c972bce8c880ba3cf"
 mozcdic_ut_alt_cannadic_commit="69d40eed4e9cf016384d9629920fefa199116ea2"
 mozcdic_ut_edict2_commit="4f82fc1003403874d9d4dd9adecfeff17f06a1f1"
-mozcdic_ut_jawiki_commit="95d6e3d24a3e22700b57b162bcd18c87b1d213e9"
+mozcdic_ut_jawiki_commit="17c5ca473b0b001460215fcd42c9cc520634516f"
 mozcdic_ut_neologd_commit="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
-mozcdic_ut_personal_names_commit="d0ad47deea54f3a6818efacd93e20ba5bac93213"
-mozcdic_ut_place_names_commit="5d91fc6fdc33f802174398ca208ded7f8c561427"
+mozcdic_ut_personal_names_commit="0310f591108cffdfc9e39ff56e17fb3bb188b2e0"
+mozcdic_ut_place_names_commit="b10b5c2c946e68f32cce4173cfd8c4676e4145b9"
 mozcdic_ut_skk_jisyo_commit="384ad926e306d5308839c6dedb63696f11703968"
-mozcdic_ut_sudachidict_commit="662ef1939eb6e9297d91abd18e53bbd0f8690914"
+mozcdic_ut_sudachidict_commit="33f9835cfafc85d6761037342debec0e7ae8aa17"
 
+# uim-mozc(arch linux)
 uimmozcrev="7beac7ba000e0459a4dc933f3873b521664d2665"
 
-jawiki_date="20251020"
+# mozc-ut(arch linux)
+jawiki_date="20251101"
 
+# fcitx5-mozc-ext-neologd(arch linux)
 dictext_commit="574160e"
 neologd_commit="abc61e3"
 ##############################################################
@@ -63,21 +73,43 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 
     git clone https://chromium.googlesource.com/breakpad/breakpad
+    cd breakpad
+    git checkout -b build $breakpad_commit
+
+    cd $W
     git clone https://github.com/google/googletest.git
+    cd googletest
+    git checkout -b build $googletest_commit
+
+    cd $W
     git clone https://chromium.googlesource.com/external/gyp
+    cd gyp
+    git checkout -b build $gyp_commit
+
+    cd $W
     git clone https://github.com/hiroyuki-komatsu/japanese-usage-dictionary.git
+    cd japanese-usage-dictionary
+    git checkout -b build $japanese_usage_dictionary_commit
+
+    cd $W
     git clone https://github.com/microsoft/wil.git
+    cd wil
+    git checkout -b build $wil_commit
+
+    cd $W
     git clone https://github.com/google/protobuf.git
+    cd protobuf
+    git checkout -b build $protobuf_commit
+
+    cd $W
     git clone https://github.com/abseil/abseil-cpp.git
-  
+    cd abseil-cpp
+    git checkout -b build $abseil_cpp_commit
+
     cd $W
     git clone https://github.com/e-kato/macuim.git
     cd macuim
     git checkout -b build $uimmozcrev
-    cd $S/src
-    echo "prepare uim-mozc"
-    cp -rf "$W/macuim/Mozc/uim" unix/
-    cp $W/BUILD.bazel unix/uim
 
     cd $W
     git clone https://github.com/reasonset/mozcdict-ext.git
@@ -160,9 +192,9 @@ if [ $opt_download -eq 1 ] ; then
     cd $W
     wget --timestamping https://dumps.wikimedia.org/jawiki/${jawiki_date}/jawiki-${jawiki_date}-pages-articles-multistream-index.txt.bz2
     wget --timestamping https://www.post.japanpost.jp/zipcode/dl/jigyosyo/zip/jigyosyo.zip
-    unzip -f jigyosyo.zip
+    unzip jigyosyo.zip
     wget --timestamping https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/ken_all.zip
-    unzip -f ken_all.zip
+    unzip ken_all.zip
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -183,24 +215,21 @@ if [ $opt_config -eq 1 ] ; then
         touch .macuim_mozc_tool.patch
     fi
 
-    cd $B
+    cd $B/src
+    echo "prepare uim-mozc"
+    cp -rf "$W/macuim/Mozc/uim" unix/
+    cp $W/BUILD.bazel unix/uim
 
+    cd $B
     patch -p1 -i $W/bazel.patch
     cd $B/src
     patch -p1 -i $W/mozc.patch
 
-#    cd $W
-#    SHA256_ZIP_CODE_KEN_ALL=$(sha256sum ken_all.zip | cut -d' ' -f1);
-#    SHA256_ZIP_CODE_JIGYOSYO=$(sha256sum jigyosyo.zip | cut -d' ' -f1);
-#
-#    cd $B
-#    sed -e "s|SHA256_ZIP_CODE_KEN_ALL = \(.*\)|SHA256_ZIP_CODE_KEN_ALL = \"${SHA256_ZIP_CODE_KEN_ALL}\"|" \
-#        -e "s|SHA256_ZIP_CODE_JIGYOSYO = \(.*\)|SHA256_ZIP_CODE_JIGYOSYO = \"${SHA256_ZIP_CODE_JIGYOSYO}\"|" \
-#        -i src/config.bzl src/MODULE.bazel
-
-    # Generate zip code seed
-    cd $B/src
     echo "Generating zip code seed..."
+    cd $B/src
+    echo "Reset dictionary09"
+    git checkout data/dictionary_oss/dictionary09.txt
+
     PYTHONPATH="$PWD:$PYTHONPATH" python dictionary/gen_zip_code_seed.py --zip_code="$W/KEN_ALL.CSV" --jigyosyo="$W/JIGYOSYO.CSV" >> data/dictionary_oss/dictionary09.txt
     echo "Done."
 
@@ -266,7 +295,7 @@ if [ $opt_config -eq 1 ] ; then
 
     python merge_dictionaries.py mozcdic-ut.txt
 
-    # Append the UT dictionary
+    echo "Append the UT dictionary"
     cat mozcdic-ut.txt >> $B/src/data/dictionary_oss/dictionary00.txt    
 
     set +e
@@ -284,16 +313,23 @@ if [ $opt_build -eq 1 ] ; then
     bazel build \
         --config oss_linux \
         --compilation_mode opt \
+	--cxxopt='-Wno-uninitialized -I/usr/include/uim' \
+	--host_cxxopt='-Wno-uninitialized -I/usr/include/uim' \
+	--experimental_cc_shared_library \
+	--verbose_failures \
         unix/fcitx5:fcitx5-mozc.so \
         server:mozc_server \
-        gui/tool:mozc_tool
+        gui/tool:mozc_tool \
+	unix/uim:uim-mozc \
+	unix/icons
 
-    bazel build unix/uim:uim-mozc unix/icons --config oss_linux --compilation_mode opt --cxxopt=-Wno-uninitialized --host_cxxopt=-Wno-uninitialized --cxxopt=-I/usr/include/uim --host_cxxopt=-Wno-uninitialized --host_cxxopt=-I/usr/include/uim --experimental_cc_shared_library --verbose_failures
     set +e
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
+
+# mozc
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B/src
 
@@ -323,9 +359,6 @@ if [ $opt_package -eq 1 ] ; then
   sed -i -e 's|^[ \t]*||g' Windows-Implementation-Library
   install -Dm644 Windows-Implementation-Library $docdir/mozc/Windows-Implementation-Library
 
-#  install -Dm755 bazel-bin/server/mozc_server "$P"/usr/lib/mozc/mozc_server
-#  install -Dm755 bazel-bin/gui/tool/mozc_tool "$P"/usr/lib/mozc/mozc_tool
-  
   cd $B/src
   export PREFIX="$P/usr"
   ../scripts/install_server_bazel
@@ -347,7 +380,7 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 $W/README.v2.0.generate-zipcode-dic $docdir/mozc/README.v2.0.generate-zipcode-dic
 
-  # addfiles のインストール
+  # install addfiles
   for add in $addfiles ; do
     cp $W/$add $docdir/mozc/$add
     gzip $docdir/mozc/$add
@@ -372,6 +405,7 @@ y
 1
 EOF
 
+# uim_mozc
   cd $B/src
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   install -D -m 755 bazel-bin/unix/uim/libuim-mozc.so "$P/usr/lib/uim/plugin/libuim-mozc.so"
@@ -401,110 +435,12 @@ y
 1
 EOF
 
+# fcitx5_mozc
   cd $B/src
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
 
-  # BSD-3-Clause
-  sed -n 1,29p unix/fcitx5/fcitx_key_translator.h > Fcitx5
-  sed -i -e 's|^\/\/[ ]\?||g' Fcitx5
-  install -Dm644 Fcitx5 $docdir/fcitx5-mozc/Fcitx5
-  # BSD-3-Clause
-  sed -n 67,94p data/installer/credits_en.html > Mozc
-  install -Dm644 Mozc $docdir/fcitx5-mozc/Mozc
-  # BSD-3-Clause
-  sed -n 317,344p data/installer/credits_en.html > Breakpad
-  install -Dm644 Breakpad $docdir/fcitx5-mozc/Breakpad
-  # NAIST-2003
-  sed -n 355,424p data/installer/credits_en.html > IPAdic
-  install -Dm644 IPAdic $docdir/fcitx5-mozc/IPAdic
-  # BSD-2-Clause
-  sed -n 435,457p data/installer/credits_en.html > Japanese-Usage-Dictionary
-  install -Dm644 Japanese-Usage-Dictionary $docdir/fcitx5-mozc/Japanese-Usage-Dictionary
-  # Public Domain Data
-  sed -n 468,470p data/installer/credits_en.html > Okinawa-Dictionary
-  install -Dm644 Okinawa-Dictionary $docdir/fcitx5-mozc/Okinawa-Dictionary
-  # BSD-3-Clause
-  sed -n 481,513p data/installer/credits_en.html > Protocol-Buffers
-  install -Dm644 Protocol-Buffers $docdir/fcitx5-mozc/Protocol-Buffers
-  # MIT
-  sed -n 698,704p data/installer/credits_en.html > Tamachi-Phonetic-Kanji-Alphabet
-  install -Dm644 Tamachi-Phonetic-Kanji-Alphabet $docdir/fcitx5-mozc/Tamachi-Phonetic-Kanji-Alphabet
-  # MIT
-  sed -n 762,782p data/installer/credits_en.html > Windows-Implementation-Library
-  sed -i -e 's|^[ \t]*||g' Windows-Implementation-Library
-  install -Dm644 Windows-Implementation-Library $docdir/fcitx5-mozc/Windows-Implementation-Library
-
-#  install -Dm755 bazel-bin/unix/fcitx5/fcitx5-mozc.so "$P"/usr/lib/fcitx5/fcitx5-mozc.so
-#  install -Dm644 unix/fcitx5/mozc-addon.conf "$P"/usr/share/fcitx5/addon/mozc.conf
-#  install -Dm644 unix/fcitx5/mozc.conf "$P"/usr/share/fcitx5/inputmethod/mozc.conf
-#
-#  for pofile in unix/fcitx5/po/*.po
-#  do
-#      filename=`basename ${pofile}`
-#      lang=${filename/.po/}
-#      mofile=${pofile/.po/.mo}
-#      msgfmt ${pofile} -o ${mofile}
-#      install -Dm644 ${mofile} "$P"/usr/share/locale/${lang}/LC_MESSAGES/fcitx5-mozc.mo
-#  done
-#
-#  msgfmt --xml -d unix/fcitx5/po/ --template unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml.in -o unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml
-#  install -Dm644 unix/fcitx5/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml "$P"/usr/share/metainfo/org.fcitx.Fcitx5.Addon.Mozc.metainfo.xml
-#
-#  cd bazel-bin/unix
-#
-#  set -e
-#  unzip -o icons.zip
-#
-#  install -Dm644 mozc.png                                     "$P"/usr/share/icons/hicolor/128x128/apps/org.fcitx.Fcitx5.fcitx_mozc.png
-#  install -Dm644 alpha_full.svg                               "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_full.svg
-#  install -Dm644 alpha_half.svg                               "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_half.svg
-#  install -Dm644 direct.svg                                   "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_direct.svg
-#  install -Dm644 hiragana.svg                                 "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_hiragana.svg
-#  install -Dm644 katakana_full.svg                            "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_full.svg
-#  install -Dm644 katakana_half.svg                            "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_half.svg
-#  install -Dm644 outlined/dictionary.svg                      "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_dictionary.svg
-#  install -Dm644 outlined/properties.svg                      "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_properties.svg
-#  install -Dm644 outlined/tool.svg                            "$P"/usr/share/icons/hicolor/scalable/apps/org.fcitx.Fcitx5.fcitx_mozc_tool.svg
-#
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc.png                       "$P"/usr/share/icons/hicolor/128x128/apps/fcitx_mozc.png
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_alpha_full.svg            "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_alpha_full.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_alpha_half.svg            "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_alpha_half.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_direct.svg                "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_direct.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_hiragana.svg              "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_hiragana.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_katakana_full.svg         "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_katakana_full.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_katakana_half.svg         "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_katakana_half.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_dictionary.svg            "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_dictionary.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_properties.svg            "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_properties.svg
-#  ln -s org.fcitx.Fcitx5.fcitx_mozc_tool.svg                  "$P"/usr/share/icons/hicolor/scalable/apps/fcitx_mozc_tool.svg
-#
-##  install -D -m 644 $B/src/data/images/product_icon_32bpp-128.png $P/usr/share/icons/hicolor/128x128/apps/org.fcitx.Fcitx5.fcitx_mozc.png
-#  install -D -m 644 $B/src/data/images/unix/ime_product_icon_opensource-32.png $P/usr/share/icons/hicolor/32x32/apps/org.fcitx.Fcitx5.fcitx_mozc.png
-#  install -D -m 644 $B/scripts/icons/ui-alpha_full.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_full.png
-#  install -D -m 644 $B/scripts/icons/ui-alpha_half.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_alpha_half.png
-#  install -D -m 644 $B/scripts/icons/ui-direct.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_direct.png
-#  install -D -m 644 $B/scripts/icons/ui-hiragana.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_hiragana.png
-#  install -D -m 644 $B/scripts/icons/ui-katakana_full.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_full.png
-#install -D -m 644 $B/scripts/icons/ui-katakana_half.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_katakana_half.png
-#install -D -m 644 $B/scripts/icons/ui-dictionary.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_dictionary.png
-#install -D -m 644 $B/scripts/icons/ui-properties.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_properties.png
-#install -D -m 644 $B/scripts/icons/ui-tool.png $P/usr/share/icons/hicolor/48x48/apps/org.fcitx.Fcitx5.fcitx_mozc_tool.png
-#
-##  ln -sf org.fcitx.Fcitx5.fcitx_mozc.png $P/usr/share/icons/hicolor/128x128/apps/fcitx_mozc.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc.png $P/usr/share/icons/hicolor/32x32/apps/fcitx_mozc.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_alpha_full.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_alpha_full.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_alpha_half.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_alpha_half.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_direct.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_direct.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_hiragana.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_hiragana.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_katakana_full.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_katakana_full.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_katakana_half.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_katakana_half.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_dictionary.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_dictionary.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_properties.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_properties.png
-#  ln -sf org.fcitx.Fcitx5.fcitx_mozc_tool.png $P/usr/share/icons/hicolor/48x48/apps/fcitx_mozc_tool.png
-
-  cd $B/src
   export PREFIX="$P/usr"
   ../scripts/install_fcitx5_bazel
-  set +e
 
   install_tweak
   convert_links
@@ -515,34 +451,9 @@ y
 1
 EOF
  
+# emacs_mozc
   cd $B/src
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-
-  # BSD-3-Clause
-  sed -n 67,94p data/installer/credits_en.html > Mozc
-  install -Dm644 Mozc $docdir/emacs-mozc/Mozc
-  # BSD-3-Clause
-  sed -n 317,344p data/installer/credits_en.html > Breakpad
-  install -Dm644 Breakpad $docdir/emacs-mozc/Breakpad
-  # NAIST-2003
-  sed -n 355,424p data/installer/credits_en.html > IPAdic
-  install -Dm644 IPAdic $docdir/emacs-mozc/IPAdic
-  # BSD-2-Clause
-  sed -n 435,457p data/installer/credits_en.html > Japanese-Usage-Dictionary
-  install -Dm644 Japanese-Usage-Dictionary $docdir/emacs-mozc/Japanese-Usage-Dictionary
-  # Public Domain Data
-  sed -n 468,470p data/installer/credits_en.html > Okinawa-Dictionary
-  install -Dm644 Okinawa-Dictionary $docdir/emacs-mozc/Okinawa-Dictionary
-  # BSD-3-Clause
-  sed -n 481,513p data/installer/credits_en.html > Protocol-Buffers
-  install -Dm644 Protocol-Buffers $docdir/emacs-mozc/Protocol-Buffers
-  # MIT
-  sed -n 698,704p data/installer/credits_en.html > Tamachi-Phonetic-Kanji-Alphabet
-  install -Dm644 Tamachi-Phonetic-Kanji-Alphabet $docdir/emacs-mozc/Tamachi-Phonetic-Kanji-Alphabet
-  # MIT
-  sed -n 762,782p data/installer/credits_en.html > Windows-Implementation-Library
-  sed -i -e 's|^[ \t]*||g' Windows-Implementation-Library
-  install -Dm644 Windows-Implementation-Library $docdir/emacs-mozc/Windows-Implementation-Library
 
   install -Dm755 bazel-bin/unix/emacs/mozc_emacs_helper "$P"/usr/bin/mozc_emacs_helper
   install -Dm644 unix/emacs/mozc.el "$P"/usr/share/emacs/site-lisp/mozc.el
