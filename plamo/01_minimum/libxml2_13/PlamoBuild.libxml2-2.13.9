@@ -8,9 +8,9 @@ digest="sha256sum:a2c9ae7b770da34860050c309f903221c67830c86e4a7e760692b803df9514
 arch=`uname -m`
 build=B1
 src="libxml2-${vers}"
-OPT_CONFIG="--buildtype=release -D http=true -D legacy=true -D python=true -D icu=disabled"
+OPT_CONFIG="--disable-static --sysconfdir=/etc --with-history --with-threads --without-icu --with-python --with-legacy --with-ftp --docdir=/usr/share/doc/${src}"
 DOCS="NEWS README.md README.zOS doc"
-patchfiles="0001-meson-Build-fixes.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -70,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,7 +79,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -91,16 +92,17 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  DESTDIR=$P ninja install
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
-  rm -rfv $P/usr/bin
   rm -rfv $P/usr/include
-  rm -rfv $P/usr/lib/{cmake,pkgconfig}
-  rm -rfv $P/usr/share/doc/libxml2
-  rm -rfv $P/usr/share/man
-  rm -v $P/usr/lib/libxml2.so
-  rm -rfv $P/usr/share/gtk-doc
+  rm -rfv $P/usr/lib/pkgconfig
+  rm -rfv $P/usr/lib/libxml2.so
+  rm -rfv $P/usr/lib/cmake
   rm -rfv $P/usr/share/aclocal
+  rm -rfv $P/usr/bin
+  rm -rfv $P/usr/share/man
+  rm -rfv $P/usr/share/gtk-doc
 
 ################################
 #      install tweaks
@@ -114,6 +116,8 @@ if [ $opt_package -eq 1 ] ; then
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
+
+  rm -rfv $P/var/local
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
