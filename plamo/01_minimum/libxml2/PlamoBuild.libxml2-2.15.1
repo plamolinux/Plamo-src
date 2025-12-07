@@ -4,11 +4,11 @@ pkgbase="libxml2"
 vers="2.15.1"
 url="https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.1.tar.xz"
 verify=""
-digest=""
+digest="sha256sum:c008bac08fd5c7b4a87f7b8a71f283fa581d80d80ff8d2efd3b26224c39bc54c"
 arch=`uname -m`
 build=B1
-src="libxml2-2.15.1"
-OPT_CONFIG="--buildtype=release"
+src="libxml2-${vers}"
+OPT_CONFIG="--buildtype=release -D icu=disabled -D legacy=enabled"
 DOCS="NEWS README.md README.zOS doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
