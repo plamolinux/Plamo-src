@@ -15,6 +15,15 @@ patchfiles=""
 addfiles=""
 compress=tzst
 ##############################################################
+# compat lib
+compat_vers="2.13.9"
+compat_url="https://download.gnome.org/sources/libxml2/${compat_vers%.*}/libxml2-${compat_vers}.tar.xz"
+verify=""
+compat_digest="sha256sum:a2c9ae7b770da34860050c309f903221c67830c86e4a7e760692b803df95143a"
+compat_src="libxml2-${compat_vers}"
+compat_OPT_CONFIG="--disable-static --sysconfdir=/etc --with-history --with-threads --without-icu --with-python --with-legacy --with-ftp --docdir=/usr/share/doc/${src}"
+compat_patchfiles=""
+####
 
 source /usr/share/plamobuild_functions.sh
 
@@ -24,6 +33,71 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+compat_download() {
+    if [ ! -f ${compat_url##*/} ]; then
+	wget $compat_url
+    fi
+    IFS=":"
+    set -- $compat_digest
+    sum=$( $1 ${compat_url##*/} | awk '{ print $1 }')
+    IFS=$' \t\n'
+    if [ $sum != $2 ]; then
+	exit 1
+    fi
+    tar xvf ${compat_url##*/}
+}
+
+B_compat="/tmp/build2"
+
+compat_config() {
+    for f in $compat_patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+    if [ -d $B_compat ] ; then rm -rf $B_compat ; fi ; mkdir -p $B_compat 
+    cd $W/$compat_src
+    for patch in $compat_patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    cd $B_compat
+    export LDFLAGS='-Wl,--as-needed'
+    $W/$compat_src/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${compat_OPT_CONFIG}
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+}
+
+compat_build() {
+    cd $B_compat
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+}
+
+P_compat=$W/work2
+
+compat_install() {
+  check_root
+  if [ -d $P_compat ] ; then rm -rf $P_compat ; fi ; mkdir -p $P_compat
+  cd $B_compat
+
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P_compat
+
+  cp -av $P_compat/usr/lib/libxml2.so.* $P/usr/lib/
+  cp -av $P_compat/usr/lib/python3.11 $P/usr/lib/
+}
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -40,6 +114,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    compat_download
 fi
 
 
@@ -64,9 +139,6 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
@@ -75,6 +147,8 @@ if [ $opt_config -eq 1 ] ; then
         echo "configure error. $0 script stop"
         exit 255
     fi
+
+    compat_config
 fi
 
 if [ $opt_build -eq 1 ] ; then
@@ -84,6 +158,8 @@ if [ $opt_build -eq 1 ] ; then
         echo "build error. $0 script stop"
         exit 255
     fi
+
+    compat_build
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -92,6 +168,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+
+  compat_install
 
 ################################
 #      install tweaks
