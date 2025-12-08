@@ -95,7 +95,7 @@ compat_install() {
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P_compat
 
-  cp -v $P_compat/usr/lib/libxml2.so.* $P/usr/lib/
+  cp -av $P_compat/usr/lib/libxml2.so.* $P/usr/lib/
   cp -av $P_compat/usr/lib/python3.11 $P/usr/lib/
 }
 
