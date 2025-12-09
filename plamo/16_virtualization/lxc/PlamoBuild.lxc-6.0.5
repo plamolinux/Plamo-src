@@ -156,6 +156,9 @@ if [ $opt_package -eq 1 ] ; then
     cd $W/template_build
     make install DESTDIR=$P
 
+    mkdir -pv $P/lib
+    mv $P/usr/lib/security $P/lib/security
+
     ################################
     #      install tweaks
     #  strip binaries, delete locale except ja, compress man, 
