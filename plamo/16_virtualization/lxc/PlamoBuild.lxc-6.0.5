@@ -8,7 +8,7 @@ template="https://github.com/lxc/lxc-templates.git"
 verify="${url}.asc"
 #template_verify="${template}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 template_src="lxc-templates"
 OPT_CONFIG=(
@@ -155,6 +155,9 @@ if [ $opt_package -eq 1 ] ; then
 
     cd $W/template_build
     make install DESTDIR=$P
+
+    mkdir -pv $P/lib
+    mv $P/usr/lib/security $P/lib/security
 
     ################################
     #      install tweaks
