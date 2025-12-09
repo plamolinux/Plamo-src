@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="urllib3"
-vers="1.26.19"
-url="https://github.com/urllib3/urllib3/releases/download/${vers}/urllib3-${vers}.tar.gz"
+vers="2.6.0"
+url="https://files.pythonhosted.org/packages/source/u/urllib3/urllib3-2.6.0.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="urllib3-${vers}"
+src="urllib3-2.6.0"
 OPT_CONFIG=""
-DOCS="LICENSE.txt README.rst dev-requirements.txt docs"
+DOCS="LICENSE.txt README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -66,7 +66,9 @@ if [ $opt_config -eq 1 ] ; then
 
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    python setup.py config    
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -75,7 +77,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    python setup.py build
+    python -m build --wheel --no-isolation --skip-dependency-check
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -87,7 +89,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
