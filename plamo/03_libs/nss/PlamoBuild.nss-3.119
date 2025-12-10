@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nss'
-vers="3.117"
+vers="3.119"
 url="https://archive.mozilla.org/pub/security/${pkgbase}/releases/NSS_${vers//./_}_RTM/src/${pkgbase}-${vers}.tar.gz"
 verify=""
-digest="md5sum:1d5fa716ad3a7e920297d9f30a4271ef"
+digest="md5sum:2ae4f7eadd6bb7117d0546823a9390b8"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
