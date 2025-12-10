@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxslt'
-vers='1.1.43'
+vers='1.1.45'
 url="https://download.gnome.org/sources/libxslt/${vers%.*}/libxslt-${vers}.tar.xz"
-digest="md5sum:5dc0179c81be7a3082b43030ecfdebd4"
+digest="md5sum:84bb3f6ba7f5ee98af5dcd72e828c73e"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
