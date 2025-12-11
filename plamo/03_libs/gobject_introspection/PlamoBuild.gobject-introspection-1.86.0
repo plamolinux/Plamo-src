@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gobject_introspection"
-vers="1.84.0"
+vers="1.86.0"
 url="https://download.gnome.org/sources/gobject-introspection/${vers%.*}/gobject-introspection-${vers}.tar.xz"
 verify=""
-digest="sha256sum:945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779"
+digest="md5sum:fa0f2ae76868bf35ff725f940d75ec16"
 arch=`uname -m`
 build=B1
 src="gobject-introspection-${vers}"
@@ -15,8 +15,15 @@ patchfiles=""
 addfiles=""
 compress=tzst
 ##############################################################
+# 同時にインストールされる glib のバージョン
+glib_vers="2.86.3"
+glib_url="https://download.gnome.org/sources/glib/${glib_vers%.*}/glib-${glib_vers}.tar.xz"
 
 source /usr/share/plamobuild_functions.sh
+
+glib_src="$W/glib-${glib_vers}"
+
+OPT_CONFIG="$OPT_CONFIG -D glib_src_dir=${glib_src}"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -40,6 +47,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    if [ ! -f ${glib_url##*/} ]; then
+	wget $glib_url
+	tar xvf ${glib_url##*/}
+    fi
 fi
 
 
