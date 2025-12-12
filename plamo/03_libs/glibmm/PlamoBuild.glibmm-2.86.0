@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glibmm"
-vers="2.84.0"
+vers="2.86.0"
 url="https://download.gnome.org/sources/glibmm/${vers%.*}/glibmm-${vers}.tar.xz"
 verify=""
-digest="md5sum:96ef281ceb794cf98f406612b61a9146"
+digest="md5sum:fb392e970d77bdacd0cf0899c4d4a47d"
 arch=`uname -m`
 build=B1
 src="glibmm-${vers}"
