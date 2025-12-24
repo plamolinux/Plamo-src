@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wicd"
-commitid="c32fa28"
+commitid="7775db5"
 vers="$(date +%Y%m%d)"
 url="https://git.launchpad.net/wicd"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="wicd"
 OPT_CONFIG=""
 DOCS="AUTHORS HOWTO_RELEASE INSTALL LICENSE NEWS README.rst docs"
