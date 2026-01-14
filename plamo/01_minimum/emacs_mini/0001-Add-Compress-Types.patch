@@ -1,17 +1,17 @@
-From 9c05ff7658f7df2ea648410b02479df4bfa1d9e1 Mon Sep 17 00:00:00 2001
+From afadef92243524d91fec9425d72b284b8fdf6ade Mon Sep 17 00:00:00 2001
 From: KATOH Yasufumi <karma@jazz.email.ne.jp>
-Date: Fri, 2 Feb 2024 21:51:49 +0900
-Subject: [PATCH] Add compress type for Plamo Linux
+Date: Tue, 13 Jan 2026 22:30:55 +0900
+Subject: [PATCH] Add Compress Types
 
 ---
- lisp/eshell/esh-util.el | 2 +-
- lisp/ibuffer.el         | 2 +-
- lisp/ldefs-boot.el      | 2 +-
- lisp/pcmpl-gnu.el       | 2 +-
+ plamo/06_xapps/emacs/emacs-30.2/lisp/eshell/esh-util.el | 2 +-
+ plamo/06_xapps/emacs/emacs-30.2/lisp/ibuffer.el         | 2 +-
+ plamo/06_xapps/emacs/emacs-30.2/lisp/ldefs-boot.el      | 2 +-
+ plamo/06_xapps/emacs/emacs-30.2/lisp/pcmpl-gnu.el       | 2 +-
  4 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/lisp/eshell/esh-util.el b/lisp/eshell/esh-util.el
-index 163577f..c9f0ef8 100644
+index bb53586b..c988beb8 100644
 --- a/lisp/eshell/esh-util.el
 +++ b/lisp/eshell/esh-util.el
 @@ -72,7 +72,7 @@ Setting this to nil is offered as an aid to debugging only."
@@ -24,7 +24,7 @@ index 163577f..c9f0ef8 100644
    :version "24.1"			; added xz
    :type 'regexp)
 diff --git a/lisp/ibuffer.el b/lisp/ibuffer.el
-index 26358bd..bf7833d 100644
+index 438a4189..a1d954dd 100644
 --- a/lisp/ibuffer.el
 +++ b/lisp/ibuffer.el
 @@ -321,7 +321,7 @@ directory, like `default-directory'."
@@ -37,10 +37,10 @@ index 26358bd..bf7833d 100644
    :version "24.1"                       ; added xz
    :type 'regexp)
 diff --git a/lisp/ldefs-boot.el b/lisp/ldefs-boot.el
-index 16a9df2..5785c38 100644
+index 6a56cb08..5f8a81e5 100644
 --- a/lisp/ldefs-boot.el
 +++ b/lisp/ldefs-boot.el
-@@ -10714,7 +10714,7 @@ To switch to a new list of tags tables, setting this variable is sufficient.
+@@ -11030,7 +11030,7 @@ To switch to a new list of tags tables, setting this variable is sufficient.
  If you set this variable, do not also set `tags-file-name'.
  Use the `etags' program to make a tags table file.")
  (custom-autoload 'tags-table-list "etags" t)
@@ -50,7 +50,7 @@ index 16a9df2..5785c38 100644
  An empty string means search the non-compressed file.")
  (custom-autoload 'tags-compression-info-list "etags" t)
 diff --git a/lisp/pcmpl-gnu.el b/lisp/pcmpl-gnu.el
-index fcc4ab4..2816d0b 100644
+index 6c0e8516..254fd323 100644
 --- a/lisp/pcmpl-gnu.el
 +++ b/lisp/pcmpl-gnu.el
 @@ -160,7 +160,7 @@ Return the new list."
@@ -63,5 +63,5 @@ index fcc4ab4..2816d0b 100644
    :version "24.3"                       ; added xz
    :type 'regexp)
 -- 
-2.41.0
+2.50.1
 
