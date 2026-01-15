@@ -2,12 +2,12 @@
 ##############################################################
 pkgbase="pluggy"
 vers="1.6.0"
-url="https://files.pythonhosted.org/packages/source/p/pluggy/pluggy-1.6.0.tar.gz"
+url="https://files.pythonhosted.org/packages/source/p/pluggy/pluggy-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
-src="pluggy-1.6.0"
+build=B2
+src="pluggy-${vers}"
 OPT_CONFIG=""
 DOCS=".readthedocs.yml CHANGELOG.rst LICENSE README.rst changelog docs"
 patchfiles=""
