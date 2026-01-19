@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="fcitx5_configtool"
-vers="5.1.9"
-url="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-${vers}.tar.zst"
-verify="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-${vers}.tar.zst.sig"
+vers="5.1.8"
+url="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-5.1.8.tar.zst"
+verify="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-5.1.8.tar.zst.sig"
 digest=""
 arch=`uname -m`
 build=B2
-src="fcitx5-configtool-${vers}"
+src="fcitx5-configtool-5.1.8"
 OPT_CONFIG="-DUSE_QT6=On -DKDE_INSTALL_USE_QT_SYS_PATHS=ON -DENABLE_KCM=OFF -DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=/usr/lib"
 DOCS="LICENSES README"
 patchfiles=""
