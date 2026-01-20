@@ -6,7 +6,7 @@ url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
 digest="md5sum:cbbbbb20f7748b946b27a3dd88409098"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-v${vers}"
 OPT_CONFIG="--shared-brotli --shared-libuv --shared-cares --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
