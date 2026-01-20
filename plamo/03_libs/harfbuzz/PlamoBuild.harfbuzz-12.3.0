@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="harfbuzz"
-vers="8.3.0"
+vers="12.3.0"
 url="https://github.com/harfbuzz/harfbuzz/releases/download/${vers}/harfbuzz-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="harfbuzz-${vers}"
 OPT_CONFIG="--buildtype=release 
   -Dglib=enabled 
@@ -16,7 +16,7 @@ OPT_CONFIG="--buildtype=release
   -Dtests=disabled 
   -Dbenchmark=disabled"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README README.md README.python.md THANKS docs gtk-doc.make"
-patchfiles=""
+patchfiles="CVE-2026-22693.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
