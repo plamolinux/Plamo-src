@@ -1,16 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='yatex'
-vers='1.80'
+vers='1.84'
 url="https://www.yatex.org/yatex${vers}.tar.gz"
-verify="https://www.yatex.org/yatex${vers}_tar_gz.asc"
+#verify="https://www.yatex.org/yatex${vers}_tar_gz.asc"
+digest="sha256sum:ca5ea387e16cf4bbd28e66f8a446578183138b4b5ee987c84b282939593f4c4b"
 arch=`uname -m`
 build=B1
 src="yatex${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='00readme install readme.meadow.j'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
