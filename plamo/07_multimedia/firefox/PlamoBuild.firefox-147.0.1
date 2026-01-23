@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="147.0"
+vers="147.0.1"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -82,9 +82,6 @@ if [ $opt_config -eq 1 ] ; then
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
 
-  # for current ICU
-  sed -e 's/checkImpl/checkFFImpl/g' -i js/src/vm/JSContext*.h
-
   # branding
   #
   sed -i \
@@ -119,24 +116,13 @@ if [ $opt_config -eq 1 ] ; then
       fi
   fi
 
-  for p in toml pysolfc tomli-w
-  do
-      pip3 list | grep $p
-      if [ $? -ne 0 ]; then
-          pip3 install --user $p
-      fi
-  done
-
-  cd $S
-  sed -i '/ROOT_CLIP_CHAIN/d' gfx/webrender_bindings/webrender_ffi.h
-
 fi
 
 if [ $opt_build -eq 1 ] ; then
   cd $S
   export PATH="$HOME/.cargo/bin:$PATH"
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=pip
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
   export MOZ_ENABLE_FULL_SYMBOLS=1
   # disable desktop notification (? maybe...)
   export MOZ_NOSPAM=1
@@ -158,7 +144,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $S
   export MOZBUILD_STATE_PATH=${PWD}/mozbuild
-  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system
+  export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none
   DESTDIR=$P ./mach install
 
   # plugin
