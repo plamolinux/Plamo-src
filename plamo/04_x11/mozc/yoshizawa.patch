@@ -1,0 +1,21 @@
+diff -urpN macuim.orig/Mozc/uim/mozc.cc macuim/Mozc/uim/mozc.cc
+--- macuim.orig/Mozc/uim/mozc.cc	2026-01-25 09:05:56.630032661 +0900
++++ macuim/Mozc/uim/mozc.cc	2026-01-25 09:28:48.134398429 +0900
+@@ -992,7 +992,7 @@ set_composition_mode(uim_lisp mc_, uim_l
+     update_all(mc_, id);
+     uim_scm_callf("mozc-context-set-on!", "oo", mc_, uim_scm_f());
+   } else {
+-    command.set_type(commands::SessionCommand::SWITCH_INPUT_MODE);
++    command.set_type(commands::SessionCommand::SWITCH_COMPOSITION_MODE);
+     command.set_composition_mode(mode);
+     context_slot[id].session->SendCommand(command, context_slot[id].output);
+     context_slot[id].currentMode = mode; /* don't set this with DIRECT mode */
+@@ -1008,7 +1008,7 @@ set_composition_on(uim_lisp id_)
+   int id = C_INT(id_);
+   commands::SessionCommand command;
+ 
+-  command.set_type(commands::SessionCommand::SWITCH_INPUT_MODE);
++  command.set_type(commands::SessionCommand::SWITCH_COMPOSITION_MODE);
+   command.set_composition_mode(context_slot[id].currentMode);
+   context_slot[id].session->SendCommand(command, context_slot[id].output);
+ 
