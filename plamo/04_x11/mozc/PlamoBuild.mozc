@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="2.32.5994.102"
-commitid="7cd777dbb"
+vers="3.33.6079.2"
+commitid="acc6b842"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
@@ -11,7 +11,7 @@ build=B1
 src="mozc"
 #OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
-patchfiles="mozc.patch bazel.patch macuim_mozc_tool.patch"
+patchfiles="mozc.patch bazel.patch macuim_mozc_tool.patch yoshizawa.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
@@ -26,11 +26,11 @@ protobuf_commit="7cc670c1809e704ebeba90fb430d50e009f36727"
 abseil_cpp_commit="4447c7562e3bc702ade25105912dce503f0c4010"
 merge_ut_dictionaries_commit="05942c4da7a4066882e8aa3c972bce8c880ba3cf"
 mozcdic_ut_alt_cannadic_commit="69d40eed4e9cf016384d9629920fefa199116ea2"
-mozcdic_ut_edict2_commit="4f82fc1003403874d9d4dd9adecfeff17f06a1f1"
-mozcdic_ut_jawiki_commit="17c5ca473b0b001460215fcd42c9cc520634516f"
+mozcdic_ut_edict2_commit="aa2decff870dd341ac2ddc20b453f27fc2df3721"
+mozcdic_ut_jawiki_commit="4590e06f23071be2850b7d53a7fe73728a2572ad"
 mozcdic_ut_neologd_commit="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
-mozcdic_ut_personal_names_commit="0310f591108cffdfc9e39ff56e17fb3bb188b2e0"
-mozcdic_ut_place_names_commit="b10b5c2c946e68f32cce4173cfd8c4676e4145b9"
+mozcdic_ut_personal_names_commit="a64659ba0c8ee34170f09d7fa21dfd5cb5005296"
+mozcdic_ut_place_names_commit="2748c881573e4e33e2c20e3ec61dba7e59e8bf9d"
 mozcdic_ut_skk_jisyo_commit="384ad926e306d5308839c6dedb63696f11703968"
 mozcdic_ut_sudachidict_commit="33f9835cfafc85d6761037342debec0e7ae8aa17"
 
@@ -38,7 +38,7 @@ mozcdic_ut_sudachidict_commit="33f9835cfafc85d6761037342debec0e7ae8aa17"
 uimmozcrev="7beac7ba000e0459a4dc933f3873b521664d2665"
 
 # mozc-ut(arch linux)
-jawiki_date="20251101"
+jawiki_date="20260101"
 
 # fcitx5-mozc-ext-neologd(arch linux)
 dictext_commit="574160e"
@@ -214,6 +214,12 @@ if [ $opt_config -eq 1 ] ; then
         patch -p1 < $W/macuim_mozc_tool.patch
         touch .macuim_mozc_tool.patch
     fi
+
+    if [ ! -f .yoshizawa.patch ]; then
+        patch -p1 < $W/yoshizawa.patch
+        touch .yoshizawa.patch
+    fi
+
 
     cd $B/src
     echo "prepare uim-mozc"
