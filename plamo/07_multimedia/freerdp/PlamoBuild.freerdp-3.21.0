@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="freerdp"
-vers="2.11.5"
+vers="3.21.0"
 url="https://github.com/FreeRDP/FreeRDP/releases/download/${vers}/freerdp-${vers}.tar.gz"
 verify="${url}.sha256"
 digest=""
@@ -9,28 +9,37 @@ arch=`uname -m`
 build=B1
 src="freerdp-${vers}"
 OPT_CONFIG="
-        -DCHANNEL_URBDRC_CLIENT=ON
-	-DCMAKE_BUILD_TYPE=None
+	-DCHANNEL_URBDRC_CLIENT=ON
+	-DCMAKE_BUILD_TYPE=Release
 	-DWITH_SKIP_INSTALL_RPATH=ON
-	-DWITH_ALSA=ON
-        -DWITH_CHANNELS=ON
-        -DWITH_CLIENT_CHANNELS=ON
-        -DWITH_CUPS=ON
-        -DWITH_DSP_FFMPEG=ON
-        -DWITH_FFMPEG=ON
-	-DWITH_FUSE=ON
-	-DWITH_ICU=ON
-        -DWITH_JPEG=ON
-        -DWITH_PCSC=ON
-        -DWITH_PULSE=ON
-        -DWITH_SERVER=ON
-        -DWITH_SERVER_CHANNELS=ON
-	-DWITH_SYSTEMD=OFF
-        -DWITH_SWSCALE=ON
-	-DWITH_WAYLAND=ON
-	-DWITH_WINPR_TOOLS=ON
-	-DWITH_X11=ON
-        -Wno-dev"
+	-D WINPR_UTILS_IMAGE_JPEG=ON
+	-D WINPR_UTILS_IMAGE_PNG=ON
+	-D WINPR_UTILS_IMAGE_WEBP=ON
+	-D WITH_ALSA=ON
+	-D WITH_BINARY_VERSIONING=ON  # prevent file conflicts with freerdp2
+	-D WITH_CHANNELS=ON
+	-D WITH_CLIENT_CHANNELS=ON
+	-D WITH_CLIENT_SDL3=OFF
+	-D WITH_CLIENT_SDL2=OFF
+	-D WITH_CUPS=ON
+	-D WITH_DSP_FFMPEG=ON
+	-D WITH_FFMPEG=ON
+	-D WITH_FUSE=ON
+	-D WITH_ICU=ON
+	-D WITH_JPEG=ON
+	-D WITH_PCSC=ON
+	-D WITH_PULSE=ON
+	-D WITH_SERVER=ON
+	-D WITH_SERVER_CHANNELS=ON
+	-D WITH_SWSCALE=ON
+	-D WITH_SYSTEMD=OFF
+	-D WITH_VAAPI=ON
+	-D WITH_VERBOSE_WINPR_ASSERT=OFF
+	-D WITH_WAYLAND=ON
+	-D WITH_WINPR_TOOLS=ON
+	-D WITH_X11=ON
+	-G Ninja
+	-W no-dev"
 DOCS="ChangeLog LICENSE README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
