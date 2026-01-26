@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="net_snmp"
-vers="5.9.5.2"
-url="https://downloads.sourceforge.net/project/net-snmp/net-snmp/${vers}/net-snmp-${vers}.tar.gz"
-verify="${url}.asc"
+vers="5.9"
+url="https://jaist.dl.sourceforge.net/project/net-snmp/net-snmp/5.9/net-snmp-5.9.tar.gz"
+verify=""
 digest=""
 arch=`uname -m`
-build=B1
-src="net-snmp-${vers}"
+build=B4
+src="net-snmp-5.9"
 OPT_CONFIG='--enable-shared --disable-static --enable-ucd-snmp-compatibility  --enable-ipv6   --with-python-modules  --with-default-snmp-version=3  '
 DOCS="AGENT.txt COPYING ChangeLog INSTALL NEWS README README.Panasonic_AM3X.txt README.agent-mibs README.agentx README.aix README.hpux11 README.irix README.krb5 README.osX README.snmpv3 README.solaris README.sql README.systemd README.thread README.tru64 README.win32 TODO doc"
 patchfiles=""
