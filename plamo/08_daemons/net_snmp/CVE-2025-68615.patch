@@ -1,0 +1,27 @@
+Description: snmptrapd: Fix out-of-bounds trapOid[] accesses
+ Fixes: https://issues.oss-fuzz.com/issues/457106694
+ Fixes: https://issues.oss-fuzz.com/issues/458668421
+ Fixes: https://issues.oss-fuzz.com/issues/458876071
+ -
+ Fixes: CVE-2025-68615
+Author: Bart Van Assche <bvanassche@acm.org>
+Origin: upstream, https://github.com/net-snmp/net-snmp/commit/4a201ac239d2cedff32a9205d389fdb523487878
+Bug-Debian: https://bugs.debian.org/1123861
+Applied-Upstream: 5.9.5
+Reviewed-by: Craig Small <csmall@debian.org>
+Last-Update: 2025-12-28
+--- a/apps/snmptrapd_handlers.c
++++ b/apps/snmptrapd_handlers.c
+@@ -1112,6 +1112,12 @@
+ 	     */
+             if (pdu->trap_type == SNMP_TRAP_ENTERPRISESPECIFIC) {
+                 trapOidLen = pdu->enterprise_length;
++                /*
++                 * Drop packets that would trigger an out-of-bounds trapOid[]
++                 * access.
++                 */
++                if (trapOidLen < 1 || trapOidLen > OID_LENGTH(trapOid) - 2)
++                    return 1;
+                 memcpy(trapOid, pdu->enterprise, sizeof(oid) * trapOidLen);
+                 if (trapOid[trapOidLen - 1] != 0) {
+                     trapOid[trapOidLen++] = 0;
