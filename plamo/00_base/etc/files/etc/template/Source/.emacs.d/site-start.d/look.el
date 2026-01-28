@@ -31,7 +31,7 @@
 	    ;;; フォントのスケーラブルをしない (有効?=>emacs23
 	    ;(setq scalable-fonts-allowed nil)
 	    ;;; tool-bar を消す
-	    ;(tool-bar-mode nil)
+	    ;(tool-bar-mode 0)
 	    (menu-bar-mode 1)
 	    ;;; ツールバーのshadowとmarginの設定
 	    ;;; (デフォルトにしておかないとMewの時の挙動が変:-P)
