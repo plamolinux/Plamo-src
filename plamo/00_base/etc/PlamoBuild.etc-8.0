@@ -3,11 +3,11 @@
 pkgbase='etc'
 vers='8.0'
 url=""
-iana_vers="20240912"
+iana_vers="20251215"
 iana_url="https://github.com/Mic92/iana-etc/releases/download/${iana_vers}/iana-etc-${iana_vers}.tar.gz"
 verify=""
 arch=noarch
-build=B1
+build=B2
 src="files"
 OPT_CONFIG=''
 DOCS=''
