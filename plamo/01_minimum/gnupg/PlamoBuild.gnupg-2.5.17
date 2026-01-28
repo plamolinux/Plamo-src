@@ -3,7 +3,7 @@
 pkgbase='gnupg'
 vers="2.5.17"
 url="https://${pkgbase}.org/ftp/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:5bc13825904d5f515c0fffd9e7d01bc5"
+digest="md5sum:4b409385749843387db3b3a852a35775"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
