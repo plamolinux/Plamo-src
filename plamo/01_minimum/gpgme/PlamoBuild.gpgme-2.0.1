@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gpgme'
-vers='1.9.0'
-url="ftp://ftp.gnupg.org/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+vers="2.0.1"
+url="https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
 DOCS='AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'

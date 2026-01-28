@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='gnupg'
-vers="2.4.4"
+vers="2.5.17"
 url="https://${pkgbase}.org/ftp/gcrypt/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-verify="${url}.sig"
+digest="md5sum:4b409385749843387db3b3a852a35775"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
