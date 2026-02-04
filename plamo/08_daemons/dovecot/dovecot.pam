@@ -1,2 +1,3 @@
-auth		required	pam_unix.so nullok
-account	required	pam_unix.so
+auth     include system-auth
+account  include system-account
+password include system-password

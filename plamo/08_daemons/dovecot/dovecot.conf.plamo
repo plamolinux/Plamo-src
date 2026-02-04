@@ -1,16 +1,21 @@
 # Dovecot sample configration for plamo
 # This is SAMPLE.
-# Please refer to http://wiki2.dovecot.org/ and configure it appropriately
+# Please refer to https://doc.dovecot.org/latest/ and configure it appropriately
+dovecot_config_version = ##dovecot_version##
+dovecot_storage_version = ##dovecot_version##
+
 protocols = imap
 ssl = no
-listen = *
-mail_location = Maildir:~/Maildir
+auth_allow_cleartext = yes
 
-userdb {
+listen = *
+mail_driver = maildir
+mail_path = ~/Maildir
+
+userdb users {
        driver	= passwd
 }
 
-passdb {
+passdb passwords {
        driver	= pam
-       args	= dovecot
 }

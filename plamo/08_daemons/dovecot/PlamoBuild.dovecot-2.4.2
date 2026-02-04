@@ -1,18 +1,26 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dovecot'
-vers="2.3.21.1"
-url="https://${pkgbase}.org/releases/2.3/${pkgbase}-${vers}.tar.gz"
-verify="${url}.sig"
+vers="2.4.2"
+url="https://${pkgbase}.org/releases/2.4/${pkgbase}-${vers}.tar.gz"
+#verify="${url}.sig"
+digest="md5sum:5c32d194129424b2dd92b864e4c8e16a"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --with-rundir=/run/dovecot
-	    --with-mysql --with-sqlite --with-ssl=openssl
-	    --without-gssapi --without-lua --without-ldap
-	    --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="
+	--disable-static
+	--with-rundir=/run/dovecot
+	--with-mysql
+	--with-sqlite
+	--with-ssl=openssl
+	--without-gssapi
+	--without-lua
+	--without-ldap
+	--with-systemd=no
+	--docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING COPYING.LGPL COPYING.MIT ChangeLog INSTALL INSTALL.md NEWS README README.md TODO'
-patchfiles="dovecot-2.3.21.1-openssl3_fixes-1.patch dovecot-2.3.21.1-security_fix-1.patch"
+patchfiles=""
 compress=tzst
 ##############################################################
 
@@ -105,11 +113,11 @@ if [ $opt_package -eq 1 ] ; then
   done
 
   # config files
-  mv -v $P/etc/dovecot $P/etc/dovecot.dist
-  cp -rv $docdir/$src/example-config/* $P/etc/dovecot.dist/
-  sed -i '/^\!include / s/^/#/' $P/etc/dovecot.dist/dovecot.conf
-  install -Dm644 -v $W/dovecot.conf.plamo $P/etc/dovecot.dist/local.conf
+  rm -vf $P/etc/dovecot/dovecot.conf
+  install -Dm644 -v $W/dovecot.conf.plamo $P/etc/dovecot/dovecot.conf.dist
   install -Dm644 -v $W/dovecot.conf.plamo $docdir/$src/dovecot.conf.plamo
+
+  sed -e "s|##dovecot_version##|${vers}|" -i $P/etc/dovecot/dovecot.conf.dist
 
   # pam
   mkdir -pv $P/etc/pam.d
@@ -136,8 +144,8 @@ if ! grep dovenull /etc/passwd; then
   useradd -c "Dovecot login user" -d /dev/null -u 43 \
         -g dovenull -s /bin/false dovenull
 fi
-if [ ! -d /etc/dovecot ]; then
-  cp -a /etc/dovecot.dist /etc/dovecot
+if [ ! -f /etc/dovecot/dovecot.conf ]; then
+  cp -v /etc/dovecot/dovecot.conf.dist /etc/dovecot/dovecot.conf
 fi
 EOF
 
