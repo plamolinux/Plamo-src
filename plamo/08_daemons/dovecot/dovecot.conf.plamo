@@ -12,11 +12,10 @@ listen = *
 mail_driver = maildir
 mail_path = ~/Maildir
 
-userdb {
+userdb users {
        driver	= passwd
 }
 
-passdb {
+passdb passwords {
        driver	= pam
-       args	= dovecot
 }
