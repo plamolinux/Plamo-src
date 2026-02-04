@@ -1,20 +1,47 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libvpx"
-vers="1.14.1"
-url="https://github.com/webmproject/libvpx/archive/v${vers}.tar.gz"
+vers="1.16.0"
+url="https://github.com/webmproject/libvpx/archive/refs/tags/v${vers}.tar.gz"
 verify=""
-digest="md5sum:1d2a1c594587ee1f26a4f017becddcd5"
+digest="md5sum:fb51551487ecfdec93f3d243b7fb1a67"
 arch=`uname -m`
 build=B1
 src="libvpx-${vers}"
-OPT_CONFIG="--enable-pic --enable-shared --disable-static"
+OPT_CONFIG="
+ --enable-pic
+ --enable-shared
+ --disable-static
+ --disable-unit-tests
+ --enable-vp8 
+ --enable-postproc 
+ --enable-vp9 
+ --enable-vp9-postproc
+ --enable-vp9-highbitdepth
+ --enable-runtime-cpu-detect"
 DOCS="AUTHORS CHANGELOG LICENSE README"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
 ##############################################################
+# compat lib
+compat_vers="1.15.2"
+compat_url="https://github.com/webmproject/libvpx/archive/refs/tags/v${compat_vers}.tar.gz"
+verify=""
+compat_digest="md5sum:4c7a93808c12b359733430c8377b7fcf"
+compat_src="libvpx-${compat_vers}"
+compat_OPT_CONFIG="
+  --enable-pic
+  --enable-shared
+  --disable-static
+  --enable-vp8 
+  --enable-postproc 
+  --enable-vp9 
+  --enable-vp9-postproc
+  --enable-runtime-cpu-detect"
+compat_patchfiles=""
+####
 
 source /usr/share/plamobuild_functions.sh
 
@@ -24,6 +51,72 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+# compat lib
+compat_download() {
+    if [ ! -f ${compat_url##*/} ]; then
+	wget $compat_url
+    fi
+    IFS=":"
+    set -- $compat_digest
+    sum=$( $1 ${compat_url##*/} | awk '{ print $1 }')
+    IFS=$' \t\n'
+    if [ $sum != $2 ]; then
+	exit 1
+    fi
+    tar xvf ${compat_url##*/}
+}
+
+B_compat="/tmp/build2"
+
+compat_config() {
+    for f in $compat_patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+    if [ -d $B_compat ] ; then rm -rf $B_compat ; fi ; mkdir -p $B_compat 
+    cd $W/$compat_src
+    for patch in $compat_patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+    cd $B_compat
+    export LDFLAGS='-Wl,--as-needed'
+    $W/$compat_src/configure --prefix=/usr --libdir=/usr/${libdir} ${compat_OPT_CONFIG}
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+}
+
+compat_build() {
+    cd $B_compat
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+}
+
+P_compat=$W/work2
+
+compat_install() {
+  check_root
+  if [ -d $P_compat ] ; then rm -rf $P_compat ; fi ; mkdir -p $P_compat
+  cd $B_compat
+
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P_compat
+
+  cp -av $P_compat/usr/lib/libvpx.so.* $P/usr/lib
+}
+# end: compat lib
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -40,6 +133,7 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    compat_download
 fi
 
 
@@ -76,16 +170,21 @@ if [ $opt_config -eq 1 ] ; then
         echo "configure error. $0 script stop"
         exit 255
     fi
+
+    compat_config
 fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    make $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
     fi
+
+    compat_build
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -95,6 +194,8 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  compat_install
 
 ################################
 #      install tweaks
