@@ -1,22 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase='screen'
-vers="4.9.1"
+vers="5.0.1"
 url="http://ftp.jaist.ac.jp/pub/GNU/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 verify="${url}.sig"
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--enable-colors256 --enable-pam --enable-rxvt_osc
-            --with-pty-group=5 --with-sys-screenrc=/etc/screenrc
-            --with-socket-dir=/run/screen"
+OPT_CONFIG="
+	--enable-color256
+	--enable-pam
+	--enable-rxvt_osc
+	--enable-utmp
+	--with-pty-group=5
+	--with-pty-mode=0620
+	--with-sys-screenrc=/etc/screenrc
+	--with-socket-dir=/run/screen"
 DOCS='COPYING ChangeLog HACKING INSTALL NEWS NEWS.3.5 NEWS.3.6 NEWS.3.7 NEWS.3.9 README TODO'
 addfiles="pam.screen"
-# https://security.opensuse.org/2025/05/12/screen-security-issues.html
-patchfiles="
-	0001-attacher.c-prevent-temporary-0666-mode-on-PTYs-to-fi.patch
-	0002-Avoid-file-existence-test-information-leaks-to-fix-C.patch
-	0003-socket.c-don-t-send-signals-with-root-privileges-to-.patch"
+patchfiles=""
 compress=tzst
 ##############################################################
 
@@ -56,23 +58,17 @@ if [ $opt_config -eq 1 ] ; then
     fi
   done
 
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  sed -i -e "s%/usr/local/etc/screenrc%/etc/screenrc%" {etc,doc}/*
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  for patch in $patchfiles ; do
+      patch -p1 < $W/$patch
+  done
+
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man $OPT_CONFIG
 
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
