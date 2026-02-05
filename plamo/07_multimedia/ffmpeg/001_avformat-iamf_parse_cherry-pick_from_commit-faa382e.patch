@@ -1,0 +1,23 @@
+diff -Nru a/libavformat/iamf_parse.c b/libavformat/iamf_parse.c
+--- a/libavformat/iamf_parse.c	2025-11-29 01:09:56.992181872 +0900
++++ b/libavformat/iamf_parse.c	2025-11-29 01:10:31.672225314 +0900
+@@ -398,6 +398,9 @@
+                                                           .nb_channels = substream_count +
+                                                                          coupled_substream_count };
+ 
++        if (i && layer->ch_layout.nb_channels <= audio_element->element->layers[i-1]->ch_layout.nb_channels)
++            return AVERROR_INVALIDDATA;
++
+         for (int j = 0; j < substream_count; j++) {
+             IAMFSubStream *substream = &audio_element->substreams[k++];
+ 
+@@ -411,6 +414,9 @@
+ 
+     }
+ 
++    if (k != audio_element->nb_substreams)
++        return AVERROR_INVALIDDATA;
++
+     return 0;
+ }
+ 
