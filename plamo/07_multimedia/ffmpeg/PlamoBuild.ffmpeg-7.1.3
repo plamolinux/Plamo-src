@@ -155,8 +155,6 @@ if [ $opt_config -eq 1 ] ; then
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed -Wno-error=int-conversion -Wno-error=incompatible-pointer-types' 
     $S/configure --prefix=/usr --libdir=/usr/${libdir} --mandir=/usr/share/man ${OPT_CONFIG}
-    echo -e "\E[0;32mPress any key to build the package!\E[0;0m"
-    read
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -165,7 +163,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B
-NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
     export LDFLAGS='-Wl,--as-needed'
     make $NUMJOBS
     if [ $? != 0 ]; then
