@@ -1,7 +1,7 @@
 ###################################################################
 #  PJE-0.1 ユーザ設定ファイルサンプル for screen 3.07.02
 #                       MATSUMOTO Shoji (shom@i.h.kyoto-u.ac.jp)
-#                            Time-stamp: <2018-02-16 20:42:54 karma>
+#                            Time-stamp: <2026-02-05 21:35:33 karma>
 
 ####
 # kterm/rxvt 上で screen (ver. 3.07.02) を動かして、
@@ -15,8 +15,8 @@ vbell off
 startup_message off
 autodetach on
 
-term screen-256color
-# term xterm-256color
+# term screen-256color
+term xterm-256color
 
 defutf8 on
 defencoding utf8
@@ -27,7 +27,11 @@ defhstatus screen@$HOSTNAME
 msgminwait 0
 
 defhstatus screen@$HOSTNAME
-hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %Y %m/%d %C:%s%a"
+
+# to 4.9.1
+#hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %Y %m/%d %C:%s%a"
+# from 5.0.0
+hardstatus alwayslastline "%{.255;4}%-w%{.255;1}%n %t%{-}%+w %= %{.255;4}%H %Y-%m-%d %c"
 hardstatus off
 msgminwait 0
 
