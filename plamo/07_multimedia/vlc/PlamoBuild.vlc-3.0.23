@@ -1,16 +1,27 @@
 #!/bin/sh
 ##############################################################
 pkgbase="vlc"
-vers="3.0.18"
-url="https://vlc.letterboxdelivery.org/vlc/${vers}/vlc-${vers}.tar.xz"
+vers="3.0.23"
+url="https://github.com/videolan/vlc.git"
+commitid="3697ebc"
 verify=""
 digest=""
 arch=`uname -m`
-build=B5
-src="vlc-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
+build=B2
+src="vlc"
+OPT_CONFIG="--disable-static --enable-shared 
+	--disable-opencv 
+	--enable-libbluray 
+	--enable-wayland 
+	--enable-qt=6 
+	--disable-upnp 
+	--disable-caca 
+	--enable-vdpau 
+        --disable-libva 
+	--enable-mfx
+        --disable-libplacebo"
 DOCS="ABOUT-NLS AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS doc"
-patchfiles="patch-dvdnav-503.diff patch-dvdread-503.diff patch_vlc_cache_gen.diff libplacebo-5.patch"
+patchfiles="patch_vlc_cache_gen.diff"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -57,6 +68,9 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
     if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
     cd $B
+    ./bootstrap
+    autoreconf -vf
+
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
@@ -77,10 +91,11 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
     export LUAC=/usr/bin/luac5.2
     export LUA_LIBS="$(pkg-config --libs lua5.2)"
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    make $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
