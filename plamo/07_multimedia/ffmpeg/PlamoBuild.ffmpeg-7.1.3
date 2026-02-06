@@ -105,7 +105,7 @@ source /usr/share/plamobuild_functions.sh
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
 if [ $# -eq 0 ] ; then
-  opt_download=1 ; opt_config=1 ; opt_build=1 ; opt_package=1
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
 else
   opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
   for i in $@ ; do
