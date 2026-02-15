@@ -1,18 +1,32 @@
 #!/bin/sh
 ##############################################################
-pkgbase="xorgxrdp"
-vers="0.10.2"
-url="https://github.com/neutrinolabs/xorgxrdp/releases/download/v${vers}/xorgxrdp-${vers}.tar.gz"
-verify=""
+pkgbase="xrdp"
+vers="0.10.5"
+url="https://github.com/neutrinolabs/xrdp/releases/download/v${vers}/xrdp-${vers}.tar.gz"
+verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
-src="xorgxrdp-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
-DOCS="COPYING README.md"
-patchfiles="drm_h.patch"
+src="xrdp-${vers}"
+OPT_CONFIG="
+	--enable-jpeg
+	--enable-tjpeg
+	--enable-fuse
+	--enable-fdkaac
+	--enable-opus
+	--enable-rfxcodec
+	--enable-mp3lame
+	--enable-pixman
+	--enable-painter
+	--enable-vsock
+	--enable-ipv6
+	--enable-rdpsndaudin
+	--with-systemdsystemunitdir=no
+	--with-imlib2"
+DOCS="COPYING NEWS.md README.md docs"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="45-allow-colord.rules startwm.sh.plamo xrdp.init"
 compress=tzst
 ##############################################################
 
@@ -94,6 +108,19 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  rm -rfv $P/etc/init.d
+  install -v -Dm0755 $W/xrdp.init $P/etc/rc.d/init.d/xrdp
+  install -v -Dm0755 $W/startwm.sh.plamo $P/etc/xrdp/startwm.sh
+  install -v -Dm0755 $W/45-allow-colord.rules $P/etc/polkit-1/rules.d/45-allow-colord.rules
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+grep -q allowed_users /etc/X11/Xwrapper.config >/dev/null 2>&1
+if [ \$? -ne 0 ]; then
+   echo "allowed_users=anybody" >> /etc/X11/Xwrapper.config
+fi
+EOF
 
 ################################
 #      install tweaks
