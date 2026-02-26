@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libsoup3"
-vers="3.6.5"
+vers="3.6.6"
 url="https://download.gnome.org/sources/libsoup/${vers%.*}/libsoup-${vers}.tar.xz"
 verify=""
-digest="md5sum:181a474d783492e3f5f7cbfb047bcecd"
+digest="md5sum:9e07742595800ecf301eafb52300dd89"
 arch=`uname -m`
-build=B2
+build=B1
 src="libsoup-${vers}"
 OPT_CONFIG="--buildtype=release -D autobahn=disabled --wrap-mode=nofallback"
 DOCS="AUTHORS COPYING ChangeLog.pre-git HACKING NEWS README README.msvc docs"
-# https://www.linuxfromscratch.org/patches/blfs/svn/libsoup-3.6.5-upstream_fixes-1.patch
-patchfiles="libsoup-3.6.5-upstream_fixes-1.patch"
+# https://www.linuxfromscratch.org/patches/blfs/svn/libsoup-3.6.6-upstream_fixes-1.patch
+patchfiles="libsoup-3.6.6-upstream_fixes-1.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst

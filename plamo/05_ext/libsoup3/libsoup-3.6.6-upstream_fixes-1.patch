@@ -1,0 +1,84 @@
+Submitted By:            Douglas R. Reno <renodr at linuxfromscratch dot org>
+Date:                    2026-02-20
+Initial Package Version: 3.6.6
+Upstream Status:         Applied
+Origin:                  Upstream (PR #510)
+Description:             Fixes a forgotten security vulnerability in
+                         libsoup-3.6.6. This issue is CVE-2026-1539, and allows
+                         for the Proxy-Authorization header to be leaked on
+                         redirects. This can lead to credentials to be exposed
+                         to malicious third party applications.
+
+diff -Naurp libsoup-3.6.6.orig/libsoup/soup-session.c libsoup-3.6.6/libsoup/soup-session.c
+--- libsoup-3.6.6.orig/libsoup/soup-session.c	2026-02-14 16:13:32.000000000 -0600
++++ libsoup-3.6.6/libsoup/soup-session.c	2026-02-20 15:47:45.208344200 -0600
+@@ -1234,6 +1234,7 @@ soup_session_redirect_message (SoupSessi
+         /* Strip all credentials on cross-origin redirect. */
+         if (!soup_uri_host_equal (soup_message_get_uri (msg), new_uri)) {
+                 soup_message_headers_remove_common (soup_message_get_request_headers (msg), SOUP_HEADER_AUTHORIZATION);
++                soup_message_headers_remove_common (soup_message_get_request_headers (msg), SOUP_HEADER_PROXY_AUTHORIZATION);
+                 soup_message_set_auth (msg, NULL);
+         }
+ 
+diff -Naurp libsoup-3.6.6.orig/tests/httpd.conf.in libsoup-3.6.6/tests/httpd.conf.in
+--- libsoup-3.6.6.orig/tests/httpd.conf.in	2026-02-14 16:13:32.000000000 -0600
++++ libsoup-3.6.6/tests/httpd.conf.in	2026-02-20 15:47:45.208344200 -0600
+@@ -34,6 +34,7 @@ LoadModule ssl_module           @APACHE_
+ DirectoryIndex index.txt
+ TypesConfig /dev/null
+ Redirect permanent /redirected /index.txt
++Redirect permanent /Basic/realm1/redirected https://127.0.0.1:47525/index.txt
+ 
+ # Prefer http1 for now because most of the tests expect http1 behavior.
+ Protocols http/1.1 h2
+diff -Naurp libsoup-3.6.6.orig/tests/proxy-test.c libsoup-3.6.6/tests/proxy-test.c
+--- libsoup-3.6.6.orig/tests/proxy-test.c	2026-02-14 16:13:32.000000000 -0600
++++ libsoup-3.6.6/tests/proxy-test.c	2026-02-20 15:47:45.208344200 -0600
+@@ -269,6 +269,39 @@ do_proxy_redirect_test (void)
+ 	soup_test_session_abort_unref (session);
+ }
+ 
++static void proxy_auth_redirect_message_restarted (SoupMessage *msg)
++{
++        if (soup_message_get_status (msg) != SOUP_STATUS_MOVED_PERMANENTLY)
++                return;
++
++        g_assert_null (soup_message_headers_get_one (soup_message_get_request_headers (msg), "Proxy-Authorization"));
++}
++
++static void
++do_proxy_auth_redirect_test (void)
++{
++        SoupSession *session;
++        SoupMessage *msg;
++        char *url;
++
++        SOUP_TEST_SKIP_IF_NO_APACHE;
++        SOUP_TEST_SKIP_IF_NO_TLS;
++
++        session = soup_test_session_new ("proxy-resolver", proxy_resolvers[AUTH_PROXY], NULL);
++
++        url = g_strconcat (HTTP_SERVER, "/Basic/realm1/redirected", NULL);
++        msg = soup_message_new (SOUP_METHOD_GET, url);
++        g_signal_connect (msg, "authenticate", G_CALLBACK (authenticate), NULL);
++        g_signal_connect (msg, "restarted", G_CALLBACK (proxy_auth_redirect_message_restarted), NULL);
++
++        soup_test_session_send_message (session, msg);
++        soup_test_assert_message_status (msg, SOUP_STATUS_OK);
++
++        g_free (url);
++        g_object_unref (msg);
++        soup_test_session_abort_unref (session);
++}
++
+ static void
+ do_proxy_auth_request (const char *url, SoupSession *session, gboolean do_read)
+ {
+@@ -402,6 +435,7 @@ main (int argc, char **argv)
+ 
+ 	g_test_add_data_func ("/proxy/fragment", base_uri, do_proxy_fragment_test);
+ 	g_test_add_func ("/proxy/redirect", do_proxy_redirect_test);
++        g_test_add_func ("/proxy/auth-redirect", do_proxy_auth_redirect_test);
+ 	g_test_add_func ("/proxy/auth-cache", do_proxy_auth_cache_test);
+         g_test_add_data_func ("/proxy/connect-error", base_https_uri, do_proxy_connect_error_test);
+ 
