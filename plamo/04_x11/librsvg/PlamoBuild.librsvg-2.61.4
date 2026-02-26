@@ -6,7 +6,7 @@ url="https://download.gnome.org/sources/librsvg/${vers%.*}/librsvg-${vers}.tar.x
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="librsvg-${vers}"
 OPT_CONFIG="--buildtype=release"
 DOCS="AUTHORS COPYING.LIB INSTALL MAINTAINERS NEWS README.md devel-docs doc"
@@ -121,6 +121,10 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+  mkdir -p $P/install
+  cat <<EOF > $P/install/initpkg
+gdk-pixbuf-query-loaders --update-cache
+EOF
 
 ################################
 #      install tweaks
