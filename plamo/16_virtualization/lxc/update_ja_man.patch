@@ -1,0 +1,46 @@
+diff --git a/doc/ja/lxc-create.sgml.in b/doc/ja/lxc-create.sgml.in
+index 5e086202e..738177be7 100644
+--- a/doc/ja/lxc-create.sgml.in
++++ b/doc/ja/lxc-create.sgml.in
+@@ -185,10 +185,12 @@
+ 		 You can specify the following options :
+ 		 <replaceable>&#045;&#045;rbdname RBDNAME</replaceable> will create a blockdevice named RBDNAME rather than the default, which is the container name.
+ 		 <replaceable>&#045;&#045;rbdpool POOL</replaceable> will create the blockdevice in the pool named POOL, rather than the default, which is 'lxc'.
++		<replaceable>\-\-rbduser RBDUSER</replaceable> will specify the ceph user RBDUSER creating the blockdevice, rather than the default, which is 'admin'.
+ 		 -->
+ 		 backingstore が 'rbd' の場合、<filename>ceph.conf</filename> に有効な設定がされており、<filename>ceph.client.admin.keyring</filename> が定義されている必要があります。
+ 		 <replaceable>--rbdname RBDNAME</replaceable> を指定すると、RBDNAME という名前のブロックデバイスを作成します。このオプションを指定しない場合のデフォルトのブロックデバイス名はコンテナ名です。
+ 		 <replaceable>--rbdpool POOL</replaceable> を指定すると、POOL という名前のプール内にブロックデバイスを作成します。このオプションを指定しない場合のデフォルトのプール名は 'lxc' です。
++		 <replaceable>--rbduser RBDUSER</replaceable> を指定すると、RBDUSER という ceph ユーザを指定してブロックデバイスを作成します。このオプションを指定しない場合のデフォルトのユーザ名は 'admin' です。
+ 	  </para>
+ 	  <para>
+             <!--
+diff --git a/doc/ja/lxc.sgml.in b/doc/ja/lxc.sgml.in
+index 735b485e3..ad68d2eff 100644
+--- a/doc/ja/lxc.sgml.in
++++ b/doc/ja/lxc.sgml.in
+@@ -306,6 +306,24 @@ rootfs
+       で説明しています。
+     </refsect2>
+ 
++    <refsect2>
++      <title><!-- Unprivileged containers -->非特権コンテナ</title>
++      <para>
++        <!--
++        Unprivileged LXC containers run without root host-level privileges in a 
++        user namespace, mapping container UID 0 to a non-root host ID, which 
++        strictly limits the accessible devices and filesystems of the 
++        container. In order to mount a rootfs in an unprivileged container, the 
++        mapped host user must have execute permissions for all directories 
++        along the path to and including the rootfs. Additionally, all files and 
++        directories under the rootfs must be owned by the correct user ID and 
++        group ID. The correct user ID and group ID are the host IDs mapped to 
++        the container root(UID 0) in lxc.idmap.
++        -->
++        非特権 LXC コンテナは、ユーザ名前空間内で root のホストレベルの特権がない状態で実行されます。コンテナの UID 0 は、root ではないホストの ID にマッピングされ、コンテナのアクセス可能なデバイスとファイルシステムが厳密に制限されます。非特権コンテナ内で rootfs をマウントするためには、マッピングされたホストのユーザが、rootfs ディレクトリ自身を含む、rootfs までのパス上にあるすべてのディレクトリに対して実行権限を持っている必要があります。さらに、rootfs 以下のすべてのファイルとディレクトリは、正しいユーザ ID とグループ ID が所有している必要があります。正しいユーザ ID とグループ ID とは、lxc.idmap でコンテナの root（UID 0）にマッピングされているホストの ID です。
++      </para>
++    </refsect2>
++
+     <refsect2>
+       <title><!-- Creating / Destroying containers -->コンテナの作成と削除</title>
+       <para>
