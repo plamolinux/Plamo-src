@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='lxc'
-vers="6.0.6"
+vers="6.0.5"
 template_vers=""
 url="https://linuxcontainers.org/downloads/${pkgbase}/${pkgbase}-${vers}.tar.gz"
 template="https://github.com/lxc/lxc-templates.git"
 verify="${url}.asc"
 #template_verify="${template}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 template_src="lxc-templates"
 OPT_CONFIG=(
@@ -19,7 +19,7 @@ OPT_CONFIG=(
 	-Dinit-script=sysvinit
 )
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
-patchfiles="update_ja_man.patch"
+patchfiles=""
 template_patchfiles=""
 compress=tzst
 ##############################################################
@@ -84,7 +84,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
