@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xscreensaver"
-vers="6.12"
-url="https://www.jwz.org/xscreensaver/xscreensaver-6.12.tar.gz"
+vers="6.14"
+url="https://www.jwz.org/xscreensaver/xscreensaver-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B5
-src="xscreensaver-6.12"
+build=B1
+src="xscreensaver-${vers}"
 OPT_CONFIG="--with-elogind --datadir=/usr/share --localedir=/usr/share/locale"
 DOCS="INSTALL README README.hacking"
 patchfiles=""
