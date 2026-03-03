@@ -6,7 +6,7 @@ url="https://github.com/webmproject/libvpx/archive/refs/tags/v${vers}.tar.gz"
 verify=""
 digest="md5sum:fb51551487ecfdec93f3d243b7fb1a67"
 arch=`uname -m`
-build=B2
+build=B3
 src="libvpx-${vers}"
 OPT_CONFIG="
  --enable-pic
@@ -20,7 +20,8 @@ OPT_CONFIG="
  --enable-vp9-highbitdepth
  --enable-runtime-cpu-detect"
 DOCS="AUTHORS CHANGELOG LICENSE README"
-patchfiles=""
+# https://www.linuxfromscratch.org/patches/blfs/svn/libvpx-1.16.0-security_fix-1.patch
+patchfiles="libvpx-1.16.0-security_fix-1.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
