@@ -1,23 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_plugins_bad"
-vers="1.20.6"
+vers="1.26.7"
 url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
 verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B7
+build=B2
 src="gst-plugins-bad-${vers}"
 OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
-# 4896.patch is https://gstreamer.freedesktop.org/security/sa-2023-0003.html
-# 5362.patch is https://gstreamer.freedesktop.org/security/sa-2023-0007.html
-# 5364.patch is https://gstreamer.freedesktop.org/security/sa-2023-0008.html
-# 5634.patch is https://gstreamer.freedesktop.org/security/sa-2023-0009.html
-# 5635.patch is https://gstreamer.freedesktop.org/security/sa-2023-0010.html
-# 5823.patch is https://gstreamer.freedesktop.org/security/sa-2023-0011.html
-# 5970.patch is https://gstreamer.freedesktop.org/security/sa-2024-0001.html
-patchfiles="4896.patch 5362.patch 5364.patch 5634.patch 5635.patch 5823.patch 5970.patch"
+patchfiles="10884.patch 10885.patch 10887.patch 10888.patch 10889.patch 10902.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -77,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
+    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -86,7 +79,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
