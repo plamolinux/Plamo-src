@@ -4,13 +4,13 @@ pkgbase="gst_plugins_good"
 vers="1.26.7"
 url="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${vers}.tar.xz"
 verify=""
-digest=""
+digest="${url}.sha256sum"
 arch=`uname -m`
-build=B2
+build=B3
 src="gst-plugins-good-${vers}"
 OPT_CONFIG=(--buildtype=release -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
-patchfiles=""
+patchfiles="10880.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
