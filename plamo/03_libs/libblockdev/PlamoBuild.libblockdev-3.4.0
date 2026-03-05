@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libblockdev"
-vers="3.3.1"
+vers="3.4.0"
 url="https://github.com/storaged-project/libblockdev/releases/download/${vers}/libblockdev-${vers}.tar.gz"
 verify=""
-digest="md5sum:9a1d1d44e78af1693abf5cd23fa4ce58"
+digest="md5sum:b796b839c6971917718caedbdc165487"
 arch=`uname -m`
 build=B1
 src="libblockdev-${vers}"
