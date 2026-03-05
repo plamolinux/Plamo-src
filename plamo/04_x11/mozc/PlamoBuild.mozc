@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="3.33.6079.2"
-commitid="acc6b842"
+vers="3.33.6089.2"
+commitid="e99761585"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
@@ -18,27 +18,28 @@ compress=tzst
 
 # mozc-ut(arch linux)
 breakpad_commit="216cea7bca53fa441a3ee0d0f5fd339a3a894224"
-googletest_commit="b514bdc898e2951020cbdca1304b75f5950d1f59"
+googletest_commit="52eb8108c5bdec04579160ae17225d66034bd723"
 gyp_commit="9ecf45e37677743503342ee4c6a76eaee80e4a7f"
 japanese_usage_dictionary_commit="e5b3425575734c323e1d947009dd74709437b684"
 wil_commit="fc5dbf55989fe20351c71d038a8d12de4b397a6d"
-protobuf_commit="7cc670c1809e704ebeba90fb430d50e009f36727"
-abseil_cpp_commit="4447c7562e3bc702ade25105912dce503f0c4010"
-merge_ut_dictionaries_commit="05942c4da7a4066882e8aa3c972bce8c880ba3cf"
+protobuf_commit="4fbd1111a292d04746c732573025e3251de0bb9c"
+abseil_cpp_commit="987c57f325f7fa8472fa84e1f885f7534d391b0d"
+merge_ut_dictionaries_commit="9c30e6648ccf459ef364529f21b029932ac6c455"
 mozcdic_ut_alt_cannadic_commit="69d40eed4e9cf016384d9629920fefa199116ea2"
-mozcdic_ut_edict2_commit="aa2decff870dd341ac2ddc20b453f27fc2df3721"
-mozcdic_ut_jawiki_commit="4590e06f23071be2850b7d53a7fe73728a2572ad"
+mozcdic_ut_edict2_commit="5e2db4eccab42652ae29e798b267c0f50f101128"
+mozcdic_ut_jawiki_commit="f7ad6d689be3c5dc33bef6ae1620bb618a0f12fc"
 mozcdic_ut_neologd_commit="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
-mozcdic_ut_personal_names_commit="a64659ba0c8ee34170f09d7fa21dfd5cb5005296"
-mozcdic_ut_place_names_commit="2748c881573e4e33e2c20e3ec61dba7e59e8bf9d"
+mozcdic_ut_personal_names_commit="a2e43ea4d2c93ef8730a73df503c046a465294d3"
+mozcdic_ut_place_names_commit="3c054fa8e849f6da5b76ec99f8fc28d555ef5c63"
 mozcdic_ut_skk_jisyo_commit="384ad926e306d5308839c6dedb63696f11703968"
-mozcdic_ut_sudachidict_commit="33f9835cfafc85d6761037342debec0e7ae8aa17"
+mozcdic_ut_sudachidict_commit="6c8307cb6c8a935707fd7c39f5d116300e7b8d87"
+bazel_central_registry_commit="b340ca17233d8a3452184a0bf5f593000cdad9e4"
 
 # uim-mozc(arch linux)
 uimmozcrev="7beac7ba000e0459a4dc933f3873b521664d2665"
 
 # mozc-ut(arch linux)
-jawiki_date="20260101"
+jawiki_date="20260201"
 
 # fcitx5-mozc-ext-neologd(arch linux)
 dictext_commit="574160e"
@@ -165,6 +166,11 @@ if [ $opt_download -eq 1 ] ; then
     git clone https://github.com/utuhiro78/mozcdic-ut-sudachidict.git
     cd mozcdic-ut-sudachidict
     git checkout -b build ${mozcdic_ut_sudachidict_commit}
+
+    cd $W
+    git clone https://github.com/bazelbuild/bazel-central-registry.git
+    cd bazel-central-registry
+    git checkout -b build ${bazel_central_registry_commit}
 
     cd $S
     git submodule init
@@ -317,7 +323,12 @@ if [ $opt_build -eq 1 ] ; then
 
     set -e
     bazel build \
+	--registry file://$W/bazel-central-registry \
+	--distdir=$W \
         --config oss_linux \
+	--config stable_channel \
+	--config release_build \
+	--copt '-U_FORTIFY_SOURCE' \
         --compilation_mode opt \
 	--cxxopt='-Wno-uninitialized -I/usr/include/uim' \
 	--host_cxxopt='-Wno-uninitialized -I/usr/include/uim' \
