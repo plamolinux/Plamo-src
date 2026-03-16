@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gstreamer"
-vers="1.20.3"
+vers="1.26.11"
 url="https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-${vers}.tar.xz"
-verify="${url}.asc"
+#verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
@@ -65,11 +65,7 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     meson --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
     if [ $? != 0 ]; then
