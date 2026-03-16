@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_python"
-vers="1.20.3"
+vers="1.26.11"
 url="https://gstreamer.freedesktop.org/src/gst-python/gst-python-${vers}.tar.xz"
-verify="${url}.asc"
+#verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
