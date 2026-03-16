@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_devtools"
-vers="1.20.3"
+vers="1.26.11"
 url="https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-${vers}.tar.xz"
-verify="${url}.asc"
+#verify="${url}.asc"
 digest=""
 arch=`uname -m`
 build=B1
@@ -80,7 +80,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
