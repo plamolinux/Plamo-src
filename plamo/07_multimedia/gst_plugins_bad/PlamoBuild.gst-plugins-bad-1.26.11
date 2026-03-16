@@ -10,7 +10,7 @@ build=B1
 src="gst-plugins-bad-${vers}"
 OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
-patchfiles="10884.patch 10885.patch 10887.patch 10888.patch 10889.patch 10902.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
