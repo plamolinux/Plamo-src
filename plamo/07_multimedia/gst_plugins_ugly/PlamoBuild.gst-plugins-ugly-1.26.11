@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_plugins_ugly"
-vers="1.26.7"
+vers="1.26.11"
 url="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-${vers}.tar.xz"
 verify=""
 digest="${url}.sha256sum"
 arch=`uname -m`
-build=B2
+build=B1
 src="gst-plugins-ugly-${vers}"
 OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
-patchfiles="10881.patch 10883.patch"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
