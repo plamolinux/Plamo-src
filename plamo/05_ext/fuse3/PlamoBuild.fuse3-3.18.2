@@ -1,9 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='fuse3'
-vers='3.14.1'
-url="https://github.com/libfuse/libfuse/releases/download/fuse-${vers}/fuse-${vers}.tar.xz"
-verify="${url}.asc"
+vers="3.18.2"
+url="https://github.com/libfuse/libfuse/releases/download/fuse-${vers}/fuse-${vers}.tar.gz"
+verify=""
+digest="md5sum:43c6f6cd2c1368d916f6fb080eb39cbb"
 arch=`uname -m`
 build=B1
 src="fuse-${vers}"
@@ -55,7 +56,7 @@ if [ $opt_config -eq 1 ] ; then
   sed -i '/^udev/,$ s/^/#/' util/meson.build
 
   cd $B
-  meson --prefix=/usr --libdir=${libdir} $S
+  meson setup --prefix=/usr --libdir=${libdir} $S
 
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
