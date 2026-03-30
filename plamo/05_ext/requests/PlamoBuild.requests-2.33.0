@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="requests"
-vers="2.31.0"
+vers="2.33.0"
 url="https://files.pythonhosted.org/packages/source/r/requests/requests-${vers}.tar.gz"
 verify=""
-digest="md5sum:941e175c276cd7d39d098092c56679a4"
+digest="md5sum:662bf03e3af75028d5a7f36b7e25ad10"
 arch=`uname -m`
 build=B1
 src="requests-${vers}"
