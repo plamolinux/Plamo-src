@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='dovecot'
-vers="2.4.2"
+vers="2.4.3"
 url="https://${pkgbase}.org/releases/2.4/${pkgbase}-${vers}.tar.gz"
-#verify="${url}.sig"
-digest="md5sum:5c32d194129424b2dd92b864e4c8e16a"
+verify="${url}.sig"
+digest=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
