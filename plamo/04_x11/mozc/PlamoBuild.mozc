@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="3.33.6089.2"
-commitid="e99761585"
+vers="3.33.6133.2"
+commitid="21c0f0406"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
@@ -26,11 +26,11 @@ protobuf_commit="4fbd1111a292d04746c732573025e3251de0bb9c"
 abseil_cpp_commit="987c57f325f7fa8472fa84e1f885f7534d391b0d"
 merge_ut_dictionaries_commit="9c30e6648ccf459ef364529f21b029932ac6c455"
 mozcdic_ut_alt_cannadic_commit="69d40eed4e9cf016384d9629920fefa199116ea2"
-mozcdic_ut_edict2_commit="5e2db4eccab42652ae29e798b267c0f50f101128"
-mozcdic_ut_jawiki_commit="f7ad6d689be3c5dc33bef6ae1620bb618a0f12fc"
+mozcdic_ut_edict2_commit="44ac6ffeae2c39f8a543f69468007a4cc2096e62"
+mozcdic_ut_jawiki_commit="8f6864262845425c057dd08a59f0f351a377e30c"
 mozcdic_ut_neologd_commit="e33ac4ce808fa4253c6c97bf5178e229a4bfb50f"
-mozcdic_ut_personal_names_commit="a2e43ea4d2c93ef8730a73df503c046a465294d3"
-mozcdic_ut_place_names_commit="3c054fa8e849f6da5b76ec99f8fc28d555ef5c63"
+mozcdic_ut_personal_names_commit="e2555ebb1b4d17446d5dbe676b28c83dfeee5fd0"
+mozcdic_ut_place_names_commit="9d17b1e0c42e250532f03d77ecaa057df41071db"
 mozcdic_ut_skk_jisyo_commit="384ad926e306d5308839c6dedb63696f11703968"
 mozcdic_ut_sudachidict_commit="6c8307cb6c8a935707fd7c39f5d116300e7b8d87"
 bazel_central_registry_commit="b340ca17233d8a3452184a0bf5f593000cdad9e4"
@@ -39,7 +39,7 @@ bazel_central_registry_commit="b340ca17233d8a3452184a0bf5f593000cdad9e4"
 uimmozcrev="7beac7ba000e0459a4dc933f3873b521664d2665"
 
 # mozc-ut(arch linux)
-jawiki_date="20260201"
+jawiki_date="20260301"
 
 # fcitx5-mozc-ext-neologd(arch linux)
 dictext_commit="574160e"
@@ -144,7 +144,7 @@ if [ $opt_download -eq 1 ] ; then
     
     cd $W
     git clone https://github.com/utuhiro78/mozcdic-ut-neologd.git
-    git mozcdic-ut-neologd
+    cd mozcdic-ut-neologd
     git checkout -b build ${mozcdic_ut_neologd_commit}
     
     cd $W
@@ -262,9 +262,6 @@ if [ $opt_config -eq 1 ] ; then
       )
     ) | ruby .dev.utils/uniqword.rb 2> /dev/null >> "$B/src/data/dictionary_oss/dictionary09.txt"
     echo "Done."
-
-    cd $B/src
-    rm unix/fcitx/fcitx.gyp
 
     cd $W/merge-ut-dictionaries/src/merge/
     echo "Use a dated snapshot for the jawiki dump data"
