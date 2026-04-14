@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="trove_classifiers"
-vers="2025.11.14.15"
-url="https://files.pythonhosted.org/packages/source/t/trove_classifiers/trove_classifiers-${vers}.tar.gz"
+vers="2026.1.14.14"
+url="https://files.pythonhosted.org/packages/d8/43/7935f8ea93fcb6680bc10a6fdbf534075c198eeead59150dd5ed68449642/trove_classifiers-2026.1.14.14.tar.gz"
 verify=""
-digest="md5sum:f130cc982d8011d48c134eb67859edb5"
+digest=""
 arch=`uname -m`
 build=B1
 src="trove_classifiers-${vers}"
