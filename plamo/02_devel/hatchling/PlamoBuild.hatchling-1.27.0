@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="hatchling"
-vers="1.27.0"
-url="https://files.pythonhosted.org/packages/source/h/hatchling/hatchling-1.27.0.tar.gz"
+vers="1.29.0"
+url="https://files.pythonhosted.org/packages/source/h/hatchling/hatchling-${vers}.tar.gz"
 verify=""
 digest=""
-arch=`uname -m`
+arch="noarch"
 build=B1
-src="hatchling-1.27.0"
+src="hatchling-${vers}"
 OPT_CONFIG=""
 DOCS="LICENSE.txt README.md"
 patchfiles=""
