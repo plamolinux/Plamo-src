@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="freerdp"
-vers="3.24.0"
+vers="3.24.2"
 url="https://github.com/FreeRDP/FreeRDP/releases/download/${vers}/freerdp-${vers}.tar.gz"
 verify="${url}.sha256"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="freerdp-${vers}"
 OPT_CONFIG="
 	-DCHANNEL_URBDRC_CLIENT=ON
