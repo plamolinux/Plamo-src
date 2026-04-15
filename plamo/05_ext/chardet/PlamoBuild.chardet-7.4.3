@@ -1,17 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="chardet"
-vers="3.0.4"
-url="https://github.com/chardet/chardet/archive/${vers}.tar.gz"
+vers="7.4.3"
+url="https://files.pythonhosted.org/packages/19/b6/9df434a8eeba2e6628c465a1dfa31034228ef79b26f76f46278f4ef7e49d/chardet-7.4.3.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="chardet-${vers}"
+build=B1
+src="chardet-7.4.3"
 OPT_CONFIG=""
-DOCS="LICENSE README.rst"
+DOCS=".readthedocs.yaml LICENSE README.md docs"
 patchfiles=""
-compress=txz
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,52 +43,53 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi
-    for i in 2 3
-    do
-	mkdir -p $B/$i
-	cp -a $S/* $B/$i/
-	cd $B/$i
-	for patch in $patchfiles ; do
-	    patch -p1 < $W/$patch
-	done
-
-	python${i} setup.py config    
-	if [ $? != 0 ]; then
-            echo "configure error. $0 script stop"
-            exit 255
-	fi
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    for i in 2 3
-    do
-	cd $B/$i
-	python${i} setup.py build
-	if [ $? != 0 ]; then
-            echo "build error. $0 script stop"
-            exit 255
-	fi
-    done
+    cd $B 
+    python -m build --wheel --no-isolation --skip-dependency-check  
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  for i in 2 3
-  do
-      cd $B/$i
-      python${i} setup.py install --root $P --prefix=/usr --optimize=1
+  cd $B
 
-      ( cd $P/usr/bin/ && mv -v chardetect chardetect${i} )
-  done
-
-  ln -sfv chardetect3 $P/usr/bin/chardetect
-
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
