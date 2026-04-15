@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="python_jinja2"
-vers="3.1.3"
-url="https://pypi.org/packages/source/J/Jinja2/Jinja2-${vers}.tar.gz"
+vers="3.1.6"
+url="https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz"
 verify=""
-digest="md5sum:caf5418c851eac59e70a78d9730d4cea"
-arch=`uname -m`
+digest=""
+arch="noarch"
 build=B1
-src="Jinja2-${vers}"
+src="jinja2-3.1.6"
 OPT_CONFIG=""
-DOCS="LICENSE.rst README.rst docs"
+DOCS="LICENSE.txt README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -66,7 +66,9 @@ if [ $opt_config -eq 1 ] ; then
 
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    python setup.py config    
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -75,7 +77,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    python setup.py build
+    python -m build --wheel --no-isolation --skip-dependency-check  
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -87,7 +89,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
