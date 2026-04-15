@@ -1,16 +1,22 @@
 #!/bin/sh
 ##############################################################
 pkgbase="blueman"
-vers="2.3.1"
+vers="2.4.6"
 url="https://github.com/blueman-project/blueman/releases/download/${vers}/blueman-${vers}.tar.gz"
 verify=""
-digest="md5sum:98852c763b2c2ac00b8c3c14e026a346"
+digest="md5sum:c7f82fa292553ea1806b33b281b3efdf"
 arch=`uname -m`
 build=B2
 src="blueman-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --with-dhcp-config=/etc/dhcp.conf  --enable-polkit --enable-caja-sendto --enable-thunar-sendto --enable-settings-integration --disable-schemas-compile"
+OPT_CONFIG="--disable-static --enable-shared 
+ --with-dhcp-config=/etc/dhcp.conf  
+ --enable-polkit 
+ --enable-caja-sendto 
+ --enable-thunar-sendto 
+ --enable-settings-integration 
+ --disable-schemas-compile"
 DOCS="CHANGELOG.md COPYING README.md FAQ"
-addfiles="ja.gmo ja.po"
+addfiles=""
 patchfiles="dont-autostart-applet-in-kde.diff"
 compress=tzst
 ##############################################################
@@ -54,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
-    # autoreconf -fi
+    autoreconf -vif
     
     cd $B
     export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
@@ -127,7 +133,7 @@ EOF
   convert_links
 
 #  DOCS で指定したものと同じものが /usr/share/doc/blueman/ 以下に置かれるので削除
-#  rm -rf $P/usr/share/doc/$pkgbase
+  rm -rf $P/usr/share/doc/$pkgbase
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
