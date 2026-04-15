@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libnvme"
-vers="1.8"
-url="https://github.com/linux-nvme/libnvme/archive/refs/tags/v${vers}.tar.gz"
+vers="1.16.1"
+url="https://github.com/linux-nvme/libnvme/archive/refs/tags/v1.16.1.tar.gz"
 verify=""
-digest="md5sum:ff72b83dc2ada1da0bd528570154eed3"
+digest=""
 arch=`uname -m`
-build=B2
-src="libnvme-${vers}"
+build=B1
+src="libnvme-1.16.1"
 OPT_CONFIG="--buildtype=release"
 DOCS=".readthedocs.yaml COPYING README.md doc"
 patchfiles=""
