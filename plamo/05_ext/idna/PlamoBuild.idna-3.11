@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="idna"
-vers="3.7"
+vers="3.11"
 url="https://github.com/kjd/idna/archive/refs/tags/v${vers}.tar.gz"
 verify=""
 digest=""
-arch=`uname -m`
+arch="noarch"
 build=B1
 src="idna-${vers}"
 OPT_CONFIG=""
