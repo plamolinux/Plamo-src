@@ -1,27 +1,29 @@
 #!/bin/sh
 ##############################################################
-pkgbase='pyxdg'
-vers='0.25'
-url="http://people.freedesktop.org/~takluyver/${pkgbase}-${vers}.tar.gz"
-arch=`uname -m`
-build=P2
-src="${pkgbase}-${vers}"
-OPT_CONFIG=''
-DOCS='AUTHORS COPYING ChangeLog INSTALL README TODO'
-patchfiles=''
-compress=txz
+pkgbase="pyxdg"
+vers="0.28"
+url="https://files.pythonhosted.org/packages/b0/25/7998cd2dec731acbd438fbf91bc619603fc5188de0a9a17699a781840452/pyxdg-0.28.tar.gz"
+verify=""
+digest=""
+arch="noarch"
+build=B2
+src="pyxdg-0.28"
+OPT_CONFIG=""
+DOCS="AUTHORS COPYING ChangeLog INSTALL README TODO docs"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-export PYTHON=/usr/bin/python3
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -41,29 +43,42 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B ; cp -a $S/* $B
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
-#  copy srcs to build directory, patch and config in build dir
+#  source copy build. patch apply in build dir
 ######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
     cd $B
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
 
-    python3 setup.py config
-    
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    python setup.py config    
     if [ $? != 0 ]; then
-	echo "configure error. $0 script stop"
-	exit 255
+        echo "configure error. $0 script stop"
+        exit 255
     fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-    python3 setup.py build
+    cd $B 
+    python setup.py build
     if [ $? != 0 ]; then
-	echo "build error. $0 script stop"
-	exit 255
+        echo "build error. $0 script stop"
+        exit 255
     fi
 fi
 
@@ -71,17 +86,17 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python3 setup.py install --root $P --optimize=1
 
+  python setup.py install --root $P --prefix=/usr
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
