@@ -1,26 +1,29 @@
 #!/bin/sh
 ##############################################################
-pkgbase='sip'
-vers='4.19.17'
-url="https://www.riverbankcomputing.com/static/Downloads/sip/${vers}/sip-${vers}.tar.gz"
-arch=`uname -m`
+pkgbase="sip"
+vers="6.15.3"
+url="https://files.pythonhosted.org/packages/02/b1/79bff1c49a9e19ffe0211cb8905cc514c3f6b8f3f7ae55a40403d346c076/sip-6.15.3.tar.gz"
+verify=""
+digest=""
+arch="noarch"
 build=B1
-src="sip-${vers}"
-OPT_CONFIG=''
-DOCS='ChangeLog LICENSE LICENSE-GPL2 LICENSE-GPL3 NEWS README'
-patchfiles=''
-compress=txz
+src="sip-6.15.3"
+OPT_CONFIG=""
+DOCS="LICENSE README.md"
+patchfiles=""
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
 
 # このスクリプトで使う1文字変数の意味
-# 
+#
 # $W : このスクリプトを動かすカレントディレクトリ
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
-# $B : ビルド用ディレクトリ(デフォルト: /tmp/build{,32})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -40,60 +43,62 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi 
-######################################################################
-#  copy sources into build directory, patch and make in the build dir
-######################################################################
-    for i in 2 3
-    do
-	mkdir -p $B/$i
-	cp -a $S/* $B/$i/
-	cd $B/$i
-	for patch in $patchfiles ; do
-	    patch -p1 < $W/$patch
-	done
 
-	export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-	python${i} ./configure.py
-    
-	if [ $? != 0 ]; then
-	    echo "configure error. $0 script stop"
-	    exit 255
-	fi
-    done
-fi
-    
-if [ $opt_build -eq 1 ] ; then
-    for i in 2 3
+    for f in $addfiles $patchfiles
     do
-	cd $B/$i
-	export LDFLAGS='-Wl,--as-needed'
-	make
-	if [ $? != 0 ]; then
-	    echo "build error. $0 script stop"
-	    exit 255
-	fi
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
     done
+
+######################################################################
+#  source copy build. patch apply in build dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
+    cd $B
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    python -m build --wheel --no-isolation --skip-dependency-check  
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  for i in 2 3
-  do
-      cd $B/$i
-      make install DESTDIR=$P
-  done
+  cd $B
 
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
-#  strip binaries, delete locale except ja, compress man, 
+#  strip binaries, delete locale except ja, compress man,
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
 
 #############################
-#   convert symlink to null file and 
+#   convert symlink to null file and
 #   add "ln -sf" command into install/doinst.sh
 ################################
   convert_links
