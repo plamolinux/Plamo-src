@@ -3,13 +3,13 @@
 pkgbase='auto_background_changer'
 vers='0.4'
 url="https://github.com/AlvinJian/${pkgbase}/archive/v${vers}.tar.gz"
-arch=`uname -m`
-build=B2
+arch="noarch"
+build=B5
 src="${pkgbase}-${vers}"
 OPT_CONFIG=''
 DOCS='LICENSE README.md TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
