@@ -1,17 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="pylast"
-vers="3.1.0"
-url="https://github.com/pylast/pylast/archive/${vers}.tar.gz"
+vers="7.0.2"
+url="https://files.pythonhosted.org/packages/dc/56/1729aa02df4bf959f31f6bd024775f8be0aaa08fd18a1d2bbdaab3c38e9e/pylast-7.0.2.tar.gz"
 verify=""
 digest=""
-arch=`uname -m`
+arch="noarch"
 build=B1
-src="pylast-${vers}"
+src="pylast-7.0.2"
 OPT_CONFIG=""
-DOCS="CHANGELOG.md COPYING INSTALL LICENSE.txt README.md"
+DOCS="CHANGELOG.md COPYING LICENSE.txt README.md requirements-mypy.txt"
 patchfiles=""
-compress=txz
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,6 +43,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
@@ -49,10 +60,15 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
 
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    python setup.py config    
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -61,7 +77,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    python setup.py build
+    python -m build --wheel --no-isolation --skip-dependency-check  
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -73,7 +89,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr --optimize=1 --skip-build
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
