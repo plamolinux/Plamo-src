@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase="random2"
-vers="1.0.1"
-url="https://files.pythonhosted.org/packages/ee/b5/5aca5217501fbd06b1e5aed6d5986baa0da5380880e6bb6f421ed18e3a32/random2-${vers}.zip"
+vers="1.0.2"
+url="https://files.pythonhosted.org/packages/c2/f8/aba7ea7900492da2dd405aa42aa6160b83490421c7d70cf2d5aa44238a13/random2-${vers}.tar.gz"
 verify=""
 digest=""
-arch=`uname -m`
-build=B2
+arch="noarch"
+build=B1
 src="random2-${vers}"
 OPT_CONFIG=""
-DOCS="CHANGES.txt README.txt"
+DOCS="CHANGES.rst README.rst"
 patchfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
