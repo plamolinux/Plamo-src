@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='nftables'
-vers="1.0.6"
+vers="1.0.9"
 url="https://netfilter.org/projects/${pkgbase}/files/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
@@ -89,6 +89,7 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  pip install --root $P $S/py/
 
   ( cd $docdir/nftables-${vers}/examples/nftables && mv -v *.nft .. )
   rmdir -v $docdir/nftables-${vers}/examples/nftables
