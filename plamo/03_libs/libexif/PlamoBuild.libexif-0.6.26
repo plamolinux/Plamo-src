@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libexif'
-vers='0.6.22'
-url="https://github.com/libexif/libexif/releases/download/libexif-${vers//./_}-release/libexif-${vers}.tar.xz"
-digest="md5sum:1070601438443fdd5b8635565693cf99"
+vers="0.6.26"
+url="https://github.com/libexif/libexif/releases/download/v${vers}/libexif-${vers}.tar.bz2"
+digest="md5sum:d659a750d1be6330105de54eb3bf627a"
 verify=""
 arch=`uname -m`
 build=B1
