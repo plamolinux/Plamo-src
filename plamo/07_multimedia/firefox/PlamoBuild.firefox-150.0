@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='firefox'
-vers="149.0.2"
+vers="150.0"
 url="https://archive.mozilla.org/pub/firefox/releases/${vers}/source/firefox-${vers}.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/firefox/releases/${vers}/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -12,7 +12,7 @@ build=B1
 src="firefox-${vers}"
 OPT_CONFIG=
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles="0002-Patch-glsl-optimizer-to-build-with-glibc-2.43.patch 0003-Bug-2016618-Fix-Linux-sandbox-build-breakage-on-glib.patch"
+patchfiles="0002-Bug-2033279-Make-enable-rust-simd-work-with-Rust-1.9.patch 0003-Patch-glsl-optimizer-to-build-with-glibc-2.43.patch"
 addfiles="firefox.desktop langpack.sh mozconfig vendor-firefox.js vendor-gre.js"
 compress=tzst
 
