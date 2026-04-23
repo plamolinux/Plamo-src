@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gegl"
-vers="0.4.40"
+vers="0.4.62"
 url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:0077654104c84fd54b4b48b92271131c"
 arch=`uname -m`
 build=B2
 src="gegl-${vers}"
-OPT_CONFIG="--buildtype=release"
+OPT_CONFIG="--buildtype=release -Dgi-docgen=disabled"
 DOCS="AUTHORS COPYING COPYING.LESSER MAINTAINERS NEWS README docs"
-patchfiles="gegl.no.runtime.dot.check.diff"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -64,11 +64,6 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    
-    # This needs if we use libraw 0.21.0+
-    #sed -e '/shot_select/s/params/raw&/' \
-    #        -i operations/external/raw-load.c
-
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
@@ -83,8 +78,9 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
-    ninja
+    cd $B
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
