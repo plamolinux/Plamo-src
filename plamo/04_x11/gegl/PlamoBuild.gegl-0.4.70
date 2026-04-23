@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gegl"
-vers="0.4.62"
+vers="0.4.70"
 url="https://download.gimp.org/pub/gegl/0.4/gegl-${vers}.tar.xz"
 verify=""
-digest="md5sum:0077654104c84fd54b4b48b92271131c"
+digest=""
 arch=`uname -m`
 build=B2
 src="gegl-${vers}"
