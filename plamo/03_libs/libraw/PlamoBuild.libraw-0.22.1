@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libraw"
-vers="0.20.2"
+vers="0.22.1"
 url="https://github.com/LibRaw/LibRaw/archive/${vers}.tar.gz"
 verify=""
-digest=""
+digest="md5sum:ef448b735c76b263aa7bd289318ee9e2"
 arch=`uname -m`
-build=B2
+build=B1
 src="LibRaw-${vers}"
-OPT_CONFIG="--disable-static --enable-jpeg --enable-jasper --enable-lcms --docdir=/usr/share/doc/libraw-0.20.2"
-DOCS="Changelog.txt INSTALL LICENSE.CDDL LICENSE.LGPL README.DNGSDK.txt README.GoPro.txt README.RawSpeed.txt README.cmake README.demosaic-packs README.md doc"
+OPT_CONFIG="--disable-static --enable-jpeg --enable-lcms --docdir=/usr/share/doc/LibRaw-${vers}"
+DOCS="COPYRIGHT Changelog.txt INSTALL LICENSE.CDDL LICENSE.LGPL README.DNGSDK.txt README.GoPro.txt README.RawSpeed.txt README.cmake README.demosaic-packs README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -67,7 +67,7 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-    NOCONFIGURE=1 autoreconf --install
+    autoreconf -fiv
     
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
@@ -102,8 +102,8 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
-  mv -v $P/usr/share/doc/"$src"/* $P/usr/share/doc/libraw-"$vers"/
-  rmdir $P/usr/share/doc/"$src"
+  mv -v $P/usr/share/doc/${src}/* $P/usr/share/doc/libraw-${vers}/
+  rmdir $P/usr/share/doc/${src}
 
 #############################
 #   convert symlink to null file and
