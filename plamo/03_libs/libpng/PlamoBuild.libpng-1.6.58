@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libpng'
-vers='1.6.56'
+vers='1.6.58'
 url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:e30798a97361f11390a624b5b48c1c74"
+digest="md5sum:c6c372a9d7754c66e0b77a8d34987a3b"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
 #apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
-apng_patch_url="https://www.linuxfromscratch.org/patches/blfs/svn/libpng-1.6.54-apng.patch"
+apng_patch_url="https://www.linuxfromscratch.org/patches/blfs/svn/libpng-1.6.57-apng.patch"
 patchfiles="$(basename ${apng_patch_url##*/} .gz)"
 compress=tzst
 ##############################################################
