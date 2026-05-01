@@ -1,0 +1,71 @@
+Submitted By:            Joe Locash <jlocash at gmail dot com>
+Date:                    2025-11-20
+Initial Package Version: 3.4.1
+Upstream Status:         Applied
+Origin:                  Upstream commit 797e17f
+Description:             fixes an invalid access to files array
+
+Updated by:              Joe Locash <jlocash at gmail dot com>
+Date:                    2026-04-22
+Upstream Status:         Applied
+Description:             Fixes CVE-2026-41035
+
+From 797e17fc4a6f15e3b1756538a9f812b63942686f Mon Sep 17 00:00:00 2001
+From: Andrew Tridgell <andrew@tridgell.net>
+Date: Sat, 23 Aug 2025 17:26:53 +1000
+Subject: [PATCH] fixed an invalid access to files array
+
+this was found by Calum Hutton from Rapid7. It is a real bug, but
+analysis shows it can't be leverged into an exploit. Worth fixing
+though.
+
+Many thanks to Calum and Rapid7 for finding and reporting this
+---
+ sender.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sender.c b/sender.c
+index a4d46c39e..b1588b701 100644
+--- a/sender.c
++++ b/sender.c
+@@ -262,6 +262,8 @@ void send_files(int f_in, int f_out)
+ 
+ 		if (ndx - cur_flist->ndx_start >= 0)
+ 			file = cur_flist->files[ndx - cur_flist->ndx_start];
++		else if (cur_flist->parent_ndx < 0)
++			exit_cleanup(RERR_PROTOCOL);
+ 		else
+ 			file = dir_flist->files[cur_flist->parent_ndx];
+ 		if (F_PATHNAME(file)) {
+From bb0a8118c2d2ab01140bac5e4e327e5e1ef90c9c Mon Sep 17 00:00:00 2001
+From: Andrew Tridgell <andrew@tridgell.net>
+Date: Wed, 22 Apr 2026 09:57:45 +1000
+Subject: [PATCH] xattrs: fixed count in qsort
+
+this fixes the count passed to the sort of the xattr list. This issue
+was reported here:
+
+https://www.openwall.com/lists/oss-security/2026/04/16/2
+
+the bug is not exploitable due to the fork-per-connection design of
+rsync, the attack is the equivalent of the user closing the socket
+themselves.
+---
+ xattrs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xattrs.c b/xattrs.c
+index 26e50a6f9..65166eed9 100644
+--- a/xattrs.c
++++ b/xattrs.c
+@@ -860,8 +860,8 @@ void receive_xattr(int f, struct file_struct *file)
+ 		rxa->num = num;
+ 	}
+ 
+-	if (need_sort && count > 1)
+-		qsort(temp_xattr.items, count, sizeof (rsync_xa), rsync_xal_compare_names);
++	if (need_sort && temp_xattr.count > 1)
++		qsort(temp_xattr.items, temp_xattr.count, sizeof (rsync_xa), rsync_xal_compare_names);
+ 
+ 	ndx = rsync_xal_store(&temp_xattr); /* adds item to rsync_xal_l */
+ 
