@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="ntfs_3g"
-vers="2022.10.3"
-url="https://tuxera.com/opensource/ntfs-3g_ntfsprogs-${vers}.tgz"
+vers="2026.2.25"
+url="https://github.com/tuxera/ntfs-3g/archive/${vers}/ntfs-3g-${vers}.tar.gz"
 verify=""
-digest="md5sum:a038af61be7584b79f8922ff11244090"
+digest="md5sum:e92f169f58eda3307f2ca128bd42792f"
 arch=`uname -m`
 build=B1
-src="ntfs-3g_ntfsprogs-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/ntfs-3g-${vers}"
+src="ntfs-3g-${vers}"
+OPT_CONFIG="--disable-static --enable-shared --with-fuse=internal --docdir=/usr/share/doc/ntfs-3g-${vers}"
 DOCS="AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README TODO.ntfsprogs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -65,11 +65,10 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
+    if [ -f autogen.sh ] ; then
+      sh ./autogen.sh
+    fi
     cd $B
-    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
     $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
@@ -96,17 +95,10 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install -i DESTDIR=$P
 
-  ln -s -v ntfs-3g.8 $P/usr/share/man/man8/mount.ntfs.8
+  ln -svf ntfs-3g.8 $P/usr/share/man/man8/mount.ntfs.8
 
   # mount.ntfs
-  mkdir -pv $P/usr/sbin
-  cat > $P/sbin/mount.ntfs <<"EOF"
-#!/bin/sh
-exec mount -t ntfs3 "$@"
-EOF
-  chmod -v 755 $P/sbin/mount.ntfs
-
-  src=${pkgbase}-${vers}
+  ln -svf ../bin/ntfs-3g $P/sbin/mount.ntfs
 
 ################################
 #      install tweaks
