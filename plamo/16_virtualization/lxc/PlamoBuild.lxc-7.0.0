@@ -17,7 +17,7 @@ OPT_CONFIG=(
 	-Ddbus=false
 	-Ddoc-path=/usr/share/doc/"$src"
 	-Dinit-script=sysvinit
-	-Dlandlock-monitor=true
+	-Dlandlock-monitor=false
 )
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=""
