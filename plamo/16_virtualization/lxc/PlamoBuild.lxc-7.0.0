@@ -8,7 +8,7 @@ template="https://github.com/lxc/lxc-templates.git"
 verify="${url}.asc"
 #template_verify="${template}.asc"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 template_src="lxc-templates"
 OPT_CONFIG=(
@@ -21,7 +21,7 @@ OPT_CONFIG=(
 )
 DOCS='AUTHORS COPYING ChangeLog INSTALL MAINTAINERS NEWS README'
 patchfiles=""
-template_patchfiles=""
+template_patchfiles="0001-Replace-lxc.cgroup.devices-with-lxc.cgroup2.devices.patch"
 compress=tzst
 ##############################################################
 
