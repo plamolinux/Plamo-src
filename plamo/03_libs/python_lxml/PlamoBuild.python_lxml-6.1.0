@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="python_lxml"
-vers="6.0.4"
-url="https://files.pythonhosted.org/packages/ce/08/1217ca4043f55c3c92993b283a7dbfa456a2058d8b57bbb416cc96b6efff/lxml-6.0.4.tar.gz"
+vers="6.1.0"
+url="https://files.pythonhosted.org/packages/source/l/lxml/lxml-${vers}.tar.gz"
 verify=""
-digest=""
+digest="md5sum:31d8b15cdee087ef63b3f2dde600af8d"
 arch=`uname -m`
-build=B1
-src="lxml-6.0.4"
+build=B2
+src="lxml-${vers}"
 OPT_CONFIG=""
 DOCS="CHANGES.txt CREDITS.txt INSTALL.txt LICENSE.txt LICENSES.txt README.rst TODO.txt doc requirements.txt"
 patchfiles=""
