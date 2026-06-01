@@ -2,12 +2,12 @@
 ##############################################################
 pkgbase="pyproject_hooks"
 vers="1.2.0"
-pythonvers="3.14"
+#pythonvers="3.14"
 url="https://files.pythonhosted.org/packages/e7/82/28175b2414effca1cdac8dc99f76d660e7a4fb0ceefa4b4ab8f5f6742925/pyproject_hooks-1.2.0.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="pyproject_hooks-${vers}"
 OPT_CONFIG=""
 DOCS=".readthedocs.yml LICENSE README.rst dev-requirements.txt docs"
@@ -78,12 +78,11 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    # pyproject-hooksをビルドするのにpyproject-hooksが必要
-#    python -m build --wheel --no-isolation --skip-dependency-check  
-#    if [ $? != 0 ]; then
-#        echo "build error. $0 script stop"
-#        exit 255
-#    fi
+    python -m build --wheel --no-isolation --skip-dependency-check  
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -91,10 +90,11 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-#  python -m installer --destdir=$P dist/*.whl 
-  LIB_DIR=$P/usr/lib/python${pythonvers}/site-packages
-  mkdir -p $LIB_DIR
-  cp -r $S/src/pyproject_hooks $LIB_DIR
+  python -m installer --destdir=$P dist/*.whl 
+#    # pyproject-hooksをビルドするのにpyproject-hooksが必要
+#  LIB_DIR=$P/usr/lib/python${pythonvers}/site-packages
+#  mkdir -p $LIB_DIR
+#  cp -r $S/src/pyproject_hooks $LIB_DIR
 
 ################################
 #      install tweaks
