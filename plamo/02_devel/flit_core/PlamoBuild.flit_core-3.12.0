@@ -7,7 +7,7 @@ url="https://files.pythonhosted.org/packages/69/59/b6fc2188dfc7ea4f936cd12b49d70
 verify=""
 digest=""
 arch="noarch"
-build=B2
+build=B3
 src="flit_core-${vers}"
 OPT_CONFIG=""
 DOCS="LICENSE bootstrap_install.py"
@@ -78,13 +78,11 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    # buildとflip_coreで鶏と卵問題が発生するので、
-    # flip_coreはソース中のファイルをコピーしてインストールする
-#     python -m build --wheel --no-isolation --skip-dependency-check  
-#    if [ $? != 0 ]; then
-#        echo "build error. $0 script stop"
-#        exit 255
-#    fi
+    python -m build --wheel --no-isolation --skip-dependency-check  
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -92,10 +90,12 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-#  python -m installer --destdir=$P dist/*.whl 
-  LIB_DIR=$P/usr/lib/python${pythonvers}/site-packages
-  mkdir -p $LIB_DIR
-  cp -r $S/flit_core $LIB_DIR
+  python -m installer --destdir=$P dist/*.whl 
+#    # buildとflip_coreで鶏と卵問題が発生するので、
+#    # flip_coreはソース中のファイルをコピーしてインストールする
+#  LIB_DIR=$P/usr/lib/python${pythonvers}/site-packages
+#  mkdir -p $LIB_DIR
+#  cp -r $S/flit_core $LIB_DIR
 
 
 ################################
