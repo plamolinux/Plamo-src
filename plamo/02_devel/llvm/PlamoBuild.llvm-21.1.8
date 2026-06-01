@@ -5,7 +5,7 @@ vers='21.1.8'
 m_vers=${vers%%.[0-9].[0-9]}  # 20
 url="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/llvm-${vers}.src.tar.xz"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}.src"
 # url2="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/clang-${vers}.src.tar.xz"
 # url3="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/compiler-rt-${vers}.src.tar.xz"
@@ -33,7 +33,7 @@ OPT_CONFIG="
 DOCS='CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT README.txt RELEASE_TESTERS.TXT docs'
 
 patchfiles='lld-MachO-libunwind.patch'
-oldlibs='libLLVM.so.20.1 libclang.so.20.1.8 libclang-cpp.so.20.1'
+oldlibs='libLLVM.so.19.1 libclang.so.19.1.0 libclang-cpp.so.19.1 libLLVM.so.20.1 libclang.so.20.1.8 libclang-cpp.so.20.1'
 compress=tzst
 ##############################################################
 
