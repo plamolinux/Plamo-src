@@ -6,7 +6,7 @@ url="https://gstreamer.freedesktop.org/src/gstreamer-editing-services/gst-editin
 #verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="gst-editing-services-${vers}"
 OPT_CONFIG=(--buildtype=release
 	    -Ddoc=disabled

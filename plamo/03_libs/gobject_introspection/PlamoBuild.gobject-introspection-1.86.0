@@ -6,7 +6,7 @@ url="https://download.gnome.org/sources/gobject-introspection/${vers%.*}/gobject
 verify=""
 digest="md5sum:fa0f2ae76868bf35ff725f940d75ec16"
 arch=`uname -m`
-build=B1
+build=B2
 src="gobject-introspection-${vers}"
 OPT_CONFIG="--buildtype=release"
 DOCS="COPYING COPYING.GPL COPYING.LGPL HACKING MSVC.README.rst NEWS README.rst TODO docs"

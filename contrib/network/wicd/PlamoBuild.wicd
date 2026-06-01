@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wicd"
-commitid="7775db5"
+commitid="fd5b4fb5bf9c5bdedaaa18d902eeec8034d77d7a"
 vers="$(date +%Y%m%d)"
 url="https://git.launchpad.net/wicd"
 verify=""
 digest=""
-arch=`uname -m`
+arch="noarch"
 build=B1
 src="wicd"
 OPT_CONFIG=""
