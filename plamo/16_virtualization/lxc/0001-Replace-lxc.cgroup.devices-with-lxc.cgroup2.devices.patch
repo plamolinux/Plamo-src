@@ -1,0 +1,323 @@
+From 7fdc49f03794c66ca550f4f6a360a19e626764af Mon Sep 17 00:00:00 2001
+From: KATOH Yasufumi <karma@jazz.email.ne.jp>
+Date: Tue, 19 May 2026 18:38:40 +0900
+Subject: [PATCH] Replace lxc.cgroup.devices with lxc.cgroup2.devices
+
+LXC 7.0 dropped support for cgroup v1. Replace all
+lxc.cgroup.devices.* keys with their lxc.cgroup2.devices.*
+equivalents accordingly.
+
+Signed-off-by: KATOH Yasufumi <karma@jazz.email.ne.jp>
+---
+ config/debian.common.conf.in    | 12 +++++------
+ config/devuan.common.conf.in    | 12 +++++------
+ config/gentoo.common.conf.in    | 10 ++++-----
+ config/kali.common.conf.in      | 12 +++++------
+ config/openwrt.common.conf.in   | 28 ++++++++++++------------
+ config/plamo.common.conf.in     |  2 +-
+ config/sabayon.common.conf.in   | 38 ++++++++++++++++-----------------
+ config/slackware.common.conf.in | 10 ++++-----
+ config/ubuntu.common.conf.in    | 12 +++++------
+ 9 files changed, 68 insertions(+), 68 deletions(-)
+
+diff --git a/config/debian.common.conf.in b/config/debian.common.conf.in
+index 4e6a6e6..5f075d6 100644
+--- a/config/debian.common.conf.in
++++ b/config/debian.common.conf.in
+@@ -11,18 +11,18 @@ lxc.tty.dir =
+ 
+ # If you wish to allow mounting block filesystems, then use the following
+ # line instead, and make sure to grant access to the block device and/or loop
+-# devices below in lxc.cgroup.devices.allow.
++# devices below in lxc.cgroup2.devices.allow.
+ #lxc.apparmor.profile = lxc-container-default-with-mounting
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+diff --git a/config/devuan.common.conf.in b/config/devuan.common.conf.in
+index 4e6a6e6..5f075d6 100644
+--- a/config/devuan.common.conf.in
++++ b/config/devuan.common.conf.in
+@@ -11,18 +11,18 @@ lxc.tty.dir =
+ 
+ # If you wish to allow mounting block filesystems, then use the following
+ # line instead, and make sure to grant access to the block device and/or loop
+-# devices below in lxc.cgroup.devices.allow.
++# devices below in lxc.cgroup2.devices.allow.
+ #lxc.apparmor.profile = lxc-container-default-with-mounting
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+diff --git a/config/gentoo.common.conf.in b/config/gentoo.common.conf.in
+index 477a2ab..1d9e76b 100644
+--- a/config/gentoo.common.conf.in
++++ b/config/gentoo.common.conf.in
+@@ -11,16 +11,16 @@ lxc.tty.dir =
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+ 
+ # /dev/shm needs to be mounted as tmpfs. It's needed by python (bug #496328)
+ # and possibly other packages.
+diff --git a/config/kali.common.conf.in b/config/kali.common.conf.in
+index 4e6a6e6..5f075d6 100644
+--- a/config/kali.common.conf.in
++++ b/config/kali.common.conf.in
+@@ -11,18 +11,18 @@ lxc.tty.dir =
+ 
+ # If you wish to allow mounting block filesystems, then use the following
+ # line instead, and make sure to grant access to the block device and/or loop
+-# devices below in lxc.cgroup.devices.allow.
++# devices below in lxc.cgroup2.devices.allow.
+ #lxc.apparmor.profile = lxc-container-default-with-mounting
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+diff --git a/config/openwrt.common.conf.in b/config/openwrt.common.conf.in
+index 73db6f6..0107832 100644
+--- a/config/openwrt.common.conf.in
++++ b/config/openwrt.common.conf.in
+@@ -19,31 +19,31 @@ lxc.cap.drop = syslog
+ lxc.cap.drop = wake_alarm
+ 
+ # Default cgroups - all denied except those whitelisted
+-lxc.cgroup.devices.deny = a
++lxc.cgroup2.devices.deny = a
+ ## /dev/null and zero
+-lxc.cgroup.devices.allow = c 1:3 rwm
+-lxc.cgroup.devices.allow = c 1:5 rwm
++lxc.cgroup2.devices.allow = c 1:3 rwm
++lxc.cgroup2.devices.allow = c 1:5 rwm
+ ## consoles
+-lxc.cgroup.devices.allow = c 5:0 rwm
+-lxc.cgroup.devices.allow = c 5:1 rwm
++lxc.cgroup2.devices.allow = c 5:0 rwm
++lxc.cgroup2.devices.allow = c 5:1 rwm
+ ## /dev/{,u}random
+-lxc.cgroup.devices.allow = c 1:8 rwm
+-lxc.cgroup.devices.allow = c 1:9 rwm
++lxc.cgroup2.devices.allow = c 1:8 rwm
++lxc.cgroup2.devices.allow = c 1:9 rwm
+ ## /dev/pts/*
+-lxc.cgroup.devices.allow = c 5:2 rwm
+-lxc.cgroup.devices.allow = c 136:* rwm
++lxc.cgroup2.devices.allow = c 5:2 rwm
++lxc.cgroup2.devices.allow = c 136:* rwm
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## dev/tty0
+-lxc.cgroup.devices.allow = c 4:0 rwm
++lxc.cgroup2.devices.allow = c 4:0 rwm
+ ## dev/tty1
+-lxc.cgroup.devices.allow = c 4:1 rwm
++lxc.cgroup2.devices.allow = c 4:1 rwm
+ 
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+ 
+ # Blacklist some syscalls which are not safe in privileged
+ # containers
+diff --git a/config/plamo.common.conf.in b/config/plamo.common.conf.in
+index 7918b4a..652e761 100644
+--- a/config/plamo.common.conf.in
++++ b/config/plamo.common.conf.in
+@@ -6,4 +6,4 @@ lxc.tty.dir =
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+diff --git a/config/sabayon.common.conf.in b/config/sabayon.common.conf.in
+index ccb4c12..c31232d 100644
+--- a/config/sabayon.common.conf.in
++++ b/config/sabayon.common.conf.in
+@@ -16,46 +16,46 @@ lxc.autodev = 1
+ lxc.tty.dir =
+ 
+ # CGroup whitelist
+-lxc.cgroup.devices.deny = a
++lxc.cgroup2.devices.deny = a
+ 
+ ## Allow any mknod (but not reading/writing the node)
+-#lxc.cgroup.devices.allow = c *:* m
+-#lxc.cgroup.devices.allow = b *:* m
++#lxc.cgroup2.devices.allow = c *:* m
++#lxc.cgroup2.devices.allow = b *:* m
+ 
+ ## Allow specific devices
+ ### /dev/null
+-lxc.cgroup.devices.allow = c 1:3 rwm
++lxc.cgroup2.devices.allow = c 1:3 rwm
+ ### /dev/zero
+-lxc.cgroup.devices.allow = c 1:5 rwm
++lxc.cgroup2.devices.allow = c 1:5 rwm
+ ### /dev/full
+-lxc.cgroup.devices.allow = c 1:7 rwm
++lxc.cgroup2.devices.allow = c 1:7 rwm
+ ### /dev/random
+-lxc.cgroup.devices.allow = c 1:8 rwm
++lxc.cgroup2.devices.allow = c 1:8 rwm
+ ### /dev/urandom
+-lxc.cgroup.devices.allow = c 1:9 rwm
++lxc.cgroup2.devices.allow = c 1:9 rwm
+ ### /dev/pts/*
+-#lxc.cgroup.devices.allow = c 136:* rwm
++#lxc.cgroup2.devices.allow = c 136:* rwm
+ ### /dev/tty
+-#lxc.cgroup.devices.allow = c 5:0 rwm
++#lxc.cgroup2.devices.allow = c 5:0 rwm
+ ### /dev/console
+-#lxc.cgroup.devices.allow = c 5:1 rwm
++#lxc.cgroup2.devices.allow = c 5:1 rwm
+ ### /dev/ptmx
+-#lxc.cgroup.devices.allow = c 5:2 rwm
++#lxc.cgroup2.devices.allow = c 5:2 rwm
+ ### fuse
+-#lxc.cgroup.devices.allow = c 10:229 rwm
++#lxc.cgroup2.devices.allow = c 10:229 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+ ## rtc
+-#lxc.cgroup.devices.allow = c 254:0 rm
++#lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-#lxc.cgroup.devices.allow = c 10:200 rwm
++#lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-#lxc.cgroup.devices.allow = c 10:228 rwm
++#lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-#lxc.cgroup.devices.allow = c 10:232 rwm
++#lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## /dev/mem
+-#lxc.cgroup.devices.allow = c 1:1 rwm
++#lxc.cgroup2.devices.allow = c 1:1 rwm
+ 
+ # If something doesn't work, try to comment this out.
+ # Dropping sys_admin disables container root from doing a lot of things
+diff --git a/config/slackware.common.conf.in b/config/slackware.common.conf.in
+index 899c52c..8b770b9 100644
+--- a/config/slackware.common.conf.in
++++ b/config/slackware.common.conf.in
+@@ -6,16 +6,16 @@ lxc.tty.dir =
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+ 
+ # mount /dev/shm as tmpfs
+ lxc.mount.entry = none dev/shm tmpfs rw,nosuid,nodev,create=dir
+diff --git a/config/ubuntu.common.conf.in b/config/ubuntu.common.conf.in
+index ff8ef6a..292914b 100644
+--- a/config/ubuntu.common.conf.in
++++ b/config/ubuntu.common.conf.in
+@@ -18,18 +18,18 @@ lxc.mount.entry = mqueue dev/mqueue mqueue rw,relatime,create=dir,optional 0 0
+ 
+ # If you wish to allow mounting block filesystems, then use the following
+ # line instead, and make sure to grant access to the block device and/or loop
+-# devices below in lxc.cgroup.devices.allow.
++# devices below in lxc.cgroup2.devices.allow.
+ #lxc.apparmor.profile = lxc-container-default-with-mounting
+ 
+ # Extra cgroup device access
+ ## rtc
+-lxc.cgroup.devices.allow = c 254:0 rm
++lxc.cgroup2.devices.allow = c 254:0 rm
+ ## tun
+-lxc.cgroup.devices.allow = c 10:200 rwm
++lxc.cgroup2.devices.allow = c 10:200 rwm
+ ## hpet
+-lxc.cgroup.devices.allow = c 10:228 rwm
++lxc.cgroup2.devices.allow = c 10:228 rwm
+ ## kvm
+-lxc.cgroup.devices.allow = c 10:232 rwm
++lxc.cgroup2.devices.allow = c 10:232 rwm
+ ## To use loop devices, copy the following line to the container's
+ ## configuration file (uncommented).
+-#lxc.cgroup.devices.allow = b 7:* rwm
++#lxc.cgroup2.devices.allow = b 7:* rwm
+-- 
+2.50.1
+

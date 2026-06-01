@@ -1,15 +1,48 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_plugins_bad"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
-verify="${url}.asc"
-digest=""
+pkgbase="freerdp"
+vers="3.24.2"
+#url="https://github.com/FreeRDP/FreeRDP/releases/download/${vers}/freerdp-${vers}.tar.gz"
+url="https://github.com/freerdp/freerdp/archive/${vers}/FreeRDP-${vers}.tar.gz"
+#verify="${url}.sha256"
+digest="md5sum:96ff5faaa360d86c92e460f3795e9db3"
 arch=`uname -m`
-build=B2
-src="gst-plugins-bad-${vers}"
-OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
-DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
+build=B1
+#src="freerdp-${vers}"
+src="FreeRDP-${vers}"
+OPT_CONFIG="
+	-DCHANNEL_URBDRC_CLIENT=ON
+	-DCMAKE_BUILD_TYPE=Release
+	-DWITH_SKIP_INSTALL_RPATH=ON
+	-D WINPR_UTILS_IMAGE_JPEG=ON
+	-D WINPR_UTILS_IMAGE_PNG=ON
+	-D WINPR_UTILS_IMAGE_WEBP=ON
+	-D WITH_ALSA=ON
+	-D WITH_BINARY_VERSIONING=ON  # prevent file conflicts with freerdp2
+	-D WITH_CHANNELS=ON
+	-D WITH_CLIENT_CHANNELS=ON
+	-D WITH_CLIENT_SDL3=OFF
+	-D WITH_CLIENT_SDL2=OFF
+	-D WITH_CUPS=ON
+	-D WITH_DSP_FFMPEG=ON
+	-D WITH_FFMPEG=ON
+	-D WITH_FUSE=ON
+	-D WITH_ICU=ON
+	-D WITH_JPEG=ON
+	-D WITH_PCSC=ON
+	-D WITH_PULSE=ON
+	-D WITH_SERVER=ON
+	-D WITH_SERVER_CHANNELS=ON
+	-D WITH_SWSCALE=ON
+	-D WITH_SYSTEMD=OFF
+	-D WITH_VAAPI=ON
+	-D WITH_VERBOSE_WINPR_ASSERT=OFF
+	-D WITH_WAYLAND=ON
+	-D WITH_WINPR_TOOLS=ON
+	-D WITH_X11=ON
+	-G Ninja
+	-W no-dev"
+DOCS="ChangeLog LICENSE README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -70,7 +103,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
+    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +112,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
-    ninja $NUMJOBS
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255

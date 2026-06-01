@@ -1,15 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='libpng'
+vers='1.6.58'
+url="https://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:c6c372a9d7754c66e0b77a8d34987a3b"
+verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG='--disable-static --enable-shared'
+DOCS='INSTALL LICENSE README TODO libpng-manual.txt'
+#apng_patch_url="https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-${vers}-apng.patch.gz"
+apng_patch_url="https://www.linuxfromscratch.org/patches/blfs/svn/libpng-1.6.57-apng.patch"
+patchfiles="$(basename ${apng_patch_url##*/} .gz)"
 compress=tzst
 ##############################################################
 
@@ -38,6 +41,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  if [ ! -f "$(basename ${apng_patch_url##*/} .gz)" ]; then
+    wget $apng_patch_url
+    gzip -d ${apng_patch_url##*/}
+  fi
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -59,7 +66,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  LIBS=-lpthread $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -83,6 +90,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  ( cd $P/usr/include ; ln -sf libpng16 libpng )
 
 ################################
 #      install tweaks

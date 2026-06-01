@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='node'
+vers="24.14.1"
+url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
+digest="md5sum:a2efca09a1b1f20edf5e1e1c3be73e99"
+verify=""
 arch=`uname -m`
-build=B3
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+build=B2
+src="${pkgbase}-v${vers}"
+OPT_CONFIG="--shared-brotli --shared-libuv --shared-cares --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
+DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
+patchfiles=''
 compress=tzst
 ##############################################################
 
@@ -41,32 +42,27 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+    touch .${patch}
+  done
+  
+
+  export PKG_CONFIG_PATH=/usr/${libdir}/openssl-1.0/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
+  ./configure --prefix=/usr ${OPT_CONFIG[$i]}
+
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
     exit 255
   fi
 fi
-    
+
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
@@ -83,6 +79,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  mv $docdir/node $docdir/$src
 
 ################################
 #      install tweaks

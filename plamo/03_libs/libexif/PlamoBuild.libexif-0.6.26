@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='libexif'
+vers="0.6.26"
+url="https://github.com/libexif/libexif/releases/download/v${vers}/libexif-${vers}.tar.bz2"
+digest="md5sum:d659a750d1be6330105de54eb3bf627a"
+verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG="--disable-static --enable-shared --with-doc-dir=/usr/share/doc/${src}"
+DOCS='ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README README-Win32.txt'
+patchfiles=''
 compress=tzst
 ##############################################################
 
@@ -59,7 +60,7 @@ if [ $opt_config -eq 1 ] ; then
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"

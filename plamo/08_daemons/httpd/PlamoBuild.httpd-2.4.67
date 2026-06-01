@@ -1,15 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='httpd'
+vers="2.4.67"
+url="https://archive.apache.org/dist/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
+verify="${url}.asc"
+#verify="https://downloads.apache.org/httpd/httpd-${vers}.tar.bz2.sha256"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG=(--enable-layout=Plamo-FHS
+	    --enable-mpms-shared=all
+	    --enable-modules=all
+	    --enable-mods-shared=all
+	    --mandir=/usr/share/man
+	    --with-apr=/usr/bin/apr-1-config
+	    --with-apr-util=/usr/bin/apu-1-config)
+DOCS='ABOUT_APACHE INSTALL InstallBin.dsp LICENSE README README.cmake README.platforms'
+patchfiles='httpdlogrotate_plamo.patch'
 compress=tzst
 ##############################################################
 
@@ -56,10 +63,16 @@ if [ $opt_config -eq 1 ] ; then
   #   sh ./autogen.sh
   # fi
 
+  sed -e 's#User daemon#User www#' \
+      -e 's#Group daemon#Group apache#' \
+      -i docs/conf/httpd.conf.in
+
+  cp -v $W/plamo.layout $S/config.layout
+
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
+  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
+  $S/configure ${OPT_CONFIG[@]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -83,6 +96,58 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  # for backupping config files 
+  ( cd $P/etc/httpd ; mv httpd.conf httpd.conf.dist )
+  ( cd $P/etc/httpd ; mv extra extra.dist )
+  for d in htdocs icons error cgi-bin
+  do
+    ( cd $P/srv/httpd ; mv $d $d.dist )
+  done
+
+  # logrotate
+  install -Dm644 -v $S/build/rpm/httpd.logrotate $P/etc/logrotate.d/httpd.logrotate
+
+  # init script
+  install -Dm644 -v $W/httpd.init $P/etc/rc.d/init.d/httpd
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc${i}.d/
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/httpd $P/etc/rc.d/rc${i}.d/K28httpd
+	;;
+      3|4|5)
+	ln -sfv ../init.d/httpd $P/etc/rc.d/rc${i}.d/S32httpd
+	;;
+    esac
+  done
+
+  # plamo original to doc
+  install -Dm644 -v $W/httpd.init $docdir/$src/httpd.init
+  install -Dm644 -v $W/plamo.layout $docdir/$src/plamo.layout
+
+  mkdir -p $P/install
+  cat <<"EOF" >> $P/install/initpkg
+MYHOST=$(cat /etc/HOSTNAME)
+sed -i -e "s/^#ServerName.*$/ServerName $MYHOST/" /etc/httpd/httpd.conf.dist
+
+if [ ! -f /etc/httpd/httpd.conf ]; then
+  ( cd /etc/httpd ; cp httpd.conf.dist httpd.conf )
+fi
+
+if [ ! -d /etc/httpd/extra ]; then
+  ( cd /etc/httpd ; cp -rp extra.dist extra )
+fi
+
+for d in htdocs icons error cgi-bin
+do
+  if [ ! -d /srv/httpd/$d ]; then
+    ( cd /srv/httpd ; mv $d.dist $d )
+  fi
+done
+
+EOF
 
 ################################
 #      install tweaks

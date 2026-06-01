@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='ruby'
+vers='3.4.9'
+url="https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${vers}.tar.gz"
+digest="sha256sum:7bb4d4f5e807cc27251d14d9d6086d182c5b25875191e44ab15b709cd7a7dd9c"
+verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG="--enable-shared --docdir=/usr/share/doc/$src"
+DOCS='COPYING COPYING.ja ChangeLog NEWS README.EXT README.EXT.ja README.ja.md README.md'
+patchfiles=''
 compress=tzst
 ##############################################################
 

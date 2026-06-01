@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
+pkgbase='unbound'
+vers="1.25.1"
+url="http://www.unbound.net/downloads/${pkgbase}-${vers}.tar.gz"
 verify="$url.asc"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG="--disable-static --with-pidfile=/run/unbound.pid"
+DOCS='LICENSE README'
+patchfiles=''
+addfiles="unbound.conf unbound.init"
 compress=tzst
 ##############################################################
 
@@ -41,6 +42,13 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
@@ -83,6 +91,43 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -v -d $P/usr/bin
+  mv -v $P/usr/sbin/unbound-host $P/usr/bin/unbound-host
+
+  # copy config file for plamo to /etc/unbound
+  install -v -m 644 $W/unbound.conf $P/etc/unbound/unbound.conf.dist
+
+  # copy init.file
+  install -v -D -m 644 $W/unbound.init $P/etc/rc.d/init.d/unbound
+  install -v -D -m 644 $W/unbound.init $docdir/$src/unbound.init
+
+  # copy default config file to docdir
+  mv -v $P/etc/unbound/unbound.conf $docdir/"$src"/example.conf
+
+  for i in $(seq 0 6)
+  do
+    install -dm755 $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/K79unbound
+	;;
+      3|4|5)
+	ln -sfv ../init.d/unbound $P/etc/rc.d/rc"$i".d/S21unbound
+	;;
+    esac
+  done
+
+  install -d $P/install
+  cat <<EOF >> $P/install/initpkg
+if ! id unbound >/dev/null 2>&1 ; then
+  groupadd -g 88 unbound
+  useradd -c "Unbound DNS resolver" -d /var/lib/unbound -u 88 -g unbound -s /bin/false unbound
+fi
+if [ ! -f /etc/unbound/unbound.conf ]; then
+  ( cd /etc/unbound && cp unbound.conf.dist unbound.conf )
+fi
+EOF
 
 ################################
 #      install tweaks

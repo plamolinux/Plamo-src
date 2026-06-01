@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='dnsmasq'
+vers='2.92rel2'
+url="http://www.thekelleys.org.uk/${pkgbase}/${pkgbase}-${vers}.tar.xz"
+verify="${url}.asc"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG='-DHAVE_LIBIDN2 -DHAVE_DNSSEC -DHAVE_NFTSET'
+DOCS='CHANGELOG CHANGELOG.archive COPYING COPYING-v3'
+patchfiles=""
+addfiles=""
 compress=tzst
 ##############################################################
 
@@ -41,40 +42,35 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-######################################################################
-#  don't copy sources, so need patch in the src dir
-######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
+
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+######################################################################
+#  copy sources into build directory, patch and make in the build dir
+######################################################################
   cd $B
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
-  export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG[$i]}
-    
-  if [ $? != 0 ]; then
-    echo "configure error. $0 script stop"
-    exit 255
-  fi
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
 fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make PREFIX=/usr COPTS="${OPT_CONFIG}" all-i18n
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255
   fi
+  cd $B/contrib/lease-tools
+  make COPTS="${OPT_CONFIG}" all
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -82,7 +78,20 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  make install install-i18n DESTDIR=$P PREFIX=/usr COPTS="${OPT_CONFIG}"
+
+  install -D -v -m 644 dnsmasq.conf.example $P/etc/dnsmasq.conf.dist
+  cat <<EOF
+if [ ! -f /etc/dnsmasq.conf ]; then
+  ( cd /etc && cp dnsmasq.conf.dist dnsmasq.conf )
+fi
+EOF
+  install -Dm0644 -v $W/dnsmasq.init $P/etc/rc.d/init.d/dnsmasq
+
+  install -Dm0755 -t $P/usr/bin/ 'contrib/lease-tools/dhcp_'{release{,6},lease_time}
+  install -Dm0644 -t $P/usr/share/man/man1 'contrib/lease-tools/dhcp_'{release{,6},lease_time}.1
+
+  rm -rf -v $P/usr/share/man/{es,fr}
 
 ################################
 #      install tweaks

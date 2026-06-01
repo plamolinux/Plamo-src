@@ -1,15 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase='rsync'
-vers="3.4.1"
-url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
-verify="$url.asc"
+pkgbase='libgcrypt'
+vers="1.12.2"
+url="https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${vers}.tar.bz2"
+#verify="${url}.sig"
+digest="md5sum:4e98430cfc16d842a7231026c32418da"
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--without-included-zlib --disable-xxhash --disable-lz4'
-DOCS='COPYING INSTALL NEWS OLDNEWS README TODO csprotocol.txt rsync3.txt rsyncsh.txt wildtest.txt'
-patchfiles='rsync-3.4.1-security_fix-2.patch'
+OPT_CONFIG=''
+DOCS="AUTHORS COPYING COPYING.LIB ChangeLog ChangeLog-2011 INSTALL LICENSES NEWS README README.GIT THANKS TODO"
+patchfiles=''
 compress=tzst
 ##############################################################
 
@@ -83,6 +84,13 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+  install -v -dm755 $docdir/$src/doc
+
+  for f in gcrypt.info fips-fsm.{eps,fig,png,pdf} libgcrypt-modules.{eps,fig,png,pdf}
+  do
+    install -v -m644 $S/doc/$f $docdir/$src/doc/$f
+  done
 
 ################################
 #      install tweaks

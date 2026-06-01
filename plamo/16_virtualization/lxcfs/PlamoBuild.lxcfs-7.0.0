@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_plugins_bad"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
-verify="${url}.asc"
+pkgbase="lxcfs"
+vers="7.0.0"
+url="https://linuxcontainers.org/downloads/lxcfs/lxcfs-${vers}.tar.gz"
+verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="gst-plugins-bad-${vers}"
-OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
-DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
+build=B1
+src="lxcfs-${vers}"
+OPT_CONFIG="--buildtype=release -Dinit-script=sysvinit -Dfuse-version=3"
+DOCS="AUTHORS COPYING ChangeLog LICENSE.LGPL2.1 NEWS README README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -53,6 +53,11 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+    #python3 -c "import jinja2" > /dev/null 2>&1
+    if ! python3 -c "import jinja2" > /dev/null 2>&1; then
+	pip3 install --user Jinja2
+    fi
+
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
@@ -70,7 +75,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
+    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +84,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
-    ninja $NUMJOBS
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -93,6 +97,21 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+
+  rm -rfv $P/etc/rc.d/init.d/lxcfs
+  install -Dm755 -v $W/lxcfs.init $P/etc/rc.d/init.d/lxcfs
+  for i in $(seq 0 6)
+  do
+      install -dm755 -v $P/etc/rc.d/rc"$i".d
+      case $i in
+	  0|1|2|6)
+	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/K02lxcfs
+	      ;;
+	  3|4|5)
+	      ln -sfv ../init.d/lxcfs $P/etc/rc.d/rc"$i".d/S98lxcfs
+	      ;;
+      esac
+  done
 
 ################################
 #      install tweaks

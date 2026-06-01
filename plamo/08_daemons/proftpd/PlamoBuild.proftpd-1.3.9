@@ -1,18 +1,21 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_plugins_bad"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
-verify="${url}.asc"
-digest=""
+pkgbase="proftpd"
+vers="1.3.9a"
+url="https://github.com/proftpd/proftpd/archive/refs/tags/v${vers}.tar.gz"
+verify=""
+digest="md5sum:9333020093faae6f02532c6e27078ebb"
 arch=`uname -m`
-build=B2
-src="gst-plugins-bad-${vers}"
-OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
-DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.static-linking RELEASE docs meson_options.txt"
+build=B1
+src="proftpd-${vers}"
+OPT_CONFIG="--enable-shared
+	    --enable-dso --disable-ident
+	    --with-lastlog=/var/log/lastlog
+	    --enable-openssl --with-shared=mod_tls"
+DOCS="COPYING ChangeLog INSTALL NEWS README.md RELEASE_NOTES doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="proftpd.conf proftpd.init"
 compress=tzst
 ##############################################################
 
@@ -70,7 +73,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +82,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
-    ninja $NUMJOBS
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -92,7 +95,33 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  DESTDIR=$P ninja install
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -m644 -v $W/proftpd.conf $P/etc/proftpd.conf.dist
+  install -m644 -v $W/proftpd.conf $docdir/$src/proftpd.conf_plamo_default
+  rm -vf $P/etc/proftpd.conf
+
+  install -Dm644 $W/proftpd.init $P/etc/rc.d/init.d/proftpd
+  for i in $(seq 0 6)
+  do
+    install -dm755 -v $P/etc/rc.d/rc"$i".d
+    case $i in
+      0|1|2|6)
+	ln -sfv ../init.d/proftpd $P/etc/rc.d/rc"$i".d/K28proftpd
+	;;
+      3|4|5)
+	ln -sfv ../init.d/proftpd $P/etc/rc.d/rc"$i".d/S32proftpd
+	;;
+    esac
+  done
+
+  mkdir -p $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ ! -f /etc/proftpd.conf ]; then
+  ( cd /etc ; cp proftpd.conf.dist proftpd.conf )
+fi
+EOF
 
 ################################
 #      install tweaks
