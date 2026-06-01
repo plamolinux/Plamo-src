@@ -6,7 +6,7 @@ pythonvers="3.14"
 url="https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B4
+build=B5
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-static"
 DOCS='AUTHORS COPYING COPYING.LESSER ChangeLog ChangeLog-2011 INSTALL NEWS README THANKS TODO'
@@ -19,7 +19,7 @@ compat_url="https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-${compat_vers}.tar.bz2"
 verify=""
 compat_digest="md5sum:c6f85ce24ad46c9469596df0301f32eb"
 compat_src="gpgme-${compat_vers}"
-compat_OPT_CONFIG="--disable-static --enable-languages=python"
+compat_OPT_CONFIG="--disable-static --enable-languages=cl,cpp,python"
 compat_patchfiles=""
 ####
 
