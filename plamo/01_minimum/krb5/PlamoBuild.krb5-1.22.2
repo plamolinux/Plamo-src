@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="krb5"
-vers="1.22.1"
+vers="1.22.2"
 url="https://kerberos.org/dist/krb5/${vers%.*}/krb5-${vers}.tar.gz"
 verify=""
-digest="md5sum:8f841cea186ef6856ea6c2a063091861"
+digest="md5sum:42472b11771d074329e0cc776d2eb5fd"
 arch=`uname -m`
 build=B1
 src="krb5-${vers}"
@@ -21,8 +21,7 @@ OPT_CONFIG="
 	--with-system-verto=no 
 	--without-keyutils"
 DOCS="NOTICE README doc"
-# https://raw.githubusercontent.com/archlinux/svntogit-packages/packages/krb5/trunk/krb5-config_LDFLAGS.patch
-patchfiles=""
+patchfiles="mitkrb-1.22.2-upstream_fix-1.patch mitkrb-1.22.2-security_fix-1.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
