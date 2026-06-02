@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="lxqt_wayland_session"
-vers="0.4.0"
-url="https://github.com/lxqt/lxqt-wayland-session/releases/download/${vers}/lxqt-wayland-session-${vers}.tar.xz"
+pkgbase="lxqt_panel"
+vers="2.4.1"
+url="https://github.com/lxqt/lxqt-panel/releases/download/${vers}/lxqt-panel-${vers}.tar.xz"
 verify=""
 digest=""
-arch="noarch"
+arch=`uname -m`
 build=B1
-src="lxqt-wayland-session-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release"
-DOCS="CHANGELOG COPYING COPYING.LESSER LICENSE LICENSE.BSD LICENSE.GPLv2 LICENSE.MIT README.md"
+src="lxqt-panel-${vers}"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release "
+DOCS="AUTHORS CHANGELOG LICENSE README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
