@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wlroots"
-vers="0.18.3"
+vers="0.19.3"
 url="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/${vers}/wlroots-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="wlroots-${vers}"
 OPT_CONFIG="--buildtype=release -Dexamples=false"
-DOCS="LICENSE README.md docs"
+DOCS="CONTRIBUTING.md LICENSE README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
