@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase='postfix'
-vers="3.10.7"
+vers="3.11.3"
 url="https://ghostarchive.org/postfix/postfix-release/official/postfix-${vers}.tar.gz"
-digest="md5sum:604e00614fa14f5d109a176420fde7c3"
+digest="md5sum:a96d050f085f600ce53a8c3a72f1df76"
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="postfix-${vers}"
 CCARGS_OPTS="-DNO_NIS -DUSE_SASL_AUTH -DHAS_SQLITE -DUSE_TLS -I/usr/include/openssl/"
 AUXLIBS_OPTS="-lsqlite3 -lpthread -lssl -lcrypto"
 DOCS='HISTORY INSTALL IPv6-ChangeLog LICENSE PORTING RELEASE_NOTES RELEASE_NOTES-1.0 RELEASE_NOTES-1.1 RELEASE_NOTES-2.0 RELEASE_NOTES-2.1 RELEASE_NOTES-2.10 RELEASE_NOTES-2.11 RELEASE_NOTES-2.2 RELEASE_NOTES-2.3 RELEASE_NOTES-2.4 RELEASE_NOTES-2.5 RELEASE_NOTES-2.6 RELEASE_NOTES-2.7 RELEASE_NOTES-2.8 RELEASE_NOTES-2.9 RELEASE_NOTES-3.0 RELEASE_NOTES-3.1 RELEASE_NOTES-3.2 RELEASE_NOTES-3.3 RELEASE_NOTES-3.4 RELEASE_NOTES-3.5 RELEASE_NOTES-3.6 RELEASE_NOTES-3.7 RELEASE_NOTES-3.8 RELEASE_NOTES-3.9 TLS_ACKNOWLEDGEMENTS TLS_CHANGES TLS_LICENSE TLS_TODO WISHLIST US_PATENT_6321267 pflogsumm_quickfix.txt postfix-install'
