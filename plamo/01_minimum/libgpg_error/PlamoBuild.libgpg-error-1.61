@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libgpg_error"
-vers="1.58"
+vers="1.61"
 url="https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${vers}.tar.bz2"
 verify="${url}.sig"
 digest=""
