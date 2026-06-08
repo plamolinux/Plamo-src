@@ -1,11 +1,11 @@
 #!/bin/sh
 ##############################################################
 pkgbase="freerdp"
-vers="3.24.2"
+vers="3.26.0"
 #url="https://github.com/FreeRDP/FreeRDP/releases/download/${vers}/freerdp-${vers}.tar.gz"
 url="https://github.com/freerdp/freerdp/archive/${vers}/FreeRDP-${vers}.tar.gz"
 #verify="${url}.sha256"
-digest="md5sum:96ff5faaa360d86c92e460f3795e9db3"
+digest="md5sum:de6192c28713a928e961c7ec90c9f5d2"
 arch=`uname -m`
 build=B1
 #src="freerdp-${vers}"
