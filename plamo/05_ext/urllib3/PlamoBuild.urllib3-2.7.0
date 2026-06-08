@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="urllib3"
-vers="2.6.3"
+vers="2.7.0"
 url="https://files.pythonhosted.org/packages/source/u/urllib3/urllib3-${vers}.tar.gz"
 verify=""
 digest=""
 arch="noarch"
-build=B2
+build=B1
 src="urllib3-${vers}"
 OPT_CONFIG=""
 DOCS="LICENSE.txt README.md docs"
