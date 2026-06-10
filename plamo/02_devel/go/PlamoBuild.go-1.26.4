@@ -1,9 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='go'
-vers="1.24.3"
-url="https://dl.google.com/go/go${vers}.src.tar.gz"
-digest="sha256sum:229c08b600b1446798109fae1f569228102c8473caba8104b6418cb5bc032878"
+vers="1.26.4"
+url="https://go.dev/dl/go${vers}.src.tar.gz"
+url2="https://go.dev/dl/go${vers}.linux-amd64.tar.gz"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
@@ -33,7 +34,7 @@ case "$arch" in
 	;;
 esac
 export GOROOT_FINAL=/usr/${libdir}/go
-export GOROOT_BOOTSTRAP=/usr/${libdir}/go
+export GOROOT_BOOTSTRAP=$W/root/go
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -50,6 +51,9 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
   download_sources
+  wget -N $url2
+  mkdir -p $W/root
+  tar xvf $(basename $url2) -C $W/root
 fi
 
 if [ $opt_config -eq 1 ] ; then
@@ -75,7 +79,7 @@ if [ $opt_package -eq 1 ] ; then
   install -dm755 -v $P/usr/bin \
 	  $P/usr/${libdir}/go \
 	  $docdir/go-${vers} \
-	  $P/usr/${libdir}/go/pkg/linux_amd64_"{dynlink,race}"
+	  $P/usr/${libdir}/go/pkg/linux_amd64_{dynlink,race}
 
   cp -av bin pkg src lib misc api test $P/usr/${libdir}/go/
   cp -r doc/* $docdir/go-${vers}
@@ -92,11 +96,15 @@ if [ $opt_package -eq 1 ] ; then
 
   install -Dm644 go.env $P/usr/${libdir}/go/go.env
 
-  docs="AUTHORS  CONTRIBUTING.md  CONTRIBUTORS  LICENSE  PATENTS  README.md  SECURITY.md  VERSION"
+  docs="CONTRIBUTING.md  LICENSE  PATENTS  README.md  SECURITY.md  VERSION"
   for f in $docs
   do
       install -Dm644 $f $docdir/go-${vers}/$f
   done
+
+  if [ "$EUID" -eq 0 ]; then
+      chown -R root:root $P
+  fi
 
 ################################
 #      install tweaks
