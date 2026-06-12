@@ -124,6 +124,9 @@ if [ $opt_package -eq 1 ] ; then
   # replace statically linked gs binary with symlink to dynamically linked gsc
   mv -v $P/usr/bin/gsc $P/usr/bin/gs
 
+  # copy examples
+  cp -a $S/examples /usr/share/ghostscript/${vers}/
+
   # remove man of de
   rm -rfv $P/usr/share/man/de
 
