@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libde265"
-vers="1.0.18"
-url="https://github.com/strukturag/libde265/releases/download/v1.0.18/libde265-1.0.18.tar.gz"
+vers="1.1.1"
+url="https://github.com/strukturag/libde265/releases/download/v${vers}/libde265-${vers}.tar.gz"
 verify=""
-digest="md5sum:1c14b8da1ce75ed87ede01274d4eb15d"
+digest="md5sum:e9a8ccb8185b5191e712b8a5fa1d1bfc"
 arch=`uname -m`
 build=B1
-src="libde265-1.0.18"
+src="libde265-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release"
 DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README README.md"
 patchfiles=""
