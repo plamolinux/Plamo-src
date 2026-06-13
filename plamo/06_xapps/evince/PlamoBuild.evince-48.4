@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="evince"
-vers="43.1"
+vers="48.4"
 url="https://download.gnome.org/sources/evince/${vers%.*}/evince-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:5df36228e83ac93a5860f013af50c5c8"
 arch=`uname -m`
 build=B1
 src="evince-${vers}"
@@ -70,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
