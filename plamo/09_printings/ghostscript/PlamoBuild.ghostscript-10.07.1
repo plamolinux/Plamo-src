@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers="9.52"
-url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers/./}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:2dd455dba172010b46225819a5485389"
+vers="10.07.1"
+url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers//./}/${pkgbase}-${vers}.tar.xz"
+digest="md5sum:9e987b203c535d3c7829e1daefb85e98"
 #fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
 #	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
@@ -12,24 +12,23 @@ arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--enable-dynamic
+	--disable-hidden-visibility
 	--with-ijs
 	--with-jbig2dec
 	--with-x
 	--with-drivers=ALL
 	--enable-fontconfig
-	--enable-freetype
 	--enable-openjpeg
 	--with-system-libtiff
 	--with-libpaper
 	--disable-compile-inits"
 fontpath="/usr/share/ghostscript/fonts
 	/usr/share/fonts
+        /usr/share/fonts/TTF
 	/usr/share/poppler/cMap/"
 DOCS='LICENSE'
-# CVE-2020-15900
-# https://github.com/ArtifexSoftware/ghostpdl/commit/5d499272b95a6b890a1397e11d20937de000d31b.patch
-patchfiles="5d499272b95a6b890a1397e11d20937de000d31b.patch"
-compress=txz
+patchfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -78,7 +77,7 @@ if [ $opt_config -eq 1 ] ; then
   # force to use system libraries
   # rm -r cups/libs freetype ijs jpeg lcms2 libpng openjpeg tiff zlib
   # use in-tree freetype because bug
-  rm -r cups/libs ijs jpeg lcms2mt libpng openjpeg tiff zlib
+  rm -r freetype cups/libs ijs jpeg lcms2mt libpng openjpeg tiff zlib
   autoreconf -vi
 
   # fontpath
@@ -89,9 +88,12 @@ if [ $opt_config -eq 1 ] ; then
   done
   fp=${fp/:/}
 
-  export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG} \
+  ./configure --prefix=/usr \
+	      --sysconfdir=/etc \
+	      --localstatedir=/var \
+	      --mandir='${prefix}'/share/man \
+	      ${OPT_CONFIG} \
 	      --with-fontpath="$fp"
     
   if [ $? != 0 ]; then
@@ -119,6 +121,12 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
   make soinstall DESTDIR=$P
 
+  # replace statically linked gs binary with symlink to dynamically linked gsc
+  mv -v $P/usr/bin/gsc $P/usr/bin/gs
+
+  # copy examples
+  cp -av $S/examples $P/usr/share/ghostscript/${vers}/
+
   # remove man of de
   rm -rfv $P/usr/share/man/de
 
@@ -130,8 +138,42 @@ if [ $opt_package -eq 1 ] ; then
   # install -v -m644 -D $W/cidfmap $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
 
   cat <<"EOF" >> $P/usr/share/ghostscript/${vers}/Resource/Init/cidfmap
-/Ryumin-Light      << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipam.ttf) /CSI [(Japan1) 6] >> ;
-/GothicBBB-Medium  << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipag.ttf) /CSI [(Japan1) 6] >> ;
+/ipag 	 << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipag.ttf) 	/SubfontID 0 /CSI [ (Japan1) 6 ] >> ;
+/ipagp 	 << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipagp.ttf) 	/SubfontID 0 /CSI [ (Japan1) 6 ] >> ;
+/ipam	 << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipam.ttf) 	/SubfontID 0 /CSI [ (Japan1) 6 ] >> ;
+/ipamp	 << /FileType /TrueType /Path (/usr/share/fonts/TTF/ipamp.ttf) 	/SubfontID 0 /CSI [ (Japan1) 6 ] >> ;
+/Ryumin-Light		/ipam ;
+/Ryumin-Medium		/ipam ;
+/GothicBBB-Medium	/ipag ;
+/ChuGothicBBB-Medium	/GothicBBB-Medium	;
+/ChuGothicBBB-Medium-Mono	/MS-Gothic	;
+/FutoGoB101-Bold	/GothicBBB-Medium	;
+/FutoMinA101-Bold	/Ryumin-Light		;
+/GothicMB101-Bold	/GothicBBB-Medium	;
+/GothicMB101-hea	/GothicBBB-Medium	;
+/GothicMB101-Ult	/GothicBBB-Medium	;
+/ShinGo-Bold		/GothicBBB-Medium	;
+/ShinGo-Medium		/GothicBBB-Medium	;
+/ShinGo-regular		/GothicBBB-Medium	;
+/MS-Gothic		/ipag			;
+/MS-PGothic		/ipagp			;
+/MSPGothic		/ipagp			;
+/MSMincho		/ipam			;
+/MS-Mincho		/ipam			;
+/MS-PMincho		/ipamp			;
+/MSPMincho		/ipamp			;
+/HeiseiMin-W3		/Ryumin-Light		;
+/HeiseiKakuGo-W5 	/GothicBBB-Medium	;
+/Kochi-Mincho      	/Ryumin-Light		;
+/Kochi-Gothic      	/GothicBBB-Medium	;
+/WadaMin-Regular	/ipam			;
+/WadaMin-RegularH	/ipam			;
+/WadaMin-Bold		/ipam			;
+/WadaGo-Regular		/ipag			;
+/WadaGo-RegularH        /ipag                   ;
+/WadaGo-Bold		/ipag			;
+/Adobe-Japan1      	/Ryumin-Light		;
+/Adobe-Japan2      	/Ryumin-Light		;
 EOF
 
   # install std_font
