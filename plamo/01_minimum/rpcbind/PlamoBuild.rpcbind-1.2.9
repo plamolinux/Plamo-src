@@ -8,7 +8,7 @@ verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --bindir=/sbin"
+OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --sbindir=/sbin"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
 patchfiles="rpcbind-sunrpc.patch"
 compress=tzst
