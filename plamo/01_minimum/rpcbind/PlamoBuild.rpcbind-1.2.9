@@ -1,18 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rpcbind'
-vers='0.2.4'
+vers='1.2.9'
 url="http://downloads.sourceforge.net/${pkgbase}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:cf10cd41ed8228fc54c316191c1f07fe"
+digest="md5sum:f4c2d1f279aadee20871c9d7c0fc9fc5"
 verify=""
 arch=`uname -m`
-build=B3
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --bindir=/sbin"
+OPT_CONFIG="--with-rpcuser=root --enable-warmstarts --without-systemdsystemunitdir --sbindir=/sbin"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README'
-# CVE-2017-8779 patch is introduced in https://github.com/guidovranken/rpcbomb
-patchfiles="rpcbind-sunrpc.patch CVE-2017-8779.patch"
-compress=txz
+patchfiles="rpcbind-sunrpc.patch"
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
