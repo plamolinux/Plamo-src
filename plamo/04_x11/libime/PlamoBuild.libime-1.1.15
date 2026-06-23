@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libime"
-vers="1.1.6"
-url="https://download.fcitx-im.org/fcitx5/libime/libime-${vers}_dict.tar.xz"
-verify="https://download.fcitx-im.org/fcitx5/libime/libime-${vers}_dict.tar.xz.sig"
+vers="1.1.15"
+url="https://download.fcitx-im.org/fcitx5/libime/libime-${vers}_dict.tar.zst"
+verify="https://download.fcitx-im.org/fcitx5/libime/libime-${vers}_dict.tar.zst.sig"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release"
 DOCS=".codedocs LICENSES README.md"
