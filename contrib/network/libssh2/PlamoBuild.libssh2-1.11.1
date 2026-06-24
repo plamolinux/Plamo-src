@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libssh2'
-vers="1.11.0"
-url="https://www.${pkgbase}.org/download/${pkgbase}-${vers}.tar.gz"
+vers="1.11.1"
+url="https://www.libssh2.org/download/libssh2-${vers}.tar.gz"
 verify="${url}.asc"
 arch=`uname -m`
-build=B3
+build=B4
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--disable-docker-tests --disable-static"
 DOCS='COPYING ChangeLog NEWS README RELEASE-NOTES'
-patchfiles='libssh2-1.11.0-security_fixes-1.patch'
+patchfiles='CVE-2026-55199.patch CVE-2026-55200.patch'
 addfiles=''
 compress=tzst
 ##############################################################
