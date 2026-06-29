@@ -6,9 +6,9 @@ url="https://github.com/libexpat/libexpat/releases/download/R_${vers//./_}/expat
 verify="https://github.com/libexpat/libexpat/releases/download/R_${vers//./_}/expat-${vers}.tar.gz.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="expat-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
+OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS="AUTHORS CMake.README COPYING README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
