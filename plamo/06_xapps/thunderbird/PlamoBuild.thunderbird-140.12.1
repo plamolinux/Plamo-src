@@ -2,7 +2,7 @@
 unset LS_BLOCK_SIZE
 ##############################################################
 pkgbase='thunderbird'
-vers="140.7.0"
+vers="140.12.1"
 url="https://archive.mozilla.org/pub/${pkgbase}/releases/${vers}esr/source/${pkgbase}-${vers}esr.source.tar.xz"
 langpack_ja="https://ftp.mozilla.org/pub/thunderbird/releases/${vers}esr/linux-x86_64/xpi/ja.xpi"
 verify="${url}.asc"
@@ -11,7 +11,7 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS LICENSE README.txt sourcestamp.txt'
-patchfiles=''
+patchfiles='thunderbird-140.12.1esr-python_3.14_fixes-1.patch thunderbird-140.12.1esr-glibc-2.43.patch thunderbird-140.12.1esr-llvm_22-1.patch'
 addfiles='langpack.sh mozconfig thunderbird.desktop vendor.js'
 compress=tzst
 
@@ -70,6 +70,18 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 < $W/$patch
   done
 
+  # Tweak for 140.12.1
+  find -name .cargo-checksum.json | \
+      xargs sed -ri 's|"[^"]*.gitmodules":"[^"]*",?||'
+
+  sed '/patch.crates-io/a glslopt={path="../third_party/rust/glslopt"}' \
+    -i comm/rust/Cargo.toml &&
+  sed '/name = "glslopt"/,/^$/{/source/d;/checksum/d}' \
+    -i comm/rust/Cargo.lock
+
+  sed -i '/const [CVP]/s/pub //' gfx/wr/webrender/src/texture_cache.rs
+  # [End] Tweak for 140.12.1
+  
   rm -f $S/.mozconfig
   cp -v $W/mozconfig $S/.mozconfig
 
