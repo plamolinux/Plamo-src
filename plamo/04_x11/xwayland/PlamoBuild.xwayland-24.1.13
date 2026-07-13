@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="xwayland"
-vers="24.1.8"
+vers="24.1.13"
 url="https://www.x.org/pub/individual/xserver/xwayland-${vers}.tar.xz"
-verify="${url}.sig"
+#verify="${url}.sig"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="xwayland-${vers}"
 OPT_CONFIG="-Dxvfb=false -Dxkb_output_dir=/var/lib/xkb"
-DOCS="COPYING README.md doc docbook.am meson_options.txt"
+DOCS="COPYING README.md doc meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
