@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsync'
-vers="3.4.3"
+vers="3.5.0"
 url="https://www.samba.org/ftp/${pkgbase}/src/${pkgbase}-${vers}.tar.gz"
 verify="$url.asc"
 arch=`uname -m`
