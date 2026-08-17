@@ -1,14 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase='apr_util'
-vers='1.6.3'
+vers='1.6.5'
 url="https://archive.apache.org/dist/apr/apr-util-${vers}.tar.bz2"
 verify="${url}.asc"
 arch=`uname -m`
 build=B1
 src="apr-util-${vers}"
-OPT_CONFIG="--disable-static --enable-shared
-            --with-apr=/usr --with-gdbm=/usr
+OPT_CONFIG="--with-apr=/usr --with-gdbm=/usr
 	    --with-openssl=/usr --with-crypto"
 DOCS='LICENSE README README.FREETDS README.cmake'
 patchfiles=''
