@@ -1,14 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="audacious_plugins"
-vers="4.4"
-url="https://distfiles.audacious-media-player.org/audacious-plugins-4.4.tar.bz2"
+vers="4.4.2"
+url="https://distfiles.audacious-media-player.org/audacious-plugins-${vers}.tar.bz2"
 verify=""
-digest=""
+digest=
 arch=`uname -m`
 build=B3
-src="audacious-plugins-4.4"
-OPT_CONFIG="--buildtype=release -Dqt5=true"
+# B2: Recompiled against flac-1.5
+src="audacious-plugins-${vers}"
+OPT_CONFIG="--buildtype=release"
 DOCS="COPYING INSTALL"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -18,7 +19,7 @@ compress=tzst
 
 source /usr/share/plamobuild_functions.sh
 
-B=$S/build
+B=$W/build
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -81,7 +82,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
