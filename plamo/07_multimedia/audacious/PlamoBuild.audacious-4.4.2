@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="audacious"
-vers="4.4"
-url="https://distfiles.audacious-media-player.org/audacious-4.4.tar.bz2"
+vers="4.4.2"
+url="https://distfiles.audacious-media-player.org/audacious-${vers}.tar.bz2"
 verify=""
-digest=""
+digest=
 arch=`uname -m`
-build=B3
-src="audacious-4.4"
-OPT_CONFIG="--buildtype=release -Dqt5=true"
+build=B2
+src="audacious-${vers}"
+OPT_CONFIG="--buildtype=release -Dgtk=true"
 DOCS="AUTHORS COPYING INSTALL"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
@@ -18,7 +18,7 @@ compress=tzst
 
 source /usr/share/plamobuild_functions.sh
 
-B=$S/build
+B=$W/build
 
 # このスクリプトで使う1文字変数の意味
 #
