@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libgcrypt'
-vers="1.12.2"
+vers="1.12.3"
 url="https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${vers}.tar.bz2"
-#verify="${url}.sig"
-digest="md5sum:4e98430cfc16d842a7231026c32418da"
+verify="${url}.sig"
+#digest=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
