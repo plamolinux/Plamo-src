@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libksba'
-vers="1.6.7"
+vers="1.8.1"
 url="https://gnupg.org/ftp/gcrypt/libksba/libksba-${vers}.tar.bz2"
-digest="md5sum:7e736de467b67c7ea88de746c31ea12f"
+verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
