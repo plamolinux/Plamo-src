@@ -1,16 +1,30 @@
 #!/bin/sh
 ##############################################################
 pkgbase="wasi_libc"
-vers="28"
+vers="34"
 url="https://github.com/WebAssembly/wasi-libc/archive/refs/tags/wasi-sdk-${vers}.tar.gz"
-commitid=""
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
 src="wasi-libc-wasi-sdk-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
-DOCS="LICENSE LICENSE-APACHE LICENSE-APACHE-LLVM LICENSE-MIT README.md"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release
+	-DCMAKE_AR=/usr/bin/llvm-ar
+	-DCMAKE_ASM_COMPILER=/usr/bin/clang
+	-DCMAKE_BUILD_TYPE=RelWithDebInfo
+	-DCMAKE_C_COMPILER=/usr/bin/clang
+	-DCMAKE_C_COMPILER_WORKS=ON
+	-DCMAKE_C_FLAGS=-fno-exceptions
+	-DCMAKE_C_LINKER_DEPFILE_SUPPORTED=OFF
+	-DCMAKE_INSTALL_PREFIX=/usr/share/wasi-sysroot
+	-DCMAKE_RANLIB=/usr/bin/llvm-ranlib
+	-DCMAKE_SYSROOT=/usr/share/wasi-sysroot
+	-DCMAKE_SYSTEM_NAME=WASI
+	-DCMAKE_SYSTEM_PROCESSOR=wasm32
+	-DCMAKE_SYSTEM_VERSION=1
+	-DTARGET_TRIPLE=wasm32-wasi
+"
+DOCS="LICENSE LICENSE-APACHE LICENSE-APACHE-LLVM LICENSE-MIT README.md linker-provided-symbols.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -39,10 +53,10 @@ else
     esac
   done
 fi
-
 if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
+
 
 if [ $opt_config -eq 1 ] ; then
 
@@ -55,23 +69,33 @@ if [ $opt_config -eq 1 ] ; then
     done
 
 ######################################################################
-#  source copy build. patch apply in build dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
     done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    # export LDFLAGS='-Wl,--as-needed'
+    export LDFLAGS='-Wl'
+    cmake -G Ninja ${OPT_CONFIG} $S  
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B
-
-    make -j $(nproc) \
-        WASM_CC=/usr/bin/clang \
-        WASM_AR=/usr/bin/llvm-ar \
-        WASM_NM=/usr/bin/llvm-nm
-
+    cd $B 
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -80,10 +104,10 @@ fi
 
 if [ $opt_package -eq 1 ] ; then
   check_root
-  if [ -d $P ] ; then rm -rf $P ; fi ; install -dm755 -v $P/usr/share
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  cp -drv --preserve=mode,timestamp sysroot $P/usr/share/wasi-sysroot
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks
