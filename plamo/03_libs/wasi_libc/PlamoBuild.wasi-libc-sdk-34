@@ -82,7 +82,7 @@ if [ $opt_build -eq 1 ] ; then
 	    extra_cflags+=" -fPIC"
 	fi
 
-	if [ -d $target ]; then rm -rf $target; fi
+	if [ -d build-$target ]; then rm -rf build-$target; fi
 	mkdir build-$target
 
 	cmake -S $src -B build-$target -G ninja $OPT_CONFIG -DTARGET_TRIPLE=$target
