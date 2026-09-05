@@ -98,14 +98,14 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
-    cd $B
+    cd $S
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
 
-    echo "no need to config, proceed to build."
-    opt_build=1
+    cd cmake
+    mkdir Platform
+    echo 'set(WASI 1)' > Platform/WASI.cmake
     
 fi
 
