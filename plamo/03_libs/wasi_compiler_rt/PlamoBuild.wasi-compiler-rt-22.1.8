@@ -6,7 +6,7 @@ url="https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-${vers}.tar.
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="llvm-project-llvmorg-${vers}"
 OPT_CONFIG="
     -G Ninja
@@ -130,6 +130,13 @@ if [ $opt_package -eq 1 ] ; then
 
   DESTDIR=$P cmake --install build -v
   DESTDIR=$P cmake --install build-threads -v
+
+  resource_dir="$(clang --print-resource-dir)"
+
+  cd "$P/$resource_dir/lib"
+  ln -s wasm32-unknown-{wasip1,wasi}
+  ln -s wasm32-unknown-{wasip1,wasip2}
+
   
 ################################
 #      install tweaks
