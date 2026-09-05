@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################
-pkgbase="wasi_libc_wasi_sdk"
+pkgbase="wasi_libc"
 vers="34"
 url="https://github.com/WebAssembly/wasi-libc/archive/refs/tags/wasi-sdk-${vers}.tar.gz"
 verify=""
