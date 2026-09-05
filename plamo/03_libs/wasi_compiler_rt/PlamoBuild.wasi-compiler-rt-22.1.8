@@ -96,7 +96,7 @@ if [ $opt_config -eq 1 ] ; then
 
     resource_dir="$(clang --print-resource-dir)"
     cmake -B build -G Ninja ${OPT_CONFIG} \
-	  -DCOMPILER_RT_INSTALL_PATH="$resource_dir"
+	  -DCOMPILER_RT_INSTALL_PATH="$resource_dir" \
 	  $src/compiler-rt
 fi
 
