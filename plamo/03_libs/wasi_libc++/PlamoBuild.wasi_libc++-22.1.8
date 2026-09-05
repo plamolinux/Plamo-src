@@ -8,6 +8,8 @@ digest=""
 arch=`uname -m`
 build=B1
 src="llvm-project-${vers}.src"
+# 古いバージョンの wasi_libc++ がインストールされた環境でビルドする場合、悪影響が起こる可能性があるため
+# -DCMAKE_CXX_FLAGS="-nostdinc++" を付与している
 OPT_CONFIG=(
       -G Ninja
       -DCMAKE_AR=/usr/bin/llvm-ar
@@ -50,6 +52,7 @@ OPT_CONFIG=(
       -DLIBCXX_INCLUDE_TESTS=OFF
       -DLIBCXX_INCLUDE_BENCHMARKS=OFF
       -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
+      -DCMAKE_CXX_FLAGS="-nostdinc++"
 )
 _targets=(wasm32-wasi wasm32-wasip1 wasm32-wasip1-threads wasm32-wasip2)
 DOCS="LICENSE.TXT README.md"
