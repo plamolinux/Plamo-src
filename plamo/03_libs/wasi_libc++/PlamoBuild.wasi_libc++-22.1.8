@@ -104,6 +104,7 @@ if [ $opt_config -eq 1 ] ; then
     done
 
     cd cmake
+    if [ -d Platform ]; then rm -rf Platform; fi
     mkdir Platform
     echo 'set(WASI 1)' > Platform/WASI.cmake
     
@@ -125,7 +126,7 @@ if [ $opt_build -eq 1 ] ; then
 	if [ -d build-$target ]; then rm -rf build-$target; fi
 	mkdir build-$target
 
-	cmake -S $src/runtimes -B build-$target $OPT_CONFIG \
+	cmake -S $src/runtimes -B build-$target "${OPT_CONFIG[@]}" \
 	      -DCMAKE_ASM_COMPILER_TARGET=$target \
 	      -DCMAKE_CXX_COMPILER_TARGET=$target \
 	      -DCMAKE_C_COMPILER_TARGET=$target \
