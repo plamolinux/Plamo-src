@@ -116,6 +116,11 @@ if [ $opt_build -eq 1 ] ; then
         echo "build error. $0 script stop"
         exit 255
     fi
+    cmake --build build-threads -v
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
