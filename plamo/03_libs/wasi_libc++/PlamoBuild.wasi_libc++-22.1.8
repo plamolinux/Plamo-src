@@ -9,7 +9,9 @@ arch=`uname -m`
 build=B1
 src="llvm-project-${vers}.src"
 # 古いバージョンの wasi_libc++ がインストールされた環境でビルドする場合、悪影響が起こる可能性があるため
-# -DCMAKE_CXX_FLAGS="-nostdinc++" を付与している
+# 次の2つを付与している
+#      -DLIBCXXABI_ADDITIONAL_COMPILE_FLAGS=-nostdinc++
+#      -DLIBCXX_ADDITIONAL_COMPILE_FLAGS=-nostdinc++
 OPT_CONFIG=(
       -G Ninja
       -DCMAKE_AR=/usr/bin/llvm-ar
@@ -52,7 +54,8 @@ OPT_CONFIG=(
       -DLIBCXX_INCLUDE_TESTS=OFF
       -DLIBCXX_INCLUDE_BENCHMARKS=OFF
       -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
-      -DCMAKE_CXX_FLAGS="-nostdinc++"
+      -DLIBCXXABI_ADDITIONAL_COMPILE_FLAGS=-nostdinc++
+      -DLIBCXX_ADDITIONAL_COMPILE_FLAGS=-nostdinc++
 )
 # ターゲットから wasm32-wasip2 は外す。これのビルドに wasm-component-ld
 # が必要なため。そしてwasiを作っている理由であるFirefoxはwasm32-wasip2は不要
