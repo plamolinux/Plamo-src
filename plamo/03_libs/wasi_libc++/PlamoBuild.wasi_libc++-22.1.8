@@ -122,7 +122,6 @@ fi
 if [ $opt_build -eq 1 ] ; then
     cd $W
     
-    local target pic_flag extra_cflags
     for target in "${_targets[@]}"; do
 	pic_flag=ON
 	extra_cflags="-Wno-deprecated -fno-exceptions --target=$target --sysroot /usr/share/wasi-sysroot"
@@ -162,7 +161,6 @@ if [ $opt_package -eq 1 ] ; then
 
     mkdir -p "$P/usr/share/wasi-sysroot/include/c++/v1"
 
-    local target
     for target in "${_targets[@]}"; do
 	DESTDIR="$P" ninja -C build-$target install-cxx
     done
