@@ -122,7 +122,8 @@ if [ $opt_build -eq 1 ] ; then
 	    extra_cflags+=" -pthread"
 	fi
 
-	if [ -d build-$target ]; then rm -rf build-$target; fi 
+	if [ -d build-$target ]; then rm -rf build-$target; fi
+	mkdir build-$target
 
 	cmake -S $src/runtimes -B build-$target $OPT_CONFIG \
 	      -DCMAKE_ASM_COMPILER_TARGET=$target \
@@ -148,6 +149,8 @@ fi
 if [ $opt_package -eq 1 ] ; then
     check_root
     if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+
+    mkdir -p "$P/usr/share/wasi-sysroot/include/c++/v1"
 
     local target
     for target in "${_targets[@]}"; do
