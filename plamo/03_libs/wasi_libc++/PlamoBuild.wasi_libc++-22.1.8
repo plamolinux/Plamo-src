@@ -54,7 +54,10 @@ OPT_CONFIG=(
       -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi"
       -DCMAKE_CXX_FLAGS="-nostdinc++"
 )
-_targets=(wasm32-wasi wasm32-wasip1 wasm32-wasip1-threads wasm32-wasip2)
+# ターゲットから wasm32-wasip2 は外す。これのビルドに wasm-component-ld
+# が必要なため。そしてwasiを作っている理由であるFirefoxはwasm32-wasip2は不要
+#_targets=(wasm32-wasi wasm32-wasip1 wasm32-wasip1-threads wasm32-wasip2)
+_targets=(wasm32-wasi wasm32-wasip1 wasm32-wasip1-threads)
 DOCS="LICENSE.TXT README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
