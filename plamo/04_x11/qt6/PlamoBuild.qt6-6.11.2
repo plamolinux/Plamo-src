@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="qt6"
-vers="6.8.3"
+vers="6.11.2"
 url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B3
+build=B1
 src="qt-everywhere-src-${vers}"
 OPT_CONFIG="
 -bindir lib/qt6/bin
@@ -126,9 +126,6 @@ if [ $opt_package -eq 1 ] ; then
 	  fi
 	  ln -s ../lib/qt6/bin/$(basename "$i") $(basename "${i}")6
   done
-
-  find $P$QT6PREFIX/ -name \*.prl \
-     -exec sed -i -e '/^QMAKE_PRL_BUILD_DIR/d' {} \;
 
   pushd $S/qttools/src &&
   

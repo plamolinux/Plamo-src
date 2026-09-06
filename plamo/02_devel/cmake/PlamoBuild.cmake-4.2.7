@@ -1,16 +1,27 @@
 #!/bin/sh
 ##############################################################
-pkgbase='wayland'
-vers='1.17.0'
-url="https://${pkgbase}.freedesktop.org/releases/${pkgbase}-${vers}.tar.xz"
+pkgbase='cmake'
+vers='4.2.7'
+url="https://github.com/Kitware/CMake/releases/download/v${vers}/${pkgbase}-${vers}.tar.gz"
+digest="sha256sum:9c846a49e783d1c2d31efc8e7fdca72861e43419887a44521a4b837a714e9c4a"
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --disable-documentation'
-DOCS='COPYING README TODO'
+OPT_CONFIG="
+	--qt-gui 
+	--mandir=/share/man
+	--system-curl 
+	--system-expat 
+	--no-system-jsoncpp
+	--no-system-librhash
+	--no-system-libarchive 
+	--system-zlib 
+	--system-bzip2 
+	--docdir=/share/doc/${src}"
+DOCS="LICENSE.rst Licenses README.rst"
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,25 +52,24 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
-  if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+  if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
 ######################################################################
 #  don't copy sources, so need patch in the src dir
 ######################################################################
-  cd $S
-  for patch in $patchfiles ; do
-    if [ ! -f .${patch} ]; then
-      patch -p1 < $W/$patch
-      touch .${patch}
-    fi
-  done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
-
   cd $B
+  for patch in $patchfiles ; do
+    patch -p1 < $W/$patch
+  done
+  # disable libuv
+    sed -i '/CMAKE_USE_LIBUV 1/s/1/0/' CMakeLists.txt
+  # disable lib64
+  if [ $libdir != "lib64" ]; then
+    sed -i '/"lib64"/s/64//' Modules/GNUInstallDirs.cmake
+  fi
+
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed' 
-  $S/configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
+  ./bootstrap --prefix=/usr ${OPT_CONFIG[$i]}
     
   if [ $? != 0 ]; then
     echo "configure error. $0 script stop"
@@ -69,8 +79,9 @@ fi
     
 if [ $opt_build -eq 1 ] ; then
   cd $B
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
   export LDFLAGS='-Wl,--as-needed'
-  make -j3
+  make $NUMJOBS
   if [ $? != 0 ]; then
     echo "build error. $0 script stop"
     exit 255

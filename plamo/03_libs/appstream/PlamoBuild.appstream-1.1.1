@@ -1,15 +1,21 @@
 #!/bin/sh
 ##############################################################
-pkgbase="kwidgetsaddons"
-vers="6.20.0"
-url="https://download.kde.org/stable/frameworks/${vers%.*}/kwidgetsaddons-${vers}.tar.xz"
+pkgbase="appstream"
+vers="1.1.1"
+url="https://codeload.github.com/ximion/appstream/tar.gz/refs/tags/v${vers}"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
-src="kwidgetsaddons-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=lib -DBUILD_PYTHON_BINDINGS=OFF"
-DOCS="LICENSES README.md docs"
+build=B3
+src="appstream-${vers}"
+OPT_CONFIG="--buildtype=release 
+  -Dapidocs=false 
+  -Dcompose=true 
+  -Dqt=true 
+  -Dstemming=false 
+  -Dsystemd=false 
+  -Dvapi=true"
+DOCS="AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -70,7 +76,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255

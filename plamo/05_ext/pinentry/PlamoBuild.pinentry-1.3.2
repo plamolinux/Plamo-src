@@ -5,7 +5,7 @@ vers="1.3.2"
 url="https://www.gnupg.org/ftp/gcrypt/pinentry/pinentry-${vers}.tar.bz2"
 verify="${url}.sig"
 arch=`uname -m`
-build=B1
+build=B2
 src="${pkgbase}-${vers}"
 #TODO: When qt and gtk packages is made, we should make pinentry_gtk and pinentry_qt, or pinentry_gui...
 OPT_CONFIG='--enable-inside-emacs=yes --enable-pinentry-qt=yes --enable-pinentry-gtk2=yes --enable-pinentry-gnome3=no'
