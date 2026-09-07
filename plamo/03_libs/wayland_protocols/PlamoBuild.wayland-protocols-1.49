@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="audacious"
-vers="4.4"
-url="https://distfiles.audacious-media-player.org/audacious-4.4.tar.bz2"
+pkgbase="wayland_protocols"
+vers="1.49"
+url="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/${vers}/downloads/wayland-protocols-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:6bc5904062daada976e8bd44dd4d2b00"
 arch=`uname -m`
-build=B3
-src="audacious-4.4"
-OPT_CONFIG="--buildtype=release -Dqt5=true"
-DOCS="AUTHORS COPYING INSTALL"
+build=B1
+src="wayland-protocols-${vers}"
+OPT_CONFIG=""
+DOCS="COPYING README.md meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -17,8 +17,6 @@ compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
-
-B=$S/build
 
 # このスクリプトで使う1文字変数の意味
 #

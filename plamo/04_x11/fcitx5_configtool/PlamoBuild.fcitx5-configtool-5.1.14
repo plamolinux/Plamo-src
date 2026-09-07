@@ -6,7 +6,7 @@ url="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-${
 verify="https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-${vers}.tar.zst.sig"
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="fcitx5-configtool-${vers}"
 OPT_CONFIG="-DKDE_INSTALL_USE_QT_SYS_PATHS=ON -DENABLE_KCM=OFF -DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=/usr/lib"
 DOCS="LICENSES README.md"

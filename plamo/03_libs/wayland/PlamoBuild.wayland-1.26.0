@@ -1,19 +1,22 @@
 #!/bin/sh
 ##############################################################
-pkgbase="poppler"
-vers="25.07.0"
-url="https://poppler.freedesktop.org/poppler-${vers}.tar.xz"
+pkgbase="wayland"
+vers="1.26.0"
+url="https://gitlab.freedesktop.org/wayland/wayland/-/releases/${vers}/downloads/wayland-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="poppler-${vers}"
-OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_INSTALL_LIBDIR=/usr/lib
-    -DENABLE_UNSTABLE_API_ABI_HEADERS=ON
-    -DTESTDATADIR=$PWD/testfiles
-    -DENABLE_GTK_DOC=OFF"
-DOCS="AUTHORS COPYING COPYING3 ChangeLog INSTALL NEWS README-XPDF README.contributors README.md gtkdoc.py make-glib-api-docs"
+src="wayland-${vers}"
+OPT_CONFIG="--buildtype=release --libexecdir=/usr/libexec 
+  --bindir=/usr/bin 
+  --sbindir=/usr/sbin 
+  --includedir=/usr/include 
+  --datadir=/usr/share 
+  --sysconfdir=/etc 
+  --localstatedir=/var 
+  -Ddocumentation=false"
+DOCS="COPYING README doc releasing.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -74,7 +77,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -83,7 +86,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
