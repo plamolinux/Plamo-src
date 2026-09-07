@@ -10,7 +10,6 @@ build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS=''
-#patch_vers="3.103"
 blfs_patch_url="http://www.linuxfromscratch.org/patches/blfs/svn/nss-standalone-1.patch"
 patchfiles="${blfs_patch_url##*/}"
 compress=tzst
