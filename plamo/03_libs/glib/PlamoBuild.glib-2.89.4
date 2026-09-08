@@ -1,10 +1,10 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glib"
-vers="2.88.1"
+vers="2.89.4"
 url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
 verify=""
-digest="sha256sum:51ab804c56f6eab3e5045c774d1290ac5e4c923d4f9a3d8e33123bee45c1840e"
+digest="sha256sum:1cdbb799f558832e6f14b8337b5fd599c6918ab144977b55e05e00a5e2e84a2c"
 arch=`uname -m`
 build=B1
 src="glib-${vers}"
@@ -14,10 +14,8 @@ OPT_CONFIG="
 	-D selinux=disabled
 	-D sysprof=disabled
 	-D man-pages=true"
-DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 README.win32.md docs"
+DOCS="COPYING NEWS README.md docs"
 patchfiles="
-0001-glib-compile-schemas-Remove-noisy-deprecation-warnin.patch
-0002-gdesktopappinfo-Add-more-known-terminals.patch
 "
 # specifies files that are not in source archive and patchfiles
 addfiles=""
