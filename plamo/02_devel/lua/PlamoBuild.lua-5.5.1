@@ -1,0 +1,208 @@
+#!/bin/sh
+##############################################################
+pkgbase="lua"
+vers="5.5.1"
+url="https://www.lua.org/ftp/lua-${vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="lua-${vers}"
+OPT_CONFIG=""
+DOCS="README doc"
+patchfiles="liblua.so.patch paths.patch"
+# specifies files that are not in source archive and patchfiles
+oldlibs='liblua5.3.so.5.3.6 liblua5.4.so.5.4.2'
+addfiles=""
+compress=txz
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+major="${vers%%.*}"          # 最初のドット以降を削除 -> 5
+minor="${vers%.*}"; minor="${minor#*.}"  # 間の数字を取得 -> 5
+num="${major}${minor}"
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+fi
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  source copy build. patch apply in build dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B
+
+    cd $B
+    cat <<"EOF" > lua.pc
+V=%VER%
+R=%REL%
+
+prefix=/usr
+INSTALL_BIN=${prefix}/bin
+INSTALL_INC=${prefix}/include
+INSTALL_LIB=${prefix}/lib
+INSTALL_MAN=${prefix}/man/man1
+INSTALL_LMOD=${prefix}/share/lua/${V}
+INSTALL_CMOD=${prefix}/lib/lua/${V}
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Lua
+Description: An Extensible Extension Language
+Version: ${R}
+Requires: 
+Libs: -L${libdir} -llua -lm
+Cflags: -I${includedir}
+EOF
+
+sed 's/-llua\b/-llua++/g' lua.pc > lua++.pc
+
+    for patch in $patchfiles ; do
+       patch -p1 < $W/$patch
+    done
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+
+    sed -i "s/%VER%/${vers%.*}/g;s/%REL%/$vers/g" lua.pc
+    sed -i "s/%VER%/${vers%.*}/g;s/%REL%/$vers/g" lua++.pc
+    sed -e "s:llua:llua${vers%.*}:" -e "s:/include:/include/lua${vers%.*}:" -i lua.pc
+
+    if [ -d ${B}2 ];then
+      rm -rf ${B}2
+    fi
+    cp -a $B ${B}2
+
+    sed -r -e "/^LUA_(SO|A|T)=/ s/lua/lua${vers%.*}/" -e "/^LUAC_T=/ s/luac/luac${vers%.*}/" -i src/Makefile
+
+    cd ${B}2
+    sed -i \
+      -e '/\$(INSTALL_EXEC) \$(TO_BIN)/d' \
+      -e '/\$(INSTALL_DATA) \$(TO_INC)/d' \
+      -e '/\$(INSTALL_DATA) \$(TO_MAN)/d' \
+      Makefile
+    
+    echo "no need to config, proceed to build."
+    opt_build=1
+
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    export LDFLAGS='-Wl,--as-needed'
+    make linux MYCFLAGS="-fPIC"
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+
+    cd ${B}2
+    make linux MYCFLAGS="-fPIC" CC=g++ LUA_A=liblua++.a LUA_SO=liblua++.so 
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  make \
+    TO_BIN="lua${vers%.*} luac${vers%.*}" \
+    TO_LIB="liblua${vers%.*}.a liblua${vers%.*}.so liblua${vers%.*}.so.${vers%.*} liblua${vers%.*}.so.$vers" \
+    INSTALL_DATA='cp -d' \
+    INSTALL_TOP="$P"/usr \
+    INSTALL_INC="$P"/usr/include/lua${vers%.*} \
+    INSTALL_MAN="$P"/usr/share/man/man1 \
+    install
+
+  install -Dm644 lua.pc "$P"/usr/lib/pkgconfig/lua${num}.pc
+  ln -sf lua${num}.pc "$P"/usr/lib/pkgconfig/lua${vers%.*}.pc
+  ln -sf lua${num}.pc "$P"/usr/lib/pkgconfig/lua-${vers%.*}.pc
+
+  ln -s liblua${vers%.*}.so "$P"/usr/lib/liblua.so.${vers%.*}
+  ln -s liblua${vers%.*}.so "$P"/usr/lib/liblua.so.$vers
+ 
+  echo "\ninstall c++ libraries\n"
+  cd ${B}2
+  make \
+    TO_LIB="liblua++.a liblua++.so liblua++.so.${vers%.*} liblua++.so.$vers" \
+    INSTALL_BIN=null INSTALL_INC=null INSTALL_MAN=../null \
+    INSTALL_DATA='cp -d' \
+    INSTALL_TOP="$P"/usr \
+    install
+
+  install -Dm644 lua++.pc "$P"/usr/lib/pkgconfig/lua++${num}.pc
+  ln -sf lua++${num}.pc "$P"/usr/lib/pkgconfig/lua++${vers%.*}.pc
+  ln -sf lua++${num}.pc "$P"/usr/lib/pkgconfig/lua++-${vers%.*}.pc
+
+  cd "$P"/usr/share/man/man1
+  mv lua.1 lua${vers%.*}.1
+  mv luac.1 luac${vers%.*}.1
+
+  # make ${vers%.*} as current
+  ( cd $P/usr/bin ; ln -sf lua${vers%.*} lua ; ln -sf luac${vers%.*} luac )
+  ( cd $P/usr/lib ; ln -sf liblua${vers%.*}.a liblua.a ; ln -sf liblua${vers%.*}.so liblua.so )
+  ( cd $P/usr/lib/pkgconfig ; ln -sf lua${num}.pc lua.pc )
+  ( cd $P/usr/lib/pkgconfig ; ln -sf lua++${num}.pc lua++.pc )
+  ( cd $P/usr/include ; ln -sf lua${vers%.*} lua )
+
+  # backward compatibility
+  for oldlib in $oldlibs ; do
+    install $W/$oldlib $P/usr/lib
+    tmp="${oldlib%.*}"
+    if [[ "$tmp" =~ ^([a-zA-Z]+)[0-9.]+(\.so\.[0-9]+\.[0-9]+)$ ]]; then
+      target="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+    fi
+    ( cd $P/usr/lib ; ln -sf $oldlib $target )
+  done
+  
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
