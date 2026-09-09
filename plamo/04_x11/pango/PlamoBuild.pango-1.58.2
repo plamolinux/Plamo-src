@@ -8,7 +8,7 @@ digest="sha256sum:342385b6ca3b7c73455d7c80a13b7dbe4489e00bc3bd4c5bd6ed4dce421e37
 arch=`uname -m`
 build=B1
 src="pango-${vers}"
-OPT_CONFIG="--buildtype=release --wrap-mode=nofallback"
+OPT_CONFIG="--buildtype=release --wrap-mode=nofallback -Dintrospection=enabled"
 DOCS="COPYING NEWS README.md README.win32.md THANKS docs meson.options"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
