@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="glibmm"
-vers="2.86.0"
+vers="2.89.1"
 url="https://download.gnome.org/sources/glibmm/${vers%.*}/glibmm-${vers}.tar.xz"
 verify=""
-digest="md5sum:fb392e970d77bdacd0cf0899c4d4a47d"
+digest="sha256sum:f24b3298078730fb96ed7066f900bf476f3baea8b283a2975d3bf3f4e8def513"
 arch=`uname -m`
 build=B1
 src="glibmm-${vers}"
 OPT_CONFIG="--buildtype=release -Dbuild-documentation=false"
-DOCS="AUTHORS COPYING COPYING.tools ChangeLog ChangeLog.pre-2-36-2 HACKING NEWS README README.SUN README.win32 docs"
+DOCS="COPYING COPYING.tools ChangeLog NEWS README.md README.win32.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
