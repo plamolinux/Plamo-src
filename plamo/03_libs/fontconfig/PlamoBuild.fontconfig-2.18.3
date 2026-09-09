@@ -1,15 +1,37 @@
 #!/bin/sh
 ##############################################################
-pkgbase="pango"
-vers="1.52.2"
-url="https://download.gnome.org/sources/pango/${vers%.*}/pango-${vers}.tar.xz"
+pkgbase="fontconfig"
+vers="2.18.3"
+url="https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/${vers}/fontconfig-${vers}.tar.xz"
 verify=""
-digest="md5sum:ed3c57bdaff980ddc4c840919ce512ac"
+digest=""
 arch=`uname -m`
 build=B1
-src="pango-${vers}"
-OPT_CONFIG="--buildtype=release --wrap-mode=nofallback"
-DOCS="COPYING NEWS README.md README.win32 THANKS docs meson_options.txt"
+src="fontconfig-${vers}"
+OPT_CONFIG="--buildtype=release -Ddoc=disabled"
+DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL NEWS README.md doc"
+enabled_config="
+10-hinting-full.conf
+10-scale-bitmap-fonts.conf
+10-sub-pixel-none.conf
+10-yes-antialias.conf
+11-lcdfilter-default.conf
+20-unhint-small-vera.conf
+30-metric-aliases.conf
+40-nonlatin.conf
+45-generic.conf
+45-latin.conf
+48-spacing.conf
+49-sansserif.conf
+50-user.conf
+51-local.conf
+60-generic.conf
+60-latin.conf
+65-fonts-persian.conf
+65-nonlatin.conf
+69-unifont.conf
+80-delicious.conf
+90-synthetic.conf"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -70,7 +92,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -92,6 +114,42 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   DESTDIR=$P ninja install
+
+  cd $S
+  install -v -dm755 \
+          $P/usr/share/{man/man{1,3,5},doc/fontconfig-2.12.6/fontconfig-devel}
+  install -v -m644 fc-*/*.1         $P/usr/share/man/man1
+  install -v -m644 doc/*.3          $P/usr/share/man/man3
+  install -v -m644 doc/fonts-conf.5 $P/usr/share/man/man5
+  install -v -m644 doc/fontconfig-devel/* \
+          $P/usr/share/doc/fontconfig-${vers}/fontconfig-devel
+  install -v -m644 doc/*.{pdf,sgml,txt,html} \
+          $P/usr/share/doc/fontconfig-${vers}
+
+  install -v -dm755 $P/etc/template/Source/.config/fontconfig
+  install -v -m644 $W/fonts.conf $P/etc/template/Source/.config/fontconfig/fonts.conf
+  install -v -Dm644 $W/fonts.conf $docdir/$src/fonts.conf
+
+  # remove installed /etc/fonts/conf.d/*.conf
+  rm -vf $P/etc/fonts/conf.d/*.conf
+
+  # create link in /etc/fonts/conf.d
+  conf_dir="/usr/share/fontconfig/conf.avail"
+  ( cd $P/etc/fonts/conf.d
+    for fontconf in $enabled_config
+    do
+	if [ -r $P/$conf_dir ]; then
+	    ln -svf $conf_dir/$fontconf .
+	fi
+    done
+  )
+
+  mkdir -pv $P/install
+  cat <<EOF >> $P/install/initpkg
+if [ -x /usr/bin/fc-cache ]; then
+   /usr/bin/fc-cache -f
+fi
+EOF
 
 ################################
 #      install tweaks

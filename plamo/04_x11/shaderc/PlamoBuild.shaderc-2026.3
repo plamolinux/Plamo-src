@@ -1,24 +1,16 @@
 #!/bin/sh
 ##############################################################
-pkgbase="glib"
-vers="2.88.1"
-url="https://download.gnome.org/sources/glib/${vers%.*}/glib-${vers}.tar.xz"
+pkgbase="shaderc"
+vers="2026.3"
+url="https://github.com/google/shaderc/archive/v2026.3/shaderc-2026.3.tar.gz"
 verify=""
-digest="sha256sum:51ab804c56f6eab3e5045c774d1290ac5e4c923d4f9a3d8e33123bee45c1840e"
+digest=""
 arch=`uname -m`
 build=B1
-src="glib-${vers}"
-OPT_CONFIG="
-	--buildtype=release
-	-D glib_debug=disabled
-	-D selinux=disabled
-	-D sysprof=disabled
-	-D man-pages=true"
-DOCS="AUTHORS COPYING HACKING NEWS NEWS.pre-1-3 README README.md README.rationale README.win32 README.win32.md docs"
-patchfiles="
-0001-glib-compile-schemas-Remove-noisy-deprecation-warnin.patch
-0002-gdesktopappinfo-Add-more-known-terminals.patch
-"
+src="shaderc-2026.3"
+OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DSHADERC_SKIP_TESTS=ON -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON"
+DOCS="AUTHORS Dockerfile LICENSE README.md license-checker.cfg"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
@@ -75,10 +67,18 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    set -e
+    sed '/build-version/d' -i glslc/CMakeLists.txt
+    sed '/third_party/d' -i CMakeLists.txt
+    sed 's|SPIRV|glslang/&|' -i libshaderc_util/src/compiler.cc
+    echo '"system"' > glslc/src/build-version.inc
+    set +e
+
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson setup --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    cmake -G Ninja -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -86,7 +86,7 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B
+    cd $B 
     ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
