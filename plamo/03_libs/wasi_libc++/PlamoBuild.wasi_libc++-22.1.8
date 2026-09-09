@@ -6,7 +6,7 @@ url="https://github.com/llvm/llvm-project/releases/download/llvmorg-${vers}/llvm
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="llvm-project-${vers}.src"
 # 古いバージョンの wasi_libc++ がインストールされた環境でビルドする場合、悪影響が起こる可能性があるため
 # 次の2つを付与している
@@ -163,6 +163,7 @@ if [ $opt_package -eq 1 ] ; then
 
     for target in "${_targets[@]}"; do
 	DESTDIR="$P" ninja -C build-$target install-cxx
+	DESTDIR="$P" ninja -C build-$target install-cxxabi
     done
     
 ################################
