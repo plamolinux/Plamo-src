@@ -6,7 +6,7 @@ url="https://www.lua.org/ftp/lua-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="lua-${vers}"
 OPT_CONFIG=""
 DOCS="README doc"
@@ -98,6 +98,7 @@ sed 's/-llua\b/-llua++/g' lua.pc > lua++.pc
     sed -i "s/%VER%/${vers%.*}/g;s/%REL%/$vers/g" lua.pc
     sed -i "s/%VER%/${vers%.*}/g;s/%REL%/$vers/g" lua++.pc
     sed -e "s:llua:llua${vers%.*}:" -e "s:/include:/include/lua${vers%.*}:" -i lua.pc
+    sed -e "s:llua++:llua++${vers%.*}:" -e "s:/include:/include/lua${vers%.*}:" -i lua++.pc
 
     if [ -d ${B}2 ];then
       rm -rf ${B}2
@@ -112,6 +113,8 @@ sed 's/-llua\b/-llua++/g' lua.pc > lua++.pc
       -e '/\$(INSTALL_DATA) \$(TO_INC)/d' \
       -e '/\$(INSTALL_DATA) \$(TO_MAN)/d' \
       Makefile
+
+    sed -r -e "/^LUA_(SO|A|T)=/ s/lua/lua++${vers%.*}/" -e "/^LUAC_T=/ s/luac/luac++${vers%.*}/" -i src/Makefile
     
     echo "no need to config, proceed to build."
     opt_build=1
@@ -128,7 +131,7 @@ if [ $opt_build -eq 1 ] ; then
     fi
 
     cd ${B}2
-    make linux MYCFLAGS="-fPIC" CC=g++ LUA_A=liblua++.a LUA_SO=liblua++.so 
+    make linux MYCFLAGS="-fPIC" CC=g++
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -155,7 +158,7 @@ if [ $opt_package -eq 1 ] ; then
   echo "\ninstall c++ libraries\n"
   cd ${B}2
   make \
-    TO_LIB="liblua++.a liblua++.so liblua++.so.${vers%.*} liblua++.so.$vers" \
+    TO_LIB="liblua++${vers%.*}.a liblua++${vers%.*}.so liblua++${vers%.*}.so.${vers%.*} liblua++${vers%.*}.so.$vers" \
     INSTALL_BIN=null INSTALL_INC=null INSTALL_MAN=../null \
     INSTALL_DATA='cp -d' \
     INSTALL_TOP="$P"/usr \
@@ -172,6 +175,7 @@ if [ $opt_package -eq 1 ] ; then
   # make ${vers%.*} as current
   ( cd $P/usr/bin ; ln -sf lua${vers%.*} lua ; ln -sf luac${vers%.*} luac )
   ( cd $P/usr/lib ; ln -sf liblua${vers%.*}.a liblua.a ; ln -sf liblua${vers%.*}.so liblua.so )
+  ( cd $P/usr/lib ; ln -sf liblua++${vers%.*}.a liblua++.a ; ln -sf liblua++${vers%.*}.so liblua++.so )
   ( cd $P/usr/lib/pkgconfig ; ln -sf lua${num}.pc lua.pc )
   ( cd $P/usr/lib/pkgconfig ; ln -sf lua++${num}.pc lua++.pc )
   ( cd $P/usr/include ; ln -sf lua${vers%.*} lua )
