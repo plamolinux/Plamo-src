@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="pixman"
-vers="0.42.2"
-url="https://www.cairographics.org/releases/pixman-${vers}.tar.gz"
-verify="${url}.sha512"
+pkgbase="wlroots"
+vers="0.20.2"
+url="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/${vers}/wlroots-${vers}.tar.gz"
+verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="pixman-${vers}"
-OPT_CONFIG="--buildtype=release"
-DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README"
+src="wlroots-${vers}"
+OPT_CONFIG="--buildtype=release -Dexamples=false"
+DOCS="CONTRIBUTING.md LICENSE README.md docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -78,8 +78,9 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
+NUMJOBS=${NUMJOBS:-" -j $(expr $(nproc) + 1) "}
     cd $B 
-    ninja
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255

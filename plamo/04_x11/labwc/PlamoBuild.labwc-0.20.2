@@ -1,13 +1,13 @@
 #!/bin/sh
 ##############################################################
 pkgbase="labwc"
-vers="0.9.7"
-url="https://github.com/labwc/labwc/archive/refs/tags/0.9.7.tar.gz"
+vers="0.20.2"
+url="https://github.com/labwc/labwc/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="labwc-0.9.7"
+build=B1
+src="labwc-${vers}"
 OPT_CONFIG="--buildtype=release"
 DOCS="LICENSE NEWS.md README.md docs"
 patchfiles=""
