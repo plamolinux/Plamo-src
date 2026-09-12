@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="appstream"
-vers="1.1.1"
-url="https://codeload.github.com/ximion/appstream/tar.gz/refs/tags/v${vers}"
+vers="1.2.0"
+url="https://github.com/ximion/appstream/archive/refs/tags/v${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B4
+build=B1
 src="appstream-${vers}"
 OPT_CONFIG="--buildtype=release 
   -Dapidocs=false 
@@ -14,7 +14,10 @@ OPT_CONFIG="--buildtype=release
   -Dqt=true 
   -Dstemming=false 
   -Dsystemd=false 
-  -Dvapi=true"
+  -Dvapi=true
+  -Dbash-completion=false
+  -Dman=false
+"
 DOCS="AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
