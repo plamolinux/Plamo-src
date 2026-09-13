@@ -1,21 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="appstream"
-vers="1.1.1"
-url="https://codeload.github.com/ximion/appstream/tar.gz/refs/tags/v${vers}"
+pkgbase="libfyaml"
+vers="0.9.6"
+url="https://github.com/pantoniou/libfyaml/releases/download/v${vers}/libfyaml-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B4
-src="appstream-${vers}"
-OPT_CONFIG="--buildtype=release 
-  -Dapidocs=false 
-  -Dcompose=true 
-  -Dqt=true 
-  -Dstemming=false 
-  -Dsystemd=false 
-  -Dvapi=true"
-DOCS="AUTHORS COPYING MAINTAINERS NEWS README.md RELEASE docs"
+build=B1
+src="libfyaml-${vers}"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="AUTHORS Dockerfile Dockerfile-build-deb Dockerfile.alpine Dockerfile.centos LICENSE README.md doc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -76,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -85,7 +79,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    export LDFLAGS='-Wl,--as-needed'
+    make -j3
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -97,7 +92,8 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  DESTDIR=$P ninja install
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
 
 ################################
 #      install tweaks
