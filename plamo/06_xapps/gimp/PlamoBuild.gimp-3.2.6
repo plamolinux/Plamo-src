@@ -1,18 +1,24 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gimp"
-vers="2.10.38"
-url="https://download.gimp.org/gimp/v2.10/gimp-${vers}.tar.bz2"
+vers="3.2.6"
+url="https://download.gimp.org/gimp/v${vers%.*}/gimp-${vers}.tar.xz"
 verify=""
-digest="md5sum:b5e37c9570a8ee723debe6d3728555ae"
+digest=""
 arch=`uname -m`
-build=B2
+build=B1
+# Compiled with GCC15
 src="gimp-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --disable-check-update --disable-python --with-bug-report-url=http://plamo.linet.gr.jp/"
-DOCS="AUTHORS COPYING ChangeLog ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git HACKING INSTALL LICENSE NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 README README.i18n authors.dtd authors.xml authors.xsl po-windows-installer"
-patchfiles="plamo.patch"
+PLAMOFLAGS="-O2 -fPIC"
+OPT_CONFIG="--buildtype=release -Dlua=true -Dgi-docgen=disabled -Dcheck-update=no -Dheadless-tests=disabled"
+DOCS="AUTHORS COPYING ChangeLog.pre-1-0 ChangeLog.pre-1-2 ChangeLog.pre-2-0 ChangeLog.pre-2-2 
+ ChangeLog.pre-2-4 ChangeLog.pre-2-6 ChangeLog.pre-git INSTALL LICENSE 
+ MAINTAINERS NEWS NEWS.pre-2-0 NEWS.pre-2-10 NEWS.pre-2-2 NEWS.pre-2-4 NEWS.pre-2-6 NEWS.pre-2-8 
+ README README.i18n authors.dtd authors.xml authors.xsl authors4gimp-web.xsl devel-docs docs po-windows-installer"
+patchfiles=""
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+# 作業ディレクトリ内で fetch-xsanecli.sh を実行し、xsanecliプラグインソースをダウンロードしてからPlamoBuildを実行する。
+addfiles="fetch-xsanecli.sh"
 compress=tzst
 ##############################################################
 
@@ -40,6 +46,13 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    cd $W
+    if [ -f fetch-xsanecli.sh ]; then
+      sh ./fetch-xsanecli.sh
+    else
+      echo "Unable to execute $W/fetch-xsanecli.sh"
+      exit 255
+    fi
 fi
 
 
@@ -69,8 +82,10 @@ if [ $opt_config -eq 1 ] ; then
     # fi
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export CFLAGS="$PLAMOFLAGS -std=gnu17"
+    export CXXFLAGS="$PLAMOFLAGS -std=gnu17"
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +94,11 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    export CFLAGS="$PLAMOFLAGS -std=gnu17"
+    export CXXFLAGS="$PLAMOFLAGS -std=gnu17"
     export LDFLAGS='-Wl,--as-needed'
-    make -j$(nproc)
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -93,7 +111,16 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
 
   export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install  
+
+# Add a scanning plugin:
+( cd $P/usr/lib/gimp/3.0/plug-ins || exit 1
+  tar xvf $W/xsanecli-*.tar.?z
+  mv xsanecli-* xsanecli
+  chown -R root:root xsanecli
+  chmod 644 xsanecli/README.md
+  chmod 755 xsanecli/*.py
+)
 
 ################################
 #      install tweaks
@@ -101,6 +128,8 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+  cat $W/fetch-xsanecli.sh > $P/usr/share/doc/$src/fetch-xsanecli.sh
 
 #############################
 #   convert symlink to null file and
