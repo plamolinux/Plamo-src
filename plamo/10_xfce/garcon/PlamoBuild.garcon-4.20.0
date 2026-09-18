@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='garcon'
-vers='0.6.4'
+vers='4.20.0'
 url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:9715aa8214be9c553d9b8c44fde90b9f"
+digest="md5sum:fe17e9cb15a62013e0086183a446e89e"
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -56,6 +56,8 @@ if [ $opt_config -eq 1 ] ; then
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
+  sh autogen.sh
+  make distclean
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
