@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="exo"
-vers="4.16.4"
-url="https://archive.xfce.org/src/xfce/exo/4.16/exo-${vers}.tar.bz2"
+vers="4.20.0"
+url="https://archive.xfce.org/src/xfce/exo/4.20/exo-${vers}.tar.bz2"
 verify=""
-digest="md5sum:f85fe6ad7fbd989c622f4d4ebef86881"
+digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
 arch=`uname -m`
-build=B1
+build=B2
 src="exo-${vers}"
-OPT_CONFIG="--disable-static --enable-shared"
+OPT_CONFIG="--disable-static --enable-shared --enable-x11 --enable-wayland"
 DOCS="AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
