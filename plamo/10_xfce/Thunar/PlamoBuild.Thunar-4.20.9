@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='Thunar'
-vers='1.8.12'
-url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/thunar-${vers}.tar.bz2"
-digest="md5sum:bebd2d83ad2ed111b906c99b65fb32ed"
+vers='4.20.9'
+url="https://archive.xfce.org/src/xfce/thunar/${vers%.*}/thunar-${vers}.tar.bz2"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
@@ -11,7 +11,7 @@ src="thunar-${vers}"
 OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
