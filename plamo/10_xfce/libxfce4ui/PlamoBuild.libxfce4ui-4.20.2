@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='libxfce4ui'
-vers='4.14.1'
-url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:50eae4bab5eeced186bce16fb5f802ac"
+vers='4.20.2'
+url="https://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:ce54074a9ed7964b4a3274e8ac74d949"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG="--disable-static --disable-debug --with-vendor-info=Plamo_Linux"
+OPT_CONFIG="--disable-static --disable-debug --enable-maintainer-mode --with-vendor-info=Plamo_Linux --enable-wayland --enable-x11" 
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO xfce4-about'
-patchfiles='dialog-char-corruption.patch'
-compress=txz
+patchfiles=''
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -77,6 +77,8 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  mkdir -p $P/usr/share/xfce4
+  cat $W/vendorinfo.plamolinux > $P/usr/share/xfce4/vendorinfo
 
 ################################
 #      install tweaks
@@ -84,6 +86,8 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+cp $W/vendorinfo.plamolinux $P/usr/share/doc/$pkgbase-$vers
 
 #############################
 #   convert symlink to null file and 
