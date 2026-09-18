@@ -1,0 +1,12 @@
+diff -Nur xfce4-session-4.14.2.orig/settings/xfce4-session.xml xfce4-session-4.14.2/settings/xfce4-session.xml
+--- xfce4-session-4.14.2.orig/settings/xfce4-session.xml	2019-07-25 17:33:25.000000000 -0500
++++ xfce4-session-4.14.2/settings/xfce4-session.xml	2020-12-15 20:27:10.194758457 -0600
+@@ -3,7 +3,7 @@
+ <channel name="xfce4-session" version="1.0">
+   <property name="general" type="empty">
+     <property name="FailsafeSessionName" type="string" value="Failsafe"/>
+-    <property name="LockCommand" type="string" value=""/>
++    <property name="LockCommand" type="string" value="/usr/bin/xfce4-screensaver-command --lock"/>
+   </property>
+   <property name="sessions" type="empty">
+     <property name="Failsafe" type="empty">

@@ -1,17 +1,26 @@
 #!/bin/sh
 ##############################################################
-pkgbase='Thunar'
-vers='1.8.12'
-url="http://archive.xfce.org/src/xfce/thunar/${vers%.*}/thunar-${vers}.tar.bz2"
-digest="md5sum:bebd2d83ad2ed111b906c99b65fb32ed"
+pkgbase='xfce4_settings'
+vers='4.20.5'
+url="http://archive.xfce.org/src/xfce/xfce4-settings/${vers%.*}/xfce4-settings-${vers}.tar.bz2"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
-src="thunar-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --docdir=/usr/share/doc/${src}"
-DOCS='AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS TODO'
-patchfiles=''
-compress=txz
+src="xfce4-settings-${vers}"
+OPT_CONFIG="--disable-static
+	--enable-shared
+	--enable-pluggable-dialogs
+	--enable-sound-settings
+        --enable-xrandr
+        --enable-xcursor
+        --enable-libnotify
+        --enable-colord
+        --enable-libxklavier"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+addfiles=""
+patchfiles='xfce4-settings.theme.diff xfce4-settings.xft.defaults.diff'
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -42,6 +51,14 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+  for f in $addfiles $patchfiles
+  do
+    if [ ! -f $f ]; then
+      echo "Required file ($f) is missing."
+      exit 255
+    fi
+  done
+
   if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
 ######################################################################
 #  don't copy sources, so need patch in the src dir
@@ -84,6 +101,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+# We don't want icon caches:
+find $P/usr/share/icons -type f -name "icon-theme.cache" -exec rm -f {} \;
 
 ################################
 #      install tweaks

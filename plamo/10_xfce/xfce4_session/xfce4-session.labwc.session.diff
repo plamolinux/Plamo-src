@@ -1,0 +1,11 @@
+--- ./scripts/startxfce4.in.orig	2024-10-11 00:36:33.000000000 -0500
++++ ./scripts/startxfce4.in	2024-12-21 18:00:05.677383861 -0600
+@@ -73,7 +73,7 @@
+       echo "$0: Please either install $default_compositor or specify another compositor as argument"
+       exit 1
+     fi
+-    XFCE4_SESSION_COMPOSITOR=${OPTS:-labwc --startup}
++    XFCE4_SESSION_COMPOSITOR=${OPTS:-labwc --session}
+   fi
+ fi
+ 

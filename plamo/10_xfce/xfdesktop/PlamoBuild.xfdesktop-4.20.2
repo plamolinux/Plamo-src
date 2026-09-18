@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='libxfce4util'
-vers='4.14.0'
-url="http://archive.xfce.org/src/xfce/libxfce4util/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:46f44e36acc3abf1a5ba814c22a773cb"
+pkgbase='xfdesktop'
+vers='4.20.2'
+url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README README.Kiosk THANKS TODO'
+OPT_CONFIG='--disable-static --enable-shared --enable-thunarx --enable-wayland --enable-x11'
+DOCS='AUTHORS COPYING ChangeLog NEWS README.md'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -84,6 +84,18 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+# Add plamolinux background files
+  mkdir -p $P/usr/share/backgrounds/xfce
+  for wall in plamo_bg01.png plamo_ascii_background-03.png 
+  do
+    cp $W/$wall $P/usr/share/backgrounds/xfce
+  done
+
+  # 互換性のため、リンクを作成
+  ln -sf xfce-x.svg $P/usr/share/backgrounds/xfce/Xfce-4.20_wallpaper_1st_winner.svg
+  ln -sf xfce-light.svg $P/usr/share/backgrounds/xfce/Xfce-4.20_wallpaper_2nd_prize.svg
+  ln -sf xfce-cp-dark.svg $P/usr/share/backgrounds/xfce/Xfce-4.20_wallpaper_3rd_prize-1.svg
 
 ################################
 #      install tweaks
