@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfce4_session'
-vers='4.14.2'
+vers='4.20.4'
 url="http://archive.xfce.org/src/xfce/xfce4-session/${vers%.*}/xfce4-session-${vers}.tar.bz2"
 digest=""
 verify=""
 arch=`uname -m`
 build=B1
 src="xfce4-session-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
+OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm --enable-wayland --enable-x11'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles=''
-compress=txz
+patchfiles='use-xfss-by-default-in-xfce.patch xfce4-session.labwc.session.diff'
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -84,12 +84,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-/usr/bin/update-desktop-database
-/usr/bin/update-mime-database /usr/share/mime
-EOF
 
 ################################
 #      install tweaks
