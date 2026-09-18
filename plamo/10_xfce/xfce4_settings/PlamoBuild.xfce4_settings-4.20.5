@@ -1,26 +1,26 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfce4_settings'
-vers='4.14.2'
+vers='4.20.5'
 url="http://archive.xfce.org/src/xfce/xfce4-settings/${vers%.*}/xfce4-settings-${vers}.tar.bz2"
-digest="md5sum:c4816eeb518414255ead805fe220acf1"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
 src="xfce4-settings-${vers}"
 OPT_CONFIG="--disable-static
 	--enable-shared
-	--enable-xrandr
-	--enable-xcursor
-	--enable-libnotify
-	--enable-libxklavier
 	--enable-pluggable-dialogs
-	--enable-xorg-libinput
-	--enable-sound-settings"
+	--enable-sound-settings
+        --enable-xrandr
+        --enable-xcursor
+        --enable-libnotify
+        --enable-colord
+        --enable-libxklavier"
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 addfiles=""
-patchfiles='xfce4-settings-xml-4.14.1.patch'
-compress=txz
+patchfiles='xfce4-settings.theme.diff xfce4-settings.xft.defaults.diff'
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -101,6 +101,9 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+
+# We don't want icon caches:
+find $P/usr/share/icons -type f -name "icon-theme.cache" -exec rm -f {} \;
 
 ################################
 #      install tweaks

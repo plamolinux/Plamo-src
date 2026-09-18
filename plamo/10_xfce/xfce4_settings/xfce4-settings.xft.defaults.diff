@@ -1,0 +1,21 @@
+--- ./xfsettingsd/xsettings.xml.orig	2024-12-01 09:21:41.000000000 -0600
++++ ./xfsettingsd/xsettings.xml	2024-12-15 12:38:18.163888479 -0600
+@@ -17,6 +17,10 @@
+     <property name="EnableEventSounds" type="bool" value="false"/>
+     <property name="EnableInputFeedbackSounds" type="bool" value="false"/>
+   </property>
++<!--
++  Commented out.  We should not modify the system text rendering defaults.
++  At least not by default.  :-)
++  Feel free to uncomment this block and modify it to suit your own needs.
+   <property name="Xft" type="empty">
+     <property name="DPI" type="int" value="-1"/>
+     <property name="Antialias" type="int" value="-1"/>
+@@ -24,6 +28,7 @@
+     <property name="HintStyle" type="string" value="hintnone"/>
+     <property name="RGBA" type="string" value="none"/>
+   </property>
++-->
+   <property name="Gtk" type="empty">
+     <property name="CanChangeAccels" type="bool" value="false"/>
+     <property name="ColorPalette" type="string" value="black:white:gray50:red:purple:blue:light blue:green:yellow:orange:lavender:brown:goldenrod4:dodger blue:pink:light green:gray10:gray30:gray75:gray90"/>
