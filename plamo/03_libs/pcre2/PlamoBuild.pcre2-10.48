@@ -1,8 +1,8 @@
 #!/bin/sh
 ##############################################################
 pkgbase='pcre2'
-vers='10.30'
-url="https://downloads.sourceforge.net/pcre/${pkgbase}-${vers}.tar.bz2"
+vers="10.48"
+url="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${vers}/pcre2-${vers}.tar.bz2"
 verify=""
 arch=`uname -m`
 build=B1
