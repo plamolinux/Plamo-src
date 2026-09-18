@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
 pkgbase='xfce4_panel'
-vers='4.14.3'
+vers='4.20.8'
 url="http://archive.xfce.org/src/xfce/xfce4-panel/${vers%.*}/xfce4-panel-${vers}.tar.bz2"
-digest="md5sum:177818d4a84633c1d489f703fffe905d"
+digest=""
 verify=""
 arch=`uname -m`
 build=B1
 src="xfce4-panel-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-gtk3'
+OPT_CONFIG='--disable-static --enable-shared --enable-gio-unix --enable-introspection=yes --enable-vala=no'
 DOCS='AUTHORS COPYING COPYING.LIB ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -51,6 +51,7 @@ if [ $opt_config -eq 1 ] ; then
     patch -p1 < $W/$patch
   done
 
+  ./autogen.sh
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig
   export LDFLAGS='-Wl,--as-needed'
   ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --mandir='${prefix}'/share/man ${OPT_CONFIG}
