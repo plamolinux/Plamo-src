@@ -1,13 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="elementary_xfce"
-vers="0.15.2"
+vers="0.22"
 url="https://github.com/shimmerproject/elementary-xfce/archive/v${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="elementary-xfce-${vers}"
+optipngver="7.9.1"
+src2="optipng-${optipngver}.tar.gz" #URL:http://optipng.sourceforge.net/ 
 OPT_CONFIG=""
 DOCS="AUTHORS LICENSE README.md"
 patchfiles=""
@@ -15,6 +17,10 @@ patchfiles=""
 addfiles=""
 compress=tzst
 ##############################################################
+
+# svgtopngがエラーになりpngファイルが作成されない現象が発生した場合は
+# 以下のコマンドを実行してください
+# sudo gdk-pixbuf-query-loaders --update-cache
 
 source /usr/share/plamobuild_functions.sh
 
@@ -25,17 +31,16 @@ source /usr/share/plamobuild_functions.sh
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
 
-optipngver="0.7.7"
 optipngurl="http://prdownloads.sourceforge.net/optipng/optipng-${optipngver}.tar.gz?download"
 optipngsrc="optipng-${optipngver}"
 
 optipng() {
     wget -O optipng-${optipngver}.tar.gz $optipngurl
     tar xvf optipng-${optipngver}.tar.gz
-    cd $optipngsrc
-    ./configure
-    make
-    cp src/optipng/optipng $W
+#    cd $optipngsrc
+#    ./configure
+#    make
+#    cp src/optipng/optipng $W
 }
 
 if [ $# -eq 0 ] ; then
@@ -71,12 +76,22 @@ if [ $opt_config -eq 1 ] ; then
 #  out of tree build. patch apply in src dir
 ######################################################################
     if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+
+    # First build a local copy of optipng
+    cd $W
+    tar xvf optipng-${optipngver}.tar.gz
+    cd optipng-${optipngver}
+    ./configure
+    make -C src/optipng
+    mkdir -p $W/package-optipng
+    cp src/optipng/optipng $W/package-optipng
+
     cd $B
     for patch in $patchfiles ; do
         patch -p1 < $W/$patch
     done
 
-    PATH=${PATH}:$W ./configure --prefix=/usr ${OPT_CONFIG}
+    PATH=${PATH}:$W/package-optipng ./configure --prefix=/usr ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -84,8 +99,9 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
-    PATH=${PATH}:$W make
+    cd $B
+#    sed -i "s,xargs optipng,xargs $W/package-optipng/optipng,g" Makefile
+    PATH=${PATH}:$W/package-optipng make
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -99,6 +115,8 @@ if [ $opt_package -eq 1 ] ; then
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
+  make icon-caches DESTDIR=$P
+  rm -f $P/usr/share/icons/*/{AUTHORS,CONTRIBUTORS,LICENSE}
 
 ################################
 #      install tweaks
