@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase="exo"
 vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/exo/4.20/exo-${vers}.tar.bz2"
+url="https://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
 verify=""
 digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
 arch=`uname -m`
