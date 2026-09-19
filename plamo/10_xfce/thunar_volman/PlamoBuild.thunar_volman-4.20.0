@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='tumbler'
-vers='0.2.8'
-url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:5d541608b3962fd2b16e23a266fd7a10"
+pkgbase='thunar_volman'
+vers='4.20.0'
+url="http://archive.xfce.org/src/xfce/thunar-volman/${vers%.*}/thunar-volman-${vers}.tar.bz2"
+digest="md5sum:34c8e0af77ea3894db7e3d164998f9bf"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
+src="thunar-volman-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh

@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xfce4_session'
-vers='4.14.2'
-url="http://archive.xfce.org/src/xfce/xfce4-session/${vers%.*}/xfce4-session-${vers}.tar.bz2"
-digest=""
+pkgbase='xfce4_appfinder'
+vers='4.20.0'
+url="http://archive.xfce.org/src/xfce/xfce4-appfinder/${vers%.*}/xfce4-appfinder-${vers}.tar.bz2"
+digest="md5sum:e60f6c2521a985c6cfe09057d4fb2d69"
 verify=""
 arch=`uname -m`
 build=B1
-src="xfce4-session-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --disable-legacy-sm'
+src="xfce4-appfinder-${vers}"
+OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -84,12 +84,6 @@ if [ $opt_package -eq 1 ] ; then
   cd $B
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
-
-  mkdir -p $P/install
-  cat <<EOF >> $P/install/initpkg
-/usr/bin/update-desktop-database
-/usr/bin/update-mime-database /usr/share/mime
-EOF
 
 ################################
 #      install tweaks

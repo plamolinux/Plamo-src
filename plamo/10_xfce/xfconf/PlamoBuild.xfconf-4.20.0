@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='xfce4_power_manager'
-vers='1.6.5'
-url="http://archive.xfce.org/src/xfce/xfce4-power-manager/${vers%.*}/xfce4-power-manager-${vers}.tar.bz2"
-digest="md5sum:709efbc2de9ed84b4831847ff70bcd7f"
+pkgbase='xfconf'
+vers='4.20.0'
+url="http://archive.xfce.org/src/xfce/${pkgbase}/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
+digest="md5sum:ca596ff0a9be7fa655bb09cb05458644"
 verify=""
 arch=`uname -m`
 build=B1
-src="xfce4-power-manager-${vers}"
+src="${pkgbase}-${vers}"
 OPT_CONFIG='--disable-static --enable-shared'
 DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -53,6 +53,7 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
+
   # if [ -f autogen.sh ] ; then
   #   sh ./autogen.sh
   # fi
@@ -91,6 +92,8 @@ if [ $opt_package -eq 1 ] ; then
 #  install docs and patches, compress them and  chown root.root
 ################################
   install_tweak
+
+cp $W/03f7ff961fd46c9141aba624a278e19de0bf3211.patch $P/usr/share/doc/${pkgbase}-${vers}/
 
 #############################
 #   convert symlink to null file and 
