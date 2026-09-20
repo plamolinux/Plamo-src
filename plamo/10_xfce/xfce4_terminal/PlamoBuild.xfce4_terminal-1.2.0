@@ -1,15 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase="elementary_xfce"
-vers="0.15.2"
-url="https://github.com/shimmerproject/elementary-xfce/archive/v${vers}.tar.gz"
+pkgbase="xfce4_terminal"
+vers="1.2.0"
+url="https://mirror.netcologne.de/xfce/src/apps/xfce4-terminal/${vers%.*}/xfce4-terminal-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
-src="elementary-xfce-${vers}"
-OPT_CONFIG=""
-DOCS="AUTHORS LICENSE README.md"
+build=B1
+src="xfce4-terminal-${vers}"
+OPT_CONFIG="--buildtype=release -Dx11=enabled 
+  -Dwayland=enabled 
+  -Dgtk-layer-shell=enabled 
+  -Dlibutempter=enabled"
+
+DOCS="ABOUT-NLS AUTHORS COPYING HACKING NEWS README.md THANKS TODO doc gtk-doc.make"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -24,19 +28,6 @@ source /usr/share/plamobuild_functions.sh
 # $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
 # $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
 # $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
-
-optipngver="0.7.7"
-optipngurl="http://prdownloads.sourceforge.net/optipng/optipng-${optipngver}.tar.gz?download"
-optipngsrc="optipng-${optipngver}"
-
-optipng() {
-    wget -O optipng-${optipngver}.tar.gz $optipngurl
-    tar xvf optipng-${optipngver}.tar.gz
-    cd $optipngsrc
-    ./configure
-    make
-    cp src/optipng/optipng $W
-}
 
 if [ $# -eq 0 ] ; then
   opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
@@ -53,7 +44,6 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
-    optipng
 fi
 
 
@@ -70,13 +60,21 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
-        patch -p1 < $W/$patch
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
     done
-
-    PATH=${PATH}:$W ./configure --prefix=/usr ${OPT_CONFIG}
+    # if [ -f autogen.sh ] ; then
+    #   sh ./autogen.sh
+    # fi
+    cd $B
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed' 
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -85,7 +83,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    PATH=${PATH}:$W make
+NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -97,8 +96,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks

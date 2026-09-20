@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="exo"
-vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
+pkgbase="xfce4_xkb_plugin"
+vers="0.9.0"
+url="https://archive.xfce.org/src/panel-plugins/xfce4-xkb-plugin/0.9/xfce4-xkb-plugin-0.9.0.tar.xz"
 verify=""
-digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
+digest="md5sum:3073f4b25ef2df34451ef6019e04b691"
 arch=`uname -m`
-build=B2
-src="exo-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-x11 --enable-wayland"
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS"
+build=B1
+src="xfce4-xkb-plugin-0.9.0"
+OPT_CONFIG="--disable-static --enable-shared --sysconfdir=/etc/xfce"
+DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -64,13 +64,13 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
-    # if [ -f autogen.sh ] ; then
-    #   sh ./autogen.sh
-    # fi
-    cd $B
+     if [ -f autogen.sh ] ; then
+       sh ./autogen.sh
+     fi
+    cd $S
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -78,9 +78,10 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
+    cd $S
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "} 
     export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    make $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -90,7 +91,7 @@ fi
 if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  cd $B
+  cd $S
 
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P

@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="exo"
-vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
+pkgbase="thunar_media_tags_plugin"
+vers="0.6.0"
+url="https://archive.xfce.org/src/thunar-plugins/thunar-media-tags-plugin/0.6/thunar-media-tags-plugin-0.6.0.tar.xz"
 verify=""
-digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
+digest=""
 arch=`uname -m`
-build=B2
-src="exo-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-x11 --enable-wayland"
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS"
+build=B1
+src="thunar-media-tags-plugin-0.6.0"
+OPT_CONFIG="--buildtype=release"
+DOCS="AUTHORS COPYING NEWS README.md TODO"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -70,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -79,8 +79,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    export LDFLAGS='-Wl,--as-needed'
-    make -j3
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -92,8 +91,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  export LDFLAGS='-Wl,--as-needed'
-  make install DESTDIR=$P
+  DESTDIR=$P ninja install
 
 ################################
 #      install tweaks

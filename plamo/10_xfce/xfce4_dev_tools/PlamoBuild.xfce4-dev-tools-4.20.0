@@ -2,7 +2,7 @@
 ##############################################################
 pkgbase="xfce4_dev_tools"
 vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/xfce4-dev-tools/4.20/xfce4-dev-tools-$vers.tar.bz2"
+url="https://archive.xfce.org/src/xfce/xfce4-dev-tools/${vers%.*}/xfce4-dev-tools-$vers.tar.bz2"
 verify=""
 digest=""
 arch=`uname -m`

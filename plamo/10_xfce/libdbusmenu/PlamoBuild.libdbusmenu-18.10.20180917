@@ -1,19 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase="exo"
-vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
+pkgbase="libdbusmenu"
+vers="18.10.20180917"
+url="http://deb.debian.org/debian/pool/main/libd/libdbusmenu/libdbusmenu_18.10.20180917~bzr492+repack1.orig.tar.xz"
 verify=""
-digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
+digest=""
 arch=`uname -m`
-build=B2
-src="exo-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-x11 --enable-wayland"
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS"
-patchfiles=""
+build=B1
+src="libdbusmenu-18.10.20180917~bzr492"
+OPT_CONFIG="--disable-static --enable-shared"
+DOCS="AUTHORS COPYING COPYING-GPL3 COPYING.2.1 ChangeLog ChangeLog.bzr INSTALL NEWS README"
+patchfiles="0001_no-deprecated-gnome-common-macros.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-compress=tzst
+compress=txz
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -67,6 +67,10 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+    cd $S
+    sh autogen.sh
+    make distclean
+
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
