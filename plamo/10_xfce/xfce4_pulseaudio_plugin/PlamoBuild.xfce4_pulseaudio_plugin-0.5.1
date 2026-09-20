@@ -1,17 +1,17 @@
 #!/bin/sh
 ##############################################################
-pkgbase='orage'
-vers='4.12.1'
-url="http://archive.xfce.org/src/apps/${pkgbase}/4.12/${pkgbase}-${vers}.tar.bz2"
-digest="md5sum:2b7f5d38cb5c6edbcc65d0f52a742e46"
+pkgbase='xfce4_pulseaudio_plugin'
+vers='0.5.1'
+url="http://archive.xfce.org/src/panel-plugins/xfce4-pulseaudio-plugin/${vers%.*}/xfce4-pulseaudio-plugin-${vers}.tar.xz"
+digest="md5sum:186a097794ced3612713c2098ec0b51c"
 verify=""
 arch=`uname -m`
 build=B1
-src="${pkgbase}-${vers}"
-OPT_CONFIG='--disable-static --enable-shared --enable-libical --disable-debug'
-DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README TODO'
-patchfiles='libical3.patch'
-compress=txz
+src="xfce4-pulseaudio-plugin-${vers}"
+OPT_CONFIG="--disable-static --enable-shared --enable-libnotify"
+DOCS='AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS'
+patchfiles=''
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -53,9 +53,11 @@ if [ $opt_config -eq 1 ] ; then
       touch .${patch}
     fi
   done
-  # if [ -f autogen.sh ] ; then
-  #   sh ./autogen.sh
-  # fi
+   if [ -f autogen.sh ] ; then
+     sh ./autogen.sh
+   fi
+  
+  make distclean
 
   cd $B
   export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig:/opt/kde/${libdir}/pkgconfig

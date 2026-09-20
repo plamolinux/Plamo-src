@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="exo"
-vers="4.20.0"
-url="https://archive.xfce.org/src/xfce/exo/${vers%.*}/exo-${vers}.tar.bz2"
+pkgbase="orage"
+vers="4.20.3"
+url="https://archive.xfce.org/src/apps/orage/${vers%.*}/${pkgbase}-${vers}.tar.bz2"
 verify=""
-digest="md5sum:f059ec3d8686d4b322c42d19ebec0366"
+digest=""
 arch=`uname -m`
-build=B2
-src="exo-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --enable-x11 --enable-wayland"
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog HACKING INSTALL NEWS README THANKS"
+build=B1
+src="${pkgbase}-${vers}"
+OPT_CONFIG="--disable-static --enable-shared --disable-debug --enable-dbus --enable-libical"
+DOCS="AUTHORS COPYING NEWS README.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -67,6 +67,12 @@ if [ $opt_config -eq 1 ] ; then
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
+
+    # Let's replace sound play command from "play" to "aplay"
+    sed -e 's|"play"|"aplay"|g' -i src/parameters.c
+
+    autoreconf -vf
+
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
