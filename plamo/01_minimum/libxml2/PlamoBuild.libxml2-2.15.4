@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="libxml2"
-vers="2.15.3"
+vers="2.15.4"
 url="https://download.gnome.org/sources/libxml2/2.15/libxml2-${vers}.tar.xz"
 verify=""
-digest="md5sum:b7b0123654f86ebf630a5cbedaafdece"
+digest="md5sum:9f5edcbe69198835cb45b4fb2a6d761b"
 arch=`uname -m`
-build=B2
+build=B1
 src="libxml2-${vers}"
 OPT_CONFIG="--buildtype=release -D icu=disabled -D legacy=enabled -Dpython=enabled"
 DOCS="NEWS README.md README.zOS doc"
