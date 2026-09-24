@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="uim"
-vers="1.9.6"
+vers="1.9.8"
 url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
 verify=""
 digest=""
@@ -11,18 +11,20 @@ src="uim-${vers}"
 # Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
 # --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
 # 動作時には必要なさそう。
-OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-immodule --with-qt6 --with-qt6-immodule"
+# --with-mozcを指定しないとmozcで日本語入力できない？
+OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-immodule --with-qt6 --with-qt6-immodule --with-mozc"
 # OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
 DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
 # anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
-#patchfiles="uim-1.8.9-anthy-unicode.patch"
-patchfiles="uim-1.9.6-anthy-unicode.patch"
+patchfiles="uim-1.9.8-anthy-unicode.patch"
 # specifies files that are not in source archive and patchfiles
-addfiles=""
+addfiles="ime_product_icon_opensource-32.png ui-tool.png ui-properties.png ui-dictionary.png"
 compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
+
+export MOZC_CXXFLAGS="-std=c++20 -Wno-conversion"
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -46,6 +48,10 @@ else
 fi
 if [ $opt_download -eq 1 ] ; then
     download_sources
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ime_product_icon_opensource-32.png?raw=true -O ime_product_icon_opensource-32.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-tool.png?raw=true -O ui-tool.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-properties.png?raw=true -O ui-properties.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-dictionary.png?raw=true -O ui-dictionary.png
 fi
 
 
@@ -70,6 +76,8 @@ if [ $opt_config -eq 1 ] ; then
             touch .${patch}
         fi
     done
+
+    sed -i '/^[[:space:]]*MOZC_CXXFLAGS=/s/-std=c++17/-std=c++20/' configure.ac
 
     #autoreconf
     if [ -f autogen.sh ] ; then
@@ -103,6 +111,11 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
+  install -D -m 644 $W/ime_product_icon_opensource-32.png "$P/usr/share/uim/pixmaps/mozc.png"
+  install    -m 644 $W/ui-tool.png "$P/usr/share/uim/pixmaps/mozc_tool_selector.png"
+  install    -m 644 $W/ui-properties.png "$P/usr/share/uim/pixmaps/mozc_tool_config_dialog.png"
+  install    -m 644 $W/ui-dictionary.png "$P/usr/share/uim/pixmaps/mozc_tool_dictionary_tool.png"
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
@@ -118,6 +131,10 @@ if [ $opt_package -eq 1 ] ; then
 
   mkdir -p $P/install
     cat <<"EOF" > $P/install/initpkg
+if [ -f /var/log/packages/uim_mozc ]; then
+	removepkg uim_mozc
+fi
+
 if [ -x /usr/bin/uim-module-manager ]; then
 	uim-module-manager --register anthy mozc
 fi
