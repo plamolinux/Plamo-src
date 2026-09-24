@@ -1,0 +1,17 @@
+diff -uprN lxqt-session-2.4.0.orig/CMakeLists.txt lxqt-session-2.4.0/CMakeLists.txt
+--- lxqt-session-2.4.0.orig/CMakeLists.txt	2026-04-20 17:14:06.000000000 +0900
++++ lxqt-session-2.4.0/CMakeLists.txt	2026-09-24 14:15:23.302027671 +0900
+@@ -38,9 +38,11 @@ find_package(PkgConfig REQUIRED)
+ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+     pkg_search_module(PROCPS REQUIRED libproc2 libprocps)
+     message(STATUS "Using PROCPS -> ${PROCPS_MODULE_NAME} v${PROCPS_VERSION}")
+-    if (PROCPS_VERSION VERSION_GREATER_EQUAL 4.0.0)
++    if (PROCPS_MODULE_NAME STREQUAL "libproc2" OR
++        (PROCPS_VERSION VERSION_GREATER_EQUAL 4.0.0))
+         add_definitions("-DUSING_LIBPROC2")
+-        if (PROCPS_VERSION VERSION_GREATER_EQUAL 4.0.5)
++        if (PROCPS_MODULE_NAME STREQUAL "libproc2" OR
++            (PROCPS_VERSION VERSION_GREATER_EQUAL 4.0.5))
+             add_definitions("-DUSING_LIBPROC2_1")
+         endif()
+     endif()
