@@ -1,0 +1,149 @@
+#!/bin/sh
+##############################################################
+pkgbase="uim"
+vers="1.9.8"
+url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
+verify=""
+digest=""
+arch=`uname -m`
+build=B1
+src="uim-${vers}"
+# Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
+# --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
+# 動作時には必要なさそう。
+# --with-mozcを指定しないとmozcで日本語入力できない？
+OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-immodule --with-qt6 --with-qt6-immodule --with-mozc"
+# OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
+DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
+# anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
+patchfiles="uim-1.9.8-anthy-unicode.patch"
+# specifies files that are not in source archive and patchfiles
+addfiles="ime_product_icon_opensource-32.png ui-tool.png ui-properties.png ui-dictionary.png"
+compress=tzst
+##############################################################
+
+source /usr/share/plamobuild_functions.sh
+
+export MOZC_CXXFLAGS="-std=c++20 -Wno-conversion"
+
+# このスクリプトで使う1文字変数の意味
+#
+# $W : このスクリプトを動かすカレントディレクトリ
+# $S : ソースコードのあるディレクトリ(デフォルト: $W/${src})
+# $B : ビルド用ディレクトリ(デフォルト: /tmp/build)
+# $P : ビルドしたファイルをインストールするディレクトリ（デフォルト: $W/work)
+
+if [ $# -eq 0 ] ; then
+  opt_download=0 ; opt_config=1 ; opt_build=1 ; opt_package=1
+else
+  opt_download=0 ; opt_config=0 ; opt_build=0 ; opt_package=0
+  for i in $@ ; do
+    case $i in
+    download) opt_download=1 ;;
+    config) opt_config=1 ;;
+    build) opt_build=1 ;;
+    package) opt_package=1 ;;
+    esac
+  done
+fi
+if [ $opt_download -eq 1 ] ; then
+    download_sources
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ime_product_icon_opensource-32.png?raw=true -O ime_product_icon_opensource-32.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-tool.png?raw=true -O ui-tool.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-properties.png?raw=true -O ui-properties.png
+    wget -N https://github.com/google/mozc/blob/master/src/data/images/unix/ui-dictionary.png?raw=true -O ui-dictionary.png
+fi
+
+
+if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
+######################################################################
+#  out of tree build. patch apply in src dir
+######################################################################
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B 
+    cd $B
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
+    sed -i '/^[[:space:]]*MOZC_CXXFLAGS=/s/-std=c++17/-std=c++20/' configure.ac
+
+    #autoreconf
+    if [ -f autogen.sh ] ; then
+       sh ./autogen.sh
+    fi
+
+    export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
+    export LDFLAGS='-Wl,--as-needed'
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_build -eq 1 ] ; then
+    cd $B 
+    export LDFLAGS='-Wl,--as-needed'
+    make -j`nproc`
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
+fi
+
+if [ $opt_package -eq 1 ] ; then
+  check_root
+  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
+  cd $B
+
+  export LDFLAGS='-Wl,--as-needed'
+  make install DESTDIR=$P
+
+  install -D -m 644 $W/ime_product_icon_opensource-32.png "$P/usr/share/uim/pixmaps/mozc.png"
+  install    -m 644 $W/ui-tool.png "$P/usr/share/uim/pixmaps/mozc_tool_selector.png"
+  install    -m 644 $W/ui-properties.png "$P/usr/share/uim/pixmaps/mozc_tool_config_dialog.png"
+  install    -m 644 $W/ui-dictionary.png "$P/usr/share/uim/pixmaps/mozc_tool_dictionary_tool.png"
+
+################################
+#      install tweaks
+#  strip binaries, delete locale except ja, compress man,
+#  install docs and patches, compress them and  chown root.root
+################################
+  install_tweak
+
+#############################
+#   convert symlink to null file and
+#   add "ln -sf" command into install/doinst.sh
+################################
+  convert_links
+
+  mkdir -p $P/install
+    cat <<"EOF" > $P/install/initpkg
+if [ -f /var/log/packages/uim_mozc ]; then
+	removepkg uim_mozc
+fi
+
+if [ -x /usr/bin/uim-module-manager ]; then
+	uim-module-manager --register anthy mozc
+fi
+EOF
+
+  cd $P
+  /sbin/makepkg ../$pkg.$compress <<EOF
+y
+1
+EOF
+
+fi
