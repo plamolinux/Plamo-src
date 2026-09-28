@@ -6,7 +6,7 @@ url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="uim-${vers}"
 # Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
 # --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
@@ -16,7 +16,7 @@ OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-
 # OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
 DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
 # anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
-patchfiles="uim-1.9.8-anthy-unicode.patch"
+patchfiles="uim-1.9.8-anthy-unicode.patch uim-682794e.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="ime_product_icon_opensource-32.png ui-tool.png ui-properties.png ui-dictionary.png"
 compress=tzst
@@ -115,6 +115,9 @@ if [ $opt_package -eq 1 ] ; then
   install    -m 644 $W/ui-tool.png "$P/usr/share/uim/pixmaps/mozc_tool_selector.png"
   install    -m 644 $W/ui-properties.png "$P/usr/share/uim/pixmaps/mozc_tool_config_dialog.png"
   install    -m 644 $W/ui-dictionary.png "$P/usr/share/uim/pixmaps/mozc_tool_dictionary_tool.png"
+
+  ln -s uim-toolbar-gtk3 $P/usr/bin/uim-toolbar-gtk
+  ln -s uim-toolbar-gtk3-systray $P/usr/bin/uim-toolbar-gtk-systray
 
 ################################
 #      install tweaks
