@@ -6,7 +6,7 @@ url="https://files.pythonhosted.org/packages/ac/b6/b55c3f49042f1df3dcd422b7f224f
 verify=""
 digest=""
 arch="noarch"
-build=B1
+build=B2
 src="html5lib-1.1"
 OPT_CONFIG=""
 DOCS="AUTHORS.rst LICENSE README.rst requirements-optional.txt requirements-test.txt requirements.txt"
@@ -64,22 +64,29 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
+    sed -i \
+      -e 's/from pkg_resources import parse_version//' \
+      -e 's/import pkg_resources/pkg_resources = None/' \
+      -e 's/ast\.Str/ast.Constant/g' \
+      -e 's/a\.value\.s/a.value.value/g' \
+    setup.py
+
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    python setup.py config    
-    if [ $? != 0 ]; then
-        echo "configure error. $0 script stop"
-        exit 255
-    fi
+#    python setup.py config    
+#    if [ $? != 0 ]; then
+#        echo "configure error. $0 script stop"
+#        exit 255
+#    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    python setup.py build
-    if [ $? != 0 ]; then
-        echo "build error. $0 script stop"
-        exit 255
-    fi
+#    python setup.py build
+#    if [ $? != 0 ]; then
+#        echo "build error. $0 script stop"
+#        exit 255
+#    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -87,7 +94,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr
+  pip install --root $P --prefix /usr --no-deps --no-build-isolation .
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
