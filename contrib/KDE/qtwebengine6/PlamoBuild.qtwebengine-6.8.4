@@ -1,15 +1,34 @@
 #!/bin/sh
 ##############################################################
-pkgbase="python_webencodings"
-vers="0.5.1"
-url="https://files.pythonhosted.org/packages/0b/02/ae6ceac1baeda530866a85075641cec12989bd8d31af6d5ab4a3e8c92f47/webencodings-0.5.1.tar.gz"
+pkgbase="qtwebengine6"
+vers="6.8.4"
+url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-opensource-src-${vers}.tar.xz"
 verify=""
 digest=""
-arch="noarch"
+arch=`uname -m`
 build=B1
-src="webencodings-0.5.1"
-OPT_CONFIG=""
-DOCS="README.rst"
+src="qt-everywhere-src-${vers}"
+# パッチの当たっていないffmpegには対応していないので
+# -DQT_FEATURE_webengine_system_ffmpeg=OFF にした
+OPT_CONFIG="
+-DCMAKE_MESSAGE_LOG_LEVEL=STATUS
+-DQT_GENERATE_SBOM=OFF
+-DQT_FEATURE_webengine_system_ffmpeg=OFF
+-DQT_FEATURE_webengine_system_icu=ON
+-DQT_FEATURE_webengine_system_libevent=ON
+-DQT_BUILD_EXAMPLES_BY_DEFAULT=OFF
+-DFEATURE_webengine_proprietary_codecs=ON
+-DFEATURE_webengine_webrtc_pipewire=ON
+-DINSTALL_INCLUDEDIR=include/qt6
+-DINSTALL_BINDIR=/usr/lib/qt6/bin
+-DINSTALL_DOCDIR=/usr/share/doc/qtwebengine6-${vers}
+-DINSTALL_ARCHDATADIR=/usr/lib/qt6
+-DINSTALL_DATADIR=/usr/share/qt6
+-DINSTALL_MKSPECSDIR=/usr/lib/qt6/mkspecs
+-DINSTALL_EXAMPLESDIR=/usr/share/doc/qtwebengine6-${vers}/examples
+-G Ninja 
+"
+DOCS="README.md README.md.template qtdoc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -17,6 +36,7 @@ compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
+B=$W/build_qtwebengine
 
 # このスクリプトで使う1文字変数の意味
 #
@@ -42,6 +62,7 @@ if [ $opt_download -eq 1 ] ; then
     download_sources
 fi
 
+
 if [ $opt_config -eq 1 ] ; then
 
     for f in $addfiles $patchfiles
@@ -53,20 +74,36 @@ if [ $opt_config -eq 1 ] ; then
     done
 
 ######################################################################
-#  source copy build. patch apply in build dir
+#  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
-    cd $B
+    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
+    cd $S
     for patch in $patchfiles ; do
-       patch -p1 < $W/$patch
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
     done
+
+    find $S/qtwebengine/src/3rdparty/chromium -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.cpp" \) \
+       -exec grep -qE '\b(u?int(8|16|32|64)_t|uintptr_t|intptr_t)\b' {} \; \
+       ! -exec grep -qE '<(cstdint|stdint\.h)>' {} \; \
+       -exec sed -i '0,/#include/s|#include.*|&\n#ifdef __cplusplus\n#include <cstdint>\n#else\n#include <stdint.h>\n#endif|' {} \;
+
+    # 先頭付近で signal.h を読み込ませ、Glibc 側の enum 定義を先に終わらせる
+    sed -i '0,/#include/s|#include.*|&\n#include <signal.h>|' \
+       $S/qtwebengine/src/3rdparty/chromium/sandbox/linux/system_headers/linux_seccomp.h
+
+    sed -i 's/static_assert(__LINE__ == [0-9]*/static_assert(true/' \
+       $S/qtwebengine/src/3rdparty/chromium/third_party/blink/renderer/core/html/fenced_frame/fenced_frame_config.h
+
     # if [ -f autogen.sh ] ; then
     #   sh ./autogen.sh
     # fi
-
+    cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    python setup.py config    
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ${OPT_CONFIG} $S/qtwebengine 
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -75,7 +112,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    python setup.py build
+    export LDFLAGS='-Wl,--as-needed'
+    ninja -j`nproc`
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -87,7 +125,11 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  python setup.py install --root $P --prefix=/usr
+  export LDFLAGS='-Wl,--as-needed'
+  DESTDIR=$P ninja install 
+
+  src=qtwebengine6-${vers}
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,

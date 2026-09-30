@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase="qt6"
-vers="6.8.3"
-url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-src-${vers}.tar.xz"
+vers="6.8.4"
+url="https://download.qt.io/archive/qt/${vers%.*}/${vers}/single/qt-everywhere-opensource-src-${vers}.tar.xz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B3
+build=B1
 src="qt-everywhere-src-${vers}"
+# ビルドエラーになるので"-- -DFEATURE_clang=OFF"を追加
 OPT_CONFIG="
 -bindir lib/qt6/bin
 -dbus-linked
@@ -29,8 +30,9 @@ OPT_CONFIG="
 -translationdir /usr/share/qt6/translations
 -examplesdir /usr/share/doc/$src/examples
 -hostdatadir /usr/lib/qt6
+-- -DFEATURE_clang=OFF
 "
-DOCS=".QT-ENTERPRISE-LICENSE-AGREEMENT LICENSES README.md README.md.template qtdoc"
+DOCS="README.md README.md.template qtdoc"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""

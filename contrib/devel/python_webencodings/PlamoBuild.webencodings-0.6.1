@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="python_html5lib"
-vers="1.1"
-url="https://files.pythonhosted.org/packages/ac/b6/b55c3f49042f1df3dcd422b7f224f939892ee94f22abcf503a9b7339eaf2/html5lib-1.1.tar.gz"
+pkgbase="python_webencodings"
+vers="0.6.1"
+url="https://files.pythonhosted.org/packages/d5/a0/8fd707bcb776a7be556bad06a2ea5fb9bd519df78ef8e26f70ccf0f38bff/webencodings-0.6.1.tar.gz"
 verify=""
 digest=""
 arch="noarch"
-build=B2
-src="html5lib-1.1"
+build=B1
+src="webencodings-0.6.1"
 OPT_CONFIG=""
-DOCS="AUTHORS.rst LICENSE README.rst requirements-optional.txt requirements-test.txt requirements.txt"
+DOCS="LICENSE README.rst docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -64,29 +64,24 @@ if [ $opt_config -eq 1 ] ; then
     #   sh ./autogen.sh
     # fi
 
-    sed -i \
-      -e 's/from pkg_resources import parse_version//' \
-      -e 's/import pkg_resources/pkg_resources = None/' \
-      -e 's/ast\.Str/ast.Constant/g' \
-      -e 's/a\.value\.s/a.value.value/g' \
-    setup.py
-
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-#    python setup.py config    
-#    if [ $? != 0 ]; then
-#        echo "configure error. $0 script stop"
-#        exit 255
-#    fi
+    echo "no need to config, proceed to build."
+    opt_build=1
+    
+    if [ $? != 0 ]; then
+        echo "configure error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-#    python setup.py build
-#    if [ $? != 0 ]; then
-#        echo "build error. $0 script stop"
-#        exit 255
-#    fi
+    python -m build --wheel --no-isolation --skip-dependency-check  
+    if [ $? != 0 ]; then
+        echo "build error. $0 script stop"
+        exit 255
+    fi
 fi
 
 if [ $opt_package -eq 1 ] ; then
@@ -94,7 +89,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 
-  pip install --root $P --prefix /usr --no-deps --no-build-isolation .
+  python -m installer --destdir=$P dist/*.whl 
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
