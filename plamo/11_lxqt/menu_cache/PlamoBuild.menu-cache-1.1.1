@@ -6,10 +6,10 @@ url="https://github.com/lxde/menu-cache/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="menu-cache-${vers}"
 OPT_CONFIG="--disable-static --enable-shared"
-DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README docs gtk-doc.make"
+DOCS="AUTHORS COPYING ChangeLog INSTALL NEWS README docs"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -56,8 +56,8 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
 #  out of tree build. patch apply in src dir
 ######################################################################
-    if [ -d $B ] ; then rm -rf $B ; fi ; mkdir -p $B 
-    cd $S
+    if [ -d $B ] ; then rm -rf $B ; fi ; cp -a $S $B
+    cd $B
     for patch in $patchfiles ; do
         if [ ! -f .${patch} ]; then
             patch -p1 < $W/$patch
@@ -67,10 +67,10 @@ if [ $opt_config -eq 1 ] ; then
     if [ -f autogen.sh ] ; then
       sh ./autogen.sh
     fi
-    cd $B
+
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    $S/configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
+    ./configure --prefix=/usr --libdir=/usr/${libdir} --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man ${OPT_CONFIG}
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
