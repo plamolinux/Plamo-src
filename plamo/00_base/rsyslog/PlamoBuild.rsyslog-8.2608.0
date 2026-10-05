@@ -1,13 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='rsyslog'
-vers='8.2204.1'
+vers='8.2608.0'
 url="https://www.rsyslog.com/files/download/rsyslog/rsyslog-${vers}.tar.gz"
-digest="sha256sum:a6d731e46ad3d64f6ad4b19bbf1bf56ca4760a44a24bb96823189dc2e71f7028"
+digest="sha256sum:e3d60c83405268c422f95feec740455a1cc4b911d00bd8424d5d1272bc509b1a"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG="--sbindir=/sbin
+	--disable-impstats-push
 	--enable-mail
 	--enable-imfile
 	--enable-imptcp"
