@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_python"
-vers="1.26.11"
+vers="1.28.7"
 url="https://gstreamer.freedesktop.org/src/gst-python/gst-python-${vers}.tar.xz"
 #verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="gst-python-${vers}"
 OPT_CONFIG=""
-DOCS="AUTHORS COPYING ChangeLog NEWS README RELEASE TODO meson_options.txt"
+DOCS="COPYING ChangeLog README.md RELEASE release-notes-${vers%.*}.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
