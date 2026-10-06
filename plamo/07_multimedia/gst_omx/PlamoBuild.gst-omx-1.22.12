@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="gst_omx"
-vers="1.20.3"
+vers="1.22.12"
 url="https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${vers}.tar.xz"
-verify="${url}.asc"
+#verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B1
+build=B3
 src="gst-omx-${vers}"
 OPT_CONFIG=(--buildtype=release -Dtarget=generic -Dexamples=disabled -Ddoc=disabled -Dexamples=disabled)
 DOCS="AUTHORS COPYING ChangeLog NEWS README RELEASE docs meson_options.txt"
