@@ -1,24 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gtk4"
-vers="4.23.4"
-url="https://download.gnome.org/sources/gtk/${vers%.*}/gtk-${vers}.tar.xz"
-verify=""
-digest="sha256sum:59df71244cf20601b425d1a13b2a7e805b854d3b5e11ad25f7f98e613cfc5bad"
+pkgbase="gst_plugins_bad"
+vers="1.28.7"
+url="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${vers}.tar.xz"
+verify="${url}.asc"
+digest=""
 arch=`uname -m`
 build=B1
-src="gtk-${vers}"
-OPT_CONFIG="--buildtype=release
-	-Dman-pages=true 
-	-Dbuild-demos=true -Ddocumentation=false 
-        -Dcloudproviders=enabled
-        -Dcolord=enabled
-	-Dbroadway-backend=true 
-	-Dbuild-examples=false 
-	-Dbuild-tests=false 
-	-Dwayland-backend=true
-	-Dintrospection=enabled"
-DOCS="AUTHORS COPYING NEWS README.md docs"
+src="gst-plugins-bad-${vers}"
+OPT_CONFIG=(--buildtype=release -Dgpl=enabled -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
+DOCS="COPYING ChangeLog MAINTAINERS README.md README.static-linking RELEASE docs release-notes-1.28.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -79,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
@@ -88,7 +79,8 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-    ninja
+    NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+    ninja $NUMJOBS
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255

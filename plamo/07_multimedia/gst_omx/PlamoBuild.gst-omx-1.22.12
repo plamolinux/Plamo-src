@@ -1,23 +1,19 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_editing_services"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gstreamer-editing-services/gst-editing-services-${vers}.tar.xz"
+pkgbase="gst_omx"
+vers="1.22.12"
+url="https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${vers}.tar.xz"
 #verify="${url}.asc"
 digest=""
 arch=`uname -m`
-build=B2
-src="gst-editing-services-${vers}"
-OPT_CONFIG=(--buildtype=release
-	    -Ddoc=disabled
-	    -Dtests=disabled
-	    -Dbash-completion=disabled
-	    -Dvalidate=disabled
-	    -Dexamples=disabled )
-DOCS="AUTHORS COPYING COPYING.LIB ChangeLog NEWS README RELEASE docs meson_options.txt"
+build=B3
+src="gst-omx-${vers}"
+OPT_CONFIG=(--buildtype=release -Dtarget=generic -Dexamples=disabled -Ddoc=disabled -Dexamples=disabled)
+DOCS="AUTHORS COPYING ChangeLog NEWS README RELEASE docs meson_options.txt"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
+#compress=txz
 compress=tzst
 ##############################################################
 

@@ -1,15 +1,15 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_devtools"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-${vers}.tar.xz"
-#verify="${url}.asc"
+pkgbase="gst_rtsp_server"
+vers="1.28.7"
+url="https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-${vers}.tar.xz"
+verify=""
 digest=""
 arch=`uname -m`
 build=B1
-src="gst-devtools-${vers}"
-OPT_CONFIG=(--buildtype=release -Ddoc=disabled -Dtests=disabled)
-DOCS="ChangeLog NEWS RELEASE docs meson_options.txt"
+src="gst-rtsp-server-${vers}"
+OPT_CONFIG=(--buildtype=release -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo" -Dexamples=disabled)
+DOCS="AUTHORS COPYING COPYING.LIB ChangeLog README README.md RELEASE TODO docs release-notes-${vers%.*}.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
@@ -80,8 +80,7 @@ fi
 
 if [ $opt_build -eq 1 ] ; then
     cd $B 
-NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
-    ninja $NUMJOBS
+    ninja
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255

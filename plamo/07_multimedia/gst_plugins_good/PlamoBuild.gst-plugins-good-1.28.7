@@ -1,19 +1,18 @@
 #!/bin/sh
 ##############################################################
-pkgbase="gst_python"
-vers="1.26.11"
-url="https://gstreamer.freedesktop.org/src/gst-python/gst-python-${vers}.tar.xz"
-#verify="${url}.asc"
-digest=""
+pkgbase="gst_plugins_good"
+vers="1.28.7"
+url="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${vers}.tar.xz"
+verify=""
+digest="${url}.sha256sum"
 arch=`uname -m`
-build=B2
-src="gst-python-${vers}"
-OPT_CONFIG=""
-DOCS="AUTHORS COPYING ChangeLog NEWS README RELEASE TODO meson_options.txt"
+build=B1
+src="gst-plugins-good-${vers}"
+OPT_CONFIG=(--buildtype=release -Dpackage-origin=https://plamolinux.org/ -Dpackage-name="GStreamer ${vers} Plamo")
+DOCS="COPYING ChangeLog MAINTAINERS README.md README.static-linking RELEASE docs release-notes-${vers%.*}.md"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
 addfiles=""
-#compress=txz
 compress=tzst
 ##############################################################
 
@@ -71,7 +70,7 @@ if [ $opt_config -eq 1 ] ; then
     cd $B
     export PKG_CONFIG_PATH=/usr/${libdir}/pkgconfig:/usr/share/pkgconfig
     export LDFLAGS='-Wl,--as-needed' 
-    meson --prefix=/usr --libdir=/usr/${libdir} ${OPT_CONFIG} $S  
+    meson setup --prefix=/usr --libdir=/usr/${libdir} "${OPT_CONFIG[@]}" $S  
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
         exit 255
