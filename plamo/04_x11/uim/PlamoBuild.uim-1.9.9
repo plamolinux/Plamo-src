@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################################################
 pkgbase="uim"
-vers="1.9.8"
+vers="1.9.9"
 url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="uim-${vers}"
 # Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
 # --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
@@ -16,7 +16,7 @@ OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-
 # OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
 DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
 # anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
-patchfiles="uim-1.9.8-anthy-unicode.patch uim-682794e.patch"
+patchfiles="uim-1.9.8-anthy-unicode.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles="ime_product_icon_opensource-32.png ui-tool.png ui-properties.png ui-dictionary.png"
 compress=tzst
