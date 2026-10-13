@@ -2,12 +2,12 @@
 ##############################################################
 pkgbase="freetype"
 vers="2.15.0"
-url="input source code url here"
-verify=""
+url="https://downloads.sourceforge.net/freetype/freetype-${vers}.tar.xz"
+verify="${url}.sig"
 digest=""
 arch=`uname -m`
 build=B1
-src="freetype-2.15.0"
+src="freetype-${vers}"
 OPT_CONFIG="
 	--buildtype=release
 	-D freetype2:default_library=shared
