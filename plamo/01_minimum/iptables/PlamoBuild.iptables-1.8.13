@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="iptables"
-vers="1.8.10"
+vers="1.8.13"
 url="https://www.netfilter.org/pub/iptables/iptables-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
