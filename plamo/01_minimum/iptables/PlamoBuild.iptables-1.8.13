@@ -1,7 +1,7 @@
 #!/bin/sh
 ##############################################################
 pkgbase="iptables"
-vers="1.8.10"
+vers="1.8.13"
 url="https://www.netfilter.org/pub/iptables/iptables-${vers}.tar.xz"
 verify="${url}.sig"
 digest=""
@@ -12,6 +12,7 @@ OPT_CONFIG="--enable-shared
 	    --enable-libipq
             --with-xtlibdir=/lib/xtables
 	    --enable-bpf-compiler
+	    --enable-devel
 	    --enable-nfsynproxy
 	    --sbindir=/sbin"
 DOCS="COPYING INSTALL"
@@ -100,13 +101,19 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  ln -sfv ../../sbin/xtables-legacy-multi $P/usr/bin/iptables-xml
-
-  for file in ip4tc ip6tc ipq xtables 
-  do
-    mv -v $P/usr/${libdir}/lib${file}.so.* $P/lib
-    ln -sfv ../../${libdir}/$(readlink $P/usr/lib/lib${file}.so) $P/usr/lib/lib${file}.so
+  for x in {arp,eb,ip,ip6}tables{,-restore,-save} iptables-xml; do
+    if [[ $x = ip* ]]; then
+      ln -sf xtables-$1-multi "$pkgdir/usr/bin/$x"
+    fi
   done
+
+  #ln -sfv ../../sbin/xtables-legacy-multi $P/usr/bin/iptables-xml
+
+  #for file in ip4tc ip6tc ipq xtables 
+  #do
+  #  mv -v $P/usr/${libdir}/lib${file}.so.* $P/lib
+  #  ln -sfv ../../${libdir}/$(readlink $P/usr/lib/lib${file}.so) $P/usr/lib/lib${file}.so
+  #done
 
   mkdir -p $P/etc/rc.d/init.d
   cat <<"EOF" > $P/etc/rc.d/init.d/iptables
@@ -263,7 +270,7 @@ EOF
 	      ;;
       esac
   done
-  
+
 ################################
 #      install tweaks
 #  strip binaries, delete locale except ja, compress man,
