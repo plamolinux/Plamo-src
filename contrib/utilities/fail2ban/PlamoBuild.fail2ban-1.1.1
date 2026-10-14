@@ -1,17 +1,19 @@
 #!/bin/sh
 ##############################################################
 pkgbase="fail2ban"
-vers="0.9.4"
-url="https://github.com/fail2ban/fail2ban/archive/${vers}.tar.gz"
+vers="1.1.1"
+url="https://github.com/fail2ban/fail2ban/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B3
+build=B1
 src="fail2ban-${vers}"
 OPT_CONFIG=""
-DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO"
+DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO doc"
 patchfiles=""
-compress=txz
+# specifies files that are not in source archive and patchfiles
+addfiles=""
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
@@ -41,6 +43,15 @@ if [ $opt_download -eq 1 ] ; then
 fi
 
 if [ $opt_config -eq 1 ] ; then
+
+    for f in $addfiles $patchfiles
+    do
+        if [ ! -f $f ]; then
+            echo "Required file ($f) is missing."
+            exit 255
+        fi
+    done
+
 ######################################################################
 #  source copy build. patch apply in build dir
 ######################################################################
@@ -49,11 +60,6 @@ if [ $opt_config -eq 1 ] ; then
     for patch in $patchfiles ; do
        patch -p1 < $W/$patch
     done
-
-    find . -type f | xargs sed -i -e 's|/var/run|/run|g'
-
-    export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-    export LDFLAGS='-Wl,--as-needed' 
     python setup.py config    
     if [ $? != 0 ]; then
         echo "configure error. $0 script stop"
@@ -62,8 +68,8 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
-    python setup.py build
+    cd $B
+    python -m build --wheel --skip-dependency-check --no-isolation
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
         exit 255
@@ -74,19 +80,19 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-
-  python setup.py install --root $P --prefix=/usr --optimize=1
+  python -m installer --destdir="$pkgdir" dist/*.whl
 
   install -Dm644 -v files/fail2ban-logrotate $P/etc/logrotate.d/fail2ban
+  install -Dm644 -t "$pkgdir"/usr/share/man/man1 man/*.1
+  install -Dm644 -t "$pkgdir"/usr/share/man/man5 man/*.5
 
-  install -Dm644 -v man/fail2ban.1 "$P"/usr/share/man/man1/fail2ban.1
-  install -Dm644 -v man/fail2ban-client.1 \
-    "$P"/usr/share/man/man1/fail2ban-client.1
-  install -Dm644 -v man/fail2ban-regex.1 \
-    "$P"/usr/share/man/man1/fail2ban-regex.1
-  install -Dm644 -v man/fail2ban-server.1 \
-    "$P"/usr/share/man/man1/fail2ban-server.1
-  install -Dm644 -v man/jail.conf.5 "$P"/usr/share/man/man5/jail.conf.5
+  ( cd $P
+    site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+    cp -rl ./"$site_packages"/{etc,usr} .
+    rm -r ./"$site_packages"/{etc,usr}
+    cd $P/"$site_packages"
+    mv -v fail2ban fail2ban-${vers}
+  )
 
   install -Dm755 -v $W/fail2ban.init $P/etc/rc.d/init.d/fail2ban
   install -Dm644 -v $W/fail2ban.init $docdir/$src/fail2ban.init
@@ -112,6 +118,7 @@ if [ ! -d /etc/fail2ban ]; then
    ( cd /etc && cp -a fail2ban.dist fail2ban )
 fi
 EOF
+
 
 ################################
 #      install tweaks
