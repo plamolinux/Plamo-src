@@ -1,91 +1,109 @@
 #!/bin/sh
 ##############################################################
 pkgbase="mozc"
-vers="3.34.6239.2"
-commitid="35898ee6c"
+vers="3.34.6345.2"
+commitid="13ef96d765703805f57f7b1e6cd238e959640282"
 url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B1
 src="mozc"
 #OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
-patchfiles="bazel.patch macuim_mozc_tool.patch mozc.patch yoshizawa.patch"
+patchfiles="qt-6.12.0.patch"
 # specifies files that are not in source archive and patchfiles
-addfiles="BUILD.bazel LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
+addfiles="LICENSE.japanese-zip-code-dictionary README.v2.0.generate-zipcode-dic generate-zipcode-dic.sh jigyosyo-convert-mozc-dictionary.awk ken_all-convert-mozc-dictionary.awk"
 compress=tzst
 
 # fcitx5-mozc (Arch Linux)
 _mozc_commit=$commitid
-_bcr_commit=b0cb0e8ec
+_bcr_commit=b0cb0e8ec70689252e3b35f109ffa4a32329b900
 
 _bazel_bin_ver="9.0.2"
 _bazel_bin_url="https://github.com/bazelbuild/bazel/releases/download/${_bazel_bin_ver}/bazel-${_bazel_bin_ver}-linux-x86_64"
 
+# fcitx5-mozc-ext-neologd (Arch Linux)
+_abseil_cpp_commit=5c01794
 _breakpad_commit=8be0e31
 _gtest_commit=d72f9c8
+_japanese_usage_dictionary_commit=38d3462
 _jsoncpp_commit=ca98c98
+_protobuf_commit=199a436
 _dictext_commit=b1b79e9
 _neologd_commit=abc61e3
 
-ENABLED_DICTIONARIES=(
-  'alt-cannadic' 'edict2' 'jawiki' 'neologd'
-  'personal-names' 'place-names' 'skk-jisyo' 'sudachidict'
+_bazel_deps=(
+    https://github.com/abseil/abseil-cpp/releases/download/20260107.1/abseil-cpp-20260107.1.tar.gz
+    https://github.com/abseil/abseil-py/archive/refs/tags/v2.1.0.tar.gz
+    https://github.com/astral-sh/python-build-standalone/releases/download/20251031/cpython-3.11.14+20251031-aarch64-unknown-linux-gnu-install_only.tar.gz
+    https://github.com/astral-sh/python-build-standalone/releases/download/20251031/cpython-3.11.14+20251031-x86_64-unknown-linux-gnu-install_only.tar.gz
+    https://github.com/bats-core/bats-core/archive/v1.10.0.tar.gz
+    https://github.com/bazel-contrib/bazel-lib/releases/download/v2.22.5/bazel-lib-v2.22.5.tar.gz
+    https://github.com/bazel-contrib/bazel-lib/releases/download/v3.0.0/bazel-lib-v3.0.0.tar.gz
+    https://github.com/bazel-contrib/bazel_features/releases/download/v1.42.1/bazel_features-v1.42.1.tar.gz
+    https://github.com/bazel-contrib/rules_go/releases/download/v0.60.0/rules_go-v0.60.0.zip
+    https://github.com/bazel-contrib/rules_python/releases/download/1.9.0/rules_python-1.9.0.tar.gz
+    https://github.com/bazel-contrib/tar.bzl/releases/download/v0.5.1/tar.bzl-v0.5.1.tar.gz
+    https://github.com/bazelbuild/apple_support/releases/download/2.4.0/apple_support.2.4.0.tar.gz
+    https://github.com/bazelbuild/bazel-skylib/releases/download/1.9.0/bazel-skylib-1.9.0.tar.gz
+    https://github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz
+    https://github.com/bazelbuild/rules_android/releases/download/v0.7.1/rules_android-v0.7.1.tar.gz
+    https://github.com/bazelbuild/rules_android_ndk/releases/download/v0.1.5/rules_android_ndk-v0.1.5.tar.gz
+    https://github.com/bazelbuild/rules_apple/releases/download/4.5.2/rules_apple.4.5.2.tar.gz
+    https://github.com/bazelbuild/rules_cc/releases/download/0.2.17/rules_cc-0.2.17.tar.gz
+    https://github.com/bazelbuild/rules_java/releases/download/9.3.0/rules_java-9.3.0.tar.gz
+    https://github.com/bazelbuild/rules_kotlin/releases/download/v2.2.2/rules_kotlin-v2.2.2.tar.gz
+    https://github.com/bazelbuild/rules_license/releases/download/1.0.0/rules_license-1.0.0.tar.gz
+    https://github.com/bazelbuild/rules_pkg/releases/download/1.2.0/rules_pkg-1.2.0.tar.gz
+    https://github.com/bazelbuild/rules_shell/releases/download/v0.6.1/rules_shell-v0.6.1.tar.gz
+    https://github.com/bazelbuild/rules_swift/releases/download/3.5.0/rules_swift.3.5.0.tar.gz
+    https://github.com/hiroyuki-komatsu/japanese-usage-dictionary/archive/refs/tags/2025-01-25.zip
+    https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/jigyosyo.zip
+    https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/ken_all.zip
+    https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
+    https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protobuf-34.1.bazel.tar.gz
+    https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protoc-34.1-linux-aarch_64.zip
+    https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protoc-34.1-linux-x86_64.zip
 )
 
-_bazel_deps=(
-  "https://github.com/abseil/abseil-cpp/releases/download/20260107.1/abseil-cpp-20260107.1.tar.gz"
-  "https://github.com/astral-sh/python-build-standalone/releases/download/20251031/cpython-3.11.14+20251031-aarch64-unknown-linux-gnu-install_only.tar.gz"
-  "https://github.com/astral-sh/python-build-standalone/releases/download/20251031/cpython-3.11.14+20251031-x86_64-unknown-linux-gnu-install_only.tar.gz"
-  "https://github.com/bats-core/bats-core/archive/v1.10.0.tar.gz"
-  "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.22.5/bazel-lib-v2.22.5.tar.gz"
-  "https://github.com/bazel-contrib/bazel-lib/releases/download/v3.0.0/bazel-lib-v3.0.0.tar.gz"
-  "https://github.com/bazel-contrib/bazel_features/releases/download/v1.42.1/bazel_features-v1.42.1.tar.gz"
-  "https://github.com/bazel-contrib/rules_go/releases/download/v0.60.0/rules_go-v0.60.0.zip"
-  "https://github.com/bazel-contrib/rules_python/releases/download/1.9.0/rules_python-1.9.0.tar.gz"
-  "https://github.com/bazel-contrib/tar.bzl/releases/download/v0.5.1/tar.bzl-v0.5.1.tar.gz"
-  "https://github.com/bazelbuild/apple_support/releases/download/2.4.0/apple_support.2.4.0.tar.gz"
-  "https://github.com/bazelbuild/bazel-skylib/releases/download/1.9.0/bazel-skylib-1.9.0.tar.gz"
-  "https://github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz"
-  "https://github.com/bazelbuild/rules_android/releases/download/v0.7.1/rules_android-v0.7.1.tar.gz"
-  "https://github.com/bazelbuild/rules_android_ndk/releases/download/v0.1.5/rules_android_ndk-v0.1.5.tar.gz"
-  "https://github.com/bazelbuild/rules_apple/releases/download/4.5.2/rules_apple.4.5.2.tar.gz"
-  "https://github.com/bazelbuild/rules_cc/releases/download/0.2.17/rules_cc-0.2.17.tar.gz"
-  "https://github.com/bazelbuild/rules_java/releases/download/9.3.0/rules_java-9.3.0.tar.gz"
-  "https://github.com/bazelbuild/rules_kotlin/releases/download/v2.2.2/rules_kotlin-v2.2.2.tar.gz"
-  "https://github.com/bazelbuild/rules_license/releases/download/1.0.0/rules_license-1.0.0.tar.gz"
-  "https://github.com/bazelbuild/rules_pkg/releases/download/1.2.0/rules_pkg-1.2.0.tar.gz"
-  "https://github.com/bazelbuild/rules_shell/releases/download/v0.6.1/rules_shell-v0.6.1.tar.gz"
-  "https://github.com/bazelbuild/rules_swift/releases/download/3.5.0/rules_swift.3.5.0.tar.gz"
-  "https://github.com/hiroyuki-komatsu/japanese-usage-dictionary/archive/refs/tags/2025-01-25.zip"
-  "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/jigyosyo.zip"
-  "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/ken_all.zip"
-  "https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz"
-  "https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protobuf-34.1.bazel.tar.gz"
-  "https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protoc-34.1-linux-aarch_64.zip"
-  "https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protoc-34.1-linux-x86_64.zip"
+# mozc-ut (Arch Linux)
+ENABLED_DICTIONARIES=(
+    'alt-cannadic'
+    'edict2'
+    'jawiki'
+    'neologd'
+    'personal-names'
+    'place-names'
+    'skk-jisyo'
+    'sudachidict'
 )
 
 declare -A _ut_repos=(
-      [merge-ut-dictionaries]="15c1c64502b43e31d328012860376c03c3eaf633"
-      [mozcdic-ut-alt-cannadic]="08e033f4558b7a0b03d8ad6920216d9473f15627"
-      [mozcdic-ut-edict2]="d7279ba285fd5ddfe158b0bfd0c4fcda1f7b08c3"
-      [mozcdic-ut-jawiki]="b50cabaecaf32c03d102db55fc5d0b98e334ec9e"
+      [merge-ut-dictionaries]="6239884099ddc0c4d5bb1453b20441121d20593e"
+      [mozcdic-ut-alt-cannadic]="e7230d7f6d9b72cb656a1eb23d2ccdb7c70d141f"
+      [mozcdic-ut-edict2]="8fe8f7918baf513c3d7e243807dfcda2d5c30139"
+      [mozcdic-ut-jawiki]="57af6adefedab262c295c4bfff71a89902cbe05c"
       [mozcdic-ut-neologd]="d8307abf02b830b185c9320822cffa0d0787c54e"
-      [mozcdic-ut-personal-names]="5896ebef5f39d5772f4575fa05eb24436ce5a5f1"
-      [mozcdic-ut-place-names]="6f9d9bda14f0bd2c10c1563d2aed9150ea95095c"
+      [mozcdic-ut-personal-names]="b557dd4c1548cc7c2164d5f8b14170c40cbb6f81"
+      [mozcdic-ut-place-names]="98cf8e9d7731695a52e5bc72ed633933c71d1913"
       [mozcdic-ut-skk-jisyo]="7c02e535bd6d999a715a53b58c3366f2401bfb7f"
-      [mozcdic-ut-sudachidict]="7def3da408b1854801bd5b559273f9fb8001ef5b"
+      [mozcdic-ut-sudachidict]="c686771bada1d59e9b105c81b29e6ac1a239cb54"
 )
 
 declare -A _extra_repos=(
   [breakpad]="https://chromium.googlesource.com/breakpad/breakpad|${_breakpad_commit}"
   [googletest]="https://github.com/google/googletest.git|${_gtest_commit}"
+  [japanese-usage-dictionary]="https://github.com/hiroyuki-komatsu/japanese-usage-dictionary.git|${_japanese_usage_dictionary_commit}"
   [jsoncpp]="https://github.com/open-source-parsers/jsoncpp.git|${_jsoncpp_commit}"
+  [protobuf]="https://github.com/google/protobuf.git|${_protobuf_commit}"
+  [abseil-cpp]="https://github.com/abseil/abseil-cpp.git|${_abseil_cpp_commit}"
+  [mozcdict-ext]="https://github.com/reasonset/mozcdict-ext.git|${_dictext_commit}"
+  [mecab-ipadic-neologd]="https://github.com/neologd/mecab-ipadic-neologd.git|${_neologd_commit}"
 )
 
-jawiki_ver="20260601"
+jawiki_ver="20261001"
+zipcode_commit="621d059fbcbfae17bfca15b439692bae934268c3"
 
 jigyosyo_ver="20260403"
 ken_all_ver="20260403"
@@ -116,8 +134,9 @@ else
   done
 fi
 if [ $opt_download -eq 1 ] ; then
-    echo "==> mozc リポジトリを取得"
     download_sources
+
+    set -euo pipefail
 
     git -C $S fetch --all
     git -C $S submodule update --init --recursive
@@ -127,7 +146,7 @@ if [ $opt_download -eq 1 ] ; then
       git clone https://github.com/bazelbuild/bazel-central-registry bazel-central-registry
     fi
     git -C bazel-central-registry fetch --all
-    git -C bazel-central-registry checkout ${_bcr_commit} -b build
+    git -C bazel-central-registry checkout ${_bcr_commit} -B build
 
     echo "==> UT辞書関連リポジトリを取得"
     for repo in "${!_ut_repos[@]}"; do
@@ -135,24 +154,24 @@ if [ $opt_download -eq 1 ] ; then
         git clone "https://github.com/utuhiro78/${repo}.git" "${repo}"
       fi
       git -C "${repo}" fetch --all
-      git -C "${repo}" checkout ${_ut_repos[$repo]} -b build
+      git -C "${repo}" checkout ${_ut_repos[$repo]} -B build
     done
     
     echo "==> jawikiインデックス、bazel本体、bazel依存ファイルをダウンロード"
-    echo "Downloading https://dumps.wikimedia.org/jawiki/$jawiki_ver/jawiki-$jawiki_ver-pages-articles-multistream-index.txt.bz2"
-    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o jawiki-$jawiki_ver-pages-articles-multistream-index.txt.bz2 \
-      "https://dumps.wikimedia.org/jawiki/$jawiki_ver/jawiki-$jawiki_ver-pages-articles-multistream-index.txt.bz2"
+    echo "Downloading https://dumps.wikimedia.org/jawiki/${jawiki_ver}/jawiki-${jawiki_ver}-pages-articles-multistream-index.txt.bz2"
+    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o jawiki-${jawiki_ver}-pages-articles-multistream-index.txt.bz2 \
+      "https://dumps.wikimedia.org/jawiki/${jawiki_ver}/jawiki-${jawiki_ver}-pages-articles-multistream-index.txt.bz2"
     
     echo "Downloading ${_bazel_bin_url}"
     curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o "bazel-${_bazel_bin_ver}-linux-x86_64" "${_bazel_bin_url}"
     chmod u+x "bazel-${_bazel_bin_ver}-linux-x86_64"
     
-    echo "Downloading https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/jigyosyo.zip"
-    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o jigyosyo-$jigyosyo_ver.zip \
-      "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/jigyosyo.zip"
-    echo "Downloading https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/ken_all.zip"
-    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o ken_all-$ken_all_ver.zip \
-      "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/621d059fbcbfae17bfca15b439692bae934268c3/ken_all.zip"
+    echo "Downloading https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/${zipcode_commit}/jigyosyo.zip"
+    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o jigyosyo-${jigyosyo_ver}.zip \
+      "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/${zipcode_commit}/jigyosyo.zip"
+    echo "Downloading https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/${zipcode_commit}/ken_all.zip"
+    curl -L --fail --retry 5 --retry-delay 10 --retry-all-errors -o ken_all-${ken_all_ver}.zip \
+      "https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/${zipcode_commit}/ken_all.zip"
 
     echo "==> bazel 依存ファイルをダウンロード"
     for url in "${_bazel_deps[@]}"; do
@@ -163,7 +182,7 @@ if [ $opt_download -eq 1 ] ; then
       fi
     done
 
-    echo "==> breakpad / googletest / jsoncpp を取得"
+    echo "==> ext neologd 関連を取得"
     for repo in "${!_extra_repos[@]}"; do
       url="${_extra_repos[$repo]%%|*}"
       commit="${_extra_repos[$repo]##*|}"
@@ -171,7 +190,7 @@ if [ $opt_download -eq 1 ] ; then
         git clone "${url}" "${repo}"
       fi
       git -C "${repo}" fetch --all
-      git -C "${repo}" checkout ${commit} -b build
+      git -C "${repo}" checkout ${commit} -B build
     done
     
     echo "==> mozcdict-ext / mecab-ipadic-neologd を取得"
@@ -179,20 +198,23 @@ if [ $opt_download -eq 1 ] ; then
       git clone https://github.com/reasonset/mozcdict-ext.git mozcdict-ext
     fi
     git -C mozcdict-ext fetch --all
-    git -C mozcdict-ext checkout ${_dictext_commit} -b build
+    git -C mozcdict-ext checkout ${_dictext_commit} -B build
     
     if [[ ! -d mecab-ipadic-neologd ]]; then
       git clone https://github.com/neologd/mecab-ipadic-neologd.git mecab-ipadic-neologd
     fi
     git -C mecab-ipadic-neologd fetch --all
-    git -C mecab-ipadic-neologd checkout ${_neologd_commit} -b build
+    git -C mecab-ipadic-neologd checkout ${_neologd_commit} -B build
 
     cd $S
     git config protocol.file.allow always
     git submodule init 2>/dev/null || true
     git config submodule.src/third_party/breakpad.url $W/breakpad 2>/dev/null || true
     git config submodule.src/third_party/gtest.url $W/googletest 2>/dev/null || true
+    git config submodule.src/third_party/japanese-usage-dictionary.url $W/japanese-usage-dictionary 2>/dev/null || true
     git config submodule.src/third_party/jsoncpp.url $W/jsoncpp 2>/dev/null || true
+    git config submodule.src/third_party/protobuf.url $W/protobuf 2>/dev/null || true
+    git config submodule.src/third_party/abseil-cpp.url $W/abseil-cpp 2>/dev/null || true
     git -c protocol.file.allow=always submodule update 2>/dev/null || true
 
     cd $S/src
@@ -205,23 +227,10 @@ if [ $opt_download -eq 1 ] ; then
     git config submodule.neologd/upstream.url "$W/mecab-ipadic-neologd" 2>/dev/null || true
     git -c protocol.file.allow=always submodule update 2>/dev/null || true
 
-    echo "==> UIM Mozc"
-    cd $W
-    if [ ! -d macuim ]; then
-       git clone https://github.com/e-kato/macuim.git
-    fi
-    cd macuim
-    if [ ! -f .macuim_mozc_tool.patch ];then
-       patch -p1 -i $W/macuim_mozc_tool.patch
-       touch .macuim_mozc_tool.patch
-    fi
-    cd $S/src
-    cp -rf $W/macuim/Mozc/uim unix/
-    cp -rf $W/BUILD.bazel unix/uim/
+    set +euo pipefail
 fi
 
 if [ $opt_config -eq 1 ] ; then
-    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
     for f in $addfiles $patchfiles
     do
         if [ ! -f $f ]; then
@@ -230,49 +239,45 @@ if [ $opt_config -eq 1 ] ; then
         fi
     done
 
+    if [ -d $B ] ; then rm -rf $B ; fi ;  cp -a $S $B  
+    cd $B
+    for patch in $patchfiles ; do
+        if [ ! -f .${patch} ]; then
+            patch -p1 < $W/$patch
+            touch .${patch}
+        fi
+    done
+
     set -euo pipefail
 
-    cd $B
-    if [ ! -f .bazel.patch ];then 
-        patch -p1 -i $W/bazel.patch
-	touch .bazel.patch
-    fi
-    cd $B/src
-    if [ ! -f .mozc.patch ];then
-        patch -p1 -i $W/mozc.patch
-	touch .mozc.patch
-    fi
-    cd $B/src/unix
-    if [ ! -f .yoshizawa.patch ];then
-	patch -p2 -i $W/yoshizawa.patch
-	touch .yoshizawa.patch
-    fi
-
     echo "==> prepare: config.bzl / MODULE.bazel の更新"
-    SHA256_ZIP_CODE_KEN_ALL=$(sha256sum $W/ken_all-$ken_all_ver.zip | cut -d' ' -f1)
-    SHA256_ZIP_CODE_JIGYOSYO=$(sha256sum $W/jigyosyo-$jigyosyo_ver.zip | cut -d' ' -f1)
+    SHA256_ZIP_CODE_KEN_ALL=$(sha256sum $W/ken_all-${ken_all_ver}.zip | cut -d' ' -f1)
+    SHA256_ZIP_CODE_JIGYOSYO=$(sha256sum $W/jigyosyo-${jigyosyo_ver}.zip | cut -d' ' -f1)
     
     cd $B
     sed -e "s|SHA256_ZIP_CODE_KEN_ALL = \(.*\)|SHA256_ZIP_CODE_KEN_ALL = \"${SHA256_ZIP_CODE_KEN_ALL}\"|" \
         -e "s|SHA256_ZIP_CODE_JIGYOSYO = \(.*\)|SHA256_ZIP_CODE_JIGYOSYO = \"${SHA256_ZIP_CODE_JIGYOSYO}\"|" \
         -i src/config.bzl src/MODULE.bazel    
 
-    # ファイル名がjigyosyo-20260403.zip / ken_all-20260403.zipに変わったことをMODULE.bazelにも反映
-    sed -i -e "s|jigyosyo\.zip|jigyosyo-20260403.zip|g ; s|ken_all\.zip|ken_all-20260403.zip|g" src/MODULE.bazel
+    # ファイル名がjigyosyo-${jigyosyo_ver}.zip / ken_all-${ken_all_ver}.zipに変わったことをMODULE.bazelにも反映
+    sed -i -e "s|jigyosyo\.zip|jigyosyo-${jigyosyo_ver}.zip|g ; s|ken_all\.zip|ken_all-${ken_all_ver}.zip|g" src/MODULE.bazel
 
     # ==== UT辞書のマージ処理 ====
     echo "==> UT辞書をマージ"
-    cd "$W/merge-ut-dictionaries/src/merge/"
+    cp -a $W/merge-ut-dictionaries $B/
+    # $W 以下を汚したくないのでビルドディレクトリにコピー
+    cd "$B/merge-ut-dictionaries/src/merge/"
     
     sed -i -e "s|mozc-master/src/data/dictionary_oss|$B/src/data/dictionary_oss|g ; \
                84s|ZipFile(f'mozc-{date_str}\.zip') as zip_ref|open('merge_dictionaries\.py') as dummy_ref| ; \
                86s|zip_ref\.|| ; \
                96s|zip_ref\.namelist()|os\.listdir(path='$B/src/data/dictionary_oss')| ; \
                104s|zip_ref\.|| ; \
-               169s|jawiki_index_file = .*|jawiki_index_file = '$W/jawiki-$jawiki_ver-pages-articles-multistream-index.txt.bz2'| ; \
+               169s|jawiki_index_file = .*|jawiki_index_file = '$W/jawiki-${jawiki_ver}-pages-articles-multistream-index.txt.bz2'| ; \
                152,168d;89,90d;80,83d;67,79d ; \
                7i import os" merge_dictionaries.py
-    
+
+    echo "Compiling the UT dictionary..."
     [[ -e mozcdic-ut.txt ]] && rm mozcdic-ut.txt
     
     for dict in "${ENABLED_DICTIONARIES[@]}"; do
@@ -284,7 +289,9 @@ if [ $opt_config -eq 1 ] ; then
     cat mozcdic-ut.txt >> "$B/src/data/dictionary_oss/dictionary00.txt"
 
     echo "==> NEologd/Sudachi/byhand辞書を生成"
-    cd $W/mozcdict-ext
+    # $W 以下を汚したくないのでビルドディレクトリにコピー
+    cp -a $W/mozcdict-ext $B/
+    cd $B/mozcdict-ext
     (
       (cd neologd && MOZC_ID_FILE="$B/src/data/dictionary_oss/id.def" zsh mkdict.zsh)
       (cd sudachi  && MOZC_ID_FILE="$B/src/data/dictionary_oss/id.def" zsh mkdict.zsh)
@@ -300,25 +307,10 @@ if [ $opt_build -eq 1 ] ; then
     export JAVA_HOME='/usr/java/jdk-22.0.2'
     export PATH=$JAVA_HOME/bin:$PATH
     cd $B/src 
-    
-    : "${CFLAGS:=}"
-    : "${CXXFLAGS:=}"
-    : "${LDFLAGS:=}"
-    
-    # glog 0.3.3互換のためclang+可視性オプションを使う場合は以下を有効化
-    # export CC=clang
-    # export CXX=clang++
-    # CFLAGS="${CFLAGS} -fvisibility=hidden"
-    # CXXFLAGS="${CXXFLAGS} -fvisibility=hidden"
 
-    conlyopts=()
-    for f in ${CFLAGS}; do conlyopts+=(--conlyopt "$f"); done
-    cxxopts=()
-    for f in ${CXXFLAGS}; do cxxopts+=(--cxxopt "$f"); done
-    linkopts=()
-    for f in ${LDFLAGS}; do linkopts+=(--linkopt "$f"); done
+    bazel_bin=${_bazel_bin_url##*/} 
     
-    bazel build \
+    $W/$bazel_bin build \
         --config oss_linux \
         --config stable_channel \
         --config release_build \
@@ -339,7 +331,6 @@ if [ $opt_build -eq 1 ] ; then
         unix/fcitx5:fcitx5-mozc.so \
         server:mozc_server \
         gui/tool:mozc_tool \
-	unix/uim:uim-mozc \
 	unix/icons \
 	unix/emacs:mozc_emacs_helper
 
@@ -422,36 +413,6 @@ if [ $opt_package -eq 1 ] ; then
 
   cd $P
   /sbin/makepkg ../$pkg.$compress <<EOF
-y
-1
-EOF
-
-# uim_mozc
-  cd $B/src
-  if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
-  install -D -m 755 bazel-bin/unix/uim/libuim-mozc.so "$P/usr/lib/uim/plugin/libuim-mozc.so"
-  install -d "$P/usr/share/uim"
-  install    -m 644 $W/macuim/Mozc/scm/*.scm "$P/usr/share/uim/"
-  install -D -m 644 data/images/unix/ime_product_icon_opensource-32.png "$P/usr/share/uim/pixmaps/mozc.png"
-  install    -m 644 data/images/unix/ui-tool.png "$P/usr/share/uim/pixmaps/mozc_tool_selector.png"
-  install    -m 644 data/images/unix/ui-properties.png "$P/usr/share/uim/pixmaps/mozc_tool_config_dialog.png"
-  install    -m 644 data/images/unix/ui-dictionary.png "$P/usr/share/uim/pixmaps/mozc_tool_dictionary_tool.png"
-
-  mkdir -p $docdir/uim-mozc
-  head -n 32 unix/uim/mozc.cc > $docdir/uim-mozc/LICENSE
-
-  mkdir -p $P/install
-  cat <<"EOF" > $P/install/initpkg
-if [ -x /usr/bin/uim-module-manager ]; then
-        uim-module-manager --register mozc
-fi
-EOF
-
-  install_tweak
-  convert_links
-
-  cd $P
-  /sbin/makepkg ../uim_mozc-$vers-$arch-$build.$compress <<EOF
 y
 1
 EOF
