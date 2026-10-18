@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 ##############################################################
 pkgbase="iptables"
 vers="1.8.13"
@@ -101,9 +101,9 @@ if [ $opt_package -eq 1 ] ; then
   export LDFLAGS='-Wl,--as-needed'
   make install DESTDIR=$P
 
-  for x in {arp,eb,ip,ip6}tables{,-restore,-save} iptables-xml; do
+  for x in {ip,ip6}tables{,-restore,-save} iptables-xml; do
     if [[ $x = ip* ]]; then
-      ln -sf xtables-nft-multi "$pkgdir/usr/bin/$x"
+      ln -sf xtables-nft-multi "$P/sbin/$x"
     fi
   done
 
