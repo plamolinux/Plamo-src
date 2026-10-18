@@ -6,7 +6,7 @@ url="https://github.com/fail2ban/fail2ban/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="fail2ban-${vers}"
 OPT_CONFIG=""
 DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO doc"
@@ -80,11 +80,11 @@ if [ $opt_package -eq 1 ] ; then
   check_root
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
-  python -m installer --destdir="$pkgdir" dist/*.whl
+  python -m installer --destdir="$P" dist/*.whl
 
   install -Dm644 -v files/fail2ban-logrotate $P/etc/logrotate.d/fail2ban
-  install -Dm644 -t "$pkgdir"/usr/share/man/man1 man/*.1
-  install -Dm644 -t "$pkgdir"/usr/share/man/man5 man/*.5
+  install -Dm644 -t "$P"/usr/share/man/man1 man/*.1
+  install -Dm644 -t "$P"/usr/share/man/man5 man/*.5
 
   ( cd $P
     site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
