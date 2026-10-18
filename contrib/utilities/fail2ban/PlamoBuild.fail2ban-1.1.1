@@ -83,8 +83,8 @@ if [ $opt_package -eq 1 ] ; then
   python -m installer --destdir="$P" dist/*.whl
 
   install -Dm644 -v files/fail2ban-logrotate $P/etc/logrotate.d/fail2ban
-  install -Dm644 -t "$pkgdir"/usr/share/man/man1 man/*.1
-  install -Dm644 -t "$pkgdir"/usr/share/man/man5 man/*.5
+  install -Dm644 -t "$P"/usr/share/man/man1 man/*.1
+  install -Dm644 -t "$P"/usr/share/man/man5 man/*.5
 
   ( cd $P
     site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
