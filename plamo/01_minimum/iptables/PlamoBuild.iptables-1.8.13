@@ -101,9 +101,10 @@ if [ $opt_package -eq 1 ] ; then
   make install DESTDIR=$P
 
   for x in {ip,ip6}tables{,-restore,-save}; do
-      ln -sf xtables-nft-multi "$P/sbin/$x"
+      ln -svf xtables-nft-multi "$P/sbin/$x"
   done
-  ln -sf /sbin/xtables-nft-multi $P/usr/bin/iptables-xml
+  mkdir -p $P/usr/bin
+  ln -svf ../../sbin/xtables-nft-multi $P/usr/bin/iptables-xml
 
   mkdir -p $P/etc/rc.d/init.d
   cat <<"EOF" > $P/etc/rc.d/init.d/iptables
