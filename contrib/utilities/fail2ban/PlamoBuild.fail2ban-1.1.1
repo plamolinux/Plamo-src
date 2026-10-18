@@ -6,7 +6,7 @@ url="https://github.com/fail2ban/fail2ban/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="fail2ban-${vers}"
 OPT_CONFIG=""
 DOCS="COPYING ChangeLog README.Solaris README.md RELEASE THANKS TODO doc"
@@ -90,8 +90,6 @@ if [ $opt_package -eq 1 ] ; then
     site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
     cp -rl ./"$site_packages"/{etc,usr} .
     rm -r ./"$site_packages"/{etc,usr}
-    cd $P/"$site_packages"
-    mv -v fail2ban fail2ban-${vers}
   )
 
   install -Dm755 -v $W/fail2ban.init $P/etc/rc.d/init.d/fail2ban
