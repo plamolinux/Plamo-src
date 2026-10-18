@@ -9,7 +9,6 @@ arch=`uname -m`
 build=B2
 src="iptables-${vers}"
 OPT_CONFIG="--enable-shared
-	    --enable-libipq
             --with-xtlibdir=/lib/xtables
 	    --enable-bpf-compiler
 	    --enable-devel
