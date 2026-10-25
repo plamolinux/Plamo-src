@@ -6,11 +6,11 @@ url="https://github.com/uclouvain/openjpeg/archive/v${vers}/openjpeg-${vers}.tar
 digest="md5sum:6160de075bb5191e482bc0f024b375e4"
 verify=""
 arch=`uname -m`
-build=B1
+build=B2
 src="openjpeg-${vers}"
 OPT_CONFIG="-DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF"
 DOCS='AUTHORS.md CHANGELOG.md INSTALL.md LICENSE NEWS.md README.md THANKS.md'
-patchfiles=''
+patchfiles='91d08b11.patch'
 compress=tzst
 ##############################################################
 
@@ -48,7 +48,7 @@ if [ $opt_config -eq 1 ] ; then
 ######################################################################
   cd $S
   for patch in $patchfiles ; do
-    if [ -f .${patch} ]; then
+    if [ ! -f .${patch} ]; then
       patch -p1 < $W/$patch
       touch .${patch}
     fi
