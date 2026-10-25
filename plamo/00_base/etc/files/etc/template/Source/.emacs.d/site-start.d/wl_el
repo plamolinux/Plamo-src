@@ -1,4 +1,5 @@
-﻿;;; Wanderlust 起動設定
+;; -*- lexical-binding: t; -*-
+;;; Wanderlust 起動設定
 ;;;   設定は .wl, .folders, .addresses 等に記述
 (require 'mime-setup)
 (autoload 'wl "wl" "Wanderlust" t)

@@ -1,4 +1,5 @@
-﻿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; -*- lexical-binding: t; -*-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; その他の設定
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ここはよくわかりませぬ ^^;
@@ -165,7 +166,7 @@
        (global-set-key "\e[23~" 'wb-line-number-toggle)))
 ;;
 (add-hook 'wb-line-number-before-enable-hook
-	  '(lambda ()
+	  (lambda ()
 	     (setq wb-bak-scroll-bar-mode scroll-bar-mode)
 	     (set-scroll-bar-mode nil)
 	     (cond
@@ -177,7 +178,7 @@
 	       ))
 	     ))
 (add-hook 'wb-line-number-after-disable-hook
-	  '(lambda ()
+	  (lambda ()
 	     (set-scroll-bar-mode wb-bak-scroll-bar-mode)
 	     (cond
 	      ((>= emacs-major-version 21)
@@ -197,7 +198,7 @@
     (while (< i 254)
       (setq i (+ i 1))
       (insert (format "%4d  0x%02x  %c\n" i i i))))
-  (beginning-of-buffer))
+  (goto-char (point-min)))
 
 ;; バッファの DOS の改行文字を UNIX に変更
 (defun dos2unix ()
@@ -223,7 +224,7 @@
                         (car (detect-coding-region (point-min) (point-max))))
                        'undecided)))
          (and (eq buf-base (coding-system-base
-                            default-buffer-file-coding-system))
+                            (default-value 'buffer-file-coding-system)))
               (not (eq (coding-system-base
                         (car (detect-coding-region (point-min) (point-max))))
                        'undecided)))))))
@@ -251,15 +252,15 @@
 ;; こちらをadd-hookしておくと，バッファに漢字を新たに書き加えた時，
 ;; どの漢字コードでsaveするか，defaultをcsとして，質問してくれる．
 (defun my-set-file-encoding (cs)
-  (add-hook 'local-write-file-hooks
-            `(lambda ()
-               (my-set-file-coding-system-for-write
-                (quote ,cs)))))
+  (add-hook 'write-file-functions
+            (lambda ()
+              (my-set-file-coding-system-for-write cs))
+            nil t))
 
 ;; こちらをadd-hookしておくと，バッファに漢字を新たに書き加えた時，
 ;; 速攻でcsな漢字コードでsaveしてくれる．
 (defun my-set-file-encoding-quick (cs)
-  (add-hook 'local-write-file-hooks
-            `(lambda ()
-               (my-set-file-coding-system-for-write-quick
-                (quote ,cs)))))
+  (add-hook 'write-file-functions
+            (lambda ()
+              (my-set-file-coding-system-for-write-quick cs))
+            nil t))

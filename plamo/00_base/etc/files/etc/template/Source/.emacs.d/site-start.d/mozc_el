@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; emacs から mozc を使う際の設定
 (require 'mozc)
 ;; isearch 中に mozc を使用する

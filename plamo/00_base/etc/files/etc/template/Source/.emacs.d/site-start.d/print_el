@@ -1,29 +1,27 @@
-﻿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; -*- lexical-binding: t; -*-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Plamo Linux emacs 用設定ファイル (プリンタ関連)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; プリンタ出力設定
 (setq ps-multibyte-buffer 'non-latin-printer)
 (require 'ps-mule)
-;; Emacs-21のバグ(?)対策
-(defalias 'ps-mule-header-string-charsets 'ignore)
 ;; タイムスタンプ表示の調整など
 (add-hook 'ps-print-hook
-	  '(lambda ()
+	  (lambda ()
 	     ;; プリンタ出力のコマンドを定義
 ;	     (setq ps-lpr-command "lpr")
 ;	     (setq ps-printer-name-option "-P")
 	     ;; プリンタ名
 ;	     (setq ps-printer-name "lp")
 ;	     (setq ps-line-number t)
-	     (load "time-stamp")
 	     (setq ps-right-header
 		   (list "/pagenumberstring load"
-			 'time-stamp-yyyy/mm/dd
-			 'time-stamp-hh:mm:ss))))
+			 'ps-time-stamp-yyyy-mm-dd
+			 'ps-time-stamp-hh:mm:ss))))
 
 ;(add-hook 'ps-print-hook
-;          '(lambda ()
+;          (lambda ()
 ;             (setq ps-font-info-database
 ;                   (append
 ;                    '((Japanese                        ; the family key

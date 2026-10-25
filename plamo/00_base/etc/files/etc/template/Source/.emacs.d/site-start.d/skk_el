@@ -1,4 +1,5 @@
-﻿;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; -*- lexical-binding: t; -*-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SKK-10
 ;;   emacs 上での仮名漢字変換システム SKK の設定
 ;;   C-x t でチュートリアルが起動します
@@ -44,7 +45,7 @@
 		      (and (boundp 'skk-mode) skk-mode
 			   (skk-isearch-mode-cleanup)
 			   (skk-set-cursor-color-properly) ))))
-(add-hook 'skk-load-hook '(lambda ()
+(add-hook 'skk-load-hook (lambda ()
 ;         (setq skk-use-color-cursor nil)
 ;         (setq skk-henkan-face nil)
           (skk-make-face 'Yellow/Blue)
