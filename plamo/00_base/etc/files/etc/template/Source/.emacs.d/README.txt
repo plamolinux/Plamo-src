@@ -29,8 +29,8 @@ ibus-el_el : Emacs からiBus経由で日本語入力するための設定ファ
 これらの機能をお使いの方は、ぜひ経験のフィードバックをお願いします。
 
 key_el : Emacsにキーバインディングを調整するファイルです。
-
-print_el : バッファのテキストをPSプリンタに出力するための機能を定義したファイルです。
+         なお、major.el の c-mode/fortran-mode で使う my-set-file-encoding-quick は
+         このファイルで定義されているため、key_el が無効な場合は呼び出されません。
 
 
 -------

@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; ~/.emacs.d/init.d 以下にある *.el ファイルを読み込む
 (let* ((dir "~/.emacs.d/site-start.d")
        (el-suffix "\\.el\\'")
