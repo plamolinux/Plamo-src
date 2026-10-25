@@ -1,14 +1,14 @@
 #!/bin/sh
 ##############################################################
 pkgbase='node'
-vers="24.14.1"
+vers="26.12.1"
 url="https://nodejs.org/dist/v${vers}/${pkgbase}-v${vers}.tar.xz"
-digest="md5sum:a2efca09a1b1f20edf5e1e1c3be73e99"
+digest="md5sum:7abf588008898873171e0015c4769725"
 verify=""
 arch=`uname -m`
-build=B2
+build=B1
 src="${pkgbase}-v${vers}"
-OPT_CONFIG="--shared-brotli --shared-libuv --shared-cares --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
+OPT_CONFIG="--shared-brotli --shared-libuv --shared-nghttp2 --shared-openssl --shared-zlib --with-intl=full-icu"
 DOCS='AUTHORS CHANGELOG.md LICENSE README.md'
 patchfiles=''
 compress=tzst
