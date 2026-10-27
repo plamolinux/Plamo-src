@@ -60,29 +60,12 @@
 	    ;(set-frame-size (selected-frame) 110 40)
 	    )) ; Emacs21 以上の設定
 
-      ;;; Emacs23 以上の設定 (TrueType/OpenType フォントの使用)
-      (if (>= emacs-major-version 23)
-          (progn
-	    (if (>= emacs-major-version 27)
-		(set-frame-font "Noto Sans Mono-8")
-	    (set-default-font "Noto Sans Mono-8"))
-	    (set-fontset-font
-	     (frame-parameter nil 'font)
-	     'japanese-jisx0208
-	     '("Migu 2M" . "iso10646-1"))
-	    (set-fontset-font
-	     (frame-parameter nil 'font)
-	     'japanese-jisx0212
-	     '("Migu 2M" . "iso10646-1"))
-            ;; Ascii フォントと日本語フォントの幅を調整する
-;	    (setq face-font-rescale-alist
-;		  '((".*Migu.*" . 1.3)
-;		    (".*VL ゴシック.*" . 1.3)
-;		    ("-cdac$" . 1.3)))
-	    )) ; Emacs23 以上の設定
-
-      )
-;      )) ; Window システムで起動した場合
+      ;; フォント設定
+      (when (>= emacs-major-version 27)
+        (set-frame-font "Noto Sans Mono-10" nil t)
+	(set-fontset-font t 'japanese-jisx0208 '("VL Gothic" . "iso10646-1"))
+        (set-fontset-font t 'japanese-jisx0212 '("VL Gothic" . "iso10646-1"))
+        )) ; Window システムで起動した場合
 
   ;;; mule/emacs -nw で起動した時の設定
   (progn
