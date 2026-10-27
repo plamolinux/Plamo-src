@@ -7,7 +7,7 @@ url="https://github.com/fcitx/mozc.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="mozc"
 #OPT_CONFIG="--disable-static --enable-shared"
 DOCS="AUTHORS LICENSE README.md docker docs"
@@ -386,8 +386,9 @@ EOF
   cd $B/src
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
 
-  install -Dm755 bazel-bin/unix/emacs/mozc_emacs_helper "$P"/usr/bin/mozc_emacs_helper
-  install -Dm644 unix/emacs/mozc.el "$P"/usr/share/emacs/site-lisp/mozc.el
+  install -Dm755 bazel-bin/unix/emacs/mozc_emacs_helper $P/usr/bin/mozc_emacs_helper
+  install -Dm644 unix/emacs/mozc.el $P/usr/share/emacs/site-lisp/mozc.el
+  emacs_mini -batch -f batch-byte-compile $P/usr/share/emacs/site-lisp/mozc.el
 
   install_tweak
   convert_links
