@@ -8,7 +8,12 @@ digest=""
 arch=`uname -m`
 build=B1
 src="smartmontools-${vers}"
-OPT_CONFIG="--disable-static --enable-shared --with-initscriptdir=no --with-libsystemd=no --docdir=/usr/share/doc/${src}"
+OPT_CONFIG="
+	--with-initscriptdir=no
+	--with-libsystemd=no
+	--with-smartdscriptdir=/usr/share/smartmontools
+	--with-smartdplugindir=/usr/share/smartmontools/smartd_warning.d
+	--docdir=/usr/share/doc/${src}"
 DOCS="AUTHORS COPYING ChangeLog ChangeLog-5.0-6.0 ChangeLog-6.0-7.0 INSTALL NEWS README TODO"
 patchfiles="smartd.init"
 # specifies files that are not in source archive and patchfiles
