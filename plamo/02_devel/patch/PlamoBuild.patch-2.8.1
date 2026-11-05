@@ -1,16 +1,16 @@
 #!/bin/sh
 ##############################################################
 pkgbase='patch'
-vers='2.7.6'
+vers='2.8.1'
 url="http://ftp.gnu.org/gnu/${pkgbase}/${pkgbase}-${vers}.tar.xz"
 verify="${url}.sig"
 arch=`uname -m`
 build=B1
 src="${pkgbase}-${vers}"
 OPT_CONFIG=""
-DOCS='AUTHORS COPYING ChangeLog ChangeLog-2011 INSTALL NEWS README TODO'
+DOCS='AUTHORS COPYING ChangeLog ChangeLog-2011 INSTALL NEWS README'
 patchfiles=''
-compress=txz
+compress=tzst
 ##############################################################
 
 source /usr/share/plamobuild_functions.sh
