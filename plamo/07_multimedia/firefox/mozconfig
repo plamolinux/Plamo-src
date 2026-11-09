@@ -14,6 +14,7 @@ ac_add_options --enable-rust-simd
 ac_add_options --enable-linker=lld
 ac_add_options --disable-elf-hack
 ac_add_options --disable-bootstrap
+ac_add_options --disable-debug-symbols
 # we use wasi (wasm)
 ac_add_options --with-wasi-sysroot=/usr/share/wasi-sysroot
 # if we need not wasi, use below
@@ -51,4 +52,4 @@ ac_add_options --disable-tests
 ac_add_options --disable-synth-speechd
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
-#mk_add_options MOZ_MAKE_FLAGS="-j3"
+mk_add_options MOZ_PARALLEL_BUILD=8
