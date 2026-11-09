@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ghostscript'
-vers="10.07.1"
+vers="10.08.0"
 url="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${vers//./}/${pkgbase}-${vers}.tar.xz"
-digest="md5sum:9e987b203c535d3c7829e1daefb85e98"
+digest="md5sum:e378629cecae3957f8ac49b8daa9f751"
 #fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz
 #	https://downloads.sourceforge.net/gs-fonts/gnu-gs-fonts-other-6.0.tar.gz"
 fonturl="https://downloads.sourceforge.net/gs-fonts/ghostscript-fonts-std-8.11.tar.gz"
