@@ -74,7 +74,8 @@ if [ $opt_config -eq 1 ] ; then
         echo "configure error. $0 script stop"
         exit 255
     fi
-    sed -i -e "s@-lpcre2-8@/usr/lib/libpcre2-8.a@" ./src/Makefile
+    # pcre2 は 00 に移動したので static link -> dynamic link に戻す
+    #sed -i -e "s@-lpcre2-8@/usr/lib/libpcre2-8.a@" ./src/Makefile
 
 fi
 
