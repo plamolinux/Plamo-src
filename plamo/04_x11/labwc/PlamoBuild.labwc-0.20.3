@@ -6,11 +6,11 @@ url="https://github.com/labwc/labwc/archive/refs/tags/${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="labwc-${vers}"
 OPT_CONFIG="--buildtype=release"
 DOCS="LICENSE NEWS.md README.md docs"
-patchfiles=""
+patchfiles="40261724c0e6b5b2d45d1f79c87a6adb39e8dc46.patch"
 # specifies files that are not in source archive and patchfiles
 addfiles=""
 compress=tzst
