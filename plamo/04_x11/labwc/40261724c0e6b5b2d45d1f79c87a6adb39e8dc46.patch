@@ -1,0 +1,69 @@
+From 40261724c0e6b5b2d45d1f79c87a6adb39e8dc46 Mon Sep 17 00:00:00 2001
+From: whistooy <149784969+whistooy@users.noreply.github.com>
+Date: Fri, 23 Oct 2026 19:27:55 +0000
+Subject: [PATCH] keyboard: do not aggregate IME virtual keyboards
+
+Exclude IME virtual keyboards from modifier aggregation
+so stuck modifiers don't keep OSDs (like window switchers) open.
+Other virtual keyboards like wayvnc remain unaffected.
+
+Fixes: #3437
+---
+ include/input/ime.h  |  2 ++
+ src/input/ime.c      | 11 +++++++++++
+ src/input/keyboard.c |  7 +++++++
+ 3 files changed, 20 insertions(+)
+
+diff --git a/include/input/ime.h b/include/input/ime.h
+index 046e09260f..04f2ce7ed7 100644
+--- a/include/input/ime.h
++++ b/include/input/ime.h
+@@ -80,6 +80,8 @@ bool input_method_keyboard_grab_forward_key(struct keyboard *keyboard,
+  */
+ bool input_method_keyboard_grab_forward_modifiers(struct keyboard *keyboard);
+ 
++bool keyboard_is_emulated_by_input_method(struct keyboard *keyboard);
++
+ struct input_method_relay *input_method_relay_create(struct seat *seat);
+ 
+ void input_method_relay_finish(struct input_method_relay *relay);
+diff --git a/src/input/ime.c b/src/input/ime.c
+index 1758d1c005..4af493300a 100644
+--- a/src/input/ime.c
++++ b/src/input/ime.c
+@@ -36,6 +36,17 @@ is_keyboard_emulated_by_input_method(struct wlr_keyboard *keyboard,
+ 	return virtual_keyboard && SAME_CLIENT(virtual_keyboard, input_method);
+ }
+ 
++bool
++keyboard_is_emulated_by_input_method(struct keyboard *keyboard)
++{
++	if (!keyboard || !keyboard->base.seat
++			|| !keyboard->base.seat->input_method_relay) {
++		return false;
++	}
++	return is_keyboard_emulated_by_input_method(keyboard->wlr_keyboard,
++		keyboard->base.seat->input_method_relay->input_method);
++}
++
+ /*
+  * Get keyboard grab of the seat from keyboard if we should forward events
+  * to it.
+diff --git a/src/input/keyboard.c b/src/input/keyboard.c
+index 78dfbb4a5a..ad0bdfe953 100644
+--- a/src/input/keyboard.c
++++ b/src/input/keyboard.c
+@@ -83,6 +83,13 @@ keyboard_get_all_modifiers(struct seat *seat)
+ 		}
+ 		struct keyboard *kb = wl_container_of(input, kb, base);
+ 		if (kb->is_virtual) {
++			/*
++			 * Exclude IME virtual keyboards so stuck modifiers
++			 * don't keep OSDs (like window switchers) open.
++			 */
++			if (keyboard_is_emulated_by_input_method(kb)) {
++				continue;
++			}
+ 			modifiers |= wlr_keyboard_get_modifiers(kb->wlr_keyboard);
+ 		}
+ 	}
