@@ -6,13 +6,13 @@ url="https://github.com/uim/uim/releases/download/${vers}/uim-${vers}.tar.gz"
 verify=""
 digest=""
 arch=`uname -m`
-build=B1
+build=B2
 src="uim-${vers}"
 # Anthy-unicode は anthy-utf8 を含むので --with-anthy のみにした。
 # --with-qt5 でビルドするには plasma-framework 等のパッケージが必要なものの、
 # 動作時には必要なさそう。
 # --with-mozcを指定しないとmozcで日本語入力できない？
-OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-immodule --with-qt6 --with-qt6-immodule --with-mozc --with-anthy-utf8"
+OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-qt5 --with-qt5-immodule --with-qt6 --with-qt6-immodule --with-mozc --with-anthy-utf8 --enable-dict"
 # OPT_CONFIG="--disable-static --enable-shared --with-anthy --with-anthy-utf8"
 DOCS="ABOUT-NLS AUTHORS COPYING INSTALL NEWS README doc"
 # anthy-unicodeはAPIレベルでanthyと互換っぽいので、anthy ではなく anthy-unicode を参照するように修正
