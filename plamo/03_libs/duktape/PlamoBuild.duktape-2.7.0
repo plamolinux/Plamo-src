@@ -6,7 +6,7 @@ url="https://duktape.org/duktape-${vers}.tar.xz"
 verify=""
 digest="md5sum:b3200b02ab80125b694bae887d7c1ca6"
 arch=`uname -m`
-build=B1
+build=B2
 src="duktape-${vers}"
 OPT_CONFIG=""
 DOCS="AUTHORS.rst LICENSE.txt README.rst licenses"
@@ -65,8 +65,8 @@ if [ $opt_config -eq 1 ] ; then
 fi
 
 if [ $opt_build -eq 1 ] ; then
-    cd $B 
-    export LDFLAGS='-Wl,--as-needed'
+    cd $B
+    export LDFLAGS="-lm"
     make -f Makefile.sharedlibrary
     if [ $? != 0 ]; then
         echo "build error. $0 script stop"
