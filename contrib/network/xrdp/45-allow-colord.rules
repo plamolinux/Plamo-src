@@ -1,6 +1,18 @@
-[Allow Colord all Users]
-Identity=unix-user:*
-Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
-ResultAny=no
-ResultInactive=no
-ResultActive=yes
+// 45-allow-colord.rules
+polkit.addRule(function(action, subject) {
+    var colordActions = [
+        "org.freedesktop.color-manager.create-device",
+        "org.freedesktop.color-manager.create-profile",
+        "org.freedesktop.color-manager.delete-device",
+        "org.freedesktop.color-manager.delete-profile",
+        "org.freedesktop.color-manager.modify-device",
+        "org.freedesktop.color-manager.modify-profile"
+    ];
+    if (colordActions.indexOf(action.id) >= 0) {
+        // Identity=unix-user:* なのでユーザー条件はなし
+        if (subject.local && subject.active) {
+            return polkit.Result.YES;   // ResultActive=yes
+        }
+        return polkit.Result.NO;        // ResultInactive=no / ResultAny=no
+    }
+});
