@@ -1,9 +1,9 @@
 #!/bin/sh
 ##############################################################
 pkgbase='ruby'
-vers='3.4.9'
+vers='3.4.13'
 url="https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${vers}.tar.gz"
-digest="sha256sum:7bb4d4f5e807cc27251d14d9d6086d182c5b25875191e44ab15b709cd7a7dd9c"
+digest="sha256sum:d0d3bf3dd8c224a3c3b7ecd816a0f1b2cbcf4f87b5afcbdbe91d3fef177f351a"
 verify=""
 arch=`uname -m`
 build=B1
