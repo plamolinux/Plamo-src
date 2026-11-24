@@ -1,0 +1,64 @@
+From 3e42dc89dd33800f73367faafb2019210d5f2029 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ball=C3=B3=20Gy=C3=B6rgy?= <ballogyor@gmail.com>
+Date: Mon, 29 Dec 2025 20:58:41 +0100
+Subject: [PATCH] theme.c: Use window icon for the menu button if available
+
+This makes it consistent with the client-side decoration of GTK.
+Also, fix scaling of the icon.
+---
+ src/ui/theme.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/src/ui/theme.c b/src/ui/theme.c
+index e77e1c1ec..3c53a3c72 100644
+--- a/src/ui/theme.c
++++ b/src/ui/theme.c
+@@ -21,6 +21,7 @@
+ 
+ #include "ui/theme-private.h"
+ 
++#include <cairo-xlib.h>
+ #include <gtk/gtk.h>
+ #include <math.h>
+ #include <stdarg.h>
+@@ -862,7 +863,10 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
+                icon_name = "window-minimize-symbolic";
+                break;
+             case META_BUTTON_TYPE_MENU:
+-               icon_name = "open-menu-symbolic";
++               if (mini_icon)
++                 surface = cairo_surface_reference (mini_icon);
++               else
++                 icon_name = "application-x-executable";
+                break;
+             default:
+                icon_name = NULL;
+@@ -904,10 +908,27 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
+           if (surface)
+             {
+               double x, y;
++              double width, height;
++
++              if (cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE)
++                {
++                  width = cairo_image_surface_get_width (surface) / (double) scale;
++                  height = cairo_image_surface_get_height (surface) / (double) scale;
++                }
++              else
++                {
++                  width = cairo_xlib_surface_get_width (surface) / (double) scale;
++                  height = cairo_xlib_surface_get_height (surface) / (double) scale;
++                }
++
+               x = button_rect.x + (button_rect.width - layout->icon_size) / 2.0;
+               y = button_rect.y + (button_rect.height - layout->icon_size) / 2.0;
+ 
+-              gtk_render_icon_surface (style, cr, surface, x, y);
++              cairo_translate (cr, x, y);
++              cairo_scale (cr, layout->icon_size / width,
++                           layout->icon_size / height);
++              cairo_set_source_surface (cr, surface, 0, 0);
++              cairo_paint (cr);
+               cairo_surface_destroy (surface);
+             }
+         }
