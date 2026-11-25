@@ -2,11 +2,11 @@
 ##############################################################
 pkgbase="cinnamon_control_center"
 vers="6.8.0"
-url="https://github.com/linuxmint/cinnamon-control-center.git"
+url="git+https://github.com/linuxmint/cinnamon-control-center.git"
 verify=""
 digest=""
 arch=`uname -m`
-build=B2
+build=B3
 src="cinnamon-control-center"
 OPT_CONFIG="--buildtype=release"
 DOCS="AUTHORS COPYING ChangeLog MAINTAINERS NEWS README README.md TODO install-scripts meson_install_schemas.py"
