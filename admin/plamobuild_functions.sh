@@ -192,28 +192,58 @@ check_and_clone_git() {
     return 0
 }
 
+download_git() {
+    local repo_dir, git_url
+    repo_dir=$(basename ${url##*/} .git)
+    git_url=${url#git+}
+
+    if [ -d $repo_dir ]; then
+        (
+            cd $repo_dir || exit 1
+            git fetch origin "$vers" &&
+                git checkout --detach FETCH_HEAD
+        )
+    else
+        if git ls-remote $url > /dev/null 2>&1
+           echo "git clone --depth 1 --branch $vers $url"
+           git clone --depth 1 --branch "$vers" "$git_url" || return 1
+        else
+            echo "$url is not git repository"
+            return 1
+        fi
+    fi
+}        
+
 download_sources() {
 
-  check_and_clone_git
-  if [ $? -eq 0 ]; then
-    return 0
-  fi
+    if [[ "$url" == *.git ]]; then
+        if [[ "$url" == git+https:// ]]; then
+            download_git
+            if [ $? -eq 0 ]; then
+                return 0
+            fi    
+        else
+            check_and_clone_git
+            if [ $? -eq 0 ]; then
+                return 0
+            fi
+    fi
 
-  if [ ! -f ${url##*/} ] ; then
-    wget $url
-  fi
-  if [ -n "$digest" ] ; then
-    check_digest
-  elif [ -n "$verify" ] ; then
-    verify_specified_sig
-  elif [ $USE_VERIFY_SIG_AUTO ] ; then
-    verify_sig_auto
-  fi
+    if [ ! -f ${url##*/} ] ; then
+        wget $url
+    fi
+    if [ -n "$digest" ] ; then
+        check_digest
+    elif [ -n "$verify" ] ; then
+        verify_specified_sig
+    elif [ $USE_VERIFY_SIG_AUTO ] ; then
+        verify_sig_auto
+    fi
 
-  case ${url##*/} in
-  *.tar*) tar xvf ${url##*/} ;;
-  *.zip) unzip ${url##*/} ;;
-  esac
+    case ${url##*/} in
+        *.tar*) tar xvf ${url##*/} ;;
+        *.zip) unzip ${url##*/} ;;
+    esac
 }
 
 # obsolete
