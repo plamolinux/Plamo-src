@@ -193,7 +193,7 @@ check_and_clone_git() {
 }
 
 download_git() {
-    local repo_dir, git_url
+    local repo_dir git_url
     repo_dir=$(basename ${url##*/} .git)
     git_url=${url#git+}
 
@@ -204,7 +204,7 @@ download_git() {
                 git checkout --detach FETCH_HEAD
         )
     else
-        if git ls-remote $url > /dev/null 2>&1
+        if git ls-remote $git_url > /dev/null 2>&1 ; then
            echo "git clone --depth 1 --branch $vers $url"
            git clone --depth 1 --branch "$vers" "$git_url" || return 1
         else
@@ -217,7 +217,7 @@ download_git() {
 download_sources() {
 
     if [[ "$url" == *.git ]]; then
-        if [[ "$url" == git+https:// ]]; then
+        if [[ "$url" == git+https://* ]]; then
             download_git
             if [ $? -eq 0 ]; then
                 return 0
@@ -227,6 +227,7 @@ download_sources() {
             if [ $? -eq 0 ]; then
                 return 0
             fi
+        fi
     fi
 
     if [ ! -f ${url##*/} ] ; then
