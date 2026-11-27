@@ -1,14 +1,23 @@
 #!/bin/sh
 ##############################################################
 pkgbase="dbus"
-vers="1.16.2"
+vers="1.16.4"
 url="https://dbus.freedesktop.org/releases/dbus/dbus-${vers}.tar.xz"
 verify=""
-digest=""
+digest="md5sum:b7ed0057777e1aa1bca3348e1aaeedb2"
 arch=`uname -m`
 build=B1
 src="dbus-${vers}"
-OPT_CONFIG="--buildtype=release -Druntime_dir=/run -Duser_session=true -Dsystemd=disabled -Dselinux=disabled -Ddoxygen_docs=disabled -Dxml_docs=disabled -Dsystem_pid_file=/run/dbus/pid -Dsystem_socket=/run/dbus/system_bus_socket"
+OPT_CONFIG="
+	--buildtype=release
+	-Druntime_dir=/run
+	-Duser_session=true
+	-Dsystemd=disabled
+	-Dselinux=disabled
+	-Ddoxygen_docs=disabled
+	-Dxml_docs=disabled
+	-Dsystem_pid_file=/run/dbus/pid
+	-Dsystem_socket=/run/dbus/system_bus_socket"
 DOCS="AUTHORS COPYING INSTALL LICENSES NEWS NEWS.pre-1-0 NEWS.pre-1-10 NEWS.pre-1-12 NEWS.pre-1-2 NEWS.pre-1-4 NEWS.pre-1-6 NEWS.pre-1-8 README README.cmake README.cygwin README.launchd README.valgrind README.win README.wince doc meson_post_install.py"
 patchfiles=""
 # specifies files that are not in source archive and patchfiles
