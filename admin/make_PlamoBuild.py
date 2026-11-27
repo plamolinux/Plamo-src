@@ -4,16 +4,28 @@
 import argparse, sys, os
 
 class Package():
-    def __init__(self, srcdir):
+    def __init__(self, srcdir, vers=None):
         self.srcdir = srcdir
         dirname = srcdir.split('/')[-1]
         parts = dirname.split('-')
-        if len(parts) == 2:   # ex: bash-4.02
-            self.basename = parts[0]
-            self.version = parts[1]
-        else:                 # ex: kde-baseapps-4.14.3
-            self.basename = "_".join(parts[0:-1])
-            self.version = parts[-1]
+
+        if vers == None :
+            if len(parts) == 2:   # ex: bash-4.02
+                self.basename = parts[0]
+                self.version = parts[1]
+            else:                 # ex: kde-baseapps-4.14.3
+                self.basename = "_".join(parts[0:-1])
+                self.version = parts[-1]
+        else:
+            self.version = vers
+            if len(parts) == 1:  # cinnamon
+                self.basename = parts[0]
+            else: # cinnamon-desktop
+                # ディレクトリ名の末尾がバージョン番号ならば削除
+                if any(c in "0123456789." for c in parts[-1]) : 
+                    self.basename = "_".join(parts[0:-1])
+                else:
+                    self.basename = "_".join(parts)
 
         keywords = ['DOC', 'DOCS', 'ABOUT', 'AUTHOR', 'COPYING', 'CHANGELOG', 'HACKING', 'HISTORY', 'INSTALL', 'LICENSE', 'LSM', 'MAINTAINERS', 'NEWS', 'README', 'RELEASE', 'THANKS', 'THANKYOU', 'TODO',  'TXT']
         exceptions = ['CMakeLists.txt', 'install-sh', 'mkinstalldirs',  '.in', '.sh', 'meson_options.txt']
@@ -212,14 +224,8 @@ if [ $opt_config -eq 1 ] ; then
         elif self.method == 'meson' :
             self.not_copy_source()
             self.config += '''
-    meson --prefix={} --libdir={}/${{libdir}} ${{OPT_CONFIG}} $S  '''.format(self.prefix, self.prefix)
-
-        elif self.method == 'python' :
-            self.copy_source()
-            self.config += '''
-    python setup.py config    '''  # setup.py はinstall時にprefixを指定する
-
-        elif self.method == 'python_new' :
+    meson setup --prefix={} --libdir={}/${{libdir}} ${{OPT_CONFIG}} $S  '''.format(self.prefix, self.prefix)
+        elif self.method == 'python_new' or self.method == 'python' :
             self.copy_source()
             self.config += '''
     echo "no need to config, proceed to build."
@@ -242,12 +248,8 @@ fi
         self.build = '''
 if [ $opt_build -eq 1 ] ; then
     cd $B '''
-
-        if self.method == 'python':
-            self.build += '''
-    python setup.py build'''
-
-        elif self.method == 'python_new' :
+        # 最近は setup.py は obsolete なので、python -m build に統一
+        if self.method == 'python_new' or self.method == 'python' :
             self.build += '''
     python -m build --wheel --no-isolation --skip-dependency-check  '''
         elif self.method == 'cmake' or self.method == 'meson' :
@@ -274,11 +276,7 @@ if [ $opt_package -eq 1 ] ; then
   if [ -d $P ] ; then rm -rf $P ; fi ; mkdir -p $P
   cd $B
 '''
-        if self.method == 'python':
-            self.package += '''
-  python setup.py install --root $P --prefix={}'''.format(self.prefix)
-
-        elif self.method == 'python_new' :
+        if self.method == 'python_new' or self.method == 'python':
             self.package += '''
   python -m installer --destdir=$P dist/*.whl '''
             
@@ -325,13 +323,14 @@ def get_args():
     parser.add_argument("-u", "--url", default='input source code url here', help='source code download url')
     parser.add_argument("-m", "--method", help="force config method(config, cmake, meson,  perl, python)")
     parser.add_argument("-s", "--source", action="store_true", help="copy source codes into build directory(use with configure)")
+    parser.add_argument("-v", "--version", help="set version number if necessary(default: get from dir name)")
     parser.add_argument("srcdir", help="source code directory")
 
     return parser.parse_args()
 
 def main():
     params = get_args()
-    pkg = Package(params.srcdir.strip('/'))
+    pkg = Package(params.srcdir.strip('/'), params.version)
 
     if params.prefix != None :
         pkg.prefix = params.prefix
@@ -349,7 +348,8 @@ def main():
 
     script = pkg.header + pkg.download + pkg.config + pkg.build + pkg.package
 
-    script_name = "PlamoBuild." + params.srcdir.strip("/")
+    # script_name = "PlamoBuild." + params.srcdir.strip("/")
+    script_name = "PlamoBuild." + pkg.basename + '-' + pkg.version
     if os.path.isfile(script_name) :
         print("same name Build script already exists. ")
         ans = input('Overwrite? [y/N]')
